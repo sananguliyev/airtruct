@@ -1,0 +1,43 @@
+version: "3.8"
+
+services:
+  coordinator:
+    build:
+      context: .
+    ports:
+      - "4195:4195"
+      - "8080:8080"
+    environment:
+      - COORDINATOR=true
+      - NODE_DISCOVERY_URI=http://coordinator:8080
+      - DATABASE_URI=file:/airtruct.sqlite?_foreign_keys=1&mode=rwc
+    volumes:
+      - ./airtruct.sqlite:/airtruct.sqlite
+    networks:
+      - airtruct
+    command:
+      - /airtruct
+      - run
+
+  worker:
+    # hostname: worker
+    deploy:
+      replicas: 2
+    build:
+      context: .
+    # ports:
+    #   - "8081:8080"
+    environment:
+      - COORDINATOR=false
+      - NODE_DISCOVERY_URI=http://coordinator:8080
+      - DATABASE_URI=file:/airtruct.sqlite?_foreign_keys=1&mode=rwc
+    networks:
+      - airtruct
+    command:
+      - /airtruct
+      - run
+
+networks:
+  airtruct:
+    name: airtruct
+    driver: bridge

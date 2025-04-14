@@ -1,0 +1,34 @@
+package persistence
+
+import (
+	configstruct "github.com/sananguliyev/airtruct/internal/config"
+
+	"github.com/rs/zerolog/log"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+)
+
+func NewGormDB(config *configstruct.DatabaseConfig) *gorm.DB {
+	var db *gorm.DB
+	var err error
+
+	if config.Driver == configstruct.DatabaseTypeSQLite {
+		db, err = gorm.Open(sqlite.Open(config.URI), &gorm.Config{})
+	} else {
+		log.Fatal().Msg("Unsupported database driver")
+		return nil
+	}
+
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to connect to database")
+		return nil
+	}
+
+	// Auto Migrate
+	err = db.AutoMigrate(&ComponentConfig{}, &Event{}, &Stream{}, &StreamProcessor{}, &Worker{}, &WorkerStream{})
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to migrate database")
+	}
+
+	return db
+}
