@@ -9,7 +9,7 @@ import (
 	"github.com/sananguliyev/airtruct/internal/persistence"
 )
 
-func (c *coordinator) CreateComponent(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (c *CoordinatorAPI) CreateComponent(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var err error
 
 	var body struct {
@@ -46,7 +46,7 @@ func (c *coordinator) CreateComponent(w http.ResponseWriter, r *http.Request, _ 
 	_ = json.NewEncoder(w).Encode(map[string]string{"message": "ComponentConfig has been created successfully"})
 }
 
-func (c *coordinator) ListComponents(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (c *CoordinatorAPI) ListComponents(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	componentConfigs, err := c.componentConfigRepo.ListComponentConfigs()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -60,8 +60,8 @@ func (c *coordinator) ListComponents(w http.ResponseWriter, r *http.Request, ps 
 	}
 }
 
-func (c *coordinator) GetComponentConfig(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	id, err := strconv.Atoi(ps.ByName("id"))
+func (c *CoordinatorAPI) GetComponentConfig(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	id, err := strconv.ParseInt(ps.ByName("id"), 10, 64)
 	if err != nil {
 		http.Error(w, "Invalid component config ID", http.StatusBadRequest)
 		return
@@ -82,10 +82,10 @@ func (c *coordinator) GetComponentConfig(w http.ResponseWriter, r *http.Request,
 	}
 }
 
-func (c *coordinator) UpdateComponentConfig(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (c *CoordinatorAPI) UpdateComponentConfig(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var err error
 
-	id, err := strconv.Atoi(ps.ByName("id"))
+	id, err := strconv.ParseInt(ps.ByName("id"), 10, 64)
 	if err != nil {
 		http.Error(w, "Invalid component config ID", http.StatusBadRequest)
 		return

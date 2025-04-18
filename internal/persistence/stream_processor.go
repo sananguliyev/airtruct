@@ -7,9 +7,9 @@ import (
 )
 
 type StreamProcessor struct {
-	ID          int       `json:"id" gorm:"primaryKey"`
-	StreamID    int       `json:"stream_id" gorm:"not null"`
-	ProcessorID int       `json:"processor_id" gorm:"not null"`
+	ID          int64     `json:"id" gorm:"primaryKey"`
+	StreamID    int64     `json:"stream_id" gorm:"not null"`
+	ProcessorID int64     `json:"processor_id" gorm:"not null"`
 	Label       string    `json:"label"`
 	CreatedAt   time.Time `json:"created_at" gorm:"not null"`
 

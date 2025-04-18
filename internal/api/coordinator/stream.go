@@ -11,18 +11,18 @@ import (
 	"github.com/sananguliyev/airtruct/internal/persistence"
 )
 
-func (c *coordinator) CreateStream(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (c *CoordinatorAPI) CreateStream(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var err error
 
 	var body struct {
 		Name       string `json:"name"`
-		InputID    int    `json:"input_id"`
+		InputID    int64  `json:"input_id"`
 		InputLabel string `json:"input_label"`
 		Processors []struct {
 			Label       string `json:"label"`
-			ProcessorID int    `json:"processor_id"`
+			ProcessorID int64  `json:"processor_id"`
 		} `json:"processors"`
-		OutputID    int    `json:"output_id"`
+		OutputID    int64  `json:"output_id"`
 		OutputLabel string `json:"output_label"`
 	}
 	if err = json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -58,8 +58,8 @@ func (c *coordinator) CreateStream(w http.ResponseWriter, r *http.Request, _ htt
 	_ = json.NewEncoder(w).Encode(map[string]string{"message": "Stream has been created successfully"})
 }
 
-func (c *coordinator) GetStream(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	id, err := strconv.Atoi(ps.ByName("id"))
+func (c *CoordinatorAPI) GetStream(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	id, err := strconv.ParseInt(ps.ByName("id"), 10, 64)
 	if err != nil {
 		http.Error(w, "Invalid stream ID", http.StatusBadRequest)
 		return
@@ -80,10 +80,10 @@ func (c *coordinator) GetStream(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 }
 
-func (c *coordinator) ListStreams(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (c *CoordinatorAPI) ListStreams(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	streams, err := c.streamRepo.ListAllByStatuses(
 		persistence.StreamStatusActive,
-		persistence.StreamStatusFinished,
+		persistence.StreamStatusCompleted,
 		persistence.StreamStatusFailed,
 		persistence.StreamStatusPaused,
 	)
@@ -99,10 +99,10 @@ func (c *coordinator) ListStreams(w http.ResponseWriter, r *http.Request, ps htt
 	}
 }
 
-func (c *coordinator) UpdateStream(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (c *CoordinatorAPI) UpdateStream(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var err error
 
-	id, err := strconv.Atoi(ps.ByName("id"))
+	id, err := strconv.ParseInt(ps.ByName("id"), 10, 64)
 	if err != nil {
 		http.Error(w, "Invalid stream ID", http.StatusBadRequest)
 		return
@@ -110,13 +110,13 @@ func (c *coordinator) UpdateStream(w http.ResponseWriter, r *http.Request, ps ht
 
 	var body struct {
 		Name       string `json:"name"`
-		InputID    int    `json:"input_id"`
+		InputID    int64  `json:"input_id"`
 		InputLabel string `json:"input_label"`
 		Processors []struct {
 			Label       string `json:"label"`
-			ProcessorID int    `json:"processor_id"`
+			ProcessorID int64  `json:"processor_id"`
 		} `json:"processors"`
-		OutputID    int    `json:"output_id"`
+		OutputID    int64  `json:"output_id"`
 		OutputLabel string `json:"output_label"`
 		Status      string `json:"status"`
 	}

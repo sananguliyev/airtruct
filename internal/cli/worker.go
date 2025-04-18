@@ -1,52 +1,73 @@
 package cli
 
 import (
+	"context"
 	"fmt"
-	"net/http"
+	"net"
 	"time"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/rs/zerolog/log"
 	"github.com/sananguliyev/airtruct/internal/api"
 	"github.com/sananguliyev/airtruct/internal/config"
 	"github.com/sananguliyev/airtruct/internal/executor"
+	pb "github.com/sananguliyev/airtruct/internal/protorender"
+	"google.golang.org/grpc"
 )
 
 type WorkerCLI struct {
-	api        api.WorkerAPI
+	api        *api.WorkerAPI
 	executor   executor.WorkerExecutor
 	nodeConfig *config.NodeConfig
 }
 
-func NewWorkerCLI(api api.WorkerAPI, executor executor.WorkerExecutor, config *config.NodeConfig) *WorkerCLI {
+func NewWorkerCLI(api *api.WorkerAPI, executor executor.WorkerExecutor, config *config.NodeConfig) *WorkerCLI {
 	return &WorkerCLI{api, executor, config}
 }
 
-func (c *WorkerCLI) Run() {
+func (c *WorkerCLI) Run(ctx context.Context) {
 	var err error
 
 	ticker := time.NewTicker(5 * time.Second)
-
 	defer ticker.Stop()
 
 	go func() {
+		if err = c.executor.JoinToCoordinator(ctx); err != nil {
+			log.Fatal().Err(err).Msg("Failed to register on coordinator")
+		}
+
+		c.executor.ConsumeStreamQueue(ctx)
+		log.Info().Msg("Worker started consuming stream queue")
+		c.executor.ShipLogs(ctx)
+		log.Info().Msg("Worker started shipping logs")
+
 		for {
 			select {
+			case <-ctx.Done():
+				log.Info().Msg("Worker stopping...")
+				c.executor.ShipLogs(ctx)
+				if err = c.executor.LeaveCoordinator(ctx); err != nil {
+					log.Error().Err(err).Msg("Failed to leave coordinator and this will be handled in coordinator")
+				}
+				log.Info().Msg("Worker stopped")
+				return
 			case <-ticker.C:
-				if err = c.executor.JoinToCoordinator(); err != nil {
+				if err = c.executor.JoinToCoordinator(ctx); err != nil {
 					log.Fatal().Err(err).Msg("Failed to register on coordinator")
 				}
 			}
 		}
 	}()
 
-	router := httprouter.New()
-	router.POST("/assign-stream", c.api.StartStream)
-	router.GET("/healthz", c.api.HealthCheck)
-
-	if err = http.ListenAndServe(fmt.Sprintf(":%d", c.nodeConfig.Port), router); err != nil {
-		log.Fatal().Err(err).Msg("Failed to start worker")
+	log.Info().Int32("port", c.nodeConfig.GRPCPort).Msg("starting coordinator GRPC server")
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", c.nodeConfig.GRPCPort))
+	if err != nil {
+		log.Fatal().Err(err).Int32("port", c.nodeConfig.GRPCPort).Msg("failed to listen GRPC port")
 	}
 
-	log.Info().Int("port", c.nodeConfig.Port).Msg("started worker")
+	grpcServer := grpc.NewServer()
+	pb.RegisterWorkerServer(grpcServer, c.api)
+
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Fatal().Err(err).Msg("failed to serve GRPC")
+	}
 }

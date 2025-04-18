@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/descriptor.proto";
+import "common.proto";
+
+
+package protorender;
+
+option go_package = "github.com/sananguliyev/airtruct/internal/protorender";
+
+message AssignStreamRequest {
+  int64 worker_stream_id = 1;
+  string config = 2;
+}
+
+message AssignStreamResponse {
+  string message = 1;
+}
+
+message FetchStreamRequest {
+  int64 worker_stream_id = 1;
+}
+
+message FetchStreamResponse {
+  WorkerStreamStatus status = 1;
+}
+
+message CompleteStreamRequest {
+  int64 worker_stream_id = 1;
+}
+
+message CompleteStreamResponse {
+  string message = 1;
+}
+
+message HealthResponse {
+  string message = 1;
+}
+
+service Worker {
+  rpc HealthCheck(google.protobuf.Empty) returns (HealthResponse) {}
+  rpc AssignStream(AssignStreamRequest) returns (AssignStreamResponse) {}
+  rpc FetchStream(FetchStreamRequest) returns (FetchStreamResponse) {}
+  rpc CompleteStream(CompleteStreamRequest) returns (CompleteStreamResponse) {}
+}
+
+

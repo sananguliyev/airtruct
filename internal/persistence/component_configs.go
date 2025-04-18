@@ -26,8 +26,8 @@ func (ct ComponentSection) Validate() error {
 }
 
 type ComponentConfig struct {
-	ID        int              `json:"id" gorm:"primaryKey"`
-	ParentID  *int             `json:"parent_id"`
+	ID        int64            `json:"id" gorm:"primaryKey"`
+	ParentID  *int64           `json:"parent_id"`
 	Name      string           `json:"name"`
 	Section   ComponentSection `json:"section"`
 	Component string           `json:"component"`
@@ -40,7 +40,7 @@ type ComponentConfig struct {
 
 type ComponentConfigRepository interface {
 	AddComponentConfig(component *ComponentConfig) error
-	FindByID(id int) (*ComponentConfig, error)
+	FindByID(id int64) (*ComponentConfig, error)
 	Update(component *ComponentConfig) error
 	ListComponentConfigs() ([]*ComponentConfig, error)
 }
@@ -103,7 +103,7 @@ func (r *componentConfigRepository) Update(component *ComponentConfig) error {
 	return tx.Commit().Error
 }
 
-func (r *componentConfigRepository) FindByID(id int) (*ComponentConfig, error) {
+func (r *componentConfigRepository) FindByID(id int64) (*ComponentConfig, error) {
 	var componentConfig = &ComponentConfig{
 		ID: id,
 	}

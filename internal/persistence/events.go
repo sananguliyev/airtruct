@@ -18,10 +18,10 @@ const (
 )
 
 type Event struct {
-	ID             int             `json:"id" gorm:"primaryKey"`
-	StreamID       int             `json:"stream_id" gorm:"not null"`
-	WorkerStreamID int             `json:"worker_stream_id" gorm:"not null"`
-	ComponentID    int             `json:"component_id"`
+	ID             int64           `json:"id" gorm:"primaryKey"`
+	StreamID       int64           `json:"stream_id" gorm:"not null"`
+	WorkerStreamID int64           `json:"worker_stream_id" gorm:"not null"`
+	ComponentID    int64           `json:"component_id"`
 	ComponentName  string          `json:"component_name"`
 	Type           EventType       `json:"type" gorm:"not null"`
 	Content        string          `json:"content" gorm:"not null"`
