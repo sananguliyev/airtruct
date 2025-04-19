@@ -7,7 +7,7 @@ import (
 
 	"github.com/sananguliyev/airtruct/internal/config"
 	"github.com/sananguliyev/airtruct/internal/persistence"
-	pb "github.com/sananguliyev/airtruct/internal/protorender"
+	pb "github.com/sananguliyev/airtruct/internal/protogen"
 
 	"github.com/rs/zerolog/log"
 	"github.com/warpstreamlabs/bento/public/service"
@@ -16,8 +16,6 @@ import (
 )
 
 const (
-	WorkerStreamUpdateStatusEndpoint = "/workers/stream"
-
 	MaxItemsInStreamQueue = 10
 )
 
@@ -163,7 +161,7 @@ func (e *workerExecutor) DeleteWorkerStream(ctx context.Context, workerStreamID 
 	return nil
 }
 
-func (e *workerExecutor) FetchWorkerStreamStatus(ctx context.Context, workerStreamID int64) (*persistence.WorkerStreamStatus, error) {
+func (e *workerExecutor) FetchWorkerStreamStatus(_ context.Context, workerStreamID int64) (*persistence.WorkerStreamStatus, error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
@@ -174,7 +172,7 @@ func (e *workerExecutor) FetchWorkerStreamStatus(ctx context.Context, workerStre
 	return nil, nil
 }
 
-func (e *workerExecutor) ShipLogs(ctx context.Context) {
+func (e *workerExecutor) ShipLogs(_ context.Context) {
 	// Implement log shipment logic here
 	return
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/sananguliyev/airtruct/internal/api"
 	"github.com/sananguliyev/airtruct/internal/config"
 	"github.com/sananguliyev/airtruct/internal/executor"
-	pb "github.com/sananguliyev/airtruct/internal/protorender"
+	pb "github.com/sananguliyev/airtruct/internal/protogen"
 	"google.golang.org/grpc"
 )
 

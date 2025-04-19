@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/rs/zerolog/log"
-	pb "github.com/sananguliyev/airtruct/internal/protorender"
+	pb "github.com/sananguliyev/airtruct/internal/protogen"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -23,7 +23,7 @@ func NewWorkerAPI(workerExecutor executor.WorkerExecutor) *WorkerAPI {
 	}
 }
 
-func (a *WorkerAPI) AssignStream(ctx context.Context, in *pb.AssignStreamRequest) (*pb.AssignStreamResponse, error) {
+func (a *WorkerAPI) AssignStream(ctx context.Context, in *pb.AssignStreamRequest) (*pb.CommonResponse, error) {
 	log.Debug().
 		Int64("worker_stream_id", in.GetWorkerStreamId()).
 		Str("config", in.GetConfig()).
@@ -35,7 +35,7 @@ func (a *WorkerAPI) AssignStream(ctx context.Context, in *pb.AssignStreamRequest
 		return nil, status.Error(codes.Internal, "Failed to queue stream")
 	}
 
-	return &pb.AssignStreamResponse{Message: "Stream queued for processing"}, nil
+	return &pb.CommonResponse{Message: "Stream queued for processing"}, nil
 }
 
 func (a *WorkerAPI) FetchStream(ctx context.Context, in *pb.FetchStreamRequest) (*pb.FetchStreamResponse, error) {
@@ -55,7 +55,7 @@ func (a *WorkerAPI) FetchStream(ctx context.Context, in *pb.FetchStreamRequest) 
 	}, nil
 }
 
-func (a *WorkerAPI) CompleteStream(ctx context.Context, in *pb.CompleteStreamRequest) (*pb.CompleteStreamResponse, error) {
+func (a *WorkerAPI) CompleteStream(ctx context.Context, in *pb.CompleteStreamRequest) (*pb.CommonResponse, error) {
 	var err error
 
 	log.Debug().
@@ -67,11 +67,11 @@ func (a *WorkerAPI) CompleteStream(ctx context.Context, in *pb.CompleteStreamReq
 		return nil, status.Error(codes.Internal, "Failed to delete stream in worker")
 	}
 
-	return &pb.CompleteStreamResponse{Message: "Worker Stream has been deleted successfully"}, nil
+	return &pb.CommonResponse{Message: "Worker Stream has been deleted successfully"}, nil
 }
 
-func (a *WorkerAPI) HealthCheck(_ context.Context, _ *emptypb.Empty) (*pb.HealthResponse, error) {
-	return &pb.HealthResponse{
+func (a *WorkerAPI) HealthCheck(_ context.Context, _ *emptypb.Empty) (*pb.CommonResponse, error) {
+	return &pb.CommonResponse{
 		Message: "OK",
 	}, nil
 }

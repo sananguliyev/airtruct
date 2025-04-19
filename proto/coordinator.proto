@@ -1,10 +1,14 @@
 syntax = "proto3";
 
 import "common.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
 
 package protorender;
 
-option go_package = "github.com/sananguliyev/airtruct/internal/protorender";
+option go_package = "github.com/sananguliyev/airtruct/internal/protogen";
 
 
 message RegisterWorkerRequest {
@@ -12,16 +16,8 @@ message RegisterWorkerRequest {
   int32 port = 2;
 }
 
-message RegisterWorkerResponse {
-  string message = 1;
-}
-
 message DeregisterWorkerRequest {
   string id = 1;
-}
-
-message DeregisterWorkerResponse {
-  string message = 1;
 }
 
 message WorkerStreamStatusRequest {
@@ -29,14 +25,106 @@ message WorkerStreamStatusRequest {
   WorkerStreamStatus status = 2;
 }
 
-message WorkerStreamStatusResponse {
-  string message = 1;
+message ListComponentConfigsResponse {
+  repeated ComponentConfig data = 1;
+}
+
+message GetComponentConfigRequest {
+  int64 id = 1 [(validate.rules).int64.gt = 0];
+}
+
+message ListWorkersRequest {
+  string status = 1 [
+    (validate.rules).string = {
+      in: ["active", "inactive", "all"]
+    }
+  ];
+}
+
+message ListWorkersResponse {
+  message Worker {
+    string id = 1;
+    string address = 2;
+    string status = 3;
+    google.protobuf.Timestamp last_heartbeat = 4;
+  }
+  repeated Worker data = 1;
+}
+
+message ListStreamsRequest {
+  string status = 1 [
+    (validate.rules).string = {
+      in: ["active", "completed", "paused", "failed", "all"]
+    }
+  ];
+}
+
+message ListStreamsResponse {
+  repeated Stream data = 1;
+}
+
+message GetStreamRequest {
+  int64 id = 1 [(validate.rules).int64.gt = 0];
 }
 
 service Coordinator {
-  rpc RegisterWorker(RegisterWorkerRequest) returns (RegisterWorkerResponse) {}
-  rpc DeregisterWorker(DeregisterWorkerRequest) returns (DeregisterWorkerResponse) {}
-  rpc UpdateWorkerStreamStatus(WorkerStreamStatusRequest) returns (WorkerStreamStatusResponse) {}
+  // Worker stream methods
+  rpc UpdateWorkerStreamStatus(WorkerStreamStatusRequest) returns (CommonResponse) {}
+
+  // Component config methods
+  rpc CreateComponentConfig(ComponentConfig) returns (CommonResponse) {
+    option (google.api.http) = {
+      post: "/v0/component-configs",
+      body: "*"
+    };
+  }
+  rpc UpdateComponentConfig(ComponentConfig) returns (CommonResponse) {
+    option (google.api.http) = {
+      put: "/v0/component-configs/{id}",
+      body: "*"
+    };
+  }
+  rpc GetComponentConfig(GetComponentConfigRequest) returns (ComponentConfig) {
+    option (google.api.http) = {
+      get: "/v0/component-configs/{id}",
+    };
+  }
+  rpc ListComponentConfigs(google.protobuf.Empty) returns (ListComponentConfigsResponse) {
+    option (google.api.http) = {
+      get: "/v0/component-configs",
+    };
+  }
+
+  // Worker methods
+  rpc RegisterWorker(RegisterWorkerRequest) returns (CommonResponse) {}
+  rpc DeregisterWorker(DeregisterWorkerRequest) returns (CommonResponse) {}
+  rpc ListWorkers(ListWorkersRequest) returns (ListWorkersResponse) {
+    option (google.api.http) = {
+      get: "/v0/workers/{status}",
+    };
+  }
+
+  // Stream methods
+  rpc ListStreams(ListStreamsRequest) returns (ListStreamsResponse) {
+    option (google.api.http) = {
+      get: "/v0/streams/{status}",
+    };
+  }
+  rpc GetStream(GetStreamRequest) returns (Stream) {
+    option (google.api.http) = {
+      get: "/v0/streams/{id}",
+    };
+  }
+  rpc CreateStream(Stream) returns (CommonResponse) {
+    option (google.api.http) = {
+      post: "/v0/streams",
+      body: "*"
+    };
+  }
+  rpc UpdateStream(Stream) returns (CommonResponse) {
+    option (google.api.http) = {
+      put: "/v0/streams/{id}",
+      body: "*"
+    };
+  }
 }
-
-

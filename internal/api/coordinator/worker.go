@@ -2,21 +2,20 @@ package coordinator
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net"
-	"net/http"
 
-	"github.com/julienschmidt/httprouter"
-	"github.com/rs/zerolog/log"
 	"github.com/sananguliyev/airtruct/internal/persistence"
-	pb "github.com/sananguliyev/airtruct/internal/protorender"
+	pb "github.com/sananguliyev/airtruct/internal/protogen"
+
+	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func (c *CoordinatorAPI) RegisterWorker(ctx context.Context, in *pb.RegisterWorkerRequest) (*pb.RegisterWorkerResponse, error) {
+func (c *CoordinatorAPI) RegisterWorker(ctx context.Context, in *pb.RegisterWorkerRequest) (*pb.CommonResponse, error) {
 	var workerEntity *persistence.Worker
 	var err error
 
@@ -46,7 +45,7 @@ func (c *CoordinatorAPI) RegisterWorker(ctx context.Context, in *pb.RegisterWork
 	}
 
 	if workerEntity != nil && workerEntity.Status == persistence.WorkerStatusActive {
-		return &pb.RegisterWorkerResponse{
+		return &pb.CommonResponse{
 			Message: "Worker has already been registered",
 		}, nil
 	}
@@ -69,37 +68,51 @@ func (c *CoordinatorAPI) RegisterWorker(ctx context.Context, in *pb.RegisterWork
 
 	log.Info().Str("worker_id", workerEntity.ID).Str("address", workerEntity.Address).Msg("Worker registered")
 
-	return &pb.RegisterWorkerResponse{
+	return &pb.CommonResponse{
 		Message: "Worker registered successfully",
 	}, nil
 }
 
-func (c *CoordinatorAPI) DeregisterWorker(ctx context.Context, in *pb.DeregisterWorkerRequest) (*pb.DeregisterWorkerResponse, error) {
+func (c *CoordinatorAPI) DeregisterWorker(_ context.Context, in *pb.DeregisterWorkerRequest) (*pb.CommonResponse, error) {
 	err := c.workerRepo.Deactivate(in.GetId())
 	if err != nil {
 		log.Error().Err(err).Str("worker_id", in.GetId()).Msg("Failed to deregister")
 		return nil, status.Error(codes.Internal, "failed to deregister worker")
 	}
 
-	return &pb.DeregisterWorkerResponse{Message: "Worker deregistered successfully"}, nil
+	return &pb.CommonResponse{Message: "Worker deregistered successfully"}, nil
 }
 
-func (c *CoordinatorAPI) ListWorkers(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (c *CoordinatorAPI) ListWorkers(_ context.Context, in *pb.ListWorkersRequest) (*pb.ListWorkersResponse, error) {
+	if err := in.Validate(); err != nil {
+		log.Debug().Err(err).Msg("Invalid request")
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
 	workerStatuses := []persistence.WorkerStatus{persistence.WorkerStatusActive, persistence.WorkerStatusInactive}
 
-	if ps.ByName("workerStatuses") != "all" {
-		workerStatuses = []persistence.WorkerStatus{persistence.WorkerStatus(ps.ByName("name"))}
+	if in.GetStatus() != "all" {
+		workerStatuses = []persistence.WorkerStatus{persistence.WorkerStatus(in.GetStatus())}
 	}
 
 	workers, err := c.workerRepo.FindAllByStatuses(workerStatuses...)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		log.Error().Err(err).Msg("Failed to list workers")
+		return nil, status.Error(codes.Internal, "failed to list workers")
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(workers); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	result := &pb.ListWorkersResponse{
+		Data: make([]*pb.ListWorkersResponse_Worker, 0, len(workers)),
 	}
+
+	for _, worker := range workers {
+		result.Data = append(result.Data, &pb.ListWorkersResponse_Worker{
+			Id:            worker.ID,
+			Address:       worker.Address,
+			LastHeartbeat: timestamppb.New(worker.LastHeartbeat),
+			Status:        string(worker.Status),
+		})
+	}
+
+	return result, nil
 }

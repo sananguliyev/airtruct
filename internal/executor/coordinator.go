@@ -12,7 +12,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/sananguliyev/airtruct/internal/persistence"
-	pb "github.com/sananguliyev/airtruct/internal/protorender"
+	pb "github.com/sananguliyev/airtruct/internal/protogen"
 	"github.com/sananguliyev/airtruct/internal/utils"
 )
 

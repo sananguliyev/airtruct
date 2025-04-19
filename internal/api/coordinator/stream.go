@@ -1,164 +1,119 @@
 package coordinator
 
 import (
-	"encoding/json"
-	"net/http"
-	"strconv"
+	"context"
 
 	"github.com/rs/zerolog/log"
+	pb "github.com/sananguliyev/airtruct/internal/protogen"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/sananguliyev/airtruct/internal/persistence"
 )
 
-func (c *CoordinatorAPI) CreateStream(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	var err error
-
-	var body struct {
-		Name       string `json:"name"`
-		InputID    int64  `json:"input_id"`
-		InputLabel string `json:"input_label"`
-		Processors []struct {
-			Label       string `json:"label"`
-			ProcessorID int64  `json:"processor_id"`
-		} `json:"processors"`
-		OutputID    int64  `json:"output_id"`
-		OutputLabel string `json:"output_label"`
-	}
-	if err = json.NewDecoder(r.Body).Decode(&body); err != nil {
-		log.Error().Err(err).Msg("Failed to decode request body")
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
+func (c *CoordinatorAPI) CreateStream(_ context.Context, in *pb.Stream) (*pb.CommonResponse, error) {
+	if err := in.Validate(); err != nil {
+		log.Debug().Err(err).Msg("Invalid request")
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	stream := &persistence.Stream{
-		Name:        body.Name,
-		InputID:     body.InputID,
-		InputLabel:  body.InputLabel,
-		Processors:  make([]persistence.StreamProcessor, len(body.Processors)),
-		OutputID:    body.OutputID,
-		OutputLabel: body.OutputLabel,
-		Status:      persistence.StreamStatusActive,
+		Processors: make([]persistence.StreamProcessor, len(in.Processors)),
 	}
+	stream.FromProto(in)
 
-	for i, processor := range body.Processors {
+	for i, processor := range in.Processors {
 		stream.Processors[i] = persistence.StreamProcessor{
-			Label:       processor.Label,
-			ProcessorID: processor.ProcessorID,
+			Label:       processor.GetLabel(),
+			ProcessorID: processor.GetProcessorId(),
 		}
 	}
-
-	if err = c.streamRepo.Create(stream); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	if err := c.streamRepo.Create(stream); err != nil {
+		log.Error().Err(err).Msg("Failed to create stream")
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]string{"message": "Stream has been created successfully"})
+	return &pb.CommonResponse{Message: "Stream has been created successfully"}, nil
 }
 
-func (c *CoordinatorAPI) GetStream(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	id, err := strconv.ParseInt(ps.ByName("id"), 10, 64)
-	if err != nil {
-		http.Error(w, "Invalid stream ID", http.StatusBadRequest)
-		return
+func (c *CoordinatorAPI) GetStream(_ context.Context, in *pb.GetStreamRequest) (*pb.Stream, error) {
+	if err := in.Validate(); err != nil {
+		log.Debug().Err(err).Msg("Invalid request")
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
-	stream, err := c.streamRepo.FindByID(id)
+
+	stream, err := c.streamRepo.FindByID(in.GetId())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		log.Error().Err(err).Msg("Failed to find stream")
+		return nil, status.Error(codes.Internal, err.Error())
 	} else if stream == nil {
-		http.Error(w, "Stream not found", http.StatusNotFound)
-		return
+		return nil, status.Error(codes.NotFound, "Stream not found")
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(stream); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	return stream.ToProto(), nil
 }
 
-func (c *CoordinatorAPI) ListStreams(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	streams, err := c.streamRepo.ListAllByStatuses(
+func (c *CoordinatorAPI) ListStreams(_ context.Context, in *pb.ListStreamsRequest) (*pb.ListStreamsResponse, error) {
+	streamStatuses := []persistence.StreamStatus{
 		persistence.StreamStatusActive,
 		persistence.StreamStatusCompleted,
 		persistence.StreamStatusFailed,
 		persistence.StreamStatusPaused,
-	)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(streams); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	if in.GetStatus() != "all" {
+		streamStatuses = []persistence.StreamStatus{persistence.StreamStatus(in.GetStatus())}
 	}
+
+	streams, err := c.streamRepo.ListAllByStatuses(streamStatuses...)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to list streams")
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	result := &pb.ListStreamsResponse{}
+	for _, stream := range streams {
+		result.Data = append(result.Data, stream.ToProto())
+	}
+
+	return result, nil
 }
 
-func (c *CoordinatorAPI) UpdateStream(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	var err error
+func (c *CoordinatorAPI) UpdateStream(_ context.Context, in *pb.Stream) (*pb.CommonResponse, error) {
+	if err := in.Validate(); err != nil {
+		log.Debug().Err(err).Msg("Invalid request")
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
 
-	id, err := strconv.ParseInt(ps.ByName("id"), 10, 64)
+	if in.GetId() == 0 {
+		log.Debug().Msg("Invalid request: ID is required")
+		return nil, status.Error(codes.InvalidArgument, "ID is required")
+	}
+
+	stream, err := c.streamRepo.FindByID(in.GetId())
 	if err != nil {
-		http.Error(w, "Invalid stream ID", http.StatusBadRequest)
-		return
-	}
-
-	var body struct {
-		Name       string `json:"name"`
-		InputID    int64  `json:"input_id"`
-		InputLabel string `json:"input_label"`
-		Processors []struct {
-			Label       string `json:"label"`
-			ProcessorID int64  `json:"processor_id"`
-		} `json:"processors"`
-		OutputID    int64  `json:"output_id"`
-		OutputLabel string `json:"output_label"`
-		Status      string `json:"status"`
-	}
-	if err = json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
-
-	stream, err := c.streamRepo.FindByID(id)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		log.Error().Err(err).Msg("Failed to find stream")
+		return nil, status.Error(codes.Internal, err.Error())
 	} else if stream == nil {
-		http.Error(w, "Stream not found", http.StatusNotFound)
-		return
+		return nil, status.Error(codes.NotFound, "Stream not found")
 	}
 
 	newStream := &persistence.Stream{
-		ID:          id,
-		ParentID:    stream.ParentID,
-		Name:        body.Name,
-		InputID:     body.InputID,
-		InputLabel:  body.InputLabel,
-		Processors:  make([]persistence.StreamProcessor, len(body.Processors)),
-		OutputID:    body.OutputID,
-		OutputLabel: body.OutputLabel,
-		Status:      persistence.StreamStatus(body.Status),
+		Processors: make([]persistence.StreamProcessor, len(in.Processors)),
 	}
+	newStream.FromProto(in)
 
-	for i, processor := range body.Processors {
+	for i, processor := range in.Processors {
 		newStream.Processors[i] = persistence.StreamProcessor{
-			Label:       processor.Label,
-			ProcessorID: processor.ProcessorID,
+			Label:       processor.GetLabel(),
+			ProcessorID: processor.GetProcessorId(),
 		}
 	}
 
 	if err = c.streamRepo.Update(newStream); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		log.Error().Err(err).Msg("Failed to update stream")
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]string{"message": "Stream has been updated successfully"})
+	return &pb.CommonResponse{Message: "Stream has been updated successfully"}, nil
 }

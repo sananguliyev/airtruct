@@ -4,6 +4,8 @@ import (
 	"errors"
 	"time"
 
+	pb "github.com/sananguliyev/airtruct/internal/protogen"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
 )
 
@@ -33,6 +35,43 @@ type Stream struct {
 	Input        ComponentConfig   `json:"input" gorm:"foreignKey:InputID"`
 	Output       ComponentConfig   `json:"output" gorm:"foreignKey:OutputID"`
 	Processors   []StreamProcessor `json:"processors" gorm:"foreignKey:StreamID;references:ID"`
+}
+
+func (s *Stream) ToProto() *pb.Stream {
+	var updatedAt *timestamppb.Timestamp
+	if s.UpdatedAt != nil {
+		updatedAt = timestamppb.New(*s.UpdatedAt)
+	}
+
+	return &pb.Stream{
+		Id:          s.ID,
+		ParentId:    s.ParentID,
+		Name:        s.Name,
+		InputLabel:  s.InputLabel,
+		InputId:     s.InputID,
+		OutputLabel: s.OutputLabel,
+		OutputId:    s.OutputID,
+		IsCurrent:   s.IsCurrent,
+		Status:      string(s.Status),
+		CreatedAt:   timestamppb.New(s.CreatedAt),
+		UpdatedAt:   updatedAt,
+	}
+}
+
+func (s *Stream) FromProto(p *pb.Stream) {
+	updatedAt := p.GetUpdatedAt().AsTime()
+
+	s.ID = p.Id
+	s.ParentID = p.ParentId
+	s.Name = p.Name
+	s.InputLabel = p.InputLabel
+	s.InputID = p.InputId
+	s.OutputLabel = p.OutputLabel
+	s.OutputID = p.OutputId
+	s.IsCurrent = p.GetIsCurrent()
+	s.Status = StreamStatus(p.GetStatus())
+	s.CreatedAt = p.CreatedAt.AsTime()
+	s.UpdatedAt = &updatedAt
 }
 
 type StreamRepository interface {

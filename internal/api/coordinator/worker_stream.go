@@ -8,10 +8,10 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/sananguliyev/airtruct/internal/persistence"
-	pb "github.com/sananguliyev/airtruct/internal/protorender"
+	pb "github.com/sananguliyev/airtruct/internal/protogen"
 )
 
-func (c *CoordinatorAPI) UpdateWorkerStreamStatus(_ context.Context, in *pb.WorkerStreamStatusRequest) (*pb.WorkerStreamStatusResponse, error) {
+func (c *CoordinatorAPI) UpdateWorkerStreamStatus(_ context.Context, in *pb.WorkerStreamStatusRequest) (*pb.CommonResponse, error) {
 	var err error
 
 	workerStream, err := c.workerStreamRepo.FindByID(in.GetWorkerStreamId())
@@ -35,7 +35,7 @@ func (c *CoordinatorAPI) UpdateWorkerStreamStatus(_ context.Context, in *pb.Work
 		}
 	}
 
-	return &pb.WorkerStreamStatusResponse{
+	return &pb.CommonResponse{
 		Message: "Worker Stream status has been updated successfully",
 	}, nil
 }
