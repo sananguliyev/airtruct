@@ -1,4 +1,4 @@
-import { Database, FileOutput } from "lucide-react";
+import { GitCompare, Database, FileOutput } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Job } from "./types";
 
@@ -17,6 +17,27 @@ export const RecentJob = () => {
       source: "MongoDB",
       status: "Completed",
       records: "56K",
+    },
+    {
+      icon: <GitCompare className="h-4 w-4" />,
+      name: "Order History",
+      source: "PostgreSQL",
+      status: "Completed",
+      records: "89K",
+    },
+    {
+      icon: <Database className="h-4 w-4" />,
+      name: "User Analytics",
+      source: "Kafka",
+      status: "Completed",
+      records: "230K",
+    },
+    {
+      icon: <FileOutput className="h-4 w-4" />,
+      name: "Inventory Sync",
+      source: "REST API",
+      status: "Completed",
+      records: "45K",
     },
   ];
 
