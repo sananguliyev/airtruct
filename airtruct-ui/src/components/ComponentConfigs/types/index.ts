@@ -28,3 +28,21 @@ export interface ComponentConfig {
     handleSectionChange: (value: string) => void;
     handleComponentChange: (value: string) => void;
   }
+
+  // src/types/componentSchemas.ts
+export interface ComponentSchemaField {
+  type: string;
+  title: string;
+  description: string;
+  default?: any;
+}
+
+export interface ComponentSchema {
+  [key: string]: ComponentSchemaField;
+}
+
+export interface ComponentSchemas {
+  [section: string]: {
+    [component: string]: ComponentSchema;
+  };
+}

@@ -38,7 +38,7 @@ const EditPage = () => {
 
   useEffect(() => {
     const fetchComponentConfig = async () => {
-      let data: { config: any; section: string; component: string; name: string; created_at: string };
+      let data: any;
       try {
         setIsLoading(true);
         const response = await fetch(`http://localhost:8080/component-configs/${id}`);
