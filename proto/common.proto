@@ -1,0 +1,107 @@
+syntax = "proto3";
+
+import "google/protobuf/descriptor.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
+
+import "validate/validate.proto";
+
+package protorender;
+
+option go_package = "github.com/sananguliyev/airtruct/internal/protogen";
+
+extend google.protobuf.EnumValueOptions {
+  string string_value = 51234;
+}
+
+enum WorkerStreamStatus {
+  waiting = 0 [(string_value) = "waiting"];
+  running = 1 [(string_value) = "running"];
+  stopped = 2 [(string_value) = "stopped"];
+  completed = 3 [(string_value) = "completed"];
+  failed = 4 [(string_value) = "failed"];
+}
+
+message CommonResponse {
+  string message = 1;
+}
+
+message ComponentConfig {
+  int64 id = 1 [json_name = "id"];
+  optional int64 parent_id = 2 [ json_name = "parent_id" ];
+  string name = 3 [
+    json_name = "name",
+    (validate.rules).string = {
+      min_len: 1,
+      max_len: 100
+    }
+  ];
+  string section = 4 [
+    json_name = "section",
+    (validate.rules).string = {in: ["input", "pipeline", "output"]}
+  ];
+  string component = 5 [
+    json_name = "component",
+    (validate.rules).string = {
+      min_len: 1,
+      max_len: 50
+    }
+  ];
+  google.protobuf.Struct config = 6 [json_name = "config"];
+  bool is_current = 7 [ json_name = "is_current" ];
+  google.protobuf.Timestamp created_at = 8 [ json_name = "created_at" ];
+}
+
+message Stream {
+  message Processor {
+    string label = 1 [
+      json_name = "label",
+      (validate.rules).string = {
+        min_len: 1,
+        max_len: 100,
+        pattern: "^[a-zA-Z0-9 _-]+$"
+      }
+    ];
+    int64 processor_id = 2 [json_name = "processor_id", (validate.rules).int64.gt = 0];
+  }
+
+  int64 id = 1 [json_name = "id"];
+  optional int64 parent_id = 2 [ json_name = "parent_id" ];
+  string name = 3 [
+    json_name = "name",
+    (validate.rules).string = {
+      min_len: 1,
+      max_len: 100
+    }
+  ];
+  string input_label = 4 [
+    json_name = "input_label",
+    (validate.rules).string = {
+      min_len: 1,
+      max_len: 100,
+      pattern: "^[a-zA-Z0-9 _-]+$"
+    }
+  ];
+  int64 input_id = 5 [json_name = "input_id", (validate.rules).int64.gt = 0];
+  string output_label = 6 [
+    json_name = "output_label",
+    (validate.rules).string = {
+      min_len: 1,
+      max_len: 100,
+      pattern: "^[a-zA-Z0-9 _-]+$"
+    }
+  ];
+  int64 output_id = 7 [json_name = "output_id", (validate.rules).int64.gt = 0];
+  bool is_current = 8 [ json_name = "is_current" ];
+  string status = 9 [
+    (validate.rules).string = {
+      in: ["active", "completed", "paused", "failed"]
+    }
+  ];
+  google.protobuf.Timestamp created_at = 10 [ json_name = "created_at" ];
+  optional google.protobuf.Timestamp updated_at = 11 [ json_name = "updated_at" ];
+
+  repeated Processor processors = 12 [
+    json_name = "processors"
+  ];
+}

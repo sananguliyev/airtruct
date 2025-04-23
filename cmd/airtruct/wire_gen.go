@@ -22,14 +22,15 @@ import (
 // Injectors from wire.go:
 
 func InitializeCoordinatorCommand() *cli.CoordinatorCLI {
+	nodeConfig := config.NewNodeConfig()
 	databaseConfig := config.NewDatabaseConfig()
 	db := persistence.NewGormDB(databaseConfig)
-	workerRepository := persistence.NewWorkerRepository(db)
-	componentRepository := persistence.NewComponentRepository(db)
+	componentConfigRepository := persistence.NewComponentRepository(db)
+	eventRepository := persistence.NewEventRepository(db)
 	streamRepository := persistence.NewStreamRepository(db)
+	workerRepository := persistence.NewWorkerRepository(db)
 	workerStreamRepository := persistence.NewWorkerStreamRepository(db)
-	nodeConfig := config.NewNodeConfig()
-	coordinatorAPI := coordinator.NewCoordinatorAPI(workerRepository, componentRepository, streamRepository, workerStreamRepository, nodeConfig)
+	coordinatorAPI := coordinator.NewCoordinatorAPI(nodeConfig, componentConfigRepository, eventRepository, streamRepository, workerRepository, workerStreamRepository)
 	coordinatorExecutor := executor.NewCoordinatorExecutor(workerRepository, streamRepository, workerStreamRepository)
 	coordinatorCLI := cli.NewCoordinatorCLI(coordinatorAPI, coordinatorExecutor, nodeConfig)
 	return coordinatorCLI

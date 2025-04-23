@@ -1,9 +1,13 @@
 package persistence
 
 import (
+	"encoding/json"
 	"errors"
 	"time"
 
+	pb "github.com/sananguliyev/airtruct/internal/protogen"
+	"google.golang.org/protobuf/types/known/structpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -26,8 +30,8 @@ func (ct ComponentSection) Validate() error {
 }
 
 type ComponentConfig struct {
-	ID        int              `json:"id" gorm:"primaryKey"`
-	ParentID  *int             `json:"parent_id"`
+	ID        int64            `json:"id" gorm:"primaryKey"`
+	ParentID  *int64           `json:"parent_id"`
 	Name      string           `json:"name"`
 	Section   ComponentSection `json:"section"`
 	Component string           `json:"component"`
@@ -38,9 +42,53 @@ type ComponentConfig struct {
 	ParentComponentConfig *ComponentConfig `json:"parent_component_config" gorm:"foreignKey:ParentID"`
 }
 
+func (c *ComponentConfig) ToProto() (*pb.ComponentConfig, error) {
+	var config *structpb.Struct
+	if c.Config != nil {
+		var configMap map[string]interface{}
+		if err := json.Unmarshal(c.Config, &configMap); err != nil {
+			return nil, err
+		}
+		config, _ = structpb.NewStruct(configMap)
+	}
+
+	return &pb.ComponentConfig{
+		Id:        c.ID,
+		ParentId:  c.ParentID,
+		Name:      c.Name,
+		Section:   string(c.Section),
+		Component: c.Component,
+		Config:    config,
+		IsCurrent: c.IsCurrent,
+		CreatedAt: timestamppb.New(c.CreatedAt),
+	}, nil
+}
+
+func (c *ComponentConfig) FromProto(p *pb.ComponentConfig) error {
+	var configJSON datatypes.JSON
+	if p.Config != nil {
+		configBytes, err := json.Marshal(p.Config.AsMap())
+		if err != nil {
+			return err
+		}
+		configJSON = configBytes
+	}
+
+	c.ID = p.Id
+	c.ParentID = p.ParentId
+	c.Name = p.Name
+	c.Section = ComponentSection(p.Section)
+	c.Component = p.Component
+	c.Config = configJSON
+	c.IsCurrent = p.IsCurrent
+	c.CreatedAt = p.CreatedAt.AsTime()
+
+	return nil
+}
+
 type ComponentConfigRepository interface {
 	AddComponentConfig(component *ComponentConfig) error
-	FindByID(id int) (*ComponentConfig, error)
+	FindByID(id int64) (*ComponentConfig, error)
 	Update(component *ComponentConfig) error
 	ListComponentConfigs() ([]*ComponentConfig, error)
 }
@@ -103,7 +151,7 @@ func (r *componentConfigRepository) Update(component *ComponentConfig) error {
 	return tx.Commit().Error
 }
 
-func (r *componentConfigRepository) FindByID(id int) (*ComponentConfig, error) {
+func (r *componentConfigRepository) FindByID(id int64) (*ComponentConfig, error) {
 	var componentConfig = &ComponentConfig{
 		ID: id,
 	}

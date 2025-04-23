@@ -1,40 +1,31 @@
 package executor
 
 import (
-	"bytes"
 	"container/heap"
+	"context"
 	"encoding/json"
-	"errors"
-	"fmt"
-	"net"
-	"net/http"
-
-	"gopkg.in/yaml.v3"
 
 	"github.com/rs/zerolog/log"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/types/known/emptypb"
+	"gopkg.in/yaml.v3"
 
 	"github.com/sananguliyev/airtruct/internal/persistence"
+	pb "github.com/sananguliyev/airtruct/internal/protogen"
 	"github.com/sananguliyev/airtruct/internal/utils"
 )
 
-const (
-	WorkerHealthAssignStream           = "/assign-stream"
-	WorkerHealthCheckEndpoint          = "/healthz"
-	WorkerStreamCheckAndDeleteEndpoint = "/streams/%s" // %s is stream id
-
-	StreamApiPortInWorker = 4195
-)
-
 type CoordinatorExecutor interface {
-	CheckWorkersAndAssignStreams() error
-	CheckWorkerStreams() error
+	CheckWorkersAndAssignStreams(context.Context) error
+	CheckWorkerStreams(context.Context) error
 }
 
 type coordinatorExecutor struct {
 	workerRepo       persistence.WorkerRepository
 	streamRepo       persistence.StreamRepository
 	workerStreamRepo persistence.WorkerStreamRepository
-	httpClient       *http.Client
+	workerClients    map[string]pb.WorkerClient
 }
 
 func NewCoordinatorExecutor(
@@ -42,10 +33,15 @@ func NewCoordinatorExecutor(
 	streamRepo persistence.StreamRepository,
 	workerStreamRepo persistence.WorkerStreamRepository,
 ) CoordinatorExecutor {
-	return &coordinatorExecutor{workerRepo, streamRepo, workerStreamRepo, &http.Client{}}
+	return &coordinatorExecutor{
+		workerRepo:       workerRepo,
+		streamRepo:       streamRepo,
+		workerStreamRepo: workerStreamRepo,
+		workerClients:    make(map[string]pb.WorkerClient),
+	}
 }
 
-func (e *coordinatorExecutor) CheckWorkersAndAssignStreams() error {
+func (e *coordinatorExecutor) CheckWorkersAndAssignStreams(ctx context.Context) error {
 	var err error
 
 	workerHeap := &utils.WorkerHeap{}
@@ -57,17 +53,15 @@ func (e *coordinatorExecutor) CheckWorkersAndAssignStreams() error {
 	}
 
 	for _, worker := range workers {
-		resp, err := e.httpClient.Get(fmt.Sprintf("http://%s%s", worker.Address, WorkerHealthCheckEndpoint))
+		workerGRPCClient, err := e.getWorkerClient(&worker)
 		if err != nil {
-			log.Error().Err(err).Str("worker_id", worker.ID).Msg("Failed to perform health check")
-
+			log.Error().Err(err).Str("worker_id", worker.ID).Msg("Failed to create grpc connection to worker")
 			e.deactivateWorker(worker.ID)
 			continue
 		}
 
-		_ = resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
+		if _, err = workerGRPCClient.HealthCheck(ctx, &emptypb.Empty{}); err != nil {
+			log.Error().Err(err).Str("worker_id", worker.ID).Msg("Failed to perform health check")
 			e.deactivateWorker(worker.ID)
 			continue
 		}
@@ -90,17 +84,17 @@ func (e *coordinatorExecutor) CheckWorkersAndAssignStreams() error {
 
 	for _, stream := range streams {
 		worker := heap.Pop(workerHeap).(persistence.Worker)
-		err = e.assignJob(worker, stream)
+		err = e.assignJob(ctx, worker, stream)
 		if err != nil {
 			log.Error().
 				Err(err).
 				Str("worker_id", worker.ID).
-				Int("stream_id", stream.ID).
+				Int64("stream_id", stream.ID).
 				Msg("Failed to assign job")
 		} else {
 			log.Debug().
 				Str("worker_id", worker.ID).
-				Int("stream_id", stream.ID).
+				Int64("stream_id", stream.ID).
 				Msg("Assigned job to worker")
 			worker.RunningStreamCount++
 		}
@@ -110,71 +104,48 @@ func (e *coordinatorExecutor) CheckWorkersAndAssignStreams() error {
 	return nil
 }
 
-func (e *coordinatorExecutor) CheckWorkerStreams() error {
-
-	checkStream := func(address, endpoint string, workerStream *persistence.WorkerStream) {
-		resp, err := e.httpClient.Get(fmt.Sprintf("http://%s%s", address, endpoint))
+func (e *coordinatorExecutor) CheckWorkerStreams(ctx context.Context) error {
+	checkStream := func(workerClient pb.WorkerClient, workerStream *persistence.WorkerStream) {
+		resp, err := workerClient.FetchStream(ctx, &pb.FetchStreamRequest{WorkerStreamId: workerStream.ID})
 		if err != nil {
 			log.Error().
 				Err(err).
 				Str("process", "check").
 				Str("worker_id", workerStream.Worker.ID).
-				Int("worker_stream_id", workerStream.ID).
-				Int("stream_id", workerStream.StreamID).
-				Msg("failed to perform health check")
-			return
-		}
+				Int64("worker_stream_id", workerStream.ID).
+				Int64("stream_id", workerStream.StreamID).
+				Msg("failed to perform stream check")
 
-		if resp.StatusCode == http.StatusNotFound {
 			if err := e.workerStreamRepo.UpdateStatus(workerStream.ID, persistence.WorkerStreamStatusStopped); err != nil {
 				log.Error().
 					Err(err).
 					Str("process", "check").
 					Str("worker_id", workerStream.Worker.ID).
-					Int("worker_stream_id", workerStream.ID).
-					Int("stream_id", workerStream.StreamID).
+					Int64("worker_stream_id", workerStream.ID).
+					Int64("stream_id", workerStream.StreamID).
 					Msg("Failed to update worker stream status")
 			}
 			return
-		} else if resp.StatusCode != http.StatusOK {
-			log.Error().
-				Str("process", "check").
-				Str("worker_id", workerStream.Worker.ID).
-				Int("worker_stream_id", workerStream.ID).
-				Int("stream_id", workerStream.StreamID).
-				Int("worker_stream_check_status_code", resp.StatusCode).
-				Msg("Worker stream check failed")
-			return
 		}
 
-		streamStatus := make(map[string]any)
-		if err := json.NewDecoder(resp.Body).Decode(&streamStatus); err != nil {
-			log.Error().
-				Err(err).
-				Str("process", "check").
-				Str("worker_id", workerStream.Worker.ID).
-				Int("worker_stream_id", workerStream.ID).
-				Int("stream_id", workerStream.StreamID).
-				Msg("Failed to decode stream status")
-			return
-		}
+		log.Info().Str("status", resp.Status.String()).Msg("Worker stream checked")
 
-		if streamStatus["active"] == false {
-			if err := e.streamRepo.UpdateStatus(workerStream.StreamID, persistence.StreamStatusFinished); err != nil {
+		if resp.Status.String() == string(persistence.WorkerStreamStatusCompleted) {
+			if err := e.streamRepo.UpdateStatus(workerStream.StreamID, persistence.StreamStatusCompleted); err != nil {
 				log.Error().
 					Err(err).
 					Str("process", "check").
 					Str("worker_id", workerStream.Worker.ID).
-					Int("worker_stream_id", workerStream.ID).
-					Int("stream_id", workerStream.StreamID).
+					Int64("worker_stream_id", workerStream.ID).
+					Int64("stream_id", workerStream.StreamID).
 					Msg("Failed to stop worker stream")
 				return
 			}
 
-			if err := e.workerStreamRepo.UpdateStatus(workerStream.ID, persistence.WorkerStreamStatusFinished); err != nil {
+			if err := e.workerStreamRepo.UpdateStatus(workerStream.ID, persistence.WorkerStreamStatusCompleted); err != nil {
 				log.Error().
 					Str("process", "check").
-					Err(err).Int("worker_stream_id", workerStream.ID).
+					Err(err).Int64("worker_stream_id", workerStream.ID).
 					Msg("Failed to stop worker stream")
 				return
 			}
@@ -182,64 +153,62 @@ func (e *coordinatorExecutor) CheckWorkerStreams() error {
 			log.Info().
 				Str("process", "check").
 				Str("worker_id", workerStream.Worker.ID).
-				Int("worker_stream_id", workerStream.ID).
-				Int("stream_id", workerStream.StreamID).
-				Msg("Worker stream has been finished job")
+				Int64("worker_stream_id", workerStream.ID).
+				Int64("stream_id", workerStream.StreamID).
+				Msg("Worker stream has been completed job")
+		} else if resp.Status.String() == string(persistence.WorkerStreamStatusFailed) {
+			if err := e.streamRepo.UpdateStatus(workerStream.StreamID, persistence.StreamStatusFailed); err != nil {
+				log.Error().
+					Err(err).
+					Str("process", "check").
+					Str("worker_id", workerStream.Worker.ID).
+					Int64("worker_stream_id", workerStream.ID).
+					Int64("stream_id", workerStream.StreamID).
+					Msg("Failed to stop worker stream")
+				return
+			}
+			if err := e.workerStreamRepo.UpdateStatus(workerStream.ID, persistence.WorkerStreamStatusFailed); err != nil {
+				log.Error().
+					Err(err).
+					Str("process", "check").
+					Str("worker_id", workerStream.Worker.ID).
+					Int64("worker_stream_id", workerStream.ID).
+					Int64("stream_id", workerStream.StreamID).
+					Msg("Failed to stop worker stream")
+				return
+			}
 		} else {
 			log.Debug().
 				Str("process", "check").
 				Str("worker_id", workerStream.Worker.ID).
-				Int("worker_stream_id", workerStream.ID).
-				Int("stream_id", workerStream.StreamID).
+				Int64("worker_stream_id", workerStream.ID).
+				Int64("stream_id", workerStream.StreamID).
 				Msg("Worker stream is still running")
 		}
 	}
 
-	deleteStream := func(address, endpoint string, workerStream *persistence.WorkerStream) {
-		req, err := http.NewRequest("DELETE", fmt.Sprintf("http://%s%s", address, endpoint), nil)
-		if err != nil {
-			log.Error().
-				Err(err).
-				Str("process", "delete").
-				Str("worker_id", workerStream.Worker.ID).
-				Int("worker_stream_id", workerStream.ID).
-				Int("stream_id", workerStream.StreamID).
-				Msg("failed to create request")
-			return
-		}
+	completeStream := func(workerClient pb.WorkerClient, workerStream *persistence.WorkerStream) {
 
-		resp, err := e.httpClient.Do(req)
+		resp, err := workerClient.CompleteStream(ctx, &pb.CompleteStreamRequest{WorkerStreamId: workerStream.ID})
 		if err != nil {
-			log.Error().
-				Err(err).
-				Str("worker_id", workerStream.Worker.ID).
-				Int("worker_stream_id", workerStream.ID).
-				Int("stream_id", workerStream.StreamID).
-				Msg("delete request has been failed")
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode == http.StatusNotFound {
-			if err := e.workerStreamRepo.UpdateStatus(workerStream.ID, persistence.WorkerStreamStatusStopped); err != nil {
+			if err := e.workerStreamRepo.UpdateStatus(workerStream.ID, persistence.WorkerStreamStatusCompleted); err != nil {
 				log.Error().
 					Err(err).
 					Str("process", "delete").
 					Str("worker_id", workerStream.Worker.ID).
-					Int("worker_stream_id", workerStream.ID).
-					Int("stream_id", workerStream.StreamID).
+					Int64("worker_stream_id", workerStream.ID).
+					Int64("stream_id", workerStream.StreamID).
 					Msg("Failed to update worker stream status")
 			}
 			return
-		} else if resp.StatusCode != http.StatusOK {
-			log.Error().
-				Str("process", "delete").
-				Str("worker_id", workerStream.Worker.ID).
-				Int("worker_stream_id", workerStream.ID).
-				Int("worker_stream_check_status_code", resp.StatusCode).
-				Msg("Worker stream check failed")
-			return
 		}
 
+		log.Info().
+			Str("process", "delete").
+			Str("worker_id", workerStream.Worker.ID).
+			Int64("worker_stream_id", workerStream.ID).
+			Str("worker_stream_complete_response", resp.Message).
+			Msg("Worker stream has been completed")
 	}
 
 	workerStreams, err := e.workerStreamRepo.ListAllByStatuses(persistence.WorkerStreamStatusRunning, persistence.WorkerStreamStatusWaiting)
@@ -250,19 +219,23 @@ func (e *coordinatorExecutor) CheckWorkerStreams() error {
 	log.Debug().Int("running_worker_stream_count", len(workerStreams)).Msg("Checking worker streams")
 
 	for _, workerStream := range workerStreams {
-		host, _, err := net.SplitHostPort(workerStream.Worker.Address)
+		workerGRPCClient, err := e.getWorkerClient(&workerStream.Worker)
 		if err != nil {
-			log.Error().Err(err).Str("worker_id", workerStream.Worker.ID).Msg("Failed to split worker address to host and port")
-			continue
+			log.Error().Err(err).Int64("worker_stream_id", workerStream.ID).Msg("Failed to get worker grpc client")
+			if err := e.workerStreamRepo.UpdateStatus(workerStream.ID, persistence.WorkerStreamStatusStopped); err != nil {
+				log.Error().
+					Err(err).
+					Str("worker_id", workerStream.Worker.ID).
+					Int64("worker_stream_id", workerStream.ID).
+					Int64("stream_id", workerStream.StreamID).
+					Msg("Failed to make GRPC connection to worker")
+			}
 		}
 
-		address := net.JoinHostPort(host, fmt.Sprintf("%d", StreamApiPortInWorker))
-		endpoint := fmt.Sprintf(WorkerStreamCheckAndDeleteEndpoint, fmt.Sprintf("worker_stream_%d", workerStream.ID))
-
 		if workerStream.Stream.IsCurrent {
-			checkStream(address, endpoint, &workerStream)
+			checkStream(workerGRPCClient, &workerStream)
 		} else {
-			deleteStream(address, endpoint, &workerStream)
+			completeStream(workerGRPCClient, &workerStream)
 		}
 
 	}
@@ -270,19 +243,26 @@ func (e *coordinatorExecutor) CheckWorkerStreams() error {
 	return nil
 }
 
-func (e *coordinatorExecutor) assignJob(worker persistence.Worker, stream persistence.Stream) error {
+func (e *coordinatorExecutor) assignJob(ctx context.Context, worker persistence.Worker, stream persistence.Stream) error {
+	workerClient, err := e.getWorkerClient(&worker)
+	if err != nil {
+		log.Error().Err(err).Str("worker_id", worker.ID).Msg("Failed to get worker grpc client")
+		return err
+	}
+
 	configMap := make(map[string]any)
 
 	input := make(map[string]any)
 	if err := json.Unmarshal(stream.Input.Config, &input); err != nil {
 		return err
 	}
-	// input[stream.Input.Component] = input
+	input["label"] = stream.InputLabel
 
 	output := make(map[string]any)
 	if err := json.Unmarshal(stream.Output.Config, &output); err != nil {
 		return err
 	}
+	output["label"] = stream.OutputLabel
 
 	pipeline := map[string][]any{
 		"processors": make([]any, len(stream.Processors)),
@@ -311,47 +291,30 @@ func (e *coordinatorExecutor) assignJob(worker persistence.Worker, stream persis
 		return err
 	}
 
-	fmt.Println(string(configYAML))
+	log.Debug().
+		Str("worker_id", worker.ID).
+		Int64("stream_id", stream.ID).
+		Str("config", string(configYAML)).
+		Msg("Config for worker stream")
 
 	workerStream, err := e.workerStreamRepo.Queue(worker.ID, stream.ID)
 	if err != nil {
 		return err
 	}
 
-	body, err := json.Marshal(struct {
-		WorkerStreamID int    `json:"worker_stream_id"`
-		Config         string `json:"config"`
-	}{
-		WorkerStreamID: workerStream.ID,
-		Config:         string(configYAML),
-	})
-	if err != nil {
-		return err
-	}
-
-	resp, err := e.httpClient.
-		Post(
-			fmt.Sprintf("http://%s%s", worker.Address, WorkerHealthAssignStream),
-			"application/json",
-			bytes.NewReader(body),
-		)
+	resp, err := workerClient.AssignStream(ctx, &pb.AssignStreamRequest{WorkerStreamId: workerStream.ID, Config: string(configYAML)})
 	if err != nil {
 		if err := e.workerStreamRepo.UpdateStatus(workerStream.ID, persistence.WorkerStreamStatusFailed); err != nil {
-			log.Warn().Err(err).Int("worker_stream_id", workerStream.ID).Msg("Failed to update worker stream status after failed assignment")
+			log.Warn().Err(err).Int64("worker_stream_id", workerStream.ID).Msg("Failed to update worker stream status after failed assignment")
 		}
 		return err
 	}
 
-	_ = resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return errors.New("failed to assign job on worker")
-	}
-
 	log.Info().
 		Str("worker_id", worker.ID).
-		Int("stream_id", stream.ID).
-		Int("worker_stream_id", workerStream.ID).
+		Int64("stream_id", stream.ID).
+		Int64("worker_stream_id", workerStream.ID).
+		Str("worker_stream_assign_response", resp.Message).
 		Msg("Assigned job to worker")
 
 	return nil
@@ -369,4 +332,21 @@ func (e *coordinatorExecutor) deactivateWorker(workerID string) {
 	}
 
 	log.Info().Str("worker_id", workerID).Msg("Worker is unhealthy and deactivated")
+}
+
+func (e *coordinatorExecutor) getWorkerClient(worker *persistence.Worker) (pb.WorkerClient, error) {
+	var workerGRPCClient pb.WorkerClient
+	workerGRPCClient, clientExists := e.workerClients[worker.ID]
+	if !clientExists {
+		log.Debug().Str("worker_id", worker.ID).Msg("Creating new grpc client for worker")
+		grpcConn, err := grpc.NewClient(worker.Address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		if err != nil {
+			return nil, err
+		}
+
+		workerGRPCClient = pb.NewWorkerClient(grpcConn)
+		e.workerClients[worker.ID] = workerGRPCClient
+	}
+
+	return workerGRPCClient, nil
 }

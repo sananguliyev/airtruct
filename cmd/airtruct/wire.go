@@ -20,6 +20,7 @@ func InitializeCoordinatorCommand() *cli.CoordinatorCLI {
 		config.NewNodeConfig,
 		persistence.NewGormDB,
 		persistence.NewComponentRepository,
+		persistence.NewEventRepository,
 		persistence.NewStreamRepository,
 		persistence.NewWorkerRepository,
 		persistence.NewWorkerStreamRepository,

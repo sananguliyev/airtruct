@@ -1,6 +1,7 @@
 package persistence
 
 import (
+	"errors"
 	"time"
 
 	"gorm.io/gorm"
@@ -9,31 +10,36 @@ import (
 type WorkerStreamStatus string
 
 const (
-	WorkerStreamStatusWaiting  WorkerStreamStatus = "waiting"
-	WorkerStreamStatusRunning  WorkerStreamStatus = "running"
-	WorkerStreamStatusStopped  WorkerStreamStatus = "stopped"
-	WorkerStreamStatusFinished WorkerStreamStatus = "finished"
-	WorkerStreamStatusFailed   WorkerStreamStatus = "failed"
+	WorkerStreamStatusWaiting   WorkerStreamStatus = "waiting"
+	WorkerStreamStatusRunning   WorkerStreamStatus = "running"
+	WorkerStreamStatusStopped   WorkerStreamStatus = "stopped"
+	WorkerStreamStatusCompleted WorkerStreamStatus = "completed"
+	WorkerStreamStatusFailed    WorkerStreamStatus = "failed"
 )
 
 type WorkerStream struct {
-	ID        int                `json:"id" gorm:"primaryKey"`
-	WorkerID  string             `json:"worker_id" gorm:"not null"`
-	StreamID  int                `json:"stream_id" gorm:"not null"`
-	Status    WorkerStreamStatus `json:"status" gorm:"not null"`
-	CreatedAt time.Time          `json:"created_at" gorm:"not null"`
-	UpdatedAt time.Time          `json:"updated_at"`
+	ID              int64              `json:"id" gorm:"primaryKey"`
+	WorkerID        string             `json:"worker_id" gorm:"not null"`
+	StreamID        int64              `json:"stream_id" gorm:"not null"`
+	InputEvents     uint64             `json:"input_events" gorm:"not null" default:"0"`
+	ProcessorErrors uint64             `json:"processor_errors" gorm:"not null" default:"0"`
+	OutputEvents    uint64             `json:"output_events" gorm:"not null" default:"0"`
+	Status          WorkerStreamStatus `json:"status" gorm:"not null"`
+	CreatedAt       time.Time          `json:"created_at" gorm:"not null"`
+	UpdatedAt       time.Time          `json:"updated_at"`
 
 	Worker Worker `json:"worker" gorm:"foreignKey:WorkerID"`
 	Stream Stream `json:"stream" gorm:"foreignKey:StreamID"`
 }
 
 type WorkerStreamRepository interface {
-	Queue(workerID string, streamID int) (WorkerStream, error)
-	UpdateStatus(id int, status WorkerStreamStatus) error
+	Queue(workerID string, streamID int64) (WorkerStream, error)
+	FindByID(id int64) (*WorkerStream, error)
+	UpdateStatus(id int64, status WorkerStreamStatus) error
+	UpdateMetrics(id int64, inputEvents, outputEvents, processorErrors uint64) error
 	StopAllByWorkerID(workerID string) error
 	ListAllByWorkerID(workerID string) ([]WorkerStream, error)
-	ListAllByStreamID(streamID int) ([]WorkerStream, error)
+	ListAllByStreamID(streamID int64) ([]WorkerStream, error)
 	ListAllByStatuses(statuses ...WorkerStreamStatus) ([]WorkerStream, error)
 }
 
@@ -45,7 +51,7 @@ func NewWorkerStreamRepository(db *gorm.DB) WorkerStreamRepository {
 	return &workerStreamRepository{db: db}
 }
 
-func (r *workerStreamRepository) Queue(workerID string, streamID int) (WorkerStream, error) {
+func (r *workerStreamRepository) Queue(workerID string, streamID int64) (WorkerStream, error) {
 	workerStream := WorkerStream{
 		WorkerID:  workerID,
 		StreamID:  streamID,
@@ -59,12 +65,43 @@ func (r *workerStreamRepository) Queue(workerID string, streamID int) (WorkerStr
 	return workerStream, err
 }
 
-func (r *workerStreamRepository) UpdateStatus(id int, status WorkerStreamStatus) error {
+func (r *workerStreamRepository) UpdateStatus(id int64, status WorkerStreamStatus) error {
 	return r.db.
 		Model(&WorkerStream{}).
 		Where("id = ?", id).
 		Updates(map[string]any{"status": status, "updated_at": time.Now()}).
 		Error
+}
+
+func (r *workerStreamRepository) UpdateMetrics(id int64, inputEvents, outputEvents, processorErrors uint64) error {
+	return r.db.
+		Model(&WorkerStream{}).
+		Where("id = ?", id).
+		Updates(map[string]any{
+			"input_events":     inputEvents,
+			"processor_errors": outputEvents,
+			"output_events":    processorErrors,
+			"updated_at":       time.Now(),
+		}).
+		Error
+}
+
+func (r *workerStreamRepository) FindByID(id int64) (*WorkerStream, error) {
+	var workerStream = &WorkerStream{
+		ID: id,
+	}
+	err := r.db.
+		Preload("Worker").
+		Preload("Stream").
+		First(workerStream).
+		Error
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	} else if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+
+	return workerStream, nil
 }
 
 func (r *workerStreamRepository) StopAllByWorkerID(workerID string) error {
@@ -88,7 +125,7 @@ func (r *workerStreamRepository) ListAllByWorkerID(workerID string) ([]WorkerStr
 	return workerStreams, err
 }
 
-func (r *workerStreamRepository) ListAllByStreamID(streamID int) ([]WorkerStream, error) {
+func (r *workerStreamRepository) ListAllByStreamID(streamID int64) ([]WorkerStream, error) {
 	var workerStreams []WorkerStream
 	err := r.db.
 		Preload("Worker").

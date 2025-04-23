@@ -9,6 +9,7 @@ type NodeConfig struct {
 	Coordinator  bool   `default:"true"`
 	DiscoveryUri string `required:"true" envconfig:"NODE_DISCOVERY_URI"`
 	Port         int    `required:"true" default:"8080"`
+	GRPCPort     int32  `required:"true" envconfig:"NODE_GRPC_PORT" default:"50000"`
 }
 
 func NewNodeConfig() *NodeConfig {

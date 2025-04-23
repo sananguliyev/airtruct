@@ -5,12 +5,12 @@ services:
     build:
       context: .
     ports:
-      - "4195:4195"
       - "8080:8080"
     environment:
       - COORDINATOR=true
-      - NODE_DISCOVERY_URI=http://coordinator:8080
+      - NODE_DISCOVERY_URI=localhost:50000
       - DATABASE_URI=file:/airtruct.sqlite?_foreign_keys=1&mode=rwc
+      - NODE_GRPC_PORT=50000
     volumes:
       - ./airtruct.sqlite:/airtruct.sqlite
     networks:
@@ -27,15 +27,25 @@ services:
       context: .
     # ports:
     #   - "8081:8080"
+    #   - "4195:4195"
     environment:
       - COORDINATOR=false
-      - NODE_DISCOVERY_URI=http://coordinator:8080
-      - DATABASE_URI=file:/airtruct.sqlite?_foreign_keys=1&mode=rwc
+      - NODE_DISCOVERY_URI=localhost:50000
+      - NODE_GRPC_PORT=50001
     networks:
       - airtruct
     command:
       - /airtruct
       - run
+
+  # ui:
+  #   build:
+  #     context: ./ui
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "3000:3000"
+  #   networks:
+  #     - airtruct
 
 networks:
   airtruct:

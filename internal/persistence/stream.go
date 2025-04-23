@@ -4,29 +4,32 @@ import (
 	"errors"
 	"time"
 
+	pb "github.com/sananguliyev/airtruct/internal/protogen"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
 )
 
 type StreamStatus string
 
 const (
-	StreamStatusActive   StreamStatus = "active"
-	StreamStatusFinished StreamStatus = "finished"
-	StreamStatusPaused   StreamStatus = "paused"
-	StreamStatusFailed   StreamStatus = "failed"
+	StreamStatusActive    StreamStatus = "active"
+	StreamStatusCompleted StreamStatus = "completed"
+	StreamStatusPaused    StreamStatus = "paused"
+	StreamStatusFailed    StreamStatus = "failed"
 )
 
 type Stream struct {
-	ID          int          `json:"id" gorm:"primaryKey"`
-	ParentID    *int         `json:"parent_id"`
+	ID          int64        `json:"id" gorm:"primaryKey"`
+	ParentID    *int64       `json:"parent_id"`
 	Name        string       `json:"name" gorm:"not null"`
 	InputLabel  string       `json:"input_label"`
-	InputID     int          `json:"input_id" gorm:"not null"`
+	InputID     int64        `json:"input_id" gorm:"not null"`
 	OutputLabel string       `json:"output_label"`
-	OutputID    int          `json:"output_id" gorm:"not null"`
+	OutputID    int64        `json:"output_id" gorm:"not null"`
 	IsCurrent   bool         `json:"is_current" gorm:"default:true"`
 	Status      StreamStatus `json:"status" gorm:"not null"`
 	CreatedAt   time.Time    `json:"created_at" gorm:"not null"`
+	UpdatedAt   *time.Time   `json:"updated_at"`
 
 	ParentStream *Stream           `json:"parent_stream" gorm:"foreignKey:ParentID"`
 	Input        ComponentConfig   `json:"input" gorm:"foreignKey:InputID"`
@@ -34,12 +37,49 @@ type Stream struct {
 	Processors   []StreamProcessor `json:"processors" gorm:"foreignKey:StreamID;references:ID"`
 }
 
+func (s *Stream) ToProto() *pb.Stream {
+	var updatedAt *timestamppb.Timestamp
+	if s.UpdatedAt != nil {
+		updatedAt = timestamppb.New(*s.UpdatedAt)
+	}
+
+	return &pb.Stream{
+		Id:          s.ID,
+		ParentId:    s.ParentID,
+		Name:        s.Name,
+		InputLabel:  s.InputLabel,
+		InputId:     s.InputID,
+		OutputLabel: s.OutputLabel,
+		OutputId:    s.OutputID,
+		IsCurrent:   s.IsCurrent,
+		Status:      string(s.Status),
+		CreatedAt:   timestamppb.New(s.CreatedAt),
+		UpdatedAt:   updatedAt,
+	}
+}
+
+func (s *Stream) FromProto(p *pb.Stream) {
+	updatedAt := p.GetUpdatedAt().AsTime()
+
+	s.ID = p.Id
+	s.ParentID = p.ParentId
+	s.Name = p.Name
+	s.InputLabel = p.InputLabel
+	s.InputID = p.InputId
+	s.OutputLabel = p.OutputLabel
+	s.OutputID = p.OutputId
+	s.IsCurrent = p.GetIsCurrent()
+	s.Status = StreamStatus(p.GetStatus())
+	s.CreatedAt = p.CreatedAt.AsTime()
+	s.UpdatedAt = &updatedAt
+}
+
 type StreamRepository interface {
 	Create(stream *Stream) error
 	Update(stream *Stream) error
-	FindByID(id int) (*Stream, error)
-	UpdateStatus(id int, status StreamStatus) error
-	Delete(id string) error
+	FindByID(id int64) (*Stream, error)
+	UpdateStatus(id int64, status StreamStatus) error
+	Delete(id int64) error
 	ListAllByStatuses(...StreamStatus) ([]Stream, error)
 	ListAllActiveAndNonAssigned() ([]Stream, error)
 }
@@ -95,7 +135,7 @@ func (r *streamRepository) Update(stream *Stream) error {
 	return tx.Commit().Error
 }
 
-func (r *streamRepository) FindByID(id int) (*Stream, error) {
+func (r *streamRepository) FindByID(id int64) (*Stream, error) {
 	var stream = &Stream{
 		ID: id,
 	}
@@ -116,15 +156,15 @@ func (r *streamRepository) FindByID(id int) (*Stream, error) {
 	return stream, nil
 }
 
-func (r *streamRepository) UpdateStatus(id int, status StreamStatus) error {
+func (r *streamRepository) UpdateStatus(id int64, status StreamStatus) error {
 	return r.db.
-		Model(&WorkerStream{}).
+		Model(&Stream{}).
 		Where("id = ?", id).
 		Updates(map[string]any{"status": status, "updated_at": time.Now()}).
 		Error
 }
 
-func (r *streamRepository) Delete(id string) error {
+func (r *streamRepository) Delete(id int64) error {
 	return r.db.Delete(&Stream{}, id).Error
 }
 
@@ -160,7 +200,7 @@ func (r *streamRepository) ListAllActiveAndNonAssigned() ([]Stream, error) {
 				Model(&WorkerStream{}).Select("1").
 				Where(
 					"worker_streams.stream_id = streams.id AND worker_streams.status IN ?",
-					[]WorkerStreamStatus{WorkerStreamStatusRunning, WorkerStreamStatusFinished},
+					[]WorkerStreamStatus{WorkerStreamStatusWaiting, WorkerStreamStatusRunning, WorkerStreamStatusCompleted},
 				),
 		).
 		Find(&streams).Error

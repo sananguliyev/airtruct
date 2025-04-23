@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/signal"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -34,38 +35,18 @@ func main() {
 			},
 		},
 		Action: func(ctx *cli.Context) error {
+			cCtx, stop := signal.NotifyContext(ctx.Context, os.Interrupt, os.Kill)
+			defer stop()
+			setLogLevel(ctx.Bool("debug"))
 			if ctx.Bool("coordinator") {
 				log.Info().Msg("starting coordinator")
-				setLogLevel(ctx.Bool("debug"))
 				coordinatorCLI := InitializeCoordinatorCommand()
-				coordinatorCLI.Run()
+				coordinatorCLI.Run(cCtx)
 				return nil
 			} else {
 				log.Info().Msg("starting worker")
-				setLogLevel(ctx.Bool("debug"))
-
-				os.Args = append(
-					os.Args,
-					"-s",
-					"logger.level=INFO",
-					"-s",
-					"logger.format=json",
-					"-s",
-					"logger.static_fields.@service=airtruct",
-					"streams",
-				)
-
-				go func() {
-					service.RunCLI(
-						context.Background(),
-						service.CLIOptSetProductName("airtruct"),
-						service.CLIOptSetBinaryName("airtruct"),
-						service.CLIOptSetVersion("1.0.0", time.Now().Format("2006-01-02")),
-					)
-				}()
-
 				workerCLI := InitializeWorkerCommand()
-				workerCLI.Run()
+				workerCLI.Run(cCtx)
 				return nil
 			}
 		},
