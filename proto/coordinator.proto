@@ -81,6 +81,13 @@ message Event {
   google.protobuf.Struct meta = 6;
 }
 
+message MetricsRequest {
+  int64 worker_stream_id = 1 [(validate.rules).int64.gt = 0];
+  uint64 input_events = 2;
+  uint64 processor_errors = 3;
+  uint64 output_events = 4;
+}
+
 service Coordinator {
   // Worker stream methods
   rpc UpdateWorkerStreamStatus(WorkerStreamStatusRequest) returns (CommonResponse) {}
@@ -144,4 +151,5 @@ service Coordinator {
 
   // Observability methods
   rpc IngestEvents(stream Event) returns (stream google.protobuf.Empty);
+  rpc IngestMetrics(MetricsRequest) returns (google.protobuf.Empty) {}
 }

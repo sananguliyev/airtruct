@@ -1,11 +1,13 @@
 package coordinator
 
 import (
+	"context"
 	"io"
 
-	"github.com/rs/zerolog/log"
 	"github.com/sananguliyev/airtruct/internal/persistence"
 	pb "github.com/sananguliyev/airtruct/internal/protogen"
+
+	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -44,4 +46,26 @@ func (c *CoordinatorAPI) IngestEvents(stream grpc.BidiStreamingServer[pb.Event, 
 			return status.Error(codes.Internal, "failed to ack event")
 		}
 	}
+}
+
+func (c *CoordinatorAPI) IngestMetrics(ctx context.Context, in *pb.MetricsRequest) (*emptypb.Empty, error) {
+	var err error
+
+	if err = in.Validate(); err != nil {
+		log.Error().Err(err).Msg("failed to validate metrics request")
+		return nil, status.Error(codes.InvalidArgument, "invalid metrics request")
+	}
+
+	err = c.workerStreamRepo.UpdateMetrics(
+		in.GetWorkerStreamId(),
+		in.GetInputEvents(),
+		in.GetProcessorErrors(),
+		in.GetOutputEvents(),
+	)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to update metrics")
+		return nil, status.Error(codes.Internal, "failed to update metrics")
+	}
+
+	return &emptypb.Empty{}, nil
 }

@@ -6,11 +6,12 @@ import (
 	"net"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	"github.com/sananguliyev/airtruct/internal/api"
 	"github.com/sananguliyev/airtruct/internal/config"
 	"github.com/sananguliyev/airtruct/internal/executor"
 	pb "github.com/sananguliyev/airtruct/internal/protogen"
+
+	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 )
 
@@ -35,16 +36,10 @@ func (c *WorkerCLI) Run(ctx context.Context) {
 			log.Fatal().Err(err).Msg("Failed to register on coordinator")
 		}
 
-		c.executor.ConsumeStreamQueue(ctx)
-		log.Info().Msg("Worker started consuming stream queue")
-		c.executor.ShipLogs(ctx)
-		log.Info().Msg("Worker started shipping logs")
-
 		for {
 			select {
 			case <-ctx.Done():
 				log.Info().Msg("Worker stopping...")
-				c.executor.ShipLogs(ctx)
 				if err = c.executor.LeaveCoordinator(ctx); err != nil {
 					log.Error().Err(err).Msg("Failed to leave coordinator and this will be handled in coordinator")
 				}
@@ -54,6 +49,7 @@ func (c *WorkerCLI) Run(ctx context.Context) {
 				if err = c.executor.JoinToCoordinator(ctx); err != nil {
 					log.Fatal().Err(err).Msg("Failed to register on coordinator")
 				}
+				c.executor.ShipMetrics(ctx)
 			}
 		}
 	}()
@@ -67,9 +63,10 @@ func (c *WorkerCLI) Run(ctx context.Context) {
 	grpcServer := grpc.NewServer()
 	pb.RegisterWorkerServer(grpcServer, c.api)
 
-	go func() {
-		c.executor.ShipLogs(ctx)
-	}()
+	go c.executor.ConsumeStreamQueue(ctx)
+	log.Info().Msg("Worker started consuming stream queue")
+	go c.executor.ShipLogs(ctx)
+	log.Info().Msg("Worker started shipping logs")
 
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatal().Err(err).Msg("failed to serve GRPC")

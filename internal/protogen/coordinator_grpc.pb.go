@@ -33,6 +33,7 @@ const (
 	Coordinator_CreateStream_FullMethodName             = "/protorender.Coordinator/CreateStream"
 	Coordinator_UpdateStream_FullMethodName             = "/protorender.Coordinator/UpdateStream"
 	Coordinator_IngestEvents_FullMethodName             = "/protorender.Coordinator/IngestEvents"
+	Coordinator_IngestMetrics_FullMethodName            = "/protorender.Coordinator/IngestMetrics"
 )
 
 // CoordinatorClient is the client API for Coordinator service.
@@ -57,6 +58,7 @@ type CoordinatorClient interface {
 	UpdateStream(ctx context.Context, in *Stream, opts ...grpc.CallOption) (*CommonResponse, error)
 	// Observability methods
 	IngestEvents(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Event, emptypb.Empty], error)
+	IngestMetrics(ctx context.Context, in *MetricsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type coordinatorClient struct {
@@ -200,6 +202,16 @@ func (c *coordinatorClient) IngestEvents(ctx context.Context, opts ...grpc.CallO
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type Coordinator_IngestEventsClient = grpc.BidiStreamingClient[Event, emptypb.Empty]
 
+func (c *coordinatorClient) IngestMetrics(ctx context.Context, in *MetricsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, Coordinator_IngestMetrics_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CoordinatorServer is the server API for Coordinator service.
 // All implementations must embed UnimplementedCoordinatorServer
 // for forward compatibility.
@@ -222,6 +234,7 @@ type CoordinatorServer interface {
 	UpdateStream(context.Context, *Stream) (*CommonResponse, error)
 	// Observability methods
 	IngestEvents(grpc.BidiStreamingServer[Event, emptypb.Empty]) error
+	IngestMetrics(context.Context, *MetricsRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedCoordinatorServer()
 }
 
@@ -270,6 +283,9 @@ func (UnimplementedCoordinatorServer) UpdateStream(context.Context, *Stream) (*C
 }
 func (UnimplementedCoordinatorServer) IngestEvents(grpc.BidiStreamingServer[Event, emptypb.Empty]) error {
 	return status.Errorf(codes.Unimplemented, "method IngestEvents not implemented")
+}
+func (UnimplementedCoordinatorServer) IngestMetrics(context.Context, *MetricsRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method IngestMetrics not implemented")
 }
 func (UnimplementedCoordinatorServer) mustEmbedUnimplementedCoordinatorServer() {}
 func (UnimplementedCoordinatorServer) testEmbeddedByValue()                     {}
@@ -515,6 +531,24 @@ func _Coordinator_IngestEvents_Handler(srv interface{}, stream grpc.ServerStream
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type Coordinator_IngestEventsServer = grpc.BidiStreamingServer[Event, emptypb.Empty]
 
+func _Coordinator_IngestMetrics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MetricsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoordinatorServer).IngestMetrics(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Coordinator_IngestMetrics_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoordinatorServer).IngestMetrics(ctx, req.(*MetricsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Coordinator_ServiceDesc is the grpc.ServiceDesc for Coordinator service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -569,6 +603,10 @@ var Coordinator_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateStream",
 			Handler:    _Coordinator_UpdateStream_Handler,
+		},
+		{
+			MethodName: "IngestMetrics",
+			Handler:    _Coordinator_IngestMetrics_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

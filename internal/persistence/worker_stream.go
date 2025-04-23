@@ -36,7 +36,7 @@ type WorkerStreamRepository interface {
 	Queue(workerID string, streamID int64) (WorkerStream, error)
 	FindByID(id int64) (*WorkerStream, error)
 	UpdateStatus(id int64, status WorkerStreamStatus) error
-	UpdateMetrics(id int64, inputEvents, outputEvents, processorErrors uint64) error
+	UpdateMetrics(id int64, inputEvents, processorErrors, outputEvents uint64) error
 	StopAllByWorkerID(workerID string) error
 	ListAllByWorkerID(workerID string) ([]WorkerStream, error)
 	ListAllByStreamID(streamID int64) ([]WorkerStream, error)
@@ -73,14 +73,14 @@ func (r *workerStreamRepository) UpdateStatus(id int64, status WorkerStreamStatu
 		Error
 }
 
-func (r *workerStreamRepository) UpdateMetrics(id int64, inputEvents, outputEvents, processorErrors uint64) error {
+func (r *workerStreamRepository) UpdateMetrics(id int64, inputEvents, processorErrors, outputEvents uint64) error {
 	return r.db.
 		Model(&WorkerStream{}).
 		Where("id = ?", id).
 		Updates(map[string]any{
 			"input_events":     inputEvents,
-			"processor_errors": outputEvents,
-			"output_events":    processorErrors,
+			"processor_errors": processorErrors,
+			"output_events":    outputEvents,
 			"updated_at":       time.Now(),
 		}).
 		Error

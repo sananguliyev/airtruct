@@ -10,12 +10,12 @@ import (
 	"github.com/sananguliyev/airtruct/internal/config"
 	"github.com/sananguliyev/airtruct/internal/persistence"
 	pb "github.com/sananguliyev/airtruct/internal/protogen"
-	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/rs/zerolog/log"
 	"github.com/warpstreamlabs/bento/public/service"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 const (
@@ -30,6 +30,7 @@ type WorkerExecutor interface {
 	FetchWorkerStreamStatus(ctx context.Context, workerStreamID int64) (*persistence.WorkerStreamStatus, error)
 	DeleteWorkerStream(ctx context.Context, workerStreamID int64) error
 	ShipLogs(context.Context)
+	ShipMetrics(context.Context)
 	ConsumeStreamQueue(context.Context)
 }
 
@@ -155,7 +156,7 @@ func (e *workerExecutor) DeleteWorkerStream(ctx context.Context, workerStreamID 
 			return err
 		}
 
-		e.ShipLogs(ctx)
+		e.ShipMetrics(ctx)
 		delete(e.streams, workerStreamID)
 		delete(e.tracingSummaries, workerStreamID)
 
@@ -337,6 +338,20 @@ func (e *workerExecutor) ShipLogs(ctx context.Context) {
 	ReconnectStream:
 		log.Info().Msg("Attempting to reconnect stream...")
 		time.Sleep(retryDelay)
+	}
+}
+
+func (e *workerExecutor) ShipMetrics(ctx context.Context) {
+	for workerStreamID, tracingSummary := range e.tracingSummaries {
+		_, err := e.coordinatorClient.IngestMetrics(ctx, &pb.MetricsRequest{
+			WorkerStreamId:  workerStreamID,
+			InputEvents:     tracingSummary.TotalInput(),
+			ProcessorErrors: tracingSummary.TotalProcessorErrors(),
+			OutputEvents:    tracingSummary.TotalOutput(),
+		})
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to send metrics")
+		}
 	}
 }
 
