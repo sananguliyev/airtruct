@@ -67,6 +67,10 @@ func (c *WorkerCLI) Run(ctx context.Context) {
 	grpcServer := grpc.NewServer()
 	pb.RegisterWorkerServer(grpcServer, c.api)
 
+	go func() {
+		c.executor.ShipLogs(ctx)
+	}()
+
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatal().Err(err).Msg("failed to serve GRPC")
 	}

@@ -2,12 +2,15 @@ package executor
 
 import (
 	"context"
+	"io"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/sananguliyev/airtruct/internal/config"
 	"github.com/sananguliyev/airtruct/internal/persistence"
 	pb "github.com/sananguliyev/airtruct/internal/protogen"
+	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/rs/zerolog/log"
 	"github.com/warpstreamlabs/bento/public/service"
@@ -17,6 +20,7 @@ import (
 
 const (
 	MaxItemsInStreamQueue = 10
+	StreamMaxDelay        = 30 * time.Second
 )
 
 type WorkerExecutor interface {
@@ -40,6 +44,7 @@ type serviceStream struct {
 }
 
 type workerExecutor struct {
+	clientConn        *grpc.ClientConn
 	coordinatorClient pb.CoordinatorClient
 	nodeConfig        *config.NodeConfig
 	joined            bool
@@ -62,6 +67,7 @@ func NewWorkerExecutor(nodeConfig *config.NodeConfig) WorkerExecutor {
 	coordinatorGRPCClient := pb.NewCoordinatorClient(grpcConn)
 
 	return &workerExecutor{
+		clientConn:        grpcConn,
 		coordinatorClient: coordinatorGRPCClient,
 		nodeConfig:        nodeConfig,
 		streamQueue:       make(chan streamQueueItem, MaxItemsInStreamQueue),
@@ -172,9 +178,166 @@ func (e *workerExecutor) FetchWorkerStreamStatus(_ context.Context, workerStream
 	return nil, nil
 }
 
-func (e *workerExecutor) ShipLogs(_ context.Context) {
-	// Implement log shipment logic here
-	return
+func (e *workerExecutor) ShipLogs(ctx context.Context) {
+	retryDelay := time.Second
+
+	for {
+		streamClient, err := e.coordinatorClient.IngestEvents(ctx)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to create stream client")
+			retryDelay *= 2
+			time.Sleep(min(retryDelay, StreamMaxDelay))
+			continue
+		}
+		retryDelay = time.Second
+
+		for {
+			select {
+			case <-ctx.Done():
+				log.Info().Msg("ShipLogs context done, closing stream")
+				if err := streamClient.CloseSend(); err != nil {
+					log.Error().Err(err).Msg("Error closing send stream")
+				}
+				return
+			default:
+				e.mu.Lock()
+				sentEvents := 0
+				for workerStreamId, tracingSummary := range e.tracingSummaries {
+					for componentName, events := range tracingSummary.InputEvents(true) {
+						for _, event := range events {
+							metaStruct, err := structpb.NewStruct(event.Meta)
+							if err != nil {
+								log.Error().
+									Err(err).
+									Int64("worker_stream_id", workerStreamId).
+									Str("component_name", componentName).
+									Str("event_type", string(event.Type)).
+									Str("event_content", event.Content).
+									Any("event_meta", event.Meta).
+									Msg("Failed to convert meta field to pb struct")
+								continue
+							}
+							if err := streamClient.Send(&pb.Event{
+								WorkerStreamId: workerStreamId,
+								ComponentName:  componentName,
+								Section:        string(persistence.ComponentSectionInput),
+								Type:           string(event.Type),
+								Content:        event.Content,
+								Meta:           metaStruct,
+							}); err != nil {
+								log.Error().Err(err).Msg("Failed to send event, re-establishing stream")
+								e.mu.Unlock()
+								goto ReconnectStream
+							}
+							sentEvents++
+
+							_, err = streamClient.Recv()
+							if err == io.EOF {
+								log.Info().Msg("Server closed the stream")
+								e.mu.Unlock()
+								goto ReconnectStream
+							}
+							if err != nil {
+								log.Error().Err(err).Msg("Failed to receive acknowledgment, re-establishing stream")
+								e.mu.Unlock()
+								goto ReconnectStream
+							}
+						}
+					}
+					for componentName, events := range tracingSummary.ProcessorEvents(true) {
+						for _, event := range events {
+							metaStruct, err := structpb.NewStruct(event.Meta)
+							if err != nil {
+								log.Error().
+									Err(err).
+									Int64("worker_stream_id", workerStreamId).
+									Str("component_name", componentName).
+									Str("event_type", string(event.Type)).
+									Str("event_content", event.Content).
+									Any("event_meta", event.Meta).
+									Msg("Failed to convert meta field to pb struct")
+								continue
+							}
+							if err := streamClient.Send(&pb.Event{
+								WorkerStreamId: workerStreamId,
+								ComponentName:  componentName,
+								Section:        string(persistence.ComponentSectionPipeline),
+								Type:           string(event.Type),
+								Content:        event.Content,
+								Meta:           metaStruct,
+							}); err != nil {
+								log.Error().Err(err).Msg("Failed to send event, re-establishing stream")
+								e.mu.Unlock()
+								goto ReconnectStream
+							}
+							sentEvents++
+
+							_, err = streamClient.Recv()
+							if err == io.EOF {
+								log.Info().Msg("Server closed the stream")
+								e.mu.Unlock()
+								goto ReconnectStream
+							}
+							if err != nil {
+								log.Error().Err(err).Msg("Failed to receive acknowledgment, re-establishing stream")
+								e.mu.Unlock()
+								goto ReconnectStream
+							}
+						}
+					}
+					for componentName, events := range tracingSummary.OutputEvents(true) {
+						for _, event := range events {
+							metaStruct, err := structpb.NewStruct(event.Meta)
+							if err != nil {
+								log.Error().
+									Err(err).
+									Int64("worker_stream_id", workerStreamId).
+									Str("component_name", componentName).
+									Str("event_type", string(event.Type)).
+									Str("event_content", event.Content).
+									Any("event_meta", event.Meta).
+									Msg("Failed to convert meta field to pb struct")
+								continue
+							}
+							if err := streamClient.Send(&pb.Event{
+								WorkerStreamId: workerStreamId,
+								ComponentName:  componentName,
+								Section:        string(persistence.ComponentSectionOutput),
+								Type:           string(event.Type),
+								Content:        event.Content,
+								Meta:           metaStruct,
+							}); err != nil {
+								log.Error().Err(err).Msg("Failed to send event, re-establishing stream")
+								e.mu.Unlock()
+								goto ReconnectStream
+							}
+							sentEvents++
+
+							_, err = streamClient.Recv()
+							if err == io.EOF {
+								log.Info().Msg("Server closed the stream")
+								e.mu.Unlock()
+								goto ReconnectStream
+							}
+							if err != nil {
+								log.Error().Err(err).Msg("Failed to receive acknowledgment, re-establishing stream")
+								e.mu.Unlock()
+								goto ReconnectStream
+							}
+						}
+					}
+				}
+				e.mu.Unlock()
+
+				if sentEvents == 0 {
+					time.Sleep(100 * time.Millisecond) // Avoid busy-waiting if no events to send
+				}
+			}
+		}
+	ReconnectStream:
+		log.Info().Msg("Attempting to reconnect stream...")
+		time.Sleep(retryDelay)
+	}
 }
 
 func (e *workerExecutor) ConsumeStreamQueue(ctx context.Context) {

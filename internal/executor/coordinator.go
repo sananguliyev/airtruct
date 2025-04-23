@@ -256,12 +256,13 @@ func (e *coordinatorExecutor) assignJob(ctx context.Context, worker persistence.
 	if err := json.Unmarshal(stream.Input.Config, &input); err != nil {
 		return err
 	}
-	// input[stream.Input.Component] = input
+	input["label"] = stream.InputLabel
 
 	output := make(map[string]any)
 	if err := json.Unmarshal(stream.Output.Config, &output); err != nil {
 		return err
 	}
+	output["label"] = stream.OutputLabel
 
 	pipeline := map[string][]any{
 		"processors": make([]any, len(stream.Processors)),
