@@ -9,25 +9,28 @@ import (
 
 type CoordinatorAPI struct {
 	pb.UnimplementedCoordinatorServer
-	config              *config.NodeConfig
-	workerRepo          persistence.WorkerRepository
 	componentConfigRepo persistence.ComponentConfigRepository
+	config              *config.NodeConfig
+	eventRepo           persistence.EventRepository
+	workerRepo          persistence.WorkerRepository
 	streamRepo          persistence.StreamRepository
 	workerStreamRepo    persistence.WorkerStreamRepository
 }
 
 func NewCoordinatorAPI(
-	workerRepo persistence.WorkerRepository,
-	componentConfigRepo persistence.ComponentConfigRepository,
-	streamRepo persistence.StreamRepository,
-	workerStreamRepo persistence.WorkerStreamRepository,
 	config *config.NodeConfig,
+	componentConfigRepo persistence.ComponentConfigRepository,
+	eventRepo persistence.EventRepository,
+	streamRepo persistence.StreamRepository,
+	workerRepo persistence.WorkerRepository,
+	workerStreamRepo persistence.WorkerStreamRepository,
 ) *CoordinatorAPI {
 	return &CoordinatorAPI{
 		config:              config,
-		workerRepo:          workerRepo,
 		componentConfigRepo: componentConfigRepo,
+		eventRepo:           eventRepo,
 		streamRepo:          streamRepo,
+		workerRepo:          workerRepo,
 		workerStreamRepo:    workerStreamRepo,
 	}
 }

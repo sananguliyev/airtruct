@@ -18,12 +18,15 @@ const (
 )
 
 type WorkerStream struct {
-	ID        int64              `json:"id" gorm:"primaryKey"`
-	WorkerID  string             `json:"worker_id" gorm:"not null"`
-	StreamID  int64              `json:"stream_id" gorm:"not null"`
-	Status    WorkerStreamStatus `json:"status" gorm:"not null"`
-	CreatedAt time.Time          `json:"created_at" gorm:"not null"`
-	UpdatedAt time.Time          `json:"updated_at"`
+	ID              int64              `json:"id" gorm:"primaryKey"`
+	WorkerID        string             `json:"worker_id" gorm:"not null"`
+	StreamID        int64              `json:"stream_id" gorm:"not null"`
+	InputEvents     uint64             `json:"input_events" gorm:"not null" default:"0"`
+	ProcessorErrors uint64             `json:"processor_errors" gorm:"not null" default:"0"`
+	OutputEvents    uint64             `json:"output_events" gorm:"not null" default:"0"`
+	Status          WorkerStreamStatus `json:"status" gorm:"not null"`
+	CreatedAt       time.Time          `json:"created_at" gorm:"not null"`
+	UpdatedAt       time.Time          `json:"updated_at"`
 
 	Worker Worker `json:"worker" gorm:"foreignKey:WorkerID"`
 	Stream Stream `json:"stream" gorm:"foreignKey:StreamID"`
@@ -33,6 +36,7 @@ type WorkerStreamRepository interface {
 	Queue(workerID string, streamID int64) (WorkerStream, error)
 	FindByID(id int64) (*WorkerStream, error)
 	UpdateStatus(id int64, status WorkerStreamStatus) error
+	UpdateMetrics(id int64, inputEvents, outputEvents, processorErrors uint64) error
 	StopAllByWorkerID(workerID string) error
 	ListAllByWorkerID(workerID string) ([]WorkerStream, error)
 	ListAllByStreamID(streamID int64) ([]WorkerStream, error)
@@ -66,6 +70,19 @@ func (r *workerStreamRepository) UpdateStatus(id int64, status WorkerStreamStatu
 		Model(&WorkerStream{}).
 		Where("id = ?", id).
 		Updates(map[string]any{"status": status, "updated_at": time.Now()}).
+		Error
+}
+
+func (r *workerStreamRepository) UpdateMetrics(id int64, inputEvents, outputEvents, processorErrors uint64) error {
+	return r.db.
+		Model(&WorkerStream{}).
+		Where("id = ?", id).
+		Updates(map[string]any{
+			"input_events":     inputEvents,
+			"processor_errors": outputEvents,
+			"output_events":    processorErrors,
+			"updated_at":       time.Now(),
+		}).
 		Error
 }
 

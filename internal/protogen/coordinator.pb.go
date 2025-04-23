@@ -12,6 +12,7 @@ import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
+	structpb "google.golang.org/protobuf/types/known/structpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
@@ -481,6 +482,90 @@ func (x *GetStreamRequest) GetId() int64 {
 	return 0
 }
 
+type Event struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	WorkerStreamId int64                  `protobuf:"varint,1,opt,name=worker_stream_id,json=workerStreamId,proto3" json:"worker_stream_id,omitempty"`
+	Section        string                 `protobuf:"bytes,2,opt,name=section,proto3" json:"section,omitempty"`
+	ComponentName  string                 `protobuf:"bytes,3,opt,name=component_name,json=componentName,proto3" json:"component_name,omitempty"`
+	Type           string                 `protobuf:"bytes,4,opt,name=type,proto3" json:"type,omitempty"`
+	Content        string                 `protobuf:"bytes,5,opt,name=content,proto3" json:"content,omitempty"`
+	Meta           *structpb.Struct       `protobuf:"bytes,6,opt,name=meta,proto3" json:"meta,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *Event) Reset() {
+	*x = Event{}
+	mi := &file_coordinator_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Event) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Event) ProtoMessage() {}
+
+func (x *Event) ProtoReflect() protoreflect.Message {
+	mi := &file_coordinator_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Event.ProtoReflect.Descriptor instead.
+func (*Event) Descriptor() ([]byte, []int) {
+	return file_coordinator_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *Event) GetWorkerStreamId() int64 {
+	if x != nil {
+		return x.WorkerStreamId
+	}
+	return 0
+}
+
+func (x *Event) GetSection() string {
+	if x != nil {
+		return x.Section
+	}
+	return ""
+}
+
+func (x *Event) GetComponentName() string {
+	if x != nil {
+		return x.ComponentName
+	}
+	return ""
+}
+
+func (x *Event) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *Event) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+func (x *Event) GetMeta() *structpb.Struct {
+	if x != nil {
+		return x.Meta
+	}
+	return nil
+}
+
 type ListWorkersResponse_Worker struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -493,7 +578,7 @@ type ListWorkersResponse_Worker struct {
 
 func (x *ListWorkersResponse_Worker) Reset() {
 	*x = ListWorkersResponse_Worker{}
-	mi := &file_coordinator_proto_msgTypes[10]
+	mi := &file_coordinator_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -505,7 +590,7 @@ func (x *ListWorkersResponse_Worker) String() string {
 func (*ListWorkersResponse_Worker) ProtoMessage() {}
 
 func (x *ListWorkersResponse_Worker) ProtoReflect() protoreflect.Message {
-	mi := &file_coordinator_proto_msgTypes[10]
+	mi := &file_coordinator_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -553,7 +638,7 @@ var File_coordinator_proto protoreflect.FileDescriptor
 
 const file_coordinator_proto_rawDesc = "" +
 	"\n" +
-	"\x11coordinator.proto\x12\vprotorender\x1a\fcommon.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x17validate/validate.proto\";\n" +
+	"\x11coordinator.proto\x12\vprotorender\x1a\fcommon.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x17validate/validate.proto\";\n" +
 	"\x15RegisterWorkerRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04port\x18\x02 \x01(\x05R\x04port\")\n" +
@@ -580,7 +665,15 @@ const file_coordinator_proto_rawDesc = "" +
 	"\x13ListStreamsResponse\x12'\n" +
 	"\x04data\x18\x01 \x03(\v2\x13.protorender.StreamR\x04data\"+\n" +
 	"\x10GetStreamRequest\x12\x17\n" +
-	"\x02id\x18\x01 \x01(\x03B\a\xfaB\x04\"\x02 \x00R\x02id2\xfd\t\n" +
+	"\x02id\x18\x01 \x01(\x03B\a\xfaB\x04\"\x02 \x00R\x02id\"\xfe\x01\n" +
+	"\x05Event\x12(\n" +
+	"\x10worker_stream_id\x18\x01 \x01(\x03R\x0eworkerStreamId\x12\x18\n" +
+	"\asection\x18\x02 \x01(\tR\asection\x12%\n" +
+	"\x0ecomponent_name\x18\x03 \x01(\tR\rcomponentName\x12C\n" +
+	"\x04type\x18\x04 \x01(\tB/\xfaB,r*R\aPRODUCER\aCONSUMER\x06DELETER\x05ERRORR\aUNKNOWNR\x04type\x12\x18\n" +
+	"\acontent\x18\x05 \x01(\tR\acontent\x12+\n" +
+	"\x04meta\x18\x06 \x01(\v2\x17.google.protobuf.StructR\x04meta2\xbd\n" +
+	"\n" +
 	"\vCoordinator\x12a\n" +
 	"\x18UpdateWorkerStreamStatus\x12&.protorender.WorkerStreamStatusRequest\x1a\x1b.protorender.CommonResponse\"\x00\x12t\n" +
 	"\x15CreateComponentConfig\x12\x1c.protorender.ComponentConfig\x1a\x1b.protorender.CommonResponse\" \x82\xd3\xe4\x93\x02\x1a:\x01*\"\x15/v0/component-configs\x12y\n" +
@@ -593,7 +686,8 @@ const file_coordinator_proto_rawDesc = "" +
 	"\vListStreams\x12\x1f.protorender.ListStreamsRequest\x1a .protorender.ListStreamsResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\x12\x14/v0/streams/{status}\x12Y\n" +
 	"\tGetStream\x12\x1d.protorender.GetStreamRequest\x1a\x13.protorender.Stream\"\x18\x82\xd3\xe4\x93\x02\x12\x12\x10/v0/streams/{id}\x12X\n" +
 	"\fCreateStream\x12\x13.protorender.Stream\x1a\x1b.protorender.CommonResponse\"\x16\x82\xd3\xe4\x93\x02\x10:\x01*\"\v/v0/streams\x12]\n" +
-	"\fUpdateStream\x12\x13.protorender.Stream\x1a\x1b.protorender.CommonResponse\"\x1b\x82\xd3\xe4\x93\x02\x15:\x01*\x1a\x10/v0/streams/{id}B4Z2github.com/sananguliyev/airtruct/internal/protogenb\x06proto3"
+	"\fUpdateStream\x12\x13.protorender.Stream\x1a\x1b.protorender.CommonResponse\"\x1b\x82\xd3\xe4\x93\x02\x15:\x01*\x1a\x10/v0/streams/{id}\x12>\n" +
+	"\fIngestEvents\x12\x12.protorender.Event\x1a\x16.google.protobuf.Empty(\x010\x01B4Z2github.com/sananguliyev/airtruct/internal/protogenb\x06proto3"
 
 var (
 	file_coordinator_proto_rawDescOnce sync.Once
@@ -607,7 +701,7 @@ func file_coordinator_proto_rawDescGZIP() []byte {
 	return file_coordinator_proto_rawDescData
 }
 
-var file_coordinator_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_coordinator_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_coordinator_proto_goTypes = []any{
 	(*RegisterWorkerRequest)(nil),        // 0: protorender.RegisterWorkerRequest
 	(*DeregisterWorkerRequest)(nil),      // 1: protorender.DeregisterWorkerRequest
@@ -619,49 +713,54 @@ var file_coordinator_proto_goTypes = []any{
 	(*ListStreamsRequest)(nil),           // 7: protorender.ListStreamsRequest
 	(*ListStreamsResponse)(nil),          // 8: protorender.ListStreamsResponse
 	(*GetStreamRequest)(nil),             // 9: protorender.GetStreamRequest
-	(*ListWorkersResponse_Worker)(nil),   // 10: protorender.ListWorkersResponse.Worker
-	(WorkerStreamStatus)(0),              // 11: protorender.WorkerStreamStatus
-	(*ComponentConfig)(nil),              // 12: protorender.ComponentConfig
-	(*Stream)(nil),                       // 13: protorender.Stream
-	(*timestamppb.Timestamp)(nil),        // 14: google.protobuf.Timestamp
-	(*emptypb.Empty)(nil),                // 15: google.protobuf.Empty
-	(*CommonResponse)(nil),               // 16: protorender.CommonResponse
+	(*Event)(nil),                        // 10: protorender.Event
+	(*ListWorkersResponse_Worker)(nil),   // 11: protorender.ListWorkersResponse.Worker
+	(WorkerStreamStatus)(0),              // 12: protorender.WorkerStreamStatus
+	(*ComponentConfig)(nil),              // 13: protorender.ComponentConfig
+	(*Stream)(nil),                       // 14: protorender.Stream
+	(*structpb.Struct)(nil),              // 15: google.protobuf.Struct
+	(*timestamppb.Timestamp)(nil),        // 16: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),                // 17: google.protobuf.Empty
+	(*CommonResponse)(nil),               // 18: protorender.CommonResponse
 }
 var file_coordinator_proto_depIdxs = []int32{
-	11, // 0: protorender.WorkerStreamStatusRequest.status:type_name -> protorender.WorkerStreamStatus
-	12, // 1: protorender.ListComponentConfigsResponse.data:type_name -> protorender.ComponentConfig
-	10, // 2: protorender.ListWorkersResponse.data:type_name -> protorender.ListWorkersResponse.Worker
-	13, // 3: protorender.ListStreamsResponse.data:type_name -> protorender.Stream
-	14, // 4: protorender.ListWorkersResponse.Worker.last_heartbeat:type_name -> google.protobuf.Timestamp
-	2,  // 5: protorender.Coordinator.UpdateWorkerStreamStatus:input_type -> protorender.WorkerStreamStatusRequest
-	12, // 6: protorender.Coordinator.CreateComponentConfig:input_type -> protorender.ComponentConfig
-	12, // 7: protorender.Coordinator.UpdateComponentConfig:input_type -> protorender.ComponentConfig
-	4,  // 8: protorender.Coordinator.GetComponentConfig:input_type -> protorender.GetComponentConfigRequest
-	15, // 9: protorender.Coordinator.ListComponentConfigs:input_type -> google.protobuf.Empty
-	0,  // 10: protorender.Coordinator.RegisterWorker:input_type -> protorender.RegisterWorkerRequest
-	1,  // 11: protorender.Coordinator.DeregisterWorker:input_type -> protorender.DeregisterWorkerRequest
-	5,  // 12: protorender.Coordinator.ListWorkers:input_type -> protorender.ListWorkersRequest
-	7,  // 13: protorender.Coordinator.ListStreams:input_type -> protorender.ListStreamsRequest
-	9,  // 14: protorender.Coordinator.GetStream:input_type -> protorender.GetStreamRequest
-	13, // 15: protorender.Coordinator.CreateStream:input_type -> protorender.Stream
-	13, // 16: protorender.Coordinator.UpdateStream:input_type -> protorender.Stream
-	16, // 17: protorender.Coordinator.UpdateWorkerStreamStatus:output_type -> protorender.CommonResponse
-	16, // 18: protorender.Coordinator.CreateComponentConfig:output_type -> protorender.CommonResponse
-	16, // 19: protorender.Coordinator.UpdateComponentConfig:output_type -> protorender.CommonResponse
-	12, // 20: protorender.Coordinator.GetComponentConfig:output_type -> protorender.ComponentConfig
-	3,  // 21: protorender.Coordinator.ListComponentConfigs:output_type -> protorender.ListComponentConfigsResponse
-	16, // 22: protorender.Coordinator.RegisterWorker:output_type -> protorender.CommonResponse
-	16, // 23: protorender.Coordinator.DeregisterWorker:output_type -> protorender.CommonResponse
-	6,  // 24: protorender.Coordinator.ListWorkers:output_type -> protorender.ListWorkersResponse
-	8,  // 25: protorender.Coordinator.ListStreams:output_type -> protorender.ListStreamsResponse
-	13, // 26: protorender.Coordinator.GetStream:output_type -> protorender.Stream
-	16, // 27: protorender.Coordinator.CreateStream:output_type -> protorender.CommonResponse
-	16, // 28: protorender.Coordinator.UpdateStream:output_type -> protorender.CommonResponse
-	17, // [17:29] is the sub-list for method output_type
-	5,  // [5:17] is the sub-list for method input_type
-	5,  // [5:5] is the sub-list for extension type_name
-	5,  // [5:5] is the sub-list for extension extendee
-	0,  // [0:5] is the sub-list for field type_name
+	12, // 0: protorender.WorkerStreamStatusRequest.status:type_name -> protorender.WorkerStreamStatus
+	13, // 1: protorender.ListComponentConfigsResponse.data:type_name -> protorender.ComponentConfig
+	11, // 2: protorender.ListWorkersResponse.data:type_name -> protorender.ListWorkersResponse.Worker
+	14, // 3: protorender.ListStreamsResponse.data:type_name -> protorender.Stream
+	15, // 4: protorender.Event.meta:type_name -> google.protobuf.Struct
+	16, // 5: protorender.ListWorkersResponse.Worker.last_heartbeat:type_name -> google.protobuf.Timestamp
+	2,  // 6: protorender.Coordinator.UpdateWorkerStreamStatus:input_type -> protorender.WorkerStreamStatusRequest
+	13, // 7: protorender.Coordinator.CreateComponentConfig:input_type -> protorender.ComponentConfig
+	13, // 8: protorender.Coordinator.UpdateComponentConfig:input_type -> protorender.ComponentConfig
+	4,  // 9: protorender.Coordinator.GetComponentConfig:input_type -> protorender.GetComponentConfigRequest
+	17, // 10: protorender.Coordinator.ListComponentConfigs:input_type -> google.protobuf.Empty
+	0,  // 11: protorender.Coordinator.RegisterWorker:input_type -> protorender.RegisterWorkerRequest
+	1,  // 12: protorender.Coordinator.DeregisterWorker:input_type -> protorender.DeregisterWorkerRequest
+	5,  // 13: protorender.Coordinator.ListWorkers:input_type -> protorender.ListWorkersRequest
+	7,  // 14: protorender.Coordinator.ListStreams:input_type -> protorender.ListStreamsRequest
+	9,  // 15: protorender.Coordinator.GetStream:input_type -> protorender.GetStreamRequest
+	14, // 16: protorender.Coordinator.CreateStream:input_type -> protorender.Stream
+	14, // 17: protorender.Coordinator.UpdateStream:input_type -> protorender.Stream
+	10, // 18: protorender.Coordinator.IngestEvents:input_type -> protorender.Event
+	18, // 19: protorender.Coordinator.UpdateWorkerStreamStatus:output_type -> protorender.CommonResponse
+	18, // 20: protorender.Coordinator.CreateComponentConfig:output_type -> protorender.CommonResponse
+	18, // 21: protorender.Coordinator.UpdateComponentConfig:output_type -> protorender.CommonResponse
+	13, // 22: protorender.Coordinator.GetComponentConfig:output_type -> protorender.ComponentConfig
+	3,  // 23: protorender.Coordinator.ListComponentConfigs:output_type -> protorender.ListComponentConfigsResponse
+	18, // 24: protorender.Coordinator.RegisterWorker:output_type -> protorender.CommonResponse
+	18, // 25: protorender.Coordinator.DeregisterWorker:output_type -> protorender.CommonResponse
+	6,  // 26: protorender.Coordinator.ListWorkers:output_type -> protorender.ListWorkersResponse
+	8,  // 27: protorender.Coordinator.ListStreams:output_type -> protorender.ListStreamsResponse
+	14, // 28: protorender.Coordinator.GetStream:output_type -> protorender.Stream
+	18, // 29: protorender.Coordinator.CreateStream:output_type -> protorender.CommonResponse
+	18, // 30: protorender.Coordinator.UpdateStream:output_type -> protorender.CommonResponse
+	17, // 31: protorender.Coordinator.IngestEvents:output_type -> google.protobuf.Empty
+	19, // [19:32] is the sub-list for method output_type
+	6,  // [6:19] is the sub-list for method input_type
+	6,  // [6:6] is the sub-list for extension type_name
+	6,  // [6:6] is the sub-list for extension extendee
+	0,  // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_coordinator_proto_init() }
@@ -676,7 +775,7 @@ func file_coordinator_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_coordinator_proto_rawDesc), len(file_coordinator_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   11,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

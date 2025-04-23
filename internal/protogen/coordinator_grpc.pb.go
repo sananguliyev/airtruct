@@ -32,6 +32,7 @@ const (
 	Coordinator_GetStream_FullMethodName                = "/protorender.Coordinator/GetStream"
 	Coordinator_CreateStream_FullMethodName             = "/protorender.Coordinator/CreateStream"
 	Coordinator_UpdateStream_FullMethodName             = "/protorender.Coordinator/UpdateStream"
+	Coordinator_IngestEvents_FullMethodName             = "/protorender.Coordinator/IngestEvents"
 )
 
 // CoordinatorClient is the client API for Coordinator service.
@@ -54,6 +55,8 @@ type CoordinatorClient interface {
 	GetStream(ctx context.Context, in *GetStreamRequest, opts ...grpc.CallOption) (*Stream, error)
 	CreateStream(ctx context.Context, in *Stream, opts ...grpc.CallOption) (*CommonResponse, error)
 	UpdateStream(ctx context.Context, in *Stream, opts ...grpc.CallOption) (*CommonResponse, error)
+	// Observability methods
+	IngestEvents(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Event, emptypb.Empty], error)
 }
 
 type coordinatorClient struct {
@@ -184,6 +187,19 @@ func (c *coordinatorClient) UpdateStream(ctx context.Context, in *Stream, opts .
 	return out, nil
 }
 
+func (c *coordinatorClient) IngestEvents(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Event, emptypb.Empty], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &Coordinator_ServiceDesc.Streams[0], Coordinator_IngestEvents_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[Event, emptypb.Empty]{ClientStream: stream}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Coordinator_IngestEventsClient = grpc.BidiStreamingClient[Event, emptypb.Empty]
+
 // CoordinatorServer is the server API for Coordinator service.
 // All implementations must embed UnimplementedCoordinatorServer
 // for forward compatibility.
@@ -204,6 +220,8 @@ type CoordinatorServer interface {
 	GetStream(context.Context, *GetStreamRequest) (*Stream, error)
 	CreateStream(context.Context, *Stream) (*CommonResponse, error)
 	UpdateStream(context.Context, *Stream) (*CommonResponse, error)
+	// Observability methods
+	IngestEvents(grpc.BidiStreamingServer[Event, emptypb.Empty]) error
 	mustEmbedUnimplementedCoordinatorServer()
 }
 
@@ -249,6 +267,9 @@ func (UnimplementedCoordinatorServer) CreateStream(context.Context, *Stream) (*C
 }
 func (UnimplementedCoordinatorServer) UpdateStream(context.Context, *Stream) (*CommonResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateStream not implemented")
+}
+func (UnimplementedCoordinatorServer) IngestEvents(grpc.BidiStreamingServer[Event, emptypb.Empty]) error {
+	return status.Errorf(codes.Unimplemented, "method IngestEvents not implemented")
 }
 func (UnimplementedCoordinatorServer) mustEmbedUnimplementedCoordinatorServer() {}
 func (UnimplementedCoordinatorServer) testEmbeddedByValue()                     {}
@@ -487,6 +508,13 @@ func _Coordinator_UpdateStream_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Coordinator_IngestEvents_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(CoordinatorServer).IngestEvents(&grpc.GenericServerStream[Event, emptypb.Empty]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Coordinator_IngestEventsServer = grpc.BidiStreamingServer[Event, emptypb.Empty]
+
 // Coordinator_ServiceDesc is the grpc.ServiceDesc for Coordinator service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -543,6 +571,13 @@ var Coordinator_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Coordinator_UpdateStream_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "IngestEvents",
+			Handler:       _Coordinator_IngestEvents_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+	},
 	Metadata: "coordinator.proto",
 }

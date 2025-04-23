@@ -3,19 +3,15 @@ module github.com/sananguliyev/airtruct
 go 1.21.5
 
 require (
+	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.1.0
 	github.com/google/wire v0.6.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/rs/zerolog v1.33.0
 	github.com/urfave/cli/v2 v2.27.5
 	github.com/warpstreamlabs/bento v1.2.0
-	gorm.io/driver/sqlite v1.5.6
-	gorm.io/gorm v1.25.12
-)
-
-require (
-	filippo.io/edwards25519 v1.1.0 // indirect
 	gorm.io/driver/mysql v1.5.6 // indirect
+	gorm.io/driver/sqlite v1.5.6
 )
 
 require (
@@ -356,5 +352,7 @@ require (
 	modernc.org/strutil v1.1.3 // indirect
 	modernc.org/token v1.1.0 // indirect
 )
+
+require gorm.io/gorm v1.25.11
 
 replace github.com/warpstreamlabs/bento => github.com/sananguliyev/bento v0.0.0-20240913055941-5fd5bc5ba9e4
