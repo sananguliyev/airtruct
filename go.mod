@@ -353,6 +353,9 @@ require (
 	modernc.org/token v1.1.0 // indirect
 )
 
-require gorm.io/gorm v1.25.11
+require (
+	github.com/rs/cors v1.11.1
+	gorm.io/gorm v1.25.11
+)
 
 replace github.com/warpstreamlabs/bento => github.com/sananguliyev/bento v0.0.0-20240913055941-5fd5bc5ba9e4

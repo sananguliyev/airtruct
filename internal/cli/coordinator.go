@@ -7,12 +7,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"github.com/rs/zerolog/log"
 	"github.com/sananguliyev/airtruct/internal/api/coordinator"
 	"github.com/sananguliyev/airtruct/internal/config"
 	"github.com/sananguliyev/airtruct/internal/executor"
 	pb "github.com/sananguliyev/airtruct/internal/protogen"
+
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/rs/cors"
+	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -68,15 +70,26 @@ func (c *CoordinatorCLI) Run(ctx context.Context) {
 
 	// Register gRPC server endpoint
 	// Note: Make sure the gRPC server is running properly and accessible
-	mux := runtime.NewServeMux()
+	mux := runtime.NewServeMux(
+		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{}),
+	)
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 	if err = pb.RegisterCoordinatorHandlerFromEndpoint(ctx, mux, coordinatorServerAddress, opts); err != nil {
 		log.Fatal().Err(err).Msg("failed to register coordinator handler")
 	}
 
+	corsMiddleware := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Accept-Encoding", "Authorization", "Content-Type", "Origin"},
+		ExposedHeaders:   []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * 60 * 60, // Maximum age for preflight cache (in seconds)
+	})
+
 	// start listening to requests from the gateway server
 	log.Info().Msgf("API gateway server listening on port %d", c.nodeConfig.Port)
-	if err = http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", c.nodeConfig.Port), mux); err != nil {
+	if err = http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", c.nodeConfig.Port), corsMiddleware.Handler(mux)); err != nil {
 		log.Fatal().Err(err).Msg("failed to serve coordinator handler")
 	}
 }
