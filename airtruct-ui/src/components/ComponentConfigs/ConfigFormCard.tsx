@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from "../../ui/card";
 import { Loader2 } from "lucide-react";
-import { NestedFormField } from "../../nested-form-field";
+import { NestedFormField } from "../../components/nested-form-field";
 
 interface ConfigFormCardProps {
   isLoading: boolean;

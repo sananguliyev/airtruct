@@ -1,12 +1,7 @@
 import React from "react";
 import { Button } from "../../ui/button";
 import { Loader2 } from "lucide-react";
-
-interface ActionButtonsProps {
-  isSubmitting: boolean;
-  onCancel: () => void;
-  disabled: boolean;
-}
+import { ActionButtonsProps } from "./types";
 
 const ActionButtons: React.FC<ActionButtonsProps> = ({
   isSubmitting,

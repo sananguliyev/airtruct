@@ -1,134 +1,155 @@
-import React, { useState, useEffect } from "react";
+// src/pages/ComponentConfigs/NewPage.tsx
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-// import { v4 as uuidv4 } from "uuid";
+import { Button } from "../../../ui/button";
+import { Input } from "../../../ui/input";
+import { Label } from "../../../ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../../ui/select";
 import { Loader2 } from "lucide-react";
 import { useToast } from "../../../components/toast";
-import { StreamBuilder } from "../../../components/stream-builder/stream-builder";
-import type { Node, Edge } from "reactflow";
-import type { StreamNodeData } from "../../../components/stream-builder/stream-node";
-import { ComponentConfig } from "../../../lib/entities";
+import { NestedFormField } from "../../../components/nested-form-field";
+import { componentSchemas, componentLists } from "../../../lib/component-schemas";
 
-const NewStreamPage: React.FC = () => {
+const NewPage = () => {
   const navigate = useNavigate();
   const { addToast } = useToast();
+
+//   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [componentConfigsData, setComponentConfigsData] = useState<
-    ComponentConfig[]
-  >([]);
+  const [componentSection, setComponentSection] = useState("");
+  const [selectedComponent, setSelectedComponent] = useState("");
+  const [configSchema, setConfigSchema] = useState<any>(null);
+  const [configValues, setConfigValues] = useState<Record<string, any>>({});
 
-  useEffect(() => {
-    const fetchComponentConfigs = async () => {
-      try {
-        const response = await fetch("http://localhost:8080/component-configs");
+  const [formData, setFormData] = useState({
+    name: "",
+    section: "",
+    component: "",
+    config: {},
+  });
 
-        if (!response.ok) {
-          throw new Error("Response not ok");
-        }
-        const data = await response.json();
-        setComponentConfigsData(
-          data.map((componentConfig: any) => ({
-            id: componentConfig.id,
-            name: componentConfig.name,
-            type:
-              componentConfig.section === "pipeline"
-                ? "processor"
-                : componentConfig.section,
-            section: componentConfig.section,
-            component: componentConfig.component,
-            createdAt: new Date(componentConfig.created_at).toLocaleString(),
-          }))
-        );
-      } catch (error) {
-        console.error("Error fetching component configs data:", error);
+  const handleBasicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSectionChange = (value: string) => {
+    setComponentSection(value);
+    setFormData((prev) => ({ ...prev, section: value }));
+    setSelectedComponent("");
+    setConfigSchema(null);
+    setConfigValues({});
+  };
+
+  const handleComponentChange = (value: string) => {
+    setSelectedComponent(value);
+    setFormData((prev) => ({ ...prev, component: value }));
+
+    const schema = componentSchemas[componentSection as keyof typeof componentSchemas][
+      value as keyof (typeof componentSchemas)[keyof typeof componentSchemas]
+    ];
+    setConfigSchema(schema);
+
+    const initialValues: Record<string, any> = {};
+    initializeDefaultValues(schema, initialValues);
+    setConfigValues(initialValues);
+  };
+
+  const initializeDefaultValues = (schema: any, values: Record<string, any>) => {
+    Object.entries(schema).forEach(([key, field]: [string, any]) => {
+      if (field.type === "object" && field.properties) {
+        values[key] = {};
+        initializeDefaultValues(field.properties, values[key]);
+      } else if (field.type === "array") {
+        values[key] = field.default || [];
+      } else if (field.type === "key_value") {
+        values[key] = field.default || {};
+      } else if (field.default !== undefined) {
+        values[key] = field.default;
+      } else if (field.type === "bool") {
+        values[key] = false;
+      } else if (field.type === "number") {
+        values[key] = 0;
+      } else if (field.type === "code") {
+        values[key] = "";
+      } else {
+        values[key] = "";
       }
-    };
+    });
+  };
 
-    fetchComponentConfigs();
-  }, [addToast]);
+  const handleConfigChange = (key: string, value: any) => {
+    setConfigValues((prev) => {
+      const newValues = JSON.parse(JSON.stringify(prev));
+      const keyParts = key.split(".");
 
-  const handleSaveStream = async (data: {
-    name: string;
-    status: string;
-    nodes: Node<StreamNodeData>[];
-    edges: Edge[];
-  }) => {
+      if (keyParts.length === 1) {
+        newValues[key] = value;
+      } else {
+        let current = newValues;
+        for (let i = 0; i < keyParts.length - 1; i++) {
+          const part = keyParts[i];
+          if (current[part] === undefined) {
+            current[part] = {};
+          }
+          current = current[part];
+        }
+        const lastKey = keyParts[keyParts.length - 1];
+        current[lastKey] = value;
+      }
+      return newValues;
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      // Extract input, processors, and output from the nodes
-      const inputNode = data.nodes.find((node) => node.data.type === "input");
-      const processorNodes = data.nodes.filter(
-        (node) => node.data.type === "processor"
-      );
-      const outputNode = data.nodes.find((node) => node.data.type === "output");
-
-      // Validate the stream configuration
-      if (!inputNode || !outputNode) {
-        throw new Error("Stream must have at least one input and one output");
+      let formDataConfig = { [formData.component]: configValues };
+      const isFlat =
+        componentSchemas[componentSection as keyof typeof componentSchemas][
+          formData.component as keyof (typeof componentSchemas)[keyof typeof componentSchemas]
+        ]?.["flat"] ?? false;
+      if (isFlat) {
+        formDataConfig = configValues;
       }
 
-      // Check if the stream is properly connected
-      const isConnected = validateConnections(data.nodes, data.edges);
-      if (!isConnected) {
-        throw new Error("All nodes must be connected in a valid flow");
-      }
-
-      // Create processors array
-      const processors = processorNodes.map((node) => ({
-        label: node.data.label,
-        processor_id: node.data.componentId || "",
-      }));
-
-      let inputComponentID: number = 0;
-      let outputComponentID: number = 0;
-      if (inputNode.data.componentId && outputNode.data.componentId) {
-        inputComponentID = parseInt(inputNode.data.componentId);
-        outputComponentID = parseInt(outputNode.data.componentId);
-      } else {
-        throw new Error(
-          "Not possible to create stream without input and output component IDs"
-        );
-      }
-
-      const newStream = {
-        name: data.name,
-        status: data.status,
-        input_label: inputNode.data.label,
-        input_id: inputComponentID,
-        processors: processors.length > 0 ? processors : null,
-        output_label: outputNode.data.label,
-        output_id: outputComponentID,
-      };
-
-      console.log("New Stream Data:", newStream);
-      const response = await fetch("http://localhost:8080/streams", {
+      const response = await fetch("http://localhost:8080/component-configs", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(newStream),
+        body: JSON.stringify({
+          ...formData,
+          config: formDataConfig,
+        }),
       });
+
       if (!response.ok) {
-        throw new Error("Failed to create stream");
+        throw new Error(`Failed to create component: ${response.statusText}`);
       }
 
-      // Show success toast
       addToast({
-        id: "stream-created",
-        title: "Stream Created",
-        description: `${data.name} has been created successfully.`,
+        id: "component-config-created",
+        title: "Component Created",
+        description: `${formData.name} has been created successfully.`,
         variant: "success",
       });
 
-      // Navigate back to the streams list
-      navigate("/streams");
-    } catch (error) {
-      // Show error toast
+      navigate("/component-configs");
+    } catch (error: any) {
       addToast({
-        id: "stream-error",
-        title: "Error Creating Stream",
-        description:
-          error instanceof Error ? error.message : "An unknown error occurred",
+        id: "component-config-error",
+        title: "Creation Failed",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "error",
       });
     } finally {
@@ -136,64 +157,120 @@ const NewStreamPage: React.FC = () => {
     }
   };
 
-  // Validate that all nodes are connected in a valid flow
-  const validateConnections = (nodes: Node[], edges: Edge[]): boolean => {
-    if (nodes.length <= 1) return false;
-
-    // Check if there's at least one input and one output
-    const hasInput = nodes.some((node) => node.data.type === "input");
-    const hasOutput = nodes.some((node) => node.data.type === "output");
-
-    if (!hasInput || !hasOutput) return false;
-
-    // Check if all nodes are connected
-    const connectedNodeIds = new Set<string>();
-
-    // Start with input nodes
-    const inputNodes = nodes.filter((node) => node.data.type === "input");
-    inputNodes.forEach((node) => connectedNodeIds.add(node.id));
-
-    // Traverse the graph
-    let newNodesAdded = true;
-    while (newNodesAdded) {
-      newNodesAdded = false;
-
-      edges.forEach((edge) => {
-        if (
-          connectedNodeIds.has(edge.source) &&
-          !connectedNodeIds.has(edge.target)
-        ) {
-          connectedNodeIds.add(edge.target);
-          newNodesAdded = true;
-        }
-      });
-    }
-
-    // Check if all nodes are in the connected set
-    return connectedNodeIds.size === nodes.length;
-  };
-
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Add New Stream</h1>
-        <p className="text-muted-foreground">
-          Design your data processing pipeline visually
-        </p>
+        <h1 className="text-2xl font-bold">Add New Component Config</h1>
+        <p className="text-muted-foreground">Create new component configuration with detailed settings</p>
       </div>
 
-      {isSubmitting ? (
-        <div className="flex justify-center items-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Basic Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleBasicChange}
+                placeholder="Component config name"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="section">Section</Label>
+              <Select value={componentSection} onValueChange={handleSectionChange} required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select component section" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="input">Input</SelectItem>
+                  <SelectItem value="pipeline">Pipeline</SelectItem>
+                  <SelectItem value="output">Output</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {componentSection && (
+              <div className="space-y-2">
+                <Label htmlFor="component">Component</Label>
+                <Select
+                  value={selectedComponent}
+                  onValueChange={handleComponentChange}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select component" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {componentLists[
+                      componentSection as keyof typeof componentLists
+                    ].map((comp) => (
+                      <SelectItem key={comp} value={comp}>
+                        {comp}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {selectedComponent && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{selectedComponent} Configuration</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {configSchema ? (
+                <div className="space-y-6">
+                  {Object.entries(configSchema).map(([key, field]: [string, any]) => (
+                    <NestedFormField
+                      key={key}
+                      fieldKey={key}
+                      field={field}
+                      value={configValues[key]}
+                      onChange={handleConfigChange}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="flex justify-center items-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        <div className="flex justify-between">
+          <Button variant="outline" type="button" onClick={() => navigate(-1)}>
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            disabled={!formData.name || !componentSection || !selectedComponent || isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              "Create Component"
+            )}
+          </Button>
         </div>
-      ) : (
-        <StreamBuilder
-          componentConfigsData={componentConfigsData}
-          onSave={handleSaveStream}
-        />
-      )}
+      </form>
     </div>
+
   );
 };
 
-export default NewStreamPage;
+export default NewPage;

@@ -15,7 +15,7 @@ import {
 } from "../../../lib/component-utils";
 import { ComponentSchema, ComponentConfig } from "../../../types";
 
-const EditPage = () => {
+const EditComponentConfigPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addToast } = useToast();
@@ -223,4 +223,4 @@ const EditPage = () => {
   );
 };
 
-export default EditPage;
+export default EditComponentConfigPage;

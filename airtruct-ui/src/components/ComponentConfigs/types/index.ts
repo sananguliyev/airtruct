@@ -29,6 +29,7 @@ export interface ComponentConfig {
     handleComponentChange: (value: string) => void;
   }
 
+
   // src/types/componentSchemas.ts
 export interface ComponentSchemaField {
   type: string;

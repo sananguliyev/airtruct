@@ -1,4 +1,3 @@
-// src/components/ComponentConfigs/BasicInfoCard.tsx
 import React from "react";
 import {
   Card,
@@ -16,15 +15,7 @@ import {
   SelectValue,
 } from "../../ui/select";
 import { componentLists } from "../../lib/component-schemas";
-
-interface BasicInfoCardProps {
-  formData: any;
-  componentSection: string;
-  selectedComponent: string;
-  handleBasicChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleSectionChange: (value: string) => void;
-  handleComponentChange: (value: string) => void;
-}
+import { BasicInfoCardProps } from "./types";
 
 const BasicInfoCard: React.FC<BasicInfoCardProps> = ({
   formData,
