@@ -11,13 +11,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { componentConfigsData } from "@/lib/mock-data";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/components/toast";
 import { NestedFormField } from "@/components/nested-form-field";
 import { componentSchemas, componentLists } from "@/lib/component-schemas";
 import { ComponentConfig } from "@/lib/entities";
-import { set } from "react-hook-form";
 
 export default function ComponentConfigEditPage() {
   const navigate = useNavigate();
@@ -283,7 +281,7 @@ export default function ComponentConfigEditPage() {
       };
 
       const response = await fetch(
-        `http://localhost:8080/component-configs/${id}`,
+        `http://localhost:8080/v0/component-configs/${id}`,
         {
           method: "PUT",
           headers: {

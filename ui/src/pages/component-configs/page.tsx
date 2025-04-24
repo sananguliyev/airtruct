@@ -5,7 +5,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/data-table";
 import { useNavigate } from "react-router-dom";
-import { Badge } from "@/components/ui/badge";
+import { columns } from "@/components/component-config-columns";
 
 import { ComponentConfig } from "@/lib/entities";
 import { useToast } from "@/components/toast";
@@ -58,39 +58,6 @@ export default function ComponentsPage() {
     loadConfigs();
   }, []);
 
-  const columns = [
-    // { key: "id", title: "ID" },
-    { key: "name", title: "Name" },
-    {
-      key: "section",
-      title: "Section",
-      render: (value: string) => {
-        const colorMap: Record<string, string> = {
-          input:
-            "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
-          processor:
-            "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
-          output:
-            "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-        };
-        return (
-          <Badge className={colorMap[value] || ""} variant="outline">
-            {value}
-          </Badge>
-        );
-      },
-    },
-    {
-      key: "component",
-      title: "Component",
-      render: (value: string) => <Badge variant="outline">{value}</Badge>,
-    },
-    {
-      key: "createdAt",
-      title: "Last versioned at",
-    },
-  ];
-
   const handleAddNew = () => {
     navigate("/component-configs/new");
   };
@@ -138,7 +105,7 @@ export default function ComponentsPage() {
       ) : (
         <DataTable
           data={componentConfigs}
-          columns={columns}
+          columns={columns()}
           onEdit={handleEdit}
           onDelete={handleDelete}
         />
