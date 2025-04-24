@@ -639,7 +639,7 @@ type ListWorkersResponse_Worker struct {
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Address       string                 `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
 	Status        string                 `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
-	LastHeartbeat *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=last_heartbeat,json=lastHeartbeat,proto3" json:"last_heartbeat,omitempty"`
+	LastHeartbeat *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=last_heartbeat,proto3" json:"last_heartbeat,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -720,14 +720,14 @@ const file_coordinator_proto_rawDesc = "" +
 	"\x19GetComponentConfigRequest\x12\x17\n" +
 	"\x02id\x18\x01 \x01(\x03B\a\xfaB\x04\"\x02 \x00R\x02id\"J\n" +
 	"\x12ListWorkersRequest\x124\n" +
-	"\x06status\x18\x01 \x01(\tB\x1c\xfaB\x19r\x17R\x06activeR\binactiveR\x03allR\x06status\"\xe2\x01\n" +
+	"\x06status\x18\x01 \x01(\tB\x1c\xfaB\x19r\x17R\x06activeR\binactiveR\x03allR\x06status\"\xe3\x01\n" +
 	"\x13ListWorkersResponse\x12;\n" +
-	"\x04data\x18\x01 \x03(\v2'.protorender.ListWorkersResponse.WorkerR\x04data\x1a\x8d\x01\n" +
+	"\x04data\x18\x01 \x03(\v2'.protorender.ListWorkersResponse.WorkerR\x04data\x1a\x8e\x01\n" +
 	"\x06Worker\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x18\n" +
 	"\aaddress\x18\x02 \x01(\tR\aaddress\x12\x16\n" +
-	"\x06status\x18\x03 \x01(\tR\x06status\x12A\n" +
-	"\x0elast_heartbeat\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\rlastHeartbeat\"[\n" +
+	"\x06status\x18\x03 \x01(\tR\x06status\x12B\n" +
+	"\x0elast_heartbeat\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\x0elast_heartbeat\"[\n" +
 	"\x12ListStreamsRequest\x12E\n" +
 	"\x06status\x18\x01 \x01(\tB-\xfaB*r(R\x06activeR\tcompletedR\x06pausedR\x06failedR\x03allR\x06status\">\n" +
 	"\x13ListStreamsResponse\x12'\n" +
@@ -745,7 +745,8 @@ const file_coordinator_proto_rawDesc = "" +
 	"\x10worker_stream_id\x18\x01 \x01(\x03B\a\xfaB\x04\"\x02 \x00R\x0eworkerStreamId\x12!\n" +
 	"\finput_events\x18\x02 \x01(\x04R\vinputEvents\x12)\n" +
 	"\x10processor_errors\x18\x03 \x01(\x04R\x0fprocessorErrors\x12#\n" +
-	"\routput_events\x18\x04 \x01(\x04R\foutputEvents2\x85\v\n" +
+	"\routput_events\x18\x04 \x01(\x04R\foutputEvents2\xfc\n" +
+	"\n" +
 	"\vCoordinator\x12a\n" +
 	"\x18UpdateWorkerStreamStatus\x12&.protorender.WorkerStreamStatusRequest\x1a\x1b.protorender.CommonResponse\"\x00\x12t\n" +
 	"\x15CreateComponentConfig\x12\x1c.protorender.ComponentConfig\x1a\x1b.protorender.CommonResponse\" \x82\xd3\xe4\x93\x02\x1a:\x01*\"\x15/v0/component-configs\x12y\n" +
@@ -754,8 +755,8 @@ const file_coordinator_proto_rawDesc = "" +
 	"\x14ListComponentConfigs\x12\x16.google.protobuf.Empty\x1a).protorender.ListComponentConfigsResponse\"\x1d\x82\xd3\xe4\x93\x02\x17\x12\x15/v0/component-configs\x12S\n" +
 	"\x0eRegisterWorker\x12\".protorender.RegisterWorkerRequest\x1a\x1b.protorender.CommonResponse\"\x00\x12W\n" +
 	"\x10DeregisterWorker\x12$.protorender.DeregisterWorkerRequest\x1a\x1b.protorender.CommonResponse\"\x00\x12n\n" +
-	"\vListWorkers\x12\x1f.protorender.ListWorkersRequest\x1a .protorender.ListWorkersResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\x12\x14/v0/workers/{status}\x12n\n" +
-	"\vListStreams\x12\x1f.protorender.ListStreamsRequest\x1a .protorender.ListStreamsResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\x12\x14/v0/streams/{status}\x12Y\n" +
+	"\vListWorkers\x12\x1f.protorender.ListWorkersRequest\x1a .protorender.ListWorkersResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\x12\x14/v0/workers/{status}\x12e\n" +
+	"\vListStreams\x12\x1f.protorender.ListStreamsRequest\x1a .protorender.ListStreamsResponse\"\x13\x82\xd3\xe4\x93\x02\r\x12\v/v0/streams\x12Y\n" +
 	"\tGetStream\x12\x1d.protorender.GetStreamRequest\x1a\x13.protorender.Stream\"\x18\x82\xd3\xe4\x93\x02\x12\x12\x10/v0/streams/{id}\x12X\n" +
 	"\fCreateStream\x12\x13.protorender.Stream\x1a\x1b.protorender.CommonResponse\"\x16\x82\xd3\xe4\x93\x02\x10:\x01*\"\v/v0/streams\x12]\n" +
 	"\fUpdateStream\x12\x13.protorender.Stream\x1a\x1b.protorender.CommonResponse\"\x1b\x82\xd3\xe4\x93\x02\x15:\x01*\x1a\x10/v0/streams/{id}\x12>\n" +

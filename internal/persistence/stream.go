@@ -43,12 +43,13 @@ func (s *Stream) ToProto() *pb.Stream {
 		updatedAt = timestamppb.New(*s.UpdatedAt)
 	}
 
-	return &pb.Stream{
+	result := &pb.Stream{
 		Id:          s.ID,
 		ParentId:    s.ParentID,
 		Name:        s.Name,
 		InputLabel:  s.InputLabel,
 		InputId:     s.InputID,
+		Processors:  make([]*pb.Stream_Processor, len(s.Processors)),
 		OutputLabel: s.OutputLabel,
 		OutputId:    s.OutputID,
 		IsCurrent:   s.IsCurrent,
@@ -56,6 +57,15 @@ func (s *Stream) ToProto() *pb.Stream {
 		CreatedAt:   timestamppb.New(s.CreatedAt),
 		UpdatedAt:   updatedAt,
 	}
+
+	for i, processor := range s.Processors {
+		result.Processors[i] = &pb.Stream_Processor{
+			Label:       processor.Label,
+			ProcessorId: processor.ProcessorID,
+		}
+	}
+
+	return result
 }
 
 func (s *Stream) FromProto(p *pb.Stream) {

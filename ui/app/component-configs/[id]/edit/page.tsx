@@ -51,7 +51,7 @@ export default function EditComponentConfigPage({
 
   // Load component data
   useEffect(() => {
-    fetch(`http://localhost:8080/component-configs/${id}`)
+    fetch(`http://localhost:8080/v0/component-configs/${id}`)
       .then((response) => {
         if (!response.ok) {
           throw new Error("Failed to fetch component config");

@@ -31,14 +31,14 @@ export default function EditStreamPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     async function fetchComponentConfigs() {
       try {
-        const response = await fetch("http://localhost:8080/component-configs");
+        const response = await fetch("http://localhost:8080/v0/component-configs");
 
         if (!response.ok) {
           throw new Error("Response not ok");
         }
         const data = await response.json();
         setComponentConfigsData(
-          data.map((componentConfig: any) => ({
+          data.data.map((componentConfig: any) => ({
             id: componentConfig.id,
             name: componentConfig.name,
             type:
@@ -62,7 +62,7 @@ export default function EditStreamPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     setIsLoading(true);
 
-    fetch(`http://localhost:8080/streams/${id}`)
+    fetch(`http://localhost:8080/v0/streams/${id}`)
       .then((response) => {
         if (!response.ok) {
           throw new Error("Failed to fetch stream");
@@ -262,7 +262,7 @@ export default function EditStreamPage({ params }: { params: { id: string } }) {
       };
       console.log("Update Stream data:", updatedStreamData);
 
-      const response = await fetch(`http://localhost:8080/streams/${id}`, {
+      const response = await fetch(`http://localhost:8080/v0/streams/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

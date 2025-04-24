@@ -22,14 +22,14 @@ export default function NewStreamPage() {
   useEffect(() => {
     async function fetchComponentConfigs() {
       try {
-        const response = await fetch("http://localhost:8080/component-configs");
+        const response = await fetch("http://localhost:8080/v0/component-configs");
 
         if (!response.ok) {
           throw new Error("Response not ok");
         }
         const data = await response.json();
         setcomponentConfigsData(
-          data.map((componentConfig: any) => ({
+          data.data.map((componentConfig: any) => ({
             id: componentConfig.id,
             name: componentConfig.name,
             type:
@@ -104,7 +104,7 @@ export default function NewStreamPage() {
       };
 
       console.log("New Stream Data:", newStream);
-      const response = await fetch("http://localhost:8080/streams", {
+      const response = await fetch("http://localhost:8080/v0/streams", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

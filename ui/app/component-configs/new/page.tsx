@@ -218,7 +218,7 @@ export default function NewComponentConfigPage() {
       };
 
       // Make a POST request to save the new component config
-      const response = await fetch("http://localhost:8080/component-configs", {
+      const response = await fetch("http://localhost:8080/v0/component-configs", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

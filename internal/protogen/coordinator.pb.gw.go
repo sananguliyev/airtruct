@@ -195,20 +195,19 @@ func local_request_Coordinator_ListWorkers_0(ctx context.Context, marshaler runt
 	return msg, metadata, err
 }
 
+var filter_Coordinator_ListStreams_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+
 func request_Coordinator_ListStreams_0(ctx context.Context, marshaler runtime.Marshaler, client CoordinatorClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq ListStreamsRequest
 		metadata runtime.ServerMetadata
-		err      error
 	)
 	io.Copy(io.Discard, req.Body)
-	val, ok := pathParams["status"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "status")
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	protoReq.Status, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "status", err)
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Coordinator_ListStreams_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	msg, err := client.ListStreams(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
@@ -218,15 +217,12 @@ func local_request_Coordinator_ListStreams_0(ctx context.Context, marshaler runt
 	var (
 		protoReq ListStreamsRequest
 		metadata runtime.ServerMetadata
-		err      error
 	)
-	val, ok := pathParams["status"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "status")
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	protoReq.Status, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "status", err)
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Coordinator_ListStreams_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	msg, err := server.ListStreams(ctx, &protoReq)
 	return msg, metadata, err
@@ -447,7 +443,7 @@ func RegisterCoordinatorHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/protorender.Coordinator/ListStreams", runtime.WithHTTPPathPattern("/v0/streams/{status}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/protorender.Coordinator/ListStreams", runtime.WithHTTPPathPattern("/v0/streams"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -650,7 +646,7 @@ func RegisterCoordinatorHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/protorender.Coordinator/ListStreams", runtime.WithHTTPPathPattern("/v0/streams/{status}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/protorender.Coordinator/ListStreams", runtime.WithHTTPPathPattern("/v0/streams"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -723,7 +719,7 @@ var (
 	pattern_Coordinator_GetComponentConfig_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "component-configs", "id"}, ""))
 	pattern_Coordinator_ListComponentConfigs_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "component-configs"}, ""))
 	pattern_Coordinator_ListWorkers_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "workers", "status"}, ""))
-	pattern_Coordinator_ListStreams_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "streams", "status"}, ""))
+	pattern_Coordinator_ListStreams_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "streams"}, ""))
 	pattern_Coordinator_GetStream_0             = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "streams", "id"}, ""))
 	pattern_Coordinator_CreateStream_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "streams"}, ""))
 	pattern_Coordinator_UpdateStream_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "streams", "id"}, ""))

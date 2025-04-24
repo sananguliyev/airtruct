@@ -28,14 +28,14 @@ export default function WorkersPage() {
   useEffect(() => {
     async function fetchWorkers() {
       try {
-        const response = await fetch("http://localhost:8080/workers/all");
+        const response = await fetch("http://localhost:8080/v0/workers/all");
 
         if (!response.ok) {
           throw new Error("Response not ok");
         }
         const data = await response.json();
         setWorkers(
-          data.map((worker: any) => ({
+          data.data.map((worker: any) => ({
             id: worker.id,
             status: worker.status,
             address: worker.address,

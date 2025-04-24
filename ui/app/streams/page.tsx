@@ -68,7 +68,7 @@ export default function StreamsPage() {
   useEffect(() => {
     async function fetchStreams() {
       try {
-        const response = await fetch("http://localhost:8080/streams");
+        const response = await fetch("http://localhost:8080/v0/streams?status=all");
 
         if (!response.ok) {
           throw new Error("Response not ok");
@@ -76,11 +76,11 @@ export default function StreamsPage() {
         const data = await response.json();
 
         setStreams(
-          data.map((stream: any) => ({
+          data.data.map((stream: any) => ({
             id: stream.id,
             name: stream.name,
             status: stream.status,
-            input: stream.input,
+            // input: stream.input,
             inputID: stream.input_id,
             inputLabel: stream.input_label,
             processors: stream.processors.map((processor: any) => ({
@@ -88,7 +88,7 @@ export default function StreamsPage() {
               label: processor.label,
               createdAt: new Date(processor.created_at).toLocaleString(),
             })),
-            output: stream.output,
+            // output: stream.output,
             outputID: stream.output_id,
             outputLabel: stream.output_label,
             createdAt: new Date(stream.created_at).toLocaleString(),

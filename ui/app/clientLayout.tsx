@@ -11,7 +11,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-const REPOSITORY_URL = "https://github.com/yourusername/airtruct";
+const REPOSITORY_URL = "https://github.com/sananguliyev/airtruct";
 
 export default function ClientLayout({
   children,

@@ -20,14 +20,14 @@ export default function ComponentsPage() {
   useEffect(() => {
     async function fetchComponentConfigs() {
       try {
-        const response = await fetch("http://localhost:8080/component-configs");
+        const response = await fetch("http://localhost:8080/v0/component-configs");
 
         if (!response.ok) {
           throw new Error("Response not ok");
         }
         const data = await response.json();
         setComponentConfigs(
-          data.map((componentConfig: any) => ({
+          data.data.map((componentConfig: any) => ({
             id: componentConfig.id,
             name: componentConfig.name,
             section: componentConfig.section,
