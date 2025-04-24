@@ -16,7 +16,7 @@ const (
 )
 
 type Worker struct {
-	ID            string       `gorm:"unique" json:"id"`
+	ID            string       `gorm:"primaryKey" json:"id"`
 	Address       string       `json:"address"`
 	LastHeartbeat time.Time    `json:"last_heartbeat"`
 	Status        WorkerStatus `json:"status"`

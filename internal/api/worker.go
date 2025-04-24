@@ -1,52 +1,77 @@
 package api
 
 import (
-	"encoding/json"
-	"net/http"
+	"context"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/rs/zerolog/log"
+	pb "github.com/sananguliyev/airtruct/internal/protogen"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/sananguliyev/airtruct/internal/executor"
 )
 
-type WorkerAPI interface {
-	StartStream(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
-	HealthCheck(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
-}
-
-type worker struct {
+type WorkerAPI struct {
+	pb.UnimplementedWorkerServer
 	workerExecutor executor.WorkerExecutor
 }
 
-func NewWorkerAPI(workerExecutor executor.WorkerExecutor) WorkerAPI {
-	return &worker{workerExecutor}
+func NewWorkerAPI(workerExecutor executor.WorkerExecutor) *WorkerAPI {
+	return &WorkerAPI{
+		workerExecutor: workerExecutor,
+	}
 }
 
-func (c *worker) StartStream(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	var body struct {
-		WorkerStreamID int    `json:"worker_stream_id"`
-		Config         string `json:"config"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
-
+func (a *WorkerAPI) AssignStream(ctx context.Context, in *pb.AssignStreamRequest) (*pb.CommonResponse, error) {
 	log.Debug().
-		Int("worker_stream_id", body.WorkerStreamID).
-		Str("config", body.Config).
+		Int64("worker_stream_id", in.GetWorkerStreamId()).
+		Str("config", in.GetConfig()).
 		Msg("Starting stream for processing")
 
-	c.workerExecutor.StartStream(body.WorkerStreamID, body.Config)
+	err := a.workerExecutor.AddStreamToQueue(ctx, in.GetWorkerStreamId(), in.GetConfig())
+	if err != nil {
+		log.Error().Err(err).Int64("worker_stream_id", in.GetWorkerStreamId()).Msg("Failed to queue stream")
+		return nil, status.Error(codes.Internal, "Failed to queue stream")
+	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]string{"message": "Stream started for processing"})
+	return &pb.CommonResponse{Message: "Stream queued for processing"}, nil
 }
 
-func (c *worker) HealthCheck(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+func (a *WorkerAPI) FetchStream(ctx context.Context, in *pb.FetchStreamRequest) (*pb.FetchStreamResponse, error) {
+	log.Debug().
+		Int64("worker_stream_id", in.GetWorkerStreamId()).
+		Msg("Fetching stream for processing")
+
+	streamStatus, err := a.workerExecutor.FetchWorkerStreamStatus(ctx, in.GetWorkerStreamId())
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to fetch stream")
+		return nil, status.Error(codes.Internal, "Failed to fetch stream")
+	} else if streamStatus == nil {
+		return nil, status.Error(codes.NotFound, "Stream not found in worker")
+	}
+	return &pb.FetchStreamResponse{
+		Status: pb.WorkerStreamStatus(pb.WorkerStreamStatus_value[string(*streamStatus)]),
+	}, nil
+}
+
+func (a *WorkerAPI) CompleteStream(ctx context.Context, in *pb.CompleteStreamRequest) (*pb.CommonResponse, error) {
+	var err error
+
+	log.Debug().
+		Int64("worker_stream_id", in.GetWorkerStreamId()).
+		Msg("Starting stream for processing")
+
+	if err = a.workerExecutor.DeleteWorkerStream(ctx, in.GetWorkerStreamId()); err != nil {
+		log.Error().Err(err).Int64("worker_stream_id", in.GetWorkerStreamId()).Msg("Failed to delete worker stream")
+		return nil, status.Error(codes.Internal, "Failed to delete stream in worker")
+	}
+
+	return &pb.CommonResponse{Message: "Worker Stream has been deleted successfully"}, nil
+}
+
+func (a *WorkerAPI) HealthCheck(_ context.Context, _ *emptypb.Empty) (*pb.CommonResponse, error) {
+	return &pb.CommonResponse{
+		Message: "OK",
+	}, nil
 }
