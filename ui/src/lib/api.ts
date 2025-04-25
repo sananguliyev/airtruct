@@ -1,7 +1,7 @@
 import { Stream, ComponentConfig, Worker } from "./entities";
 
 // Placeholder API functions - adapt based on original logic and backend
-const API_BASE_URL = "http://localhost:8080/v0"; 
+const API_BASE_URL = "http://localhost:8080/api/v0"; 
 
 export async function fetchWorkers(): Promise<Worker[]> {
   try {

@@ -355,6 +355,7 @@ require (
 )
 
 require (
+	github.com/rakyll/statik v0.1.7
 	github.com/rs/cors v1.11.1
 	gorm.io/gorm v1.25.11
 )
