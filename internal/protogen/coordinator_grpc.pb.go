@@ -43,9 +43,9 @@ type CoordinatorClient interface {
 	// Worker stream methods
 	UpdateWorkerStreamStatus(ctx context.Context, in *WorkerStreamStatusRequest, opts ...grpc.CallOption) (*CommonResponse, error)
 	// Component config methods
-	CreateComponentConfig(ctx context.Context, in *ComponentConfig, opts ...grpc.CallOption) (*CommonResponse, error)
-	UpdateComponentConfig(ctx context.Context, in *ComponentConfig, opts ...grpc.CallOption) (*CommonResponse, error)
-	GetComponentConfig(ctx context.Context, in *GetComponentConfigRequest, opts ...grpc.CallOption) (*ComponentConfig, error)
+	CreateComponentConfig(ctx context.Context, in *ComponentConfig, opts ...grpc.CallOption) (*ComponentConfigResponse, error)
+	UpdateComponentConfig(ctx context.Context, in *ComponentConfig, opts ...grpc.CallOption) (*ComponentConfigResponse, error)
+	GetComponentConfig(ctx context.Context, in *GetComponentConfigRequest, opts ...grpc.CallOption) (*ComponentConfigResponse, error)
 	ListComponentConfigs(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListComponentConfigsResponse, error)
 	// Worker methods
 	RegisterWorker(ctx context.Context, in *RegisterWorkerRequest, opts ...grpc.CallOption) (*CommonResponse, error)
@@ -53,9 +53,9 @@ type CoordinatorClient interface {
 	ListWorkers(ctx context.Context, in *ListWorkersRequest, opts ...grpc.CallOption) (*ListWorkersResponse, error)
 	// Stream methods
 	ListStreams(ctx context.Context, in *ListStreamsRequest, opts ...grpc.CallOption) (*ListStreamsResponse, error)
-	GetStream(ctx context.Context, in *GetStreamRequest, opts ...grpc.CallOption) (*Stream, error)
-	CreateStream(ctx context.Context, in *Stream, opts ...grpc.CallOption) (*CommonResponse, error)
-	UpdateStream(ctx context.Context, in *Stream, opts ...grpc.CallOption) (*CommonResponse, error)
+	GetStream(ctx context.Context, in *GetStreamRequest, opts ...grpc.CallOption) (*StreamResponse, error)
+	CreateStream(ctx context.Context, in *Stream, opts ...grpc.CallOption) (*StreamResponse, error)
+	UpdateStream(ctx context.Context, in *Stream, opts ...grpc.CallOption) (*StreamResponse, error)
 	// Observability methods
 	IngestEvents(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Event, emptypb.Empty], error)
 	IngestMetrics(ctx context.Context, in *MetricsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -79,9 +79,9 @@ func (c *coordinatorClient) UpdateWorkerStreamStatus(ctx context.Context, in *Wo
 	return out, nil
 }
 
-func (c *coordinatorClient) CreateComponentConfig(ctx context.Context, in *ComponentConfig, opts ...grpc.CallOption) (*CommonResponse, error) {
+func (c *coordinatorClient) CreateComponentConfig(ctx context.Context, in *ComponentConfig, opts ...grpc.CallOption) (*ComponentConfigResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CommonResponse)
+	out := new(ComponentConfigResponse)
 	err := c.cc.Invoke(ctx, Coordinator_CreateComponentConfig_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -89,9 +89,9 @@ func (c *coordinatorClient) CreateComponentConfig(ctx context.Context, in *Compo
 	return out, nil
 }
 
-func (c *coordinatorClient) UpdateComponentConfig(ctx context.Context, in *ComponentConfig, opts ...grpc.CallOption) (*CommonResponse, error) {
+func (c *coordinatorClient) UpdateComponentConfig(ctx context.Context, in *ComponentConfig, opts ...grpc.CallOption) (*ComponentConfigResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CommonResponse)
+	out := new(ComponentConfigResponse)
 	err := c.cc.Invoke(ctx, Coordinator_UpdateComponentConfig_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -99,9 +99,9 @@ func (c *coordinatorClient) UpdateComponentConfig(ctx context.Context, in *Compo
 	return out, nil
 }
 
-func (c *coordinatorClient) GetComponentConfig(ctx context.Context, in *GetComponentConfigRequest, opts ...grpc.CallOption) (*ComponentConfig, error) {
+func (c *coordinatorClient) GetComponentConfig(ctx context.Context, in *GetComponentConfigRequest, opts ...grpc.CallOption) (*ComponentConfigResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ComponentConfig)
+	out := new(ComponentConfigResponse)
 	err := c.cc.Invoke(ctx, Coordinator_GetComponentConfig_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -159,9 +159,9 @@ func (c *coordinatorClient) ListStreams(ctx context.Context, in *ListStreamsRequ
 	return out, nil
 }
 
-func (c *coordinatorClient) GetStream(ctx context.Context, in *GetStreamRequest, opts ...grpc.CallOption) (*Stream, error) {
+func (c *coordinatorClient) GetStream(ctx context.Context, in *GetStreamRequest, opts ...grpc.CallOption) (*StreamResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Stream)
+	out := new(StreamResponse)
 	err := c.cc.Invoke(ctx, Coordinator_GetStream_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -169,9 +169,9 @@ func (c *coordinatorClient) GetStream(ctx context.Context, in *GetStreamRequest,
 	return out, nil
 }
 
-func (c *coordinatorClient) CreateStream(ctx context.Context, in *Stream, opts ...grpc.CallOption) (*CommonResponse, error) {
+func (c *coordinatorClient) CreateStream(ctx context.Context, in *Stream, opts ...grpc.CallOption) (*StreamResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CommonResponse)
+	out := new(StreamResponse)
 	err := c.cc.Invoke(ctx, Coordinator_CreateStream_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -179,9 +179,9 @@ func (c *coordinatorClient) CreateStream(ctx context.Context, in *Stream, opts .
 	return out, nil
 }
 
-func (c *coordinatorClient) UpdateStream(ctx context.Context, in *Stream, opts ...grpc.CallOption) (*CommonResponse, error) {
+func (c *coordinatorClient) UpdateStream(ctx context.Context, in *Stream, opts ...grpc.CallOption) (*StreamResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CommonResponse)
+	out := new(StreamResponse)
 	err := c.cc.Invoke(ctx, Coordinator_UpdateStream_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -219,9 +219,9 @@ type CoordinatorServer interface {
 	// Worker stream methods
 	UpdateWorkerStreamStatus(context.Context, *WorkerStreamStatusRequest) (*CommonResponse, error)
 	// Component config methods
-	CreateComponentConfig(context.Context, *ComponentConfig) (*CommonResponse, error)
-	UpdateComponentConfig(context.Context, *ComponentConfig) (*CommonResponse, error)
-	GetComponentConfig(context.Context, *GetComponentConfigRequest) (*ComponentConfig, error)
+	CreateComponentConfig(context.Context, *ComponentConfig) (*ComponentConfigResponse, error)
+	UpdateComponentConfig(context.Context, *ComponentConfig) (*ComponentConfigResponse, error)
+	GetComponentConfig(context.Context, *GetComponentConfigRequest) (*ComponentConfigResponse, error)
 	ListComponentConfigs(context.Context, *emptypb.Empty) (*ListComponentConfigsResponse, error)
 	// Worker methods
 	RegisterWorker(context.Context, *RegisterWorkerRequest) (*CommonResponse, error)
@@ -229,9 +229,9 @@ type CoordinatorServer interface {
 	ListWorkers(context.Context, *ListWorkersRequest) (*ListWorkersResponse, error)
 	// Stream methods
 	ListStreams(context.Context, *ListStreamsRequest) (*ListStreamsResponse, error)
-	GetStream(context.Context, *GetStreamRequest) (*Stream, error)
-	CreateStream(context.Context, *Stream) (*CommonResponse, error)
-	UpdateStream(context.Context, *Stream) (*CommonResponse, error)
+	GetStream(context.Context, *GetStreamRequest) (*StreamResponse, error)
+	CreateStream(context.Context, *Stream) (*StreamResponse, error)
+	UpdateStream(context.Context, *Stream) (*StreamResponse, error)
 	// Observability methods
 	IngestEvents(grpc.BidiStreamingServer[Event, emptypb.Empty]) error
 	IngestMetrics(context.Context, *MetricsRequest) (*emptypb.Empty, error)
@@ -248,13 +248,13 @@ type UnimplementedCoordinatorServer struct{}
 func (UnimplementedCoordinatorServer) UpdateWorkerStreamStatus(context.Context, *WorkerStreamStatusRequest) (*CommonResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateWorkerStreamStatus not implemented")
 }
-func (UnimplementedCoordinatorServer) CreateComponentConfig(context.Context, *ComponentConfig) (*CommonResponse, error) {
+func (UnimplementedCoordinatorServer) CreateComponentConfig(context.Context, *ComponentConfig) (*ComponentConfigResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateComponentConfig not implemented")
 }
-func (UnimplementedCoordinatorServer) UpdateComponentConfig(context.Context, *ComponentConfig) (*CommonResponse, error) {
+func (UnimplementedCoordinatorServer) UpdateComponentConfig(context.Context, *ComponentConfig) (*ComponentConfigResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateComponentConfig not implemented")
 }
-func (UnimplementedCoordinatorServer) GetComponentConfig(context.Context, *GetComponentConfigRequest) (*ComponentConfig, error) {
+func (UnimplementedCoordinatorServer) GetComponentConfig(context.Context, *GetComponentConfigRequest) (*ComponentConfigResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetComponentConfig not implemented")
 }
 func (UnimplementedCoordinatorServer) ListComponentConfigs(context.Context, *emptypb.Empty) (*ListComponentConfigsResponse, error) {
@@ -272,13 +272,13 @@ func (UnimplementedCoordinatorServer) ListWorkers(context.Context, *ListWorkersR
 func (UnimplementedCoordinatorServer) ListStreams(context.Context, *ListStreamsRequest) (*ListStreamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListStreams not implemented")
 }
-func (UnimplementedCoordinatorServer) GetStream(context.Context, *GetStreamRequest) (*Stream, error) {
+func (UnimplementedCoordinatorServer) GetStream(context.Context, *GetStreamRequest) (*StreamResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetStream not implemented")
 }
-func (UnimplementedCoordinatorServer) CreateStream(context.Context, *Stream) (*CommonResponse, error) {
+func (UnimplementedCoordinatorServer) CreateStream(context.Context, *Stream) (*StreamResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateStream not implemented")
 }
-func (UnimplementedCoordinatorServer) UpdateStream(context.Context, *Stream) (*CommonResponse, error) {
+func (UnimplementedCoordinatorServer) UpdateStream(context.Context, *Stream) (*StreamResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateStream not implemented")
 }
 func (UnimplementedCoordinatorServer) IngestEvents(grpc.BidiStreamingServer[Event, emptypb.Empty]) error {

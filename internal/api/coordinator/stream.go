@@ -4,14 +4,14 @@ import (
 	"context"
 
 	"github.com/rs/zerolog/log"
-	pb "github.com/sananguliyev/airtruct/internal/protogen"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/sananguliyev/airtruct/internal/persistence"
+	pb "github.com/sananguliyev/airtruct/internal/protogen"
 )
 
-func (c *CoordinatorAPI) CreateStream(_ context.Context, in *pb.Stream) (*pb.CommonResponse, error) {
+func (c *CoordinatorAPI) CreateStream(_ context.Context, in *pb.Stream) (*pb.StreamResponse, error) {
 	if err := in.Validate(); err != nil {
 		log.Debug().Err(err).Msg("Invalid request")
 		return nil, status.Error(codes.InvalidArgument, err.Error())
@@ -33,10 +33,13 @@ func (c *CoordinatorAPI) CreateStream(_ context.Context, in *pb.Stream) (*pb.Com
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &pb.CommonResponse{Message: "Stream has been created successfully"}, nil
+	return &pb.StreamResponse{
+		Data: stream.ToProto(),
+		Meta: &pb.CommonResponse{Message: "Stream has been created successfully"},
+	}, nil
 }
 
-func (c *CoordinatorAPI) GetStream(_ context.Context, in *pb.GetStreamRequest) (*pb.Stream, error) {
+func (c *CoordinatorAPI) GetStream(_ context.Context, in *pb.GetStreamRequest) (*pb.StreamResponse, error) {
 	if err := in.Validate(); err != nil {
 		log.Debug().Err(err).Msg("Invalid request")
 		return nil, status.Error(codes.InvalidArgument, err.Error())
@@ -50,7 +53,10 @@ func (c *CoordinatorAPI) GetStream(_ context.Context, in *pb.GetStreamRequest) (
 		return nil, status.Error(codes.NotFound, "Stream not found")
 	}
 
-	return stream.ToProto(), nil
+	return &pb.StreamResponse{
+		Data: stream.ToProto(),
+		Meta: &pb.CommonResponse{Message: "OK"},
+	}, nil
 }
 
 func (c *CoordinatorAPI) ListStreams(_ context.Context, in *pb.ListStreamsRequest) (*pb.ListStreamsResponse, error) {
@@ -71,15 +77,17 @@ func (c *CoordinatorAPI) ListStreams(_ context.Context, in *pb.ListStreamsReques
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	result := &pb.ListStreamsResponse{}
-	for _, stream := range streams {
-		result.Data = append(result.Data, stream.ToProto())
+	result := &pb.ListStreamsResponse{
+		Data: make([]*pb.Stream, len(streams)),
+	}
+	for i, stream := range streams {
+		result.Data[i] = stream.ToProto()
 	}
 
 	return result, nil
 }
 
-func (c *CoordinatorAPI) UpdateStream(_ context.Context, in *pb.Stream) (*pb.CommonResponse, error) {
+func (c *CoordinatorAPI) UpdateStream(_ context.Context, in *pb.Stream) (*pb.StreamResponse, error) {
 	if err := in.Validate(); err != nil {
 		log.Debug().Err(err).Msg("Invalid request")
 		return nil, status.Error(codes.InvalidArgument, err.Error())
@@ -115,5 +123,8 @@ func (c *CoordinatorAPI) UpdateStream(_ context.Context, in *pb.Stream) (*pb.Com
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &pb.CommonResponse{Message: "Stream has been updated successfully"}, nil
+	return &pb.StreamResponse{
+		Data: newStream.ToProto(),
+		Meta: &pb.CommonResponse{Message: "Stream has been updated successfully"},
+	}, nil
 }
