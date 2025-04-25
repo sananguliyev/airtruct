@@ -1,0 +1,51 @@
+name: Build & Release Go Binaries
+
+on:
+  push:
+    tags:
+      - 'v*'  
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Go Binaries
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        goos: [linux, windows, darwin]
+        goarch: [amd64, arm64]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
+
+      - name: Build binaries
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          mkdir -p dist
+          output_name="airtruct-${GOOS}-${GOARCH}"
+          if [ "${GOOS}" = "windows" ]; then
+            output_name="${output_name}.exe"
+          fi
+          go build -o dist/${output_name} .
+
+      - name: Archive built binary
+        run: |
+          cd dist
+          zip "${{ matrix.goos }}-${{ matrix.goarch }}.zip" *-${{ matrix.goos }}-${{ matrix.goarch }}*
+
+      - name: Upload release asset
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: dist/${{ matrix.goos }}-${{ matrix.goarch }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
