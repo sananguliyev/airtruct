@@ -601,6 +601,166 @@ var _ interface {
 	ErrorName() string
 } = GetComponentConfigRequestValidationError{}
 
+// Validate checks the field values on ComponentConfigResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ComponentConfigResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ComponentConfigResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ComponentConfigResponseMultiError, or nil if none found.
+func (m *ComponentConfigResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ComponentConfigResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ComponentConfigResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ComponentConfigResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ComponentConfigResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetMeta()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ComponentConfigResponseValidationError{
+					field:  "Meta",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ComponentConfigResponseValidationError{
+					field:  "Meta",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetMeta()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ComponentConfigResponseValidationError{
+				field:  "Meta",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return ComponentConfigResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ComponentConfigResponseMultiError is an error wrapping multiple validation
+// errors returned by ComponentConfigResponse.ValidateAll() if the designated
+// constraints aren't met.
+type ComponentConfigResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ComponentConfigResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ComponentConfigResponseMultiError) AllErrors() []error { return m }
+
+// ComponentConfigResponseValidationError is the validation error returned by
+// ComponentConfigResponse.Validate if the designated constraints aren't met.
+type ComponentConfigResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ComponentConfigResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ComponentConfigResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ComponentConfigResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ComponentConfigResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ComponentConfigResponseValidationError) ErrorName() string {
+	return "ComponentConfigResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ComponentConfigResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sComponentConfigResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ComponentConfigResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ComponentConfigResponseValidationError{}
+
 // Validate checks the field values on ListWorkersRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -1223,6 +1383,164 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = GetStreamRequestValidationError{}
+
+// Validate checks the field values on StreamResponse with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *StreamResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on StreamResponse with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in StreamResponseMultiError,
+// or nil if none found.
+func (m *StreamResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *StreamResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, StreamResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, StreamResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return StreamResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetMeta()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, StreamResponseValidationError{
+					field:  "Meta",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, StreamResponseValidationError{
+					field:  "Meta",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetMeta()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return StreamResponseValidationError{
+				field:  "Meta",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return StreamResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// StreamResponseMultiError is an error wrapping multiple validation errors
+// returned by StreamResponse.ValidateAll() if the designated constraints
+// aren't met.
+type StreamResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m StreamResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m StreamResponseMultiError) AllErrors() []error { return m }
+
+// StreamResponseValidationError is the validation error returned by
+// StreamResponse.Validate if the designated constraints aren't met.
+type StreamResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e StreamResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e StreamResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e StreamResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e StreamResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e StreamResponseValidationError) ErrorName() string { return "StreamResponseValidationError" }
+
+// Error satisfies the builtin error interface
+func (e StreamResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sStreamResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = StreamResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = StreamResponseValidationError{}
 
 // Validate checks the field values on Event with the rules defined in the
 // proto definition for this message. If any rules are violated, the first

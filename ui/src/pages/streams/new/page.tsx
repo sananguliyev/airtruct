@@ -9,43 +9,27 @@ import { StreamBuilder } from "@/components/stream-builder/stream-builder";
 import type { Node, Edge } from "reactflow";
 import type { StreamNodeData } from "@/components/stream-builder/stream-node";
 import { ComponentConfig } from "@/lib/entities";
+import { createStream, fetchComponentConfigs } from "@/lib/api";
 
 export default function NewStreamPage() {
   const navigate = useNavigate();
   const { addToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [componentConfigsData, setcomponentConfigsData] = useState<
+  const [componentConfigsData, setComponentConfigsData] = useState<
     ComponentConfig[]
   >([] as ComponentConfig[]);
 
   useEffect(() => {
-    async function fetchComponentConfigs() {
+    async function loadComponentConfigs() {
       try {
-        const response = await fetch("http://localhost:8080/v0/component-configs");
-
-        if (!response.ok) {
-          throw new Error("Response not ok");
-        }
-        const data = await response.json();
-        setcomponentConfigsData(
-          data.data.map((componentConfig: any) => ({
-            id: componentConfig.id,
-            name: componentConfig.name,
-            type:
-              componentConfig.section === "pipeline"
-                ? "processor"
-                : componentConfig.section,
-            section: componentConfig.section,
-            component: componentConfig.component,
-            createdAt: new Date(componentConfig.created_at).toLocaleString(),
-          }))
-        );
+        const data = await fetchComponentConfigs();
+        setComponentConfigsData(data);
       } catch (error) {
         console.error("Error fetching component configs data:", error);
       }
     }
 
-    fetchComponentConfigs();
+    loadComponentConfigs();
   }, []);
 
   const handleSaveStream = async (data: {
@@ -78,7 +62,7 @@ export default function NewStreamPage() {
       // Create processors array
       const processors = processorNodes.map((node) => ({
         label: node.data.label,
-        processor_id: node.data.componentId || "",
+        processorID: parseInt(node.data.componentId || "0"),
       }));
 
       let inputComponentID: number = 0;
@@ -95,24 +79,14 @@ export default function NewStreamPage() {
       const newStream = {
         name: data.name,
         status: data.status,
-        input_label: inputNode.data.label,
-        input_id: inputComponentID,
-        processors: processors.length > 0 ? processors : null,
-        output_label: outputNode.data.label,
-        output_id: outputComponentID,
+        inputLabel: inputNode.data.label,
+        inputID: inputComponentID,
+        processors: processors.length > 0 ? processors : [],
+        outputLabel: outputNode.data.label,
+        outputID: outputComponentID,
       };
 
-      console.log("New Stream Data:", newStream);
-      const response = await fetch("http://localhost:8080/v0/streams", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newStream),
-      });
-      if (!response.ok) {
-        throw new Error("Failed to create stream");
-      }
+      const response = await createStream(newStream);
 
       // Show success toast
       addToast({

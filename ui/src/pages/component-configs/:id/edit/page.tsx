@@ -16,6 +16,8 @@ import { useToast } from "@/components/toast";
 import { NestedFormField } from "@/components/nested-form-field";
 import { componentSchemas, componentLists } from "@/lib/component-schemas";
 import { ComponentConfig } from "@/lib/entities";
+import { fetchComponentConfig, updateComponentConfig } from "@/lib/api";
+import { initializeDefaultValues, ensureNestedObjectsExist } from "@/components/component-config-helper";
 
 export default function ComponentConfigEditPage() {
   const navigate = useNavigate();
@@ -41,14 +43,13 @@ export default function ComponentConfigEditPage() {
 
   // Load component data
   useEffect(() => {
-    fetch(`http://localhost:8080/v0/component-configs/${id}`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch component config");
-        }
-        return response.json();
-      })
-      .then((data) => {
+    const loadConfig = async () => {
+      try {
+        setIsLoading(true);
+        const data = await fetchComponentConfig(id || "");
+        setComponentConfig(data);
+        setComponentSection(data.section);
+        setSelectedComponent(data.component);
         let formDataConfig = data.config[data.component] || {};
         let isFlat =
           componentSchemas[data.section as keyof typeof componentSchemas][
@@ -62,33 +63,26 @@ export default function ComponentConfigEditPage() {
           section: data.section,
           component: data.component,
           config: formDataConfig,
-          created_at: data.created_at,
+          created_at: data.createdAt,
         });
-
-        setComponentConfig(data);
-
-        // Set component section and selected component
-        setComponentSection(data.section);
-        setSelectedComponent(data.component);
-
-        // Set config values
         setConfigValues(formDataConfig);
-
-        // Mark component as loaded
         setComponentLoaded(true);
-      })
-      .catch((error) => {
+      } catch (err) {
         addToast({
-          id: "fetch-error",
+          id: "component-config-error",
           title: "Error Fetching Component Config",
           description:
-            error instanceof Error
-              ? error.message
+            err instanceof Error
+              ? err.message
               : "An unknown error occurred",
           variant: "error",
         });
         navigate("/component-configs");
-      });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadConfig();
   }, [id]);
 
   // Load config schema when component type and selected component are set
@@ -150,35 +144,6 @@ export default function ComponentConfigEditPage() {
     setConfigValues(initialValues);
   };
 
-  // Helper function to initialize default values recursively
-  const initializeDefaultValues = (
-    schema: any,
-    values: Record<string, any>
-  ) => {
-    Object.entries(schema).forEach(([key, field]: [string, any]) => {
-      if (field.type === "object" && field.properties) {
-        values[key] = {};
-        initializeDefaultValues(field.properties, values[key]);
-      } else if (field.type === "array") {
-        values[key] = field.default || [];
-      } else if (field.type === "key_value") {
-        values[key] = field.default || {};
-      } else if (field.default !== undefined) {
-        values[key] = field.default;
-      } else if (field.type === "bool") {
-        values[key] = false;
-      } else if (field.type === "number") {
-        values[key] = 0;
-      } else if (field.type === "code") {
-        values[key] = "";
-      } else {
-        values[key] = "";
-      }
-    });
-  };
-
-  // Replace the handleConfigChange function with this improved version that better handles arrays in nested objects
-
   const handleConfigChange = (key: string, value: any) => {
     setConfigValues((prev) => {
       // Create a deep copy to avoid mutation issues
@@ -228,40 +193,6 @@ export default function ComponentConfigEditPage() {
     });
   };
 
-  // Also update the ensureNestedObjectsExist function to better handle arrays
-  const ensureNestedObjectsExist = (configValues: any, schema: any) => {
-    if (!schema) return configValues;
-
-    const result = { ...configValues };
-
-    Object.entries(schema).forEach(([key, field]: [string, any]) => {
-      // If it's an object with properties, ensure the object exists
-      if (field.type === "object" && field.properties) {
-        if (!result[key] || typeof result[key] !== "object") {
-          result[key] = {};
-        }
-
-        // Recursively ensure nested objects exist
-        result[key] = ensureNestedObjectsExist(result[key], field.properties);
-      }
-      // If it's an array and doesn't exist, initialize it
-      else if (field.type === "array") {
-        if (!Array.isArray(result[key])) {
-          result[key] = [];
-        }
-      }
-      // If it's a key-value object and doesn't exist, initialize it
-      else if (
-        field.type === "key_value" &&
-        (!result[key] || typeof result[key] !== "object")
-      ) {
-        result[key] = {};
-      }
-    });
-
-    return result;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -275,29 +206,16 @@ export default function ComponentConfigEditPage() {
       if (isFlat) {
         formDataConfig = configValues;
       }
-      const updatedFormData = {
-        ...formData,
+      
+      const updatedComponentConfig = {
+        name: formData.name,
+        section: formData.section,
+        component: formData.component,
         config: formDataConfig,
       };
 
-      const response = await fetch(
-        `http://localhost:8080/v0/component-configs/${id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(updatedFormData),
-        }
-      );
+      const response = await updateComponentConfig(id || "", updatedComponentConfig);
 
-      if (!response.ok) {
-        throw new Error(
-          `Failed to create component config: ${response.statusText}`
-        );
-      }
-
-      // Show success toast
       addToast({
         id: "component-config-created",
         title: "Component Config Created",

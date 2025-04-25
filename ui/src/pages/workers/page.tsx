@@ -1,14 +1,6 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { InfoIcon } from "lucide-react";
 import {
   Tooltip,
@@ -19,39 +11,27 @@ import {
 
 import { Worker } from "@/lib/entities";
 import { DataTable } from "@/components/data-table";
+import { fetchWorkers } from "@/lib/api";
 
 export default function WorkersPage() {
   const [workers, setWorkers] = useState<Worker[]>([] as Worker[]);
 
   useEffect(() => {
-    async function fetchWorkers() {
+    async function loadWorkers() {
       try {
-        const response = await fetch("http://localhost:8080/v0/workers/all");
-
-        if (!response.ok) {
-          throw new Error("Response not ok");
-        }
-        const data = await response.json();
-        setWorkers(
-          data.data.map((worker: any) => ({
-            id: worker.id,
-            status: worker.status,
-            address: worker.address,
-            lastHeartbeat: new Date(worker.last_heartbeat).toLocaleString(),
-            activeStreams: Math.floor(Math.random() * 5),
-          }))
-        );
+        const data = await fetchWorkers();
+        setWorkers(data);
       } catch (error) {
         console.error("Error fetching workers data:", error);
       }
     }
 
-    fetchWorkers();
+    loadWorkers();
   }, []);
 
   const columns = [
-    { key: "id", title: "ID" },
-    { key: "address", title: "Address" },
+    { key: "id" as keyof Worker, title: "ID" },
+    { key: "address" as keyof Worker, title: "Address" },
     {
       key: "status" as keyof Worker,
       title: "Status",
@@ -73,7 +53,7 @@ export default function WorkersPage() {
       },
     },
     {
-      key: "activeStreams",
+      key: "activeStreams" as keyof Worker,
       title: "Active Streams",
     },
     {
@@ -116,7 +96,10 @@ export default function WorkersPage() {
           <CardTitle>Active Workers</CardTitle>
         </CardHeader>
         <CardContent>
-          <DataTable data={workers} columns={columns} />
+          <DataTable
+            data={workers}
+            columns={columns}
+          />
         </CardContent>
       </Card>
     </div>

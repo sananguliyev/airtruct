@@ -16,6 +16,8 @@ import { Loader2 } from "lucide-react";
 import { useToast } from "@/components/toast";
 import { NestedFormField } from "@/components/nested-form-field";
 import { componentSchemas, componentLists } from "@/lib/component-schemas";
+import { createComponentConfig } from "@/lib/api";
+import { initializeDefaultValues, ensureNestedObjectsExist } from "@/components/component-config-helper";
 
 export default function NewComponentConfigPage() {
   const navigate = useNavigate();
@@ -76,61 +78,34 @@ export default function NewComponentConfigPage() {
     }
   }, [selectedComponent, componentSection]);
 
-  // Update the initializeDefaultValues function to properly handle arrays
-  const initializeDefaultValues = (
-    schema: any,
-    values: Record<string, any>
-  ) => {
-    Object.entries(schema).forEach(([key, field]: [string, any]) => {
-      if (field.type === "object" && field.properties) {
-        values[key] = {};
-        initializeDefaultValues(field.properties, values[key]);
-      } else if (field.type === "array") {
-        values[key] = field.default || [];
-      } else if (field.type === "key_value") {
-        values[key] = field.default || {};
-      } else if (field.default !== undefined) {
-        values[key] = field.default;
-      } else if (field.type === "bool") {
-        values[key] = false;
-      } else if (field.type === "number") {
-        values[key] = 0;
-      } else if (field.type === "code") {
-        values[key] = "";
-      } else {
-        values[key] = "";
-      }
-    });
-  };
-
   const handleBasicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
-
+  
   const handleConfigChange = (key: string, value: any) => {
     console.log(`Changing ${key} to:`, value); // Debug log
-
+  
     setConfigValues((prev) => {
       // Create a deep copy to avoid mutation issues
       const newValues = JSON.parse(JSON.stringify(prev));
-
+  
       // Handle nested paths
       const keyParts = key.split(".");
-
+  
       console.log("Key parts:", keyParts); // Debug log
-
+  
       if (keyParts.length === 1) {
         // Simple case: top-level property
         newValues[key] = value;
       } else {
         // Complex case: nested property
         let current = newValues;
-
+  
         // Navigate to the parent object
         for (let i = 0; i < keyParts.length; i++) {
           const part = keyParts[i];
-
+  
           // Ensure the path exists
           if (current[part] === undefined) {
             // Initialize based on the next part in the path
@@ -147,53 +122,19 @@ export default function NewComponentConfigPage() {
               current[part] = {};
             }
           }
-
+  
           // Move to the next level
           current = current[part];
         }
-
+  
         // Set the value at the final level
         const lastKey = keyParts[keyParts.length - 1];
         current[lastKey] = value;
       }
-
+  
       console.log("Updated config values:", JSON.stringify(newValues, null, 2)); // More detailed debug log
       return newValues;
     });
-  };
-
-  // Helper function to ensure nested objects are properly initialized
-  const ensureNestedObjectsExist = (configValues: any, schema: any) => {
-    if (!schema) return configValues;
-
-    const result = { ...configValues };
-
-    Object.entries(schema).forEach(([key, field]: [string, any]) => {
-      // If it's an object with properties, ensure the object exists
-      if (field.type === "object" && field.properties) {
-        if (!result[key] || typeof result[key] !== "object") {
-          result[key] = {};
-        }
-
-        // Recursively ensure nested objects exist
-        result[key] = ensureNestedObjectsExist(result[key], field.properties);
-      }
-      // If it's an array and doesn't exist, initialize it
-      else if (field.type === "array") {
-        if (!Array.isArray(result[key])) {
-          result[key] = [];
-        }
-      }
-      // If it's a key-value object and doesn't exist, initialize it
-      else if (
-        field.type === "key_value" &&
-        (!result[key] || typeof result[key] !== "object")
-      ) {
-        result[key] = {};
-      }
-    });
-
-    return result;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -208,26 +149,15 @@ export default function NewComponentConfigPage() {
         ]["flat"] ?? false;
       if (isFlat) {
         formDataConfig = configValues;
-      }
-      const updatedFormData = {
-        ...formData,
+      } 
+      const updatedComponentConfig = {
+        name: formData.name,
+        section: formData.section,
+        component: formData.component,
         config: formDataConfig,
       };
 
-      // Make a POST request to save the new component config
-      const response = await fetch("http://localhost:8080/v0/component-configs", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedFormData),
-      });
-
-      if (!response.ok) {
-        throw new Error(
-          `Failed to create component config: ${response.statusText}`
-        );
-      }
+      const response = await createComponentConfig(updatedComponentConfig);
 
       // Show success toast
       addToast({

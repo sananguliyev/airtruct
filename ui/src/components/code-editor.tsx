@@ -1,12 +1,14 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-interface CodeEditorProps
-  extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+interface CodeEditorProps {
   value: string;
   onChange: (value: string) => void;
   language?: string;
   minHeight?: string;
+  className?: string;
+  placeholder?: string;
+  id?: string;
 }
 
 export function CodeEditor({

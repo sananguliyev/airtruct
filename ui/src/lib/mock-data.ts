@@ -51,7 +51,6 @@ export const componentConfigsData: ComponentConfig[] = [
     created_at: "2023-11-20T09:30:00Z",
     updated_at: "2023-11-20T09:30:00Z",
     name: "Payment Gateway",
-    type: "API",
     version: "2.0.1",
     status: "Active",
     description: "Processes payment transactions",

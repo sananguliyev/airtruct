@@ -2,7 +2,6 @@ import React, { useEffect, useState, lazy, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/data-table";
 import { Plus, Eye } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/toast";
 import {
@@ -85,7 +84,7 @@ export default function StreamsPage() {
       ) : (
         <DataTable
           data={streams}
-          columns={columns(handleRowClick)}
+          columns={columns()}
           onEdit={handleRowClick}
           onDelete={handleDelete}
           additionalActions={(stream) => (

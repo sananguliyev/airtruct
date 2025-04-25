@@ -1,9 +1,12 @@
+import type { Node, Edge } from "reactflow";
+
 export type Worker = {
   id: string;
   status: string;
   address: string;
   lastHeartbeat: string;
   activeStreams: number;
+  createdAt: string;
 };
 
 export type ComponentConfig = {
@@ -13,6 +16,7 @@ export type ComponentConfig = {
   section: string;
   component: string;
   createdAt: string;
+  config: Record<string, any>;
 };
 
 export type Stream = {
@@ -20,21 +24,21 @@ export type Stream = {
   name: string;
   status: string;
   inputLabel: string;
-  inputID: string;
+  inputID: number;
   input: string;
   output: string;
-  outputID: string;
+  outputID: number;
   outputLabel: string;
   processors: StreamProcessor[];
   createdAt: string;
 
-  visualData: {};
+  visualData?: {
+    nodes: Node[];
+    edges: Edge[];
+  };
 };
 
 export type StreamProcessor = {
-  id: string;
-  processorID: string;
-  processor: ComponentConfig;
+  processorID: number;
   label: string;
-  createdAt: string;
 };

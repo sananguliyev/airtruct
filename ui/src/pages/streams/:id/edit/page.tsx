@@ -7,7 +7,7 @@ import type { Node, Edge } from "reactflow";
 import type { StreamNodeData } from "@/components/stream-builder/stream-node";
 import { v4 as uuidv4 } from "uuid";
 import { ComponentConfig, Stream, StreamProcessor } from "@/lib/entities";
-
+import { fetchComponentConfigs, fetchStream, updateStream } from "@/lib/api";
 export default function EditStreamPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -27,171 +27,122 @@ export default function EditStreamPage() {
   const [stream, setStream] = useState<Stream | null>();
 
   useEffect(() => {
-    async function fetchComponentConfigs() {
+    async function loadComponentConfigs() {
       try {
-        const response = await fetch("http://localhost:8080/v0/component-configs");
-
-        if (!response.ok) {
-          throw new Error("Response not ok");
-        }
-        const data = await response.json();
-        setComponentConfigsData(
-          data.data.map((componentConfig: any) => ({
-            id: componentConfig.id,
-            name: componentConfig.name,
-            type:
-              componentConfig.section === "pipeline"
-                ? "processor"
-                : componentConfig.section,
-            section: componentConfig.section,
-            component: componentConfig.component,
-            createdAt: new Date(componentConfig.created_at).toLocaleString(),
-          }))
-        );
+        const data = await fetchComponentConfigs();
+        setComponentConfigsData(data);
       } catch (error) {
         console.error("Error fetching component configs data:", error);
       }
     }
 
-    fetchComponentConfigs();
+    loadComponentConfigs();
   }, []);
 
   // Load stream data
   useEffect(() => {
     setIsLoading(true);
+    const loadStream = async () => {
+      try {
+        const streamResponse = await fetchStream(id || "");
+        setStream(streamResponse);
+        // If the stream has visual data, use it
+        if (streamResponse.visualData) {
+          setStreamData({
+            name: streamResponse.name,
+            status: streamResponse.status,
+            nodes: streamResponse.visualData.nodes,
+            edges: streamResponse.visualData.edges,
+          });
+        } else {
+          // Otherwise, create visual data from the stream configuration
+          const nodes: Node<StreamNodeData>[] = [];
+          const edges: Edge[] = [];
 
-    fetch(`http://localhost:8080/v0/streams/${id}`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch stream");
-        }
-        return response.json();
-      })
-      .then((streamResponse: any) => {
-        // Set form data
-        const updatedStream = {
-          id: streamResponse.id,
-          name: streamResponse.name,
-          status: streamResponse.status,
-          input: streamResponse.input,
-          inputLabel: streamResponse.input_label,
-          inputID: streamResponse.input_id,
-          processors: streamResponse.processors.map((processor: any) => ({
-            processorID: processor.processor_id,
-            label: processor.label,
-            createdAt: new Date(processor.created_at).toLocaleString(),
-          })),
-          output: streamResponse.output,
-          outputLabel: streamResponse.output_label,
-          outputID: streamResponse.output_id,
-          createdAt: new Date(streamResponse.created_at).toLocaleString(),
-          visualData: streamResponse.visualData || undefined,
-        };
+          // Create input node
+          const inputNode: Node<StreamNodeData> = {
+            id: uuidv4(),
+            type: "streamNode",
+            position: { x: 100, y: 100 },
+            data: {
+              label: streamResponse.inputLabel || "Input",
+              type: "input",
+              component: getComponentLabel(streamResponse.inputID.toString()),
+              componentId: streamResponse.inputID.toString(),
+              status: streamResponse.status,
+            },
+          };
+          nodes.push(inputNode);
 
-        setStream(updatedStream);
-        console.log("Stream data:", updatedStream);
+          // Create processor nodes
+          let lastNodeId = inputNode.id;
+          if (
+            streamResponse.processors &&
+            streamResponse.processors.length > 0
+          ) {
+            streamResponse.processors.forEach(
+              (processor: StreamProcessor, index: number) => {
+                const processorNode: Node<StreamNodeData> = {
+                  id: uuidv4(),
+                  type: "streamNode",
+                  position: { x: 400, y: 100 + index * 150 },
+                  data: {
+                    label: processor.label || `Processor ${index + 1}`,
+                    type: "processor",
+                    component: getComponentLabel(processor.processorID.toString()),
+                    componentId: processor.processorID.toString(),
+                    status: streamResponse.status,
+                  },
+                };
+                nodes.push(processorNode);
 
-        if (updatedStream) {
-          // If the stream has visual data, use it
-          if (updatedStream.visualData) {
-            setStreamData({
-              name: updatedStream.name,
-              status: updatedStream.status,
-              nodes: updatedStream.visualData.nodes,
-              edges: updatedStream.visualData.edges,
-            });
-          } else {
-            // Otherwise, create visual data from the stream configuration
-            const nodes: Node<StreamNodeData>[] = [];
-            const edges: Edge[] = [];
+                // Connect to previous node
+                edges.push({
+                  id: `e-${lastNodeId}-${processorNode.id}`,
+                  source: lastNodeId,
+                  target: processorNode.id,
+                  animated: true,
+                });
 
-            // Create input node
-            const inputNode: Node<StreamNodeData> = {
-              id: uuidv4(),
-              type: "streamNode",
-              position: { x: 100, y: 100 },
-              data: {
-                label: updatedStream.inputLabel || "Input",
-                type: "input",
-                component: getComponentLabel(updatedStream.inputID),
-                componentId: updatedStream.inputID,
-                status: updatedStream.status,
-              },
-            };
-            nodes.push(inputNode);
-
-            // Create processor nodes
-            let lastNodeId = inputNode.id;
-            if (
-              updatedStream.processors &&
-              updatedStream.processors.length > 0
-            ) {
-              updatedStream.processors.forEach(
-                (processor: StreamProcessor, index: number) => {
-                  const processorNode: Node<StreamNodeData> = {
-                    id: processor.id || uuidv4(),
-                    type: "streamNode",
-                    position: { x: 400, y: 100 + index * 150 },
-                    data: {
-                      label: processor.label || `Processor ${index + 1}`,
-                      type: "processor",
-                      component: getComponentLabel(processor.processorID),
-                      componentId: processor.processorID,
-                      status: updatedStream.status,
-                    },
-                  };
-                  nodes.push(processorNode);
-
-                  // Connect to previous node
-                  edges.push({
-                    id: `e-${lastNodeId}-${processorNode.id}`,
-                    source: lastNodeId,
-                    target: processorNode.id,
-                    animated: true,
-                  });
-
-                  lastNodeId = processorNode.id;
-                }
-              );
-            }
-
-            // Create output node
-            const outputNode: Node<StreamNodeData> = {
-              id: uuidv4(),
-              type: "streamNode",
-              position: { x: 700, y: 100 },
-              data: {
-                label: updatedStream.outputLabel || "Output",
-                type: "output",
-                component: getComponentLabel(updatedStream.outputID),
-                componentId: updatedStream.outputID,
-                status: updatedStream.status,
-              },
-            };
-            nodes.push(outputNode);
-
-            // Connect to last processor or input
-            edges.push({
-              id: `e-${lastNodeId}-${outputNode.id}`,
-              source: lastNodeId,
-              target: outputNode.id,
-              animated: true,
-            });
-
-            setStreamData({
-              name: updatedStream.name,
-              status: updatedStream.status,
-              nodes,
-              edges,
-            });
+                lastNodeId = processorNode.id;
+              }
+            );
           }
 
-          setIsLoading(false);
-        } else {
-          navigate("/streams");
+          // Create output node
+          const outputNode: Node<StreamNodeData> = {
+            id: uuidv4(),
+            type: "streamNode",
+            position: { x: 700, y: 100 },
+            data: {
+              label: streamResponse.outputLabel || "Output",
+              type: "output",
+              component: getComponentLabel(streamResponse.outputID.toString()),
+              componentId: streamResponse.outputID.toString(),
+              status: streamResponse.status,
+            },
+          };
+          nodes.push(outputNode);
+
+          // Connect to last processor or input
+          edges.push({
+            id: `e-${lastNodeId}-${outputNode.id}`,
+            source: lastNodeId,
+            target: outputNode.id,
+            animated: true,
+          });
+
+          setStreamData({
+            name: streamResponse.name,
+            status: streamResponse.status,
+            nodes,
+            edges,
+          });
         }
-      })
-      .catch((error) => {
+
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error fetching stream data:", error);
         addToast({
           id: "fetch-error",
           title: "Error Fetching Stream",
@@ -202,7 +153,9 @@ export default function EditStreamPage() {
           variant: "error",
         });
         navigate("/streams");
-      });
+      }
+    }
+    loadStream();
   }, [id, navigate]);
 
   const handleSaveStream = async (data: {
@@ -235,15 +188,10 @@ export default function EditStreamPage() {
       // Create processors array
       const processors = processorNodes.map((node) => ({
         label: node.data.label,
-        processor_id: node.data.componentId,
+        processorID: parseInt(node.data.componentId || "0"),
       }));
 
-      let inputComponentID: number = 0;
-      let outputComponentID: number = 0;
-      if (inputNode.data.componentId && outputNode.data.componentId) {
-        inputComponentID = parseInt(inputNode.data.componentId);
-        outputComponentID = parseInt(outputNode.data.componentId);
-      } else {
+      if (!inputNode.data.componentId || !outputNode.data.componentId)  {
         throw new Error(
           "Not possible to create stream without input and output component IDs"
         );
@@ -252,27 +200,14 @@ export default function EditStreamPage() {
       const updatedStreamData = {
         name: data.name,
         status: data.status,
-        input_label: inputNode.data.label,
-        input_id: inputComponentID,
+        inputLabel: inputNode.data.label,
+        inputID: parseInt(inputNode.data.componentId || "0"),
         processors,
-        output_label: outputNode.data.label,
-        output_id: outputComponentID,
+        outputLabel: outputNode.data.label,
+        outputID: parseInt(outputNode.data.componentId || "0"),
       };
-      console.log("Update Stream data:", updatedStreamData);
 
-      const response = await fetch(`http://localhost:8080/v0/streams/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedStreamData),
-      });
-
-      if (!response.ok) {
-        throw new Error(
-          `Failed to create component config: ${response.statusText}`
-        );
-      }
+      const response = await updateStream(id || "", updatedStreamData);
 
       // Show success toast
       addToast({

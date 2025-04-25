@@ -20,8 +20,8 @@ interface Column<T> {
 interface DataTableProps<T> {
   data: T[];
   columns: Column<T>[];
-  onEdit: (item: T) => void;
-  onDelete: (item: T) => void;
+  onEdit?: (item: T) => void;
+  onDelete?: (item: T) => void;
   additionalActions?: (item: T) => React.ReactNode;
 }
 
@@ -32,6 +32,8 @@ export function DataTable<T extends { id: string | number }>({
   onDelete,
   additionalActions,
 }: DataTableProps<T>) {
+  const showActionsColumn = onEdit || onDelete || additionalActions;
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -40,14 +42,16 @@ export function DataTable<T extends { id: string | number }>({
             {columns.map((column) => (
               <TableHead key={column.key as string}>{column.title}</TableHead>
             ))}
-            <TableHead className="w-[100px]">Actions</TableHead>
+            {showActionsColumn && (
+              <TableHead className="w-[100px]">Actions</TableHead>
+            )}
           </TableRow>
         </TableHeader>
         <TableBody>
           {data.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={columns.length + 1}
+                colSpan={columns.length + (showActionsColumn ? 1 : 0)}
                 className="h-24 text-center"
               >
                 No results.
@@ -63,31 +67,33 @@ export function DataTable<T extends { id: string | number }>({
                       : String(row[column.key] || "")}
                   </TableCell>
                 ))}
-                <TableCell>
-                  <div className="flex space-x-2">
-                    {onEdit && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onEdit(row)}
-                        title="Edit"
-                      >
-                        <PencilIcon className="h-4 w-4" />
-                      </Button>
-                    )}
-                    {additionalActions && additionalActions(row)}
-                    {onDelete && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onDelete(row)}
-                        title="Delete"
-                      >
-                        <Trash2Icon className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                </TableCell>
+                {showActionsColumn && (
+                  <TableCell>
+                    <div className="flex space-x-2">
+                      {onEdit && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onEdit(row)}
+                          title="Edit"
+                        >
+                          <PencilIcon className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {additionalActions && additionalActions(row)}
+                      {onDelete && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onDelete(row)}
+                          title="Delete"
+                        >
+                          <Trash2Icon className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                )}
               </TableRow>
             ))
           )}

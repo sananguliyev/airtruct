@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/data-table";
 import { useNavigate } from "react-router-dom";
 import { columns } from "@/components/component-config-columns";
-
+import { deleteComponentConfig, fetchComponentConfigs } from "@/lib/api";
 import { ComponentConfig } from "@/lib/entities";
 import { useToast } from "@/components/toast";
 
@@ -23,22 +23,8 @@ export default function ComponentsPage() {
     const loadConfigs = async () => {
       try {
         setLoading(true);
-        const response = await fetch("http://localhost:8080/v0/component-configs");
-
-        if (!response.ok) {
-          throw new Error("Response not ok");
-        }
-        const data = await response.json();
-        setComponentConfigs(
-          data.data.map((componentConfig: any) => ({
-            id: componentConfig.id,
-            name: componentConfig.name,
-            section: componentConfig.section,
-            component: componentConfig.component,
-            createdAt: new Date(componentConfig.created_at).toLocaleString(),
-            updatedAt: new Date(componentConfig.updated_at).toLocaleString(),
-          }))
-        );
+        const data = await fetchComponentConfigs();
+        setComponentConfigs(data);
         setError(null);
       } catch (err) {
         addToast({
@@ -66,25 +52,30 @@ export default function ComponentsPage() {
     navigate(`/component-configs/${componentConfig.id}/edit`);
   };
 
-  const handleDelete = (componentConfig: ComponentConfig) => {
+  const handleDelete = async (componentConfig: ComponentConfig) => {
     const confirmDelete = confirm(
       `Are you sure you want to delete ${componentConfig.name}?`
     );
     if (confirmDelete) {
-      fetch(`http://localhost:8080/component-configs/${componentConfig.id}`, {
-        method: "DELETE",
-      })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error("Response not ok");
-          }
-          setComponentConfigs((prevConfigs) =>
-            prevConfigs.filter((config) => config.id !== componentConfig.id)
-          );
-        })
-        .catch((error) => {
-          console.error("Error deleting component config:", error);
+      try {
+        await deleteComponentConfig(componentConfig.id);
+        setComponentConfigs((prevConfigs) =>
+          prevConfigs.filter((config) => config.id !== componentConfig.id)
+        );
+        addToast({
+          id: "component-config-deleted",
+          title: "Component Config Deleted",
+          description: "The component config has been deleted successfully",
+          variant: "success",
         });
+      } catch (err) {
+        addToast({
+          id: "component-config-error",
+          title: "Error Deleting Component Config",
+          description: err instanceof Error ? err.message : "An unknown error occurred",
+          variant: "error",
+        });
+      }
     }
   };
 

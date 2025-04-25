@@ -17,6 +17,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 type CoordinatorCLI struct {
@@ -71,7 +72,9 @@ func (c *CoordinatorCLI) Run(ctx context.Context) {
 	// Register gRPC server endpoint
 	// Note: Make sure the gRPC server is running properly and accessible
 	mux := runtime.NewServeMux(
-		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{}),
+		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{MarshalOptions: protojson.MarshalOptions{
+			EmitUnpopulated: true,
+		}}),
 	)
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 	if err = pb.RegisterCoordinatorHandlerFromEndpoint(ctx, mux, coordinatorServerAddress, opts); err != nil {
