@@ -35,7 +35,7 @@ jobs:
           if [ "${GOOS}" = "windows" ]; then
             output_name="${output_name}.exe"
           fi
-          go build -o dist/${output_name} .
+          go build -o dist/${output_name} ./cmd/...
 
       - name: Archive built binary
         run: |
