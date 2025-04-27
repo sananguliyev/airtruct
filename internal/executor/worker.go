@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sananguliyev/airtruct/internal/config"
 	"github.com/sananguliyev/airtruct/internal/persistence"
 	pb "github.com/sananguliyev/airtruct/internal/protogen"
 
@@ -47,20 +46,20 @@ type serviceStream struct {
 type workerExecutor struct {
 	clientConn        *grpc.ClientConn
 	coordinatorClient pb.CoordinatorClient
-	nodeConfig        *config.NodeConfig
-	joined            bool
 	mu                sync.Mutex
 	streamQueue       chan streamQueueItem
 	streamBuilder     *service.StreamBuilder
 	streams           map[int64]*serviceStream
 	tracingSummaries  map[int64]*service.TracingSummary
+	grpcPort          uint32
+	joined            bool
 }
 
-func NewWorkerExecutor(nodeConfig *config.NodeConfig) WorkerExecutor {
+func NewWorkerExecutor(discoveryUri string, grpcPort uint32) WorkerExecutor {
 	sb := service.NewStreamBuilder()
 	sb.SetEngineVersion("1.0.0")
 
-	grpcConn, err := grpc.NewClient(nodeConfig.DiscoveryUri, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	grpcConn, err := grpc.NewClient(discoveryUri, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to create grpc client")
 	}
@@ -70,11 +69,12 @@ func NewWorkerExecutor(nodeConfig *config.NodeConfig) WorkerExecutor {
 	return &workerExecutor{
 		clientConn:        grpcConn,
 		coordinatorClient: coordinatorGRPCClient,
-		nodeConfig:        nodeConfig,
 		streamQueue:       make(chan streamQueueItem, MaxItemsInStreamQueue),
 		streamBuilder:     sb,
 		streams:           make(map[int64]*serviceStream),
 		tracingSummaries:  make(map[int64]*service.TracingSummary),
+		grpcPort:          grpcPort,
+		joined:            false,
 	}
 }
 
@@ -91,7 +91,7 @@ func (e *workerExecutor) JoinToCoordinator(ctx context.Context) error {
 
 	r, err := e.coordinatorClient.RegisterWorker(ctx, &pb.RegisterWorkerRequest{
 		Id:   hostname,
-		Port: e.nodeConfig.GRPCPort,
+		Port: e.grpcPort,
 	})
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to register on coordinator")

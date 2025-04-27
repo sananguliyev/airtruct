@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/sananguliyev/airtruct/internal/api/coordinator"
-	"github.com/sananguliyev/airtruct/internal/config"
 	"github.com/sananguliyev/airtruct/internal/executor"
 	pb "github.com/sananguliyev/airtruct/internal/protogen"
 	_ "github.com/sananguliyev/airtruct/internal/statik"
@@ -19,10 +18,153 @@ import (
 	"github.com/rakyll/statik/fs"
 	"github.com/rs/cors"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/encoding/protojson"
 )
+
+type CoordinatorCLI struct {
+	api                *coordinator.CoordinatorAPI
+	executor           executor.CoordinatorExecutor
+	httpPort, grpcPort uint32
+}
+
+func NewCoordinatorCLI(api *coordinator.CoordinatorAPI, executor executor.CoordinatorExecutor, httpPort, grpcPort uint32) *CoordinatorCLI {
+	return &CoordinatorCLI{api, executor, httpPort, grpcPort}
+}
+
+func (c *CoordinatorCLI) Run(ctx context.Context) {
+	g, ctx := errgroup.WithContext(ctx)
+
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+
+	g.Go(func() error {
+		for {
+			select {
+			case <-ctx.Done():
+				log.Info().Msg("Stopping worker health check / stream assignment routine...")
+				return ctx.Err()
+			case <-ticker.C:
+				err := c.executor.CheckWorkersAndAssignStreams(ctx)
+				if err != nil {
+					log.Error().Err(err).Msg("Failed to perform worker health check and assign streams")
+				}
+			}
+		}
+	})
+
+	g.Go(func() error {
+		for {
+			select {
+			case <-ctx.Done():
+				log.Info().Msg("Stopping worker stream health check routine...")
+				return ctx.Err()
+			case <-ticker.C:
+				err := c.executor.CheckWorkerStreams(ctx)
+				if err != nil {
+					log.Error().Err(err).Msg("Failed to perform worker stream health check")
+				}
+			}
+		}
+	})
+
+	coordinatorServerAddress := fmt.Sprintf(":%d", c.grpcPort)
+	lis, err := net.Listen("tcp", coordinatorServerAddress)
+	if err != nil {
+		log.Fatal().Err(err).Uint32("port", c.grpcPort).Msg("failed to listen GRPC port")
+	}
+
+	grpcServer := grpc.NewServer()
+	pb.RegisterCoordinatorServer(grpcServer, c.api)
+
+	g.Go(func() error {
+		log.Info().Uint32("port", c.grpcPort).Msg("starting coordinator GRPC server")
+		errCh := make(chan error, 1)
+		go func() {
+			errCh <- grpcServer.Serve(lis)
+		}()
+
+		select {
+		case err := <-errCh:
+			log.Error().Err(err).Msg("gRPC server failed")
+			return err
+		case <-ctx.Done():
+			log.Info().Msg("Shutting down gRPC server...")
+			grpcServer.GracefulStop()
+			log.Info().Msg("gRPC server stopped gracefully")
+			return ctx.Err()
+		}
+	})
+
+	mux := runtime.NewServeMux(
+		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{MarshalOptions: protojson.MarshalOptions{
+			EmitUnpopulated: true,
+		}}),
+	)
+	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+	if err = pb.RegisterCoordinatorHandlerFromEndpoint(context.Background(), mux, coordinatorServerAddress, opts); err != nil {
+		log.Fatal().Err(err).Msg("failed to register coordinator handler endpoint")
+	}
+
+	corsMiddleware := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Accept-Encoding", "Authorization", "Content-Type", "Origin"},
+		ExposedHeaders:   []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * 60 * 60,
+	})
+
+	statikFS, err := fs.New()
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to create statik FS")
+	}
+	mainMux := http.NewServeMux()
+	mainMux.Handle("/api/", http.StripPrefix("/api", mux))
+	mainMux.HandleFunc("/", serveSpa(statikFS, "/index.html"))
+
+	httpServer := &http.Server{
+		Addr:    fmt.Sprintf("0.0.0.0:%d", c.httpPort),
+		Handler: corsMiddleware.Handler(mainMux),
+	}
+
+	g.Go(func() error {
+		log.Info().Uint32("port", c.httpPort).Msg("API gateway server starting")
+		errCh := make(chan error, 1)
+		go func() {
+			errCh <- httpServer.ListenAndServe()
+		}()
+
+		select {
+		case err := <-errCh:
+			if err != nil && err != http.ErrServerClosed {
+				log.Error().Err(err).Msg("HTTP gateway server failed")
+				return err
+			}
+			log.Info().Msg("HTTP gateway server stopped.")
+			return nil
+		case <-ctx.Done():
+			log.Info().Msg("Shutting down HTTP gateway server...")
+			shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			if err := httpServer.Shutdown(shutdownCtx); err != nil {
+				log.Error().Err(err).Msg("HTTP gateway server graceful shutdown failed")
+				return err
+			}
+			log.Info().Msg("HTTP gateway server stopped gracefully")
+			return ctx.Err()
+		}
+	})
+
+	log.Info().Msg("Coordinator running. Press Ctrl+C to stop.")
+	if err := g.Wait(); err != nil && err != context.Canceled && err != context.DeadlineExceeded {
+		log.Error().Err(err).Msg("Coordinator encountered an error")
+	} else {
+		log.Info().Msg("Coordinator shutdown complete.")
+	}
+}
 
 // serveSpa serves a Single Page Application (SPA).
 // If the requested file exists in the filesystem, it serves that file.
@@ -72,96 +214,5 @@ func serveSpa(fs http.FileSystem, indexFile string) http.HandlerFunc {
 
 		// Let the default file server handle serving the existing file
 		fileServer.ServeHTTP(w, r)
-	}
-}
-
-type CoordinatorCLI struct {
-	api        *coordinator.CoordinatorAPI
-	executor   executor.CoordinatorExecutor
-	nodeConfig *config.NodeConfig
-}
-
-func NewCoordinatorCLI(api *coordinator.CoordinatorAPI, executor executor.CoordinatorExecutor, config *config.NodeConfig) *CoordinatorCLI {
-	return &CoordinatorCLI{api, executor, config}
-}
-
-func (c *CoordinatorCLI) Run(ctx context.Context) {
-	ticker := time.NewTicker(30 * time.Second)
-	defer ticker.Stop()
-
-	go func(ctx context.Context) {
-		for range ticker.C {
-			err := c.executor.CheckWorkersAndAssignStreams(ctx)
-			if err != nil {
-				log.Error().Err(err).Msg("Failed to perform worker health check and assign streams")
-			}
-		}
-	}(ctx)
-
-	go func(ctx context.Context) {
-		for range ticker.C {
-			err := c.executor.CheckWorkerStreams(ctx)
-			if err != nil {
-				log.Error().Err(err).Msg("Failed to perform worker stream health check")
-			}
-		}
-	}(ctx)
-
-	log.Info().Int32("port", c.nodeConfig.GRPCPort).Msg("starting coordinator GRPC server")
-
-	coordinatorServerAddress := fmt.Sprintf(":%d", c.nodeConfig.GRPCPort)
-	lis, err := net.Listen("tcp", coordinatorServerAddress)
-	if err != nil {
-		log.Fatal().Err(err).Int32("port", c.nodeConfig.GRPCPort).Msg("failed to listen GRPC port")
-	}
-
-	grpcServer := grpc.NewServer()
-	pb.RegisterCoordinatorServer(grpcServer, c.api)
-
-	go func() {
-		if err := grpcServer.Serve(lis); err != nil {
-			log.Fatal().Err(err).Msg("failed to serve GRPC")
-		}
-	}()
-
-	// Register gRPC server endpoint
-	// Note: Make sure the gRPC server is running properly and accessible
-	mux := runtime.NewServeMux(
-		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{MarshalOptions: protojson.MarshalOptions{
-			EmitUnpopulated: true,
-		}}),
-	)
-	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
-	if err = pb.RegisterCoordinatorHandlerFromEndpoint(ctx, mux, coordinatorServerAddress, opts); err != nil {
-		log.Fatal().Err(err).Msg("failed to register coordinator handler")
-	}
-
-	corsMiddleware := cors.New(cors.Options{
-		AllowedOrigins:   []string{"*"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Accept-Encoding", "Authorization", "Content-Type", "Origin"},
-		ExposedHeaders:   []string{"Content-Length"},
-		AllowCredentials: true,
-		MaxAge:           12 * 60 * 60, // Maximum age for preflight cache (in seconds)
-	})
-
-	statikFS, err := fs.New()
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to create statik FS")
-	}
-	// Create a new ServeMux for routing
-	mainMux := http.NewServeMux()
-
-	// Register gRPC gateway mux under /api/
-	// Use StripPrefix to remove /api before forwarding to the gateway mux
-	mainMux.Handle("/api/", http.StripPrefix("/api", mux))
-
-	// Register SPA handler for everything else
-	mainMux.HandleFunc("/", serveSpa(statikFS, "/index.html"))
-
-	// start listening to requests from the gateway server
-	log.Info().Msgf("API gateway server listening on port %d", c.nodeConfig.Port)
-	if err = http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", c.nodeConfig.Port), corsMiddleware.Handler(mainMux)); err != nil {
-		log.Fatal().Err(err).Msg("failed to serve coordinator handler")
 	}
 }

@@ -1,17 +1,20 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"os/signal"
-	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v2/altsrc"
 	_ "github.com/warpstreamlabs/bento/public/components/all"
-	"github.com/warpstreamlabs/bento/public/service"
+)
+
+const (
+	RoleCoordinator = "coordinator"
+	RoleWorker      = "worker"
 )
 
 func main() {
@@ -21,31 +24,82 @@ func main() {
 		Suggest: true,
 		Version: "v0.0.1",
 		Flags: []cli.Flag{
-			&cli.BoolFlag{
-				Name:    "coordinator",
+			&cli.StringFlag{
+				Name:    "config",
 				Aliases: []string{"c"},
-				Usage:   "role of the node",
-				EnvVars: []string{"COORDINATOR"},
+				Usage:   "Load configuration from `FILE`",
 			},
-			&cli.BoolFlag{
+			altsrc.NewStringFlag(&cli.StringFlag{
+				Name:    "role",
+				Aliases: []string{"r"},
+				Usage:   "role of the node (coordinator or worker)",
+				EnvVars: []string{"ROLE"},
+				Value:   RoleCoordinator,
+			}),
+			altsrc.NewStringFlag(&cli.StringFlag{
+				Name:    "discovery-uri",
+				Aliases: []string{"du"},
+				Usage:   "node discovery URI",
+				EnvVars: []string{"DISCOVERY_URI"},
+				Value:   "localhost:50000",
+			}),
+			altsrc.NewUintFlag(&cli.UintFlag{
+				Name:    "http-port",
+				Aliases: []string{"hp"},
+				Usage:   "http port of the node",
+				EnvVars: []string{"HTTP_PORT"},
+				Value:   8080,
+			}),
+			altsrc.NewUintFlag(&cli.UintFlag{
+				Name:     "grpc-port",
+				Aliases:  []string{"gp"},
+				Usage:    "grpc port of the node",
+				EnvVars:  []string{"GRPC_PORT"},
+				Required: true,
+			}),
+			altsrc.NewBoolFlag(&cli.BoolFlag{
 				Name:    "debug",
 				Aliases: []string{"d"},
 				Usage:   "debug mode",
 				EnvVars: []string{"DEBUG_MODE"},
-			},
+				Value:   false,
+			}),
+		},
+		Before: func(ctx *cli.Context) error {
+			configFile := ctx.String("config")
+			if configFile != "" {
+				log.Info().Str("config-file", configFile).Msg("Attempting to load configuration from file")
+				yamlSource, err := altsrc.NewYamlSourceFromFile(configFile)
+				if err != nil {
+					return fmt.Errorf("failed to load config file %s: %w", configFile, err)
+				}
+				err = altsrc.ApplyInputSourceValues(ctx, yamlSource, ctx.App.Flags)
+				if err != nil {
+					return fmt.Errorf("error applying config source values: %w", err)
+				}
+				log.Info().Msg("Successfully loaded configuration from file")
+			}
+
+			// Validate role after potentially loading from config or env vars
+			role := ctx.String("role")
+			if role != RoleCoordinator && role != RoleWorker {
+				return fmt.Errorf("invalid role: %s. Must be '%s' or '%s'", role, RoleCoordinator, RoleWorker)
+			}
+
+			return nil
 		},
 		Action: func(ctx *cli.Context) error {
 			cCtx, stop := signal.NotifyContext(ctx.Context, os.Interrupt, os.Kill)
 			defer stop()
 			setLogLevel(ctx.Bool("debug"))
-			if ctx.Bool("coordinator") {
+			if ctx.String("role") == RoleCoordinator {
 				log.Info().Msg("starting coordinator")
-				coordinatorCLI := InitializeCoordinatorCommand()
+				coordinatorCLI := InitializeCoordinatorCommand(uint32(ctx.Uint("http-port")), uint32(ctx.Uint("grpc-port")))
 				coordinatorCLI.Run(cCtx)
 				return nil
 			} else {
 				log.Info().Msg("starting worker")
-				workerCLI := InitializeWorkerCommand()
+				workerCLI := InitializeWorkerCommand(ctx.String("discovery-uri"), uint32(ctx.Uint("grpc-port")))
 				workerCLI.Run(cCtx)
 				return nil
 			}
@@ -65,61 +119,4 @@ func setLogLevel(debug bool) {
 	} else {
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
-}
-
-func runStream(input, processor, output string) error {
-	var err error
-	var tracingSummary *service.TracingSummary
-
-	streamBuilder := service.NewStreamBuilder()
-	// if err = streamBuilder.AddInputYAML(input); err != nil {
-	// 	return fmt.Errorf("could not add input YAML: %w", err)
-	// }
-	// if err = streamBuilder.AddOutputYAML(output); err != nil {
-	// 	return fmt.Errorf("could not add output YAML: %w", err)
-	// }
-
-	// // add processor if available
-	// if processor != "" {
-	// 	if err = streamBuilder.AddProcessorYAML(processor); err != nil {
-	// 		return fmt.Errorf("could not add processor YAML: %w", err)
-	// 	}
-	// }
-
-	if err = streamBuilder.SetFields("http.enabled", true); err != nil {
-		return fmt.Errorf("could not set fields: %w", err)
-	}
-
-	stream, tracingSummary, err := streamBuilder.BuildTraced()
-	if err != nil {
-		return fmt.Errorf("building stream has failed: %w", err)
-	}
-
-	ticker := time.NewTicker(5 * time.Second)
-	quit := make(chan struct{})
-	go func() {
-		for {
-			select {
-			case <-ticker.C:
-				log.Info().Uint64("total_input", tracingSummary.TotalInput()).Msg("result of stream is ready")
-				log.Info().Msgf("inputs: %+v", tracingSummary.InputEvents(true))
-				log.Info().Msgf("processors: %+v", tracingSummary.ProcessorEvents(true))
-				log.Info().Msgf("output: %+v", tracingSummary.OutputEvents(true))
-			case <-quit:
-				ticker.Stop()
-				return
-			}
-		}
-	}()
-
-	if err = stream.Run(context.Background()); err != nil {
-		return fmt.Errorf("running stream has failed: %w", err)
-	}
-
-	//log.Info().Uint64("total_input", t.TotalInput()).Msg("result of stream is ready")
-	//log.Info().Msgf("inputs: %+v", t.InputEvents(true))
-	//log.Info().Msgf("inputs 2: %+v", t.InputEvents(true))
-	//log.Info().Msgf("outputs: %+v", t.OutputEvents(true))
-
-	return nil
 }

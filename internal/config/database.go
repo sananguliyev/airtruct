@@ -6,11 +6,11 @@ import (
 )
 
 const (
-	DatabaseTypeSQLite = "sql"
+	DatabaseTypeSQLite = "sqlite"
 )
 
 type DatabaseConfig struct {
-	Driver string `default:"sql"`
+	Driver string `default:"sqlite"`
 	URI    string `required:"true`
 }
 

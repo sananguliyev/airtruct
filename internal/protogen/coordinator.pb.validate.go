@@ -1735,6 +1735,12 @@ func (m *MetricsRequest) validate(all bool) error {
 
 	// no validation rules for OutputEvents
 
+	// no validation rules for InputEventsByComponent
+
+	// no validation rules for ProcessorEventsByComponent
+
+	// no validation rules for OutputEventsByComponent
+
 	if len(errors) > 0 {
 		return MetricsRequestMultiError(errors)
 	}

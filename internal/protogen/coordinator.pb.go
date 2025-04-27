@@ -29,7 +29,7 @@ const (
 type RegisterWorkerRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Port          int32                  `protobuf:"varint,2,opt,name=port,proto3" json:"port,omitempty"`
+	Port          uint32                 `protobuf:"varint,2,opt,name=port,proto3" json:"port,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -71,7 +71,7 @@ func (x *RegisterWorkerRequest) GetId() string {
 	return ""
 }
 
-func (x *RegisterWorkerRequest) GetPort() int32 {
+func (x *RegisterWorkerRequest) GetPort() uint32 {
 	if x != nil {
 		return x.Port
 	}
@@ -671,13 +671,16 @@ func (x *Event) GetMeta() *structpb.Struct {
 }
 
 type MetricsRequest struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	WorkerStreamId  int64                  `protobuf:"varint,1,opt,name=worker_stream_id,json=workerStreamId,proto3" json:"worker_stream_id,omitempty"`
-	InputEvents     uint64                 `protobuf:"varint,2,opt,name=input_events,json=inputEvents,proto3" json:"input_events,omitempty"`
-	ProcessorErrors uint64                 `protobuf:"varint,3,opt,name=processor_errors,json=processorErrors,proto3" json:"processor_errors,omitempty"`
-	OutputEvents    uint64                 `protobuf:"varint,4,opt,name=output_events,json=outputEvents,proto3" json:"output_events,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	state                      protoimpl.MessageState `protogen:"open.v1"`
+	WorkerStreamId             int64                  `protobuf:"varint,1,opt,name=worker_stream_id,json=workerStreamId,proto3" json:"worker_stream_id,omitempty"`
+	InputEvents                uint64                 `protobuf:"varint,2,opt,name=input_events,json=inputEvents,proto3" json:"input_events,omitempty"`
+	ProcessorErrors            uint64                 `protobuf:"varint,3,opt,name=processor_errors,json=processorErrors,proto3" json:"processor_errors,omitempty"`
+	OutputEvents               uint64                 `protobuf:"varint,4,opt,name=output_events,json=outputEvents,proto3" json:"output_events,omitempty"`
+	InputEventsByComponent     map[string]uint64      `protobuf:"bytes,5,rep,name=input_events_by_component,json=inputEventsByComponent,proto3" json:"input_events_by_component,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	ProcessorEventsByComponent map[string]uint64      `protobuf:"bytes,6,rep,name=processor_events_by_component,json=processorEventsByComponent,proto3" json:"processor_events_by_component,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	OutputEventsByComponent    map[string]uint64      `protobuf:"bytes,7,rep,name=output_events_by_component,json=outputEventsByComponent,proto3" json:"output_events_by_component,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	unknownFields              protoimpl.UnknownFields
+	sizeCache                  protoimpl.SizeCache
 }
 
 func (x *MetricsRequest) Reset() {
@@ -736,6 +739,27 @@ func (x *MetricsRequest) GetOutputEvents() uint64 {
 		return x.OutputEvents
 	}
 	return 0
+}
+
+func (x *MetricsRequest) GetInputEventsByComponent() map[string]uint64 {
+	if x != nil {
+		return x.InputEventsByComponent
+	}
+	return nil
+}
+
+func (x *MetricsRequest) GetProcessorEventsByComponent() map[string]uint64 {
+	if x != nil {
+		return x.ProcessorEventsByComponent
+	}
+	return nil
+}
+
+func (x *MetricsRequest) GetOutputEventsByComponent() map[string]uint64 {
+	if x != nil {
+		return x.OutputEventsByComponent
+	}
+	return nil
 }
 
 type ListWorkersResponse_Worker struct {
@@ -813,7 +837,7 @@ const file_coordinator_proto_rawDesc = "" +
 	"\x11coordinator.proto\x12\vprotorender\x1a\fcommon.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x17validate/validate.proto\";\n" +
 	"\x15RegisterWorkerRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
-	"\x04port\x18\x02 \x01(\x05R\x04port\")\n" +
+	"\x04port\x18\x02 \x01(\rR\x04port\")\n" +
 	"\x17DeregisterWorkerRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"~\n" +
 	"\x19WorkerStreamStatusRequest\x12(\n" +
@@ -850,12 +874,24 @@ const file_coordinator_proto_rawDesc = "" +
 	"\x0ecomponent_name\x18\x03 \x01(\tR\rcomponentName\x12C\n" +
 	"\x04type\x18\x04 \x01(\tB/\xfaB,r*R\aPRODUCER\aCONSUMER\x06DELETER\x05ERRORR\aUNKNOWNR\x04type\x12\x18\n" +
 	"\acontent\x18\x05 \x01(\tR\acontent\x12+\n" +
-	"\x04meta\x18\x06 \x01(\v2\x17.google.protobuf.StructR\x04meta\"\xb6\x01\n" +
+	"\x04meta\x18\x06 \x01(\v2\x17.google.protobuf.StructR\x04meta\"\x87\x06\n" +
 	"\x0eMetricsRequest\x121\n" +
 	"\x10worker_stream_id\x18\x01 \x01(\x03B\a\xfaB\x04\"\x02 \x00R\x0eworkerStreamId\x12!\n" +
 	"\finput_events\x18\x02 \x01(\x04R\vinputEvents\x12)\n" +
 	"\x10processor_errors\x18\x03 \x01(\x04R\x0fprocessorErrors\x12#\n" +
-	"\routput_events\x18\x04 \x01(\x04R\foutputEvents2\xa0\v\n" +
+	"\routput_events\x18\x04 \x01(\x04R\foutputEvents\x12r\n" +
+	"\x19input_events_by_component\x18\x05 \x03(\v27.protorender.MetricsRequest.InputEventsByComponentEntryR\x16inputEventsByComponent\x12~\n" +
+	"\x1dprocessor_events_by_component\x18\x06 \x03(\v2;.protorender.MetricsRequest.ProcessorEventsByComponentEntryR\x1aprocessorEventsByComponent\x12u\n" +
+	"\x1aoutput_events_by_component\x18\a \x03(\v28.protorender.MetricsRequest.OutputEventsByComponentEntryR\x17outputEventsByComponent\x1aI\n" +
+	"\x1bInputEventsByComponentEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\x04R\x05value:\x028\x01\x1aM\n" +
+	"\x1fProcessorEventsByComponentEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\x04R\x05value:\x028\x01\x1aJ\n" +
+	"\x1cOutputEventsByComponentEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\x04R\x05value:\x028\x012\xa0\v\n" +
 	"\vCoordinator\x12a\n" +
 	"\x18UpdateWorkerStreamStatus\x12&.protorender.WorkerStreamStatusRequest\x1a\x1b.protorender.CommonResponse\"\x00\x12}\n" +
 	"\x15CreateComponentConfig\x12\x1c.protorender.ComponentConfig\x1a$.protorender.ComponentConfigResponse\" \x82\xd3\xe4\x93\x02\x1a:\x01*\"\x15/v0/component-configs\x12\x82\x01\n" +
@@ -884,7 +920,7 @@ func file_coordinator_proto_rawDescGZIP() []byte {
 	return file_coordinator_proto_rawDescData
 }
 
-var file_coordinator_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_coordinator_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
 var file_coordinator_proto_goTypes = []any{
 	(*RegisterWorkerRequest)(nil),        // 0: protorender.RegisterWorkerRequest
 	(*DeregisterWorkerRequest)(nil),      // 1: protorender.DeregisterWorkerRequest
@@ -901,58 +937,64 @@ var file_coordinator_proto_goTypes = []any{
 	(*Event)(nil),                        // 12: protorender.Event
 	(*MetricsRequest)(nil),               // 13: protorender.MetricsRequest
 	(*ListWorkersResponse_Worker)(nil),   // 14: protorender.ListWorkersResponse.Worker
-	(WorkerStreamStatus)(0),              // 15: protorender.WorkerStreamStatus
-	(*ComponentConfig)(nil),              // 16: protorender.ComponentConfig
-	(*CommonResponse)(nil),               // 17: protorender.CommonResponse
-	(*Stream)(nil),                       // 18: protorender.Stream
-	(*structpb.Struct)(nil),              // 19: google.protobuf.Struct
-	(*timestamppb.Timestamp)(nil),        // 20: google.protobuf.Timestamp
-	(*emptypb.Empty)(nil),                // 21: google.protobuf.Empty
+	nil,                                  // 15: protorender.MetricsRequest.InputEventsByComponentEntry
+	nil,                                  // 16: protorender.MetricsRequest.ProcessorEventsByComponentEntry
+	nil,                                  // 17: protorender.MetricsRequest.OutputEventsByComponentEntry
+	(WorkerStreamStatus)(0),              // 18: protorender.WorkerStreamStatus
+	(*ComponentConfig)(nil),              // 19: protorender.ComponentConfig
+	(*CommonResponse)(nil),               // 20: protorender.CommonResponse
+	(*Stream)(nil),                       // 21: protorender.Stream
+	(*structpb.Struct)(nil),              // 22: google.protobuf.Struct
+	(*timestamppb.Timestamp)(nil),        // 23: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),                // 24: google.protobuf.Empty
 }
 var file_coordinator_proto_depIdxs = []int32{
-	15, // 0: protorender.WorkerStreamStatusRequest.status:type_name -> protorender.WorkerStreamStatus
-	16, // 1: protorender.ListComponentConfigsResponse.data:type_name -> protorender.ComponentConfig
-	16, // 2: protorender.ComponentConfigResponse.data:type_name -> protorender.ComponentConfig
-	17, // 3: protorender.ComponentConfigResponse.meta:type_name -> protorender.CommonResponse
+	18, // 0: protorender.WorkerStreamStatusRequest.status:type_name -> protorender.WorkerStreamStatus
+	19, // 1: protorender.ListComponentConfigsResponse.data:type_name -> protorender.ComponentConfig
+	19, // 2: protorender.ComponentConfigResponse.data:type_name -> protorender.ComponentConfig
+	20, // 3: protorender.ComponentConfigResponse.meta:type_name -> protorender.CommonResponse
 	14, // 4: protorender.ListWorkersResponse.data:type_name -> protorender.ListWorkersResponse.Worker
-	18, // 5: protorender.ListStreamsResponse.data:type_name -> protorender.Stream
-	18, // 6: protorender.StreamResponse.data:type_name -> protorender.Stream
-	17, // 7: protorender.StreamResponse.meta:type_name -> protorender.CommonResponse
-	19, // 8: protorender.Event.meta:type_name -> google.protobuf.Struct
-	20, // 9: protorender.ListWorkersResponse.Worker.last_heartbeat:type_name -> google.protobuf.Timestamp
-	2,  // 10: protorender.Coordinator.UpdateWorkerStreamStatus:input_type -> protorender.WorkerStreamStatusRequest
-	16, // 11: protorender.Coordinator.CreateComponentConfig:input_type -> protorender.ComponentConfig
-	16, // 12: protorender.Coordinator.UpdateComponentConfig:input_type -> protorender.ComponentConfig
-	4,  // 13: protorender.Coordinator.GetComponentConfig:input_type -> protorender.GetComponentConfigRequest
-	21, // 14: protorender.Coordinator.ListComponentConfigs:input_type -> google.protobuf.Empty
-	0,  // 15: protorender.Coordinator.RegisterWorker:input_type -> protorender.RegisterWorkerRequest
-	1,  // 16: protorender.Coordinator.DeregisterWorker:input_type -> protorender.DeregisterWorkerRequest
-	6,  // 17: protorender.Coordinator.ListWorkers:input_type -> protorender.ListWorkersRequest
-	8,  // 18: protorender.Coordinator.ListStreams:input_type -> protorender.ListStreamsRequest
-	10, // 19: protorender.Coordinator.GetStream:input_type -> protorender.GetStreamRequest
-	18, // 20: protorender.Coordinator.CreateStream:input_type -> protorender.Stream
-	18, // 21: protorender.Coordinator.UpdateStream:input_type -> protorender.Stream
-	12, // 22: protorender.Coordinator.IngestEvents:input_type -> protorender.Event
-	13, // 23: protorender.Coordinator.IngestMetrics:input_type -> protorender.MetricsRequest
-	17, // 24: protorender.Coordinator.UpdateWorkerStreamStatus:output_type -> protorender.CommonResponse
-	5,  // 25: protorender.Coordinator.CreateComponentConfig:output_type -> protorender.ComponentConfigResponse
-	5,  // 26: protorender.Coordinator.UpdateComponentConfig:output_type -> protorender.ComponentConfigResponse
-	5,  // 27: protorender.Coordinator.GetComponentConfig:output_type -> protorender.ComponentConfigResponse
-	3,  // 28: protorender.Coordinator.ListComponentConfigs:output_type -> protorender.ListComponentConfigsResponse
-	17, // 29: protorender.Coordinator.RegisterWorker:output_type -> protorender.CommonResponse
-	17, // 30: protorender.Coordinator.DeregisterWorker:output_type -> protorender.CommonResponse
-	7,  // 31: protorender.Coordinator.ListWorkers:output_type -> protorender.ListWorkersResponse
-	9,  // 32: protorender.Coordinator.ListStreams:output_type -> protorender.ListStreamsResponse
-	11, // 33: protorender.Coordinator.GetStream:output_type -> protorender.StreamResponse
-	11, // 34: protorender.Coordinator.CreateStream:output_type -> protorender.StreamResponse
-	11, // 35: protorender.Coordinator.UpdateStream:output_type -> protorender.StreamResponse
-	21, // 36: protorender.Coordinator.IngestEvents:output_type -> google.protobuf.Empty
-	21, // 37: protorender.Coordinator.IngestMetrics:output_type -> google.protobuf.Empty
-	24, // [24:38] is the sub-list for method output_type
-	10, // [10:24] is the sub-list for method input_type
-	10, // [10:10] is the sub-list for extension type_name
-	10, // [10:10] is the sub-list for extension extendee
-	0,  // [0:10] is the sub-list for field type_name
+	21, // 5: protorender.ListStreamsResponse.data:type_name -> protorender.Stream
+	21, // 6: protorender.StreamResponse.data:type_name -> protorender.Stream
+	20, // 7: protorender.StreamResponse.meta:type_name -> protorender.CommonResponse
+	22, // 8: protorender.Event.meta:type_name -> google.protobuf.Struct
+	15, // 9: protorender.MetricsRequest.input_events_by_component:type_name -> protorender.MetricsRequest.InputEventsByComponentEntry
+	16, // 10: protorender.MetricsRequest.processor_events_by_component:type_name -> protorender.MetricsRequest.ProcessorEventsByComponentEntry
+	17, // 11: protorender.MetricsRequest.output_events_by_component:type_name -> protorender.MetricsRequest.OutputEventsByComponentEntry
+	23, // 12: protorender.ListWorkersResponse.Worker.last_heartbeat:type_name -> google.protobuf.Timestamp
+	2,  // 13: protorender.Coordinator.UpdateWorkerStreamStatus:input_type -> protorender.WorkerStreamStatusRequest
+	19, // 14: protorender.Coordinator.CreateComponentConfig:input_type -> protorender.ComponentConfig
+	19, // 15: protorender.Coordinator.UpdateComponentConfig:input_type -> protorender.ComponentConfig
+	4,  // 16: protorender.Coordinator.GetComponentConfig:input_type -> protorender.GetComponentConfigRequest
+	24, // 17: protorender.Coordinator.ListComponentConfigs:input_type -> google.protobuf.Empty
+	0,  // 18: protorender.Coordinator.RegisterWorker:input_type -> protorender.RegisterWorkerRequest
+	1,  // 19: protorender.Coordinator.DeregisterWorker:input_type -> protorender.DeregisterWorkerRequest
+	6,  // 20: protorender.Coordinator.ListWorkers:input_type -> protorender.ListWorkersRequest
+	8,  // 21: protorender.Coordinator.ListStreams:input_type -> protorender.ListStreamsRequest
+	10, // 22: protorender.Coordinator.GetStream:input_type -> protorender.GetStreamRequest
+	21, // 23: protorender.Coordinator.CreateStream:input_type -> protorender.Stream
+	21, // 24: protorender.Coordinator.UpdateStream:input_type -> protorender.Stream
+	12, // 25: protorender.Coordinator.IngestEvents:input_type -> protorender.Event
+	13, // 26: protorender.Coordinator.IngestMetrics:input_type -> protorender.MetricsRequest
+	20, // 27: protorender.Coordinator.UpdateWorkerStreamStatus:output_type -> protorender.CommonResponse
+	5,  // 28: protorender.Coordinator.CreateComponentConfig:output_type -> protorender.ComponentConfigResponse
+	5,  // 29: protorender.Coordinator.UpdateComponentConfig:output_type -> protorender.ComponentConfigResponse
+	5,  // 30: protorender.Coordinator.GetComponentConfig:output_type -> protorender.ComponentConfigResponse
+	3,  // 31: protorender.Coordinator.ListComponentConfigs:output_type -> protorender.ListComponentConfigsResponse
+	20, // 32: protorender.Coordinator.RegisterWorker:output_type -> protorender.CommonResponse
+	20, // 33: protorender.Coordinator.DeregisterWorker:output_type -> protorender.CommonResponse
+	7,  // 34: protorender.Coordinator.ListWorkers:output_type -> protorender.ListWorkersResponse
+	9,  // 35: protorender.Coordinator.ListStreams:output_type -> protorender.ListStreamsResponse
+	11, // 36: protorender.Coordinator.GetStream:output_type -> protorender.StreamResponse
+	11, // 37: protorender.Coordinator.CreateStream:output_type -> protorender.StreamResponse
+	11, // 38: protorender.Coordinator.UpdateStream:output_type -> protorender.StreamResponse
+	24, // 39: protorender.Coordinator.IngestEvents:output_type -> google.protobuf.Empty
+	24, // 40: protorender.Coordinator.IngestMetrics:output_type -> google.protobuf.Empty
+	27, // [27:41] is the sub-list for method output_type
+	13, // [13:27] is the sub-list for method input_type
+	13, // [13:13] is the sub-list for extension type_name
+	13, // [13:13] is the sub-list for extension extendee
+	0,  // [0:13] is the sub-list for field type_name
 }
 
 func init() { file_coordinator_proto_init() }
@@ -967,7 +1009,7 @@ func file_coordinator_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_coordinator_proto_rawDesc), len(file_coordinator_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   15,
+			NumMessages:   18,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

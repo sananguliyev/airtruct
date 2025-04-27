@@ -7,7 +7,6 @@ toolchain go1.24.0
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.2.1
-	github.com/google/wire v0.6.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/rs/zerolog v1.33.0
 	github.com/urfave/cli/v2 v2.27.5
@@ -254,7 +253,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.18.0 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.46.0
+	github.com/prometheus/common v0.46.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
 	github.com/pusher/pusher-http-go v4.0.1+incompatible // indirect
 	github.com/quipo/dependencysolver v0.0.0-20170801134659-2b009cb4ddcc // indirect
@@ -365,6 +364,7 @@ require (
 	cloud.google.com/go/auth v0.16.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/monitoring v1.24.2 // indirect
+	github.com/BurntSushi/toml v1.4.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.25.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.51.0 // indirect
 	github.com/apache/arrow/go/v15 v15.0.2 // indirect
