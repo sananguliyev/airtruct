@@ -34,7 +34,6 @@ const ComponentConfigsPage = () => {
         );
       } catch (error) {
         console.error("Error fetching component configs:", error);
-        // Optional: toast/error UI
       }
     }
 

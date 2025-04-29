@@ -21,7 +21,6 @@ const NewPage = () => {
   const navigate = useNavigate();
   const { addToast } = useToast();
 
-//   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [componentSection, setComponentSection] = useState("");
   const [selectedComponent, setSelectedComponent] = useState("");
