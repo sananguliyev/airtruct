@@ -1,8 +1,12 @@
 package executor
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"io"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"sync"
 	"time"
@@ -22,6 +26,11 @@ const (
 	StreamMaxDelay        = 30 * time.Second
 )
 
+type IngestResult struct {
+	StatusCode int
+	Response   []byte
+}
+
 type WorkerExecutor interface {
 	JoinToCoordinator(context.Context) error
 	LeaveCoordinator(context.Context) error
@@ -31,6 +40,7 @@ type WorkerExecutor interface {
 	ShipLogs(context.Context)
 	ShipMetrics(context.Context)
 	ConsumeStreamQueue(context.Context)
+	IngestData(ctx context.Context, workerStreamID int64, method, path, contentType string, payload []byte) (*IngestResult, error)
 }
 
 type streamQueueItem struct {
@@ -46,9 +56,9 @@ type serviceStream struct {
 type workerExecutor struct {
 	clientConn        *grpc.ClientConn
 	coordinatorClient pb.CoordinatorClient
+	mainMux           *http.ServeMux
 	mu                sync.Mutex
 	streamQueue       chan streamQueueItem
-	streamBuilder     *service.StreamBuilder
 	streams           map[int64]*serviceStream
 	tracingSummaries  map[int64]*service.TracingSummary
 	grpcPort          uint32
@@ -70,7 +80,7 @@ func NewWorkerExecutor(discoveryUri string, grpcPort uint32) WorkerExecutor {
 		clientConn:        grpcConn,
 		coordinatorClient: coordinatorGRPCClient,
 		streamQueue:       make(chan streamQueueItem, MaxItemsInStreamQueue),
-		streamBuilder:     sb,
+		mainMux:           http.NewServeMux(),
 		streams:           make(map[int64]*serviceStream),
 		tracingSummaries:  make(map[int64]*service.TracingSummary),
 		grpcPort:          grpcPort,
@@ -369,13 +379,18 @@ func (e *workerExecutor) ConsumeStreamQueue(ctx context.Context) {
 			}
 
 			log.Info().Int64("worker_stream_id", msg.workerStreamID).Msg("Processing stream")
-			if err = e.streamBuilder.SetYAML(msg.config); err != nil {
+			streamBuilder := service.NewStreamBuilder()
+			streamMux := http.NewServeMux()
+			streamBuilder.SetHTTPMux(streamMux)
+			rootPath := fmt.Sprintf("/%d", msg.workerStreamID)
+			e.mainMux.Handle(fmt.Sprintf("%s/", rootPath), http.StripPrefix(rootPath, streamMux))
+			if err = streamBuilder.SetYAML(msg.config); err != nil {
 				log.Error().Err(err).Msg("Failed to set stream YAML")
 				e.mu.Unlock()
 				continue
 			}
 
-			stream, tracingSummary, err := e.streamBuilder.BuildTraced()
+			stream, tracingSummary, err := streamBuilder.BuildTraced()
 			if err != nil {
 				log.Error().Err(err).Msg("Failed to build stream")
 				e.mu.Unlock()
@@ -459,4 +474,49 @@ func (e *workerExecutor) updateWorkerStreamStatus(ctx context.Context, workerStr
 		Msg("Updated worker stream status")
 
 	return nil
+}
+
+func (e *workerExecutor) IngestData(ctx context.Context, workerStreamID int64, method, path, contentType string, payload []byte) (*IngestResult, error) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	result := &IngestResult{}
+
+	if stream, exists := e.streams[workerStreamID]; exists && stream != nil {
+		rr := httptest.NewRecorder()
+		rootPath := fmt.Sprintf("/%d", workerStreamID)
+		req, err := http.NewRequest(method, fmt.Sprintf("%s%s", rootPath, path), bytes.NewBuffer(payload))
+		req.Header.Set("Content-Type", contentType)
+		if err != nil {
+			log.Error().
+				Err(err).
+				Int64("worker_stream_id", workerStreamID).
+				Str("content_type", contentType).
+				Str("method", method).
+				Str("path", path).
+				Bytes("payload", payload).
+				Msg("Failed to create new request")
+			return nil, err
+		}
+		e.mainMux.ServeHTTP(rr, req)
+		result.StatusCode = rr.Code
+		if rr.Body != nil {
+			result.Response, err = io.ReadAll(rr.Body)
+			if err != nil {
+				log.Error().
+					Err(err).
+					Int64("worker_stream_id", workerStreamID).
+					Str("content_type", contentType).
+					Str("method", method).
+					Str("path", path).
+					Bytes("payload", payload).
+					Msg("Failed to read response body")
+				result.Response = []byte("Failed to read response body")
+			}
+		}
+	} else {
+		log.Debug().Int64("worker_stream_id", workerStreamID).Msg("HTTP Server of the stream not found")
+		return nil, fmt.Errorf("HTTP Server of the stream not found")
+	}
+
+	return result, nil
 }

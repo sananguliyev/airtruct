@@ -25,9 +25,23 @@ message CompleteStreamRequest {
   int64 worker_stream_id = 1;
 }
 
+message IngestRequest {
+  int64 worker_stream_id = 1;
+  string method = 2;
+  string path = 3;
+  string content_type = 4;
+  bytes payload = 5;
+}
+
+message IngestResponse {
+  int32 statusCode = 1;
+  bytes response = 2;
+}
+
 service Worker {
   rpc HealthCheck(google.protobuf.Empty) returns (CommonResponse) {}
   rpc AssignStream(AssignStreamRequest) returns (CommonResponse) {}
   rpc FetchStream(FetchStreamRequest) returns (FetchStreamResponse) {}
   rpc CompleteStream(CompleteStreamRequest) returns (CommonResponse) {}
+  rpc Ingest(IngestRequest) returns (IngestResponse) {}
 }

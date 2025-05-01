@@ -24,6 +24,7 @@ const (
 	Worker_AssignStream_FullMethodName   = "/protorender.Worker/AssignStream"
 	Worker_FetchStream_FullMethodName    = "/protorender.Worker/FetchStream"
 	Worker_CompleteStream_FullMethodName = "/protorender.Worker/CompleteStream"
+	Worker_Ingest_FullMethodName         = "/protorender.Worker/Ingest"
 )
 
 // WorkerClient is the client API for Worker service.
@@ -34,6 +35,7 @@ type WorkerClient interface {
 	AssignStream(ctx context.Context, in *AssignStreamRequest, opts ...grpc.CallOption) (*CommonResponse, error)
 	FetchStream(ctx context.Context, in *FetchStreamRequest, opts ...grpc.CallOption) (*FetchStreamResponse, error)
 	CompleteStream(ctx context.Context, in *CompleteStreamRequest, opts ...grpc.CallOption) (*CommonResponse, error)
+	Ingest(ctx context.Context, in *IngestRequest, opts ...grpc.CallOption) (*IngestResponse, error)
 }
 
 type workerClient struct {
@@ -84,6 +86,16 @@ func (c *workerClient) CompleteStream(ctx context.Context, in *CompleteStreamReq
 	return out, nil
 }
 
+func (c *workerClient) Ingest(ctx context.Context, in *IngestRequest, opts ...grpc.CallOption) (*IngestResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(IngestResponse)
+	err := c.cc.Invoke(ctx, Worker_Ingest_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // WorkerServer is the server API for Worker service.
 // All implementations must embed UnimplementedWorkerServer
 // for forward compatibility.
@@ -92,6 +104,7 @@ type WorkerServer interface {
 	AssignStream(context.Context, *AssignStreamRequest) (*CommonResponse, error)
 	FetchStream(context.Context, *FetchStreamRequest) (*FetchStreamResponse, error)
 	CompleteStream(context.Context, *CompleteStreamRequest) (*CommonResponse, error)
+	Ingest(context.Context, *IngestRequest) (*IngestResponse, error)
 	mustEmbedUnimplementedWorkerServer()
 }
 
@@ -113,6 +126,9 @@ func (UnimplementedWorkerServer) FetchStream(context.Context, *FetchStreamReques
 }
 func (UnimplementedWorkerServer) CompleteStream(context.Context, *CompleteStreamRequest) (*CommonResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CompleteStream not implemented")
+}
+func (UnimplementedWorkerServer) Ingest(context.Context, *IngestRequest) (*IngestResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Ingest not implemented")
 }
 func (UnimplementedWorkerServer) mustEmbedUnimplementedWorkerServer() {}
 func (UnimplementedWorkerServer) testEmbeddedByValue()                {}
@@ -207,6 +223,24 @@ func _Worker_CompleteStream_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Worker_Ingest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IngestRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WorkerServer).Ingest(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Worker_Ingest_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WorkerServer).Ingest(ctx, req.(*IngestRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Worker_ServiceDesc is the grpc.ServiceDesc for Worker service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -229,6 +263,10 @@ var Worker_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CompleteStream",
 			Handler:    _Worker_CompleteStream_Handler,
+		},
+		{
+			MethodName: "Ingest",
+			Handler:    _Worker_Ingest_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

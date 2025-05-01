@@ -206,6 +206,134 @@ func (x *CompleteStreamRequest) GetWorkerStreamId() int64 {
 	return 0
 }
 
+type IngestRequest struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	WorkerStreamId int64                  `protobuf:"varint,1,opt,name=worker_stream_id,json=workerStreamId,proto3" json:"worker_stream_id,omitempty"`
+	Method         string                 `protobuf:"bytes,2,opt,name=method,proto3" json:"method,omitempty"`
+	Path           string                 `protobuf:"bytes,3,opt,name=path,proto3" json:"path,omitempty"`
+	ContentType    string                 `protobuf:"bytes,4,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
+	Payload        []byte                 `protobuf:"bytes,5,opt,name=payload,proto3" json:"payload,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *IngestRequest) Reset() {
+	*x = IngestRequest{}
+	mi := &file_worker_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *IngestRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*IngestRequest) ProtoMessage() {}
+
+func (x *IngestRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_worker_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use IngestRequest.ProtoReflect.Descriptor instead.
+func (*IngestRequest) Descriptor() ([]byte, []int) {
+	return file_worker_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *IngestRequest) GetWorkerStreamId() int64 {
+	if x != nil {
+		return x.WorkerStreamId
+	}
+	return 0
+}
+
+func (x *IngestRequest) GetMethod() string {
+	if x != nil {
+		return x.Method
+	}
+	return ""
+}
+
+func (x *IngestRequest) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
+}
+
+func (x *IngestRequest) GetContentType() string {
+	if x != nil {
+		return x.ContentType
+	}
+	return ""
+}
+
+func (x *IngestRequest) GetPayload() []byte {
+	if x != nil {
+		return x.Payload
+	}
+	return nil
+}
+
+type IngestResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	StatusCode    int32                  `protobuf:"varint,1,opt,name=statusCode,proto3" json:"statusCode,omitempty"`
+	Response      []byte                 `protobuf:"bytes,2,opt,name=response,proto3" json:"response,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *IngestResponse) Reset() {
+	*x = IngestResponse{}
+	mi := &file_worker_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *IngestResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*IngestResponse) ProtoMessage() {}
+
+func (x *IngestResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_worker_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use IngestResponse.ProtoReflect.Descriptor instead.
+func (*IngestResponse) Descriptor() ([]byte, []int) {
+	return file_worker_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *IngestResponse) GetStatusCode() int32 {
+	if x != nil {
+		return x.StatusCode
+	}
+	return 0
+}
+
+func (x *IngestResponse) GetResponse() []byte {
+	if x != nil {
+		return x.Response
+	}
+	return nil
+}
+
 var File_worker_proto protoreflect.FileDescriptor
 
 const file_worker_proto_rawDesc = "" +
@@ -219,12 +347,24 @@ const file_worker_proto_rawDesc = "" +
 	"\x13FetchStreamResponse\x127\n" +
 	"\x06status\x18\x01 \x01(\x0e2\x1f.protorender.WorkerStreamStatusR\x06status\"A\n" +
 	"\x15CompleteStreamRequest\x12(\n" +
-	"\x10worker_stream_id\x18\x01 \x01(\x03R\x0eworkerStreamId2\xc8\x02\n" +
+	"\x10worker_stream_id\x18\x01 \x01(\x03R\x0eworkerStreamId\"\xa2\x01\n" +
+	"\rIngestRequest\x12(\n" +
+	"\x10worker_stream_id\x18\x01 \x01(\x03R\x0eworkerStreamId\x12\x16\n" +
+	"\x06method\x18\x02 \x01(\tR\x06method\x12\x12\n" +
+	"\x04path\x18\x03 \x01(\tR\x04path\x12!\n" +
+	"\fcontent_type\x18\x04 \x01(\tR\vcontentType\x12\x18\n" +
+	"\apayload\x18\x05 \x01(\fR\apayload\"L\n" +
+	"\x0eIngestResponse\x12\x1e\n" +
+	"\n" +
+	"statusCode\x18\x01 \x01(\x05R\n" +
+	"statusCode\x12\x1a\n" +
+	"\bresponse\x18\x02 \x01(\fR\bresponse2\x8d\x03\n" +
 	"\x06Worker\x12D\n" +
 	"\vHealthCheck\x12\x16.google.protobuf.Empty\x1a\x1b.protorender.CommonResponse\"\x00\x12O\n" +
 	"\fAssignStream\x12 .protorender.AssignStreamRequest\x1a\x1b.protorender.CommonResponse\"\x00\x12R\n" +
 	"\vFetchStream\x12\x1f.protorender.FetchStreamRequest\x1a .protorender.FetchStreamResponse\"\x00\x12S\n" +
-	"\x0eCompleteStream\x12\".protorender.CompleteStreamRequest\x1a\x1b.protorender.CommonResponse\"\x00B4Z2github.com/sananguliyev/airtruct/internal/protogenb\x06proto3"
+	"\x0eCompleteStream\x12\".protorender.CompleteStreamRequest\x1a\x1b.protorender.CommonResponse\"\x00\x12C\n" +
+	"\x06Ingest\x12\x1a.protorender.IngestRequest\x1a\x1b.protorender.IngestResponse\"\x00B4Z2github.com/sananguliyev/airtruct/internal/protogenb\x06proto3"
 
 var (
 	file_worker_proto_rawDescOnce sync.Once
@@ -238,28 +378,32 @@ func file_worker_proto_rawDescGZIP() []byte {
 	return file_worker_proto_rawDescData
 }
 
-var file_worker_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_worker_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_worker_proto_goTypes = []any{
 	(*AssignStreamRequest)(nil),   // 0: protorender.AssignStreamRequest
 	(*FetchStreamRequest)(nil),    // 1: protorender.FetchStreamRequest
 	(*FetchStreamResponse)(nil),   // 2: protorender.FetchStreamResponse
 	(*CompleteStreamRequest)(nil), // 3: protorender.CompleteStreamRequest
-	(WorkerStreamStatus)(0),       // 4: protorender.WorkerStreamStatus
-	(*emptypb.Empty)(nil),         // 5: google.protobuf.Empty
-	(*CommonResponse)(nil),        // 6: protorender.CommonResponse
+	(*IngestRequest)(nil),         // 4: protorender.IngestRequest
+	(*IngestResponse)(nil),        // 5: protorender.IngestResponse
+	(WorkerStreamStatus)(0),       // 6: protorender.WorkerStreamStatus
+	(*emptypb.Empty)(nil),         // 7: google.protobuf.Empty
+	(*CommonResponse)(nil),        // 8: protorender.CommonResponse
 }
 var file_worker_proto_depIdxs = []int32{
-	4, // 0: protorender.FetchStreamResponse.status:type_name -> protorender.WorkerStreamStatus
-	5, // 1: protorender.Worker.HealthCheck:input_type -> google.protobuf.Empty
+	6, // 0: protorender.FetchStreamResponse.status:type_name -> protorender.WorkerStreamStatus
+	7, // 1: protorender.Worker.HealthCheck:input_type -> google.protobuf.Empty
 	0, // 2: protorender.Worker.AssignStream:input_type -> protorender.AssignStreamRequest
 	1, // 3: protorender.Worker.FetchStream:input_type -> protorender.FetchStreamRequest
 	3, // 4: protorender.Worker.CompleteStream:input_type -> protorender.CompleteStreamRequest
-	6, // 5: protorender.Worker.HealthCheck:output_type -> protorender.CommonResponse
-	6, // 6: protorender.Worker.AssignStream:output_type -> protorender.CommonResponse
-	2, // 7: protorender.Worker.FetchStream:output_type -> protorender.FetchStreamResponse
-	6, // 8: protorender.Worker.CompleteStream:output_type -> protorender.CommonResponse
-	5, // [5:9] is the sub-list for method output_type
-	1, // [1:5] is the sub-list for method input_type
+	4, // 5: protorender.Worker.Ingest:input_type -> protorender.IngestRequest
+	8, // 6: protorender.Worker.HealthCheck:output_type -> protorender.CommonResponse
+	8, // 7: protorender.Worker.AssignStream:output_type -> protorender.CommonResponse
+	2, // 8: protorender.Worker.FetchStream:output_type -> protorender.FetchStreamResponse
+	8, // 9: protorender.Worker.CompleteStream:output_type -> protorender.CommonResponse
+	5, // 10: protorender.Worker.Ingest:output_type -> protorender.IngestResponse
+	6, // [6:11] is the sub-list for method output_type
+	1, // [1:6] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
 	1, // [1:1] is the sub-list for extension extendee
 	0, // [0:1] is the sub-list for field type_name
@@ -277,7 +421,7 @@ func file_worker_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_worker_proto_rawDesc), len(file_worker_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

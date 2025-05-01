@@ -452,3 +452,217 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = CompleteStreamRequestValidationError{}
+
+// Validate checks the field values on IngestRequest with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *IngestRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on IngestRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in IngestRequestMultiError, or
+// nil if none found.
+func (m *IngestRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *IngestRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for WorkerStreamId
+
+	// no validation rules for Method
+
+	// no validation rules for Path
+
+	// no validation rules for ContentType
+
+	// no validation rules for Payload
+
+	if len(errors) > 0 {
+		return IngestRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// IngestRequestMultiError is an error wrapping multiple validation errors
+// returned by IngestRequest.ValidateAll() if the designated constraints
+// aren't met.
+type IngestRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m IngestRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m IngestRequestMultiError) AllErrors() []error { return m }
+
+// IngestRequestValidationError is the validation error returned by
+// IngestRequest.Validate if the designated constraints aren't met.
+type IngestRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e IngestRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e IngestRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e IngestRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e IngestRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e IngestRequestValidationError) ErrorName() string { return "IngestRequestValidationError" }
+
+// Error satisfies the builtin error interface
+func (e IngestRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sIngestRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = IngestRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = IngestRequestValidationError{}
+
+// Validate checks the field values on IngestResponse with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *IngestResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on IngestResponse with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in IngestResponseMultiError,
+// or nil if none found.
+func (m *IngestResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *IngestResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for StatusCode
+
+	// no validation rules for Response
+
+	if len(errors) > 0 {
+		return IngestResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// IngestResponseMultiError is an error wrapping multiple validation errors
+// returned by IngestResponse.ValidateAll() if the designated constraints
+// aren't met.
+type IngestResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m IngestResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m IngestResponseMultiError) AllErrors() []error { return m }
+
+// IngestResponseValidationError is the validation error returned by
+// IngestResponse.Validate if the designated constraints aren't met.
+type IngestResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e IngestResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e IngestResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e IngestResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e IngestResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e IngestResponseValidationError) ErrorName() string { return "IngestResponseValidationError" }
+
+// Error satisfies the builtin error interface
+func (e IngestResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sIngestResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = IngestResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = IngestResponseValidationError{}

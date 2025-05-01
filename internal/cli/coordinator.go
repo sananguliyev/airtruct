@@ -37,7 +37,7 @@ func NewCoordinatorCLI(api *coordinator.CoordinatorAPI, executor executor.Coordi
 func (c *CoordinatorCLI) Run(ctx context.Context) {
 	g, ctx := errgroup.WithContext(ctx)
 
-	ticker := time.NewTicker(30 * time.Second)
+	ticker := time.NewTicker(3 * time.Second)
 	defer ticker.Stop()
 
 	g.Go(func() error {
@@ -123,6 +123,15 @@ func (c *CoordinatorCLI) Run(ctx context.Context) {
 	}
 	mainMux := http.NewServeMux()
 	mainMux.Handle("/api/", http.StripPrefix("/api", mux))
+	mainMux.HandleFunc("/ingest/", func(w http.ResponseWriter, r *http.Request) {
+		statusCode, response, err := c.executor.ForwardRequestToWorker(r.Context(), r)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to ingest stream")
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		w.WriteHeader(int(statusCode))
+		w.Write(response)
+	})
 	mainMux.HandleFunc("/", serveSpa(statikFS, "/index.html"))
 
 	httpServer := &http.Server{

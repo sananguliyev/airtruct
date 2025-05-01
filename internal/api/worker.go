@@ -75,3 +75,31 @@ func (a *WorkerAPI) HealthCheck(_ context.Context, _ *emptypb.Empty) (*pb.Common
 		Message: "OK",
 	}, nil
 }
+
+func (a *WorkerAPI) Ingest(ctx context.Context, in *pb.IngestRequest) (*pb.IngestResponse, error) {
+
+	log.Debug().
+		Int64("worker_stream_id", in.GetWorkerStreamId()).
+		Bytes("data", in.GetPayload()).
+		Msg("Ingesting data")
+	ingestResult, err := a.workerExecutor.IngestData(
+		ctx,
+		in.GetWorkerStreamId(),
+		in.GetMethod(),
+		in.GetPath(),
+		in.GetContentType(),
+		in.GetPayload(),
+	)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Int64("worker_stream_id", in.GetWorkerStreamId()).
+			Msg("Failed to ingest data")
+		return nil, status.Error(codes.Internal, "Failed to ingest data")
+	}
+
+	return &pb.IngestResponse{
+		StatusCode: int32(ingestResult.StatusCode),
+		Response:   ingestResult.Response,
+	}, nil
+}

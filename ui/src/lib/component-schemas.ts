@@ -465,6 +465,35 @@ export const componentSchemas = {
         },
       },
     },
+    http_server: {
+      address: {
+        type: "input",
+        title: "Address",
+        description:
+          "An alternative address to host from. If left empty the service wide address is used",
+        default: "",
+      },
+      path: {
+        type: "input",
+        title: "Path",
+        description: "The endpoint path to listen for POST requests.",
+        default: "/post",
+      },
+      allowed_verbs: {
+        type: "array",
+        title: "Allowed Verbs",
+        description:
+          "An array of verbs that are allowed for the path endpoint.",
+        default: ["POST"],
+      },
+      timeout: {
+        type: "input",
+        title: "Timeout",
+        description:
+          "Timeout for requests. If a consumed messages takes longer than this to be delivered the connection is closed, but the message may still be delivered.",
+        default: "5s",
+      },
+    },
   },
   pipeline: {
     mapping: {
@@ -1054,7 +1083,7 @@ export const componentSchemas = {
 
 // Component lists for each type
 export const componentLists = {
-  input: ["generate", "http_client", "kafka"],
+  input: ["generate", "http_client", "http_server", "kafka"],
   pipeline: ["mapping"],
   output: ["http_client", "kafka"],
 };

@@ -4,6 +4,12 @@ import (
 	"container/heap"
 	"context"
 	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"regexp"
+	"strconv"
+	"sync"
 
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
@@ -19,13 +25,18 @@ import (
 type CoordinatorExecutor interface {
 	CheckWorkersAndAssignStreams(context.Context) error
 	CheckWorkerStreams(context.Context) error
+	ForwardRequestToWorker(context.Context, *http.Request) (int32, []byte, error)
 }
 
 type coordinatorExecutor struct {
-	workerRepo       persistence.WorkerRepository
-	streamRepo       persistence.StreamRepository
-	workerStreamRepo persistence.WorkerStreamRepository
-	workerClients    map[string]pb.WorkerClient
+	mu                 sync.Mutex
+	workerRepo         persistence.WorkerRepository
+	streamRepo         persistence.StreamRepository
+	workerStreamRepo   persistence.WorkerStreamRepository
+	workerClients      map[string]pb.WorkerClient
+	streamWorker       map[int64]string
+	streamWorkerStream map[int64]int64
+	pathRegex          *regexp.Regexp
 }
 
 func NewCoordinatorExecutor(
@@ -33,12 +44,31 @@ func NewCoordinatorExecutor(
 	streamRepo persistence.StreamRepository,
 	workerStreamRepo persistence.WorkerStreamRepository,
 ) CoordinatorExecutor {
-	return &coordinatorExecutor{
-		workerRepo:       workerRepo,
-		streamRepo:       streamRepo,
-		workerStreamRepo: workerStreamRepo,
-		workerClients:    make(map[string]pb.WorkerClient),
+	executor := &coordinatorExecutor{
+		workerRepo:         workerRepo,
+		streamRepo:         streamRepo,
+		workerStreamRepo:   workerStreamRepo,
+		workerClients:      make(map[string]pb.WorkerClient),
+		streamWorker:       make(map[int64]string),
+		streamWorkerStream: make(map[int64]int64),
+		pathRegex:          regexp.MustCompile(`^/ingest/(\d+)(/.*)?$`),
 	}
+
+	workerStreams, err := workerStreamRepo.ListAllByStatuses(persistence.WorkerStreamStatusRunning)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to list all running worker streams, suggesting to restart the coordinator, otherwise HTTP streams will not be reachable")
+	}
+	for _, workerStream := range workerStreams {
+		executor.streamWorker[workerStream.StreamID] = workerStream.Worker.ID
+		executor.streamWorkerStream[workerStream.StreamID] = workerStream.ID
+		if workerStream.Stream.ParentID != nil {
+			executor.streamWorker[*workerStream.Stream.ParentID] = workerStream.Worker.ID
+			executor.streamWorkerStream[*workerStream.Stream.ParentID] = workerStream.ID
+		}
+	}
+	log.Info().Int("running_worker_stream_count", len(workerStreams)).Msg("Loaded running worker streams")
+
+	return executor
 }
 
 func (e *coordinatorExecutor) CheckWorkersAndAssignStreams(ctx context.Context) error {
@@ -78,7 +108,7 @@ func (e *coordinatorExecutor) CheckWorkersAndAssignStreams(ctx context.Context) 
 	}
 
 	if len(streams) > 0 && workerHeap.Len() == 0 {
-		log.Warn().Msg("No active workers to assign streams")
+		log.Warn().Int("waiting_stream_count", len(streams)).Msg("No active workers to assign streams")
 		return nil
 	}
 
@@ -128,7 +158,7 @@ func (e *coordinatorExecutor) CheckWorkerStreams(ctx context.Context) error {
 			return
 		}
 
-		log.Info().Str("status", resp.Status.String()).Msg("Worker stream checked")
+		log.Debug().Int64("worker_stream_id", workerStream.ID).Str("status", resp.Status.String()).Msg("Worker stream checked")
 
 		if resp.Status.String() == string(persistence.WorkerStreamStatusCompleted) {
 			if err := e.streamRepo.UpdateStatus(workerStream.StreamID, persistence.StreamStatusCompleted); err != nil {
@@ -250,6 +280,11 @@ func (e *coordinatorExecutor) assignJob(ctx context.Context, worker persistence.
 		return err
 	}
 
+	// We should lock mutex here otherwise it blocks getting worker client
+	// and it causes deadlock
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
 	configMap := make(map[string]any)
 
 	input := make(map[string]any)
@@ -309,6 +344,12 @@ func (e *coordinatorExecutor) assignJob(ctx context.Context, worker persistence.
 		}
 		return err
 	}
+	e.streamWorker[stream.ID] = worker.ID
+	e.streamWorkerStream[stream.ID] = workerStream.ID
+	if stream.ParentID != nil {
+		e.streamWorker[*stream.ParentID] = worker.ID
+		e.streamWorkerStream[*stream.ParentID] = workerStream.ID
+	}
 
 	log.Info().
 		Str("worker_id", worker.ID).
@@ -321,6 +362,9 @@ func (e *coordinatorExecutor) assignJob(ctx context.Context, worker persistence.
 }
 
 func (e *coordinatorExecutor) deactivateWorker(workerID string) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
 	if err := e.workerRepo.Deactivate(workerID); err != nil {
 		log.Error().Err(err).Str("worker_id", workerID).Msg("Failed to deactivate worker")
 		return
@@ -330,11 +374,15 @@ func (e *coordinatorExecutor) deactivateWorker(workerID string) {
 		log.Warn().Err(err).Str("worker_id", workerID).Msg("Failed to update all worker streams statuses in worker")
 		return
 	}
+	delete(e.workerClients, workerID)
 
 	log.Info().Str("worker_id", workerID).Msg("Worker is unhealthy and deactivated")
 }
 
 func (e *coordinatorExecutor) getWorkerClient(worker *persistence.Worker) (pb.WorkerClient, error) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
 	var workerGRPCClient pb.WorkerClient
 	workerGRPCClient, clientExists := e.workerClients[worker.ID]
 	if !clientExists {
@@ -349,4 +397,58 @@ func (e *coordinatorExecutor) getWorkerClient(worker *persistence.Worker) (pb.Wo
 	}
 
 	return workerGRPCClient, nil
+}
+
+// ForwardRequestToWorker implements CoordinatorExecutor.
+func (e *coordinatorExecutor) ForwardRequestToWorker(ctx context.Context, r *http.Request) (int32, []byte, error) {
+	var err error
+	var id int64
+	var componentPath string
+
+	matches := e.pathRegex.FindStringSubmatch(r.URL.Path)
+	if matches == nil {
+		return 0, nil, fmt.Errorf("invalid path format")
+	}
+
+	id, err = strconv.ParseInt(matches[1], 10, 64)
+	if err != nil {
+		return 0, nil, fmt.Errorf("invalid ID format")
+	}
+
+	if len(matches) > 2 && matches[2] != "" {
+		componentPath = matches[2]
+	}
+
+	workerStreamID, ok := e.streamWorkerStream[id]
+	if !ok {
+		return 0, nil, fmt.Errorf("worker stream not found for stream ID %d", id)
+	}
+
+	workerID, ok := e.streamWorker[id]
+	if !ok {
+		return 0, nil, fmt.Errorf("worker not found for stream ID %d", id)
+	}
+	workerClient, err := e.getWorkerClient(&persistence.Worker{ID: workerID})
+	if err != nil {
+		return 0, nil, fmt.Errorf("failed to get worker client: %w", err)
+	}
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		return 0, nil, fmt.Errorf("failed to read request body: %w", err)
+	}
+	defer r.Body.Close()
+
+	resp, err := workerClient.Ingest(ctx, &pb.IngestRequest{
+		WorkerStreamId: workerStreamID,
+		Method:         r.Method,
+		Path:           componentPath,
+		ContentType:    r.Header.Get("Content-Type"),
+		Payload:        bodyBytes,
+	})
+
+	if err != nil {
+		return 0, nil, fmt.Errorf("failed to forward request to worker: %w", err)
+	}
+
+	return resp.StatusCode, resp.Response, nil
 }
