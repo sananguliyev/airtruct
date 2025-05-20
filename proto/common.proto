@@ -104,4 +104,6 @@ message Stream {
   repeated Processor processors = 12 [
     json_name = "processors"
   ];
+
+  bool is_http_server = 13 [json_name = "is_http_server"];
 }

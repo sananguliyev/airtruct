@@ -44,18 +44,19 @@ func (s *Stream) ToProto() *pb.Stream {
 	}
 
 	result := &pb.Stream{
-		Id:          s.ID,
-		ParentId:    s.ParentID,
-		Name:        s.Name,
-		InputLabel:  s.InputLabel,
-		InputId:     s.InputID,
-		Processors:  make([]*pb.Stream_Processor, len(s.Processors)),
-		OutputLabel: s.OutputLabel,
-		OutputId:    s.OutputID,
-		IsCurrent:   s.IsCurrent,
-		Status:      string(s.Status),
-		CreatedAt:   timestamppb.New(s.CreatedAt),
-		UpdatedAt:   updatedAt,
+		Id:           s.ID,
+		ParentId:     s.ParentID,
+		Name:         s.Name,
+		InputLabel:   s.InputLabel,
+		InputId:      s.InputID,
+		Processors:   make([]*pb.Stream_Processor, len(s.Processors)),
+		OutputLabel:  s.OutputLabel,
+		OutputId:     s.OutputID,
+		IsCurrent:    s.IsCurrent,
+		Status:       string(s.Status),
+		CreatedAt:    timestamppb.New(s.CreatedAt),
+		UpdatedAt:    updatedAt,
+		IsHttpServer: s.Input.Component == "http_server",
 	}
 
 	for i, processor := range s.Processors {

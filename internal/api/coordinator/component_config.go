@@ -115,6 +115,7 @@ func (c *CoordinatorAPI) UpdateComponentConfig(_ context.Context, in *pb.Compone
 		log.Error().Err(err).Msg("Failed to convert component config from proto")
 		return nil, status.Error(codes.Internal, "Failed to convert component config from proto")
 	}
+	newComponent.ParentID = existingComponentConfig.ParentID
 
 	if err = c.componentConfigRepo.Update(newComponent); err != nil {
 		log.Error().Err(err).Msg("Failed to update component config")

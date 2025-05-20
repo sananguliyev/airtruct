@@ -117,6 +117,7 @@ func (c *CoordinatorAPI) UpdateStream(_ context.Context, in *pb.Stream) (*pb.Str
 			ProcessorID: processor.GetProcessorId(),
 		}
 	}
+	newStream.ParentID = stream.ParentID
 
 	if err = c.streamRepo.Update(newStream); err != nil {
 		log.Error().Err(err).Msg("Failed to update stream")

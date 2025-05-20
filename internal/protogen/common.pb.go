@@ -238,6 +238,7 @@ type Stream struct {
 	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=created_at,proto3" json:"created_at,omitempty"`
 	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=updated_at,proto3,oneof" json:"updated_at,omitempty"`
 	Processors    []*Stream_Processor    `protobuf:"bytes,12,rep,name=processors,proto3" json:"processors,omitempty"`
+	IsHttpServer  bool                   `protobuf:"varint,13,opt,name=is_http_server,proto3" json:"is_http_server,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -356,6 +357,13 @@ func (x *Stream) GetProcessors() []*Stream_Processor {
 	return nil
 }
 
+func (x *Stream) GetIsHttpServer() bool {
+	if x != nil {
+		return x.IsHttpServer
+	}
+	return false
+}
+
 type Stream_Processor struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Label         string                 `protobuf:"bytes,1,opt,name=label,proto3" json:"label,omitempty"`
@@ -446,7 +454,7 @@ const file_common_proto_rawDesc = "" +
 	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"created_atB\f\n" +
 	"\n" +
-	"_parent_id\"\xd1\x05\n" +
+	"_parent_id\"\xf9\x05\n" +
 	"\x06Stream\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12!\n" +
 	"\tparent_id\x18\x02 \x01(\x03H\x00R\tparent_id\x88\x01\x01\x12\x1d\n" +
@@ -468,7 +476,8 @@ const file_common_proto_rawDesc = "" +
 	"updated_at\x88\x01\x01\x12=\n" +
 	"\n" +
 	"processors\x18\f \x03(\v2\x1d.protorender.Stream.ProcessorR\n" +
-	"processors\x1al\n" +
+	"processors\x12&\n" +
+	"\x0eis_http_server\x18\r \x01(\bR\x0eis_http_server\x1al\n" +
 	"\tProcessor\x122\n" +
 	"\x05label\x18\x01 \x01(\tB\x1c\xfaB\x19r\x17\x10\x01\x18d2\x11^[a-zA-Z0-9 _-]+$R\x05label\x12+\n" +
 	"\fprocessor_id\x18\x02 \x01(\x03B\a\xfaB\x04\"\x02 \x00R\fprocessor_idB\f\n" +

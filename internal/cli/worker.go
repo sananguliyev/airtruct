@@ -31,29 +31,6 @@ func (c *WorkerCLI) Run(ctx context.Context) {
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
-	g.Go(func() error {
-		if err := c.executor.JoinToCoordinator(ctx); err != nil {
-			log.Error().Err(err).Msg("Initial registration on coordinator failed, worker might not be operational.")
-		}
-
-		for {
-			select {
-			case <-ctx.Done():
-				log.Info().Msg("Stopping worker registration/metrics routine...")
-				if err := c.executor.LeaveCoordinator(context.Background()); err != nil {
-					log.Error().Err(err).Msg("Failed to leave coordinator during shutdown")
-				}
-				log.Info().Msg("Worker registration/metrics routine stopped.")
-				return ctx.Err()
-			case <-ticker.C:
-				if err := c.executor.JoinToCoordinator(ctx); err != nil {
-					log.Error().Err(err).Msg("Periodic registration on coordinator failed")
-				}
-				c.executor.ShipMetrics(ctx)
-			}
-		}
-	})
-
 	workerServerAddress := fmt.Sprintf(":%d", c.grpcPort)
 	lis, err := net.Listen("tcp", workerServerAddress)
 	if err != nil {
@@ -79,6 +56,25 @@ func (c *WorkerCLI) Run(ctx context.Context) {
 			grpcServer.GracefulStop()
 			log.Info().Msg("Worker gRPC server stopped gracefully.")
 			return ctx.Err()
+		}
+	})
+
+	g.Go(func() error {
+		for {
+			select {
+			case <-ctx.Done():
+				log.Info().Msg("Stopping worker registration/metrics routine...")
+				if err := c.executor.LeaveCoordinator(context.Background()); err != nil {
+					log.Error().Err(err).Msg("Failed to leave coordinator during shutdown")
+				}
+				log.Info().Msg("Worker registration/metrics routine stopped.")
+				return ctx.Err()
+			case <-ticker.C:
+				if err := c.executor.JoinToCoordinator(ctx); err != nil {
+					log.Error().Err(err).Msg("Periodic registration on coordinator failed")
+				}
+				c.executor.ShipMetrics(ctx)
+			}
 		}
 	})
 

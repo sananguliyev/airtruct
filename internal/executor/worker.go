@@ -50,6 +50,7 @@ type streamQueueItem struct {
 
 type serviceStream struct {
 	Stream *service.Stream
+	Mux    *http.ServeMux
 	Status persistence.WorkerStreamStatus
 }
 
@@ -382,8 +383,8 @@ func (e *workerExecutor) ConsumeStreamQueue(ctx context.Context) {
 			streamBuilder := service.NewStreamBuilder()
 			streamMux := http.NewServeMux()
 			streamBuilder.SetHTTPMux(streamMux)
-			rootPath := fmt.Sprintf("/%d", msg.workerStreamID)
-			e.mainMux.Handle(fmt.Sprintf("%s/", rootPath), http.StripPrefix(rootPath, streamMux))
+			//rootPath := fmt.Sprintf("/%d", msg.workerStreamID)
+			//e.mainMux.Handle(fmt.Sprintf("%s/", rootPath), http.StripPrefix(rootPath, streamMux))
 			if err = streamBuilder.SetYAML(msg.config); err != nil {
 				log.Error().Err(err).Msg("Failed to set stream YAML")
 				e.mu.Unlock()
@@ -399,13 +400,39 @@ func (e *workerExecutor) ConsumeStreamQueue(ctx context.Context) {
 
 			e.streams[msg.workerStreamID] = &serviceStream{
 				Stream: stream,
+				Mux:    streamMux,
 				Status: persistence.WorkerStreamStatusRunning,
 			}
 			e.tracingSummaries[msg.workerStreamID] = tracingSummary
 			e.mu.Unlock()
 			log.Info().Int64("worker_stream_id", msg.workerStreamID).Msg("Starting stream")
 
-			go func() {
+			go func(serviceStream *serviceStream) {
+				defer func() {
+					if r := recover(); r != nil {
+						log.Error().
+							Err(fmt.Errorf("%v", r)).
+							Int64("worker_stream_id", msg.workerStreamID).
+							Msg("Stream panicked")
+					}
+					log.Info().Int64("worker_stream_id", msg.workerStreamID).Msg("Stopping stream")
+					if err := serviceStream.Stream.Stop(ctx); err != nil {
+						log.Error().Err(err).Int64("worker_stream_id", msg.workerStreamID).Msg("Failed to stop stream in worker")
+					}
+					e.mu.Lock()
+					delete(e.streams, msg.workerStreamID)
+					delete(e.tracingSummaries, msg.workerStreamID)
+					e.mu.Unlock()
+					if err := e.updateWorkerStreamStatus(ctx, msg.workerStreamID, persistence.WorkerStreamStatusStopped); err != nil {
+						log.Warn().
+							Err(err).
+							Int64("worker_stream_id", msg.workerStreamID).
+							Str("status", string(persistence.WorkerStreamStatusStopped)).
+							Msg("Failed to update worker stream status")
+					}
+					log.Info().Int64("worker_stream_id", msg.workerStreamID).Msg("Stream has been stopped")
+				}()
+				log.Info().Int64("worker_stream_id", msg.workerStreamID).Msg("Stream started running")
 				if err = stream.Run(ctx); err != nil {
 					log.Error().Err(err).Msg("Failed to run stream")
 					e.mu.Lock()
@@ -429,7 +456,7 @@ func (e *workerExecutor) ConsumeStreamQueue(ctx context.Context) {
 						Str("status", string(persistence.WorkerStreamStatusFailed)).
 						Msg("Failed to update worker stream status")
 				}
-			}()
+			}(e.streams[msg.workerStreamID])
 
 			log.Info().Int64("worker_stream_id", msg.workerStreamID).Msg("Stream started running")
 			if err = e.updateWorkerStreamStatus(ctx, msg.workerStreamID, persistence.WorkerStreamStatusRunning); err != nil {
@@ -483,8 +510,8 @@ func (e *workerExecutor) IngestData(ctx context.Context, workerStreamID int64, m
 
 	if stream, exists := e.streams[workerStreamID]; exists && stream != nil {
 		rr := httptest.NewRecorder()
-		rootPath := fmt.Sprintf("/%d", workerStreamID)
-		req, err := http.NewRequest(method, fmt.Sprintf("%s%s", rootPath, path), bytes.NewBuffer(payload))
+		//rootPath := fmt.Sprintf("/%d", workerStreamID)
+		req, err := http.NewRequest(method, path, bytes.NewBuffer(payload))
 		req.Header.Set("Content-Type", contentType)
 		if err != nil {
 			log.Error().
@@ -497,7 +524,7 @@ func (e *workerExecutor) IngestData(ctx context.Context, workerStreamID int64, m
 				Msg("Failed to create new request")
 			return nil, err
 		}
-		e.mainMux.ServeHTTP(rr, req)
+		stream.Mux.ServeHTTP(rr, req)
 		result.StatusCode = rr.Code
 		if rr.Body != nil {
 			result.Response, err = io.ReadAll(rr.Body)

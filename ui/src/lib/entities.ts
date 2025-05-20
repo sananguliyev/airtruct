@@ -21,6 +21,7 @@ export type ComponentConfig = {
 
 export type Stream = {
   id: string;
+  parentID: string;
   name: string;
   status: string;
   inputLabel: string;
@@ -31,6 +32,7 @@ export type Stream = {
   outputLabel: string;
   processors: StreamProcessor[];
   createdAt: string;
+  isHttpServer: boolean;
 
   visualData?: {
     nodes: Node[];

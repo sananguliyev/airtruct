@@ -399,7 +399,8 @@ func (e *coordinatorExecutor) getWorkerClient(worker *persistence.Worker) (pb.Wo
 	return workerGRPCClient, nil
 }
 
-// ForwardRequestToWorker implements CoordinatorExecutor.
+// ForwardRequestToWorker forwards the HTTP request to the worker based on the stream ID in the URL path.
+// It returns the status code and response body from the worker.
 func (e *coordinatorExecutor) ForwardRequestToWorker(ctx context.Context, r *http.Request) (int32, []byte, error) {
 	var err error
 	var id int64
