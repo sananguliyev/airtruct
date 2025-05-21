@@ -11,7 +11,7 @@ const (
 
 type DatabaseConfig struct {
 	Driver string `default:"sqlite"`
-	URI    string `required:"true`
+	URI    string `required:"true"`
 }
 
 func NewDatabaseConfig() *DatabaseConfig {

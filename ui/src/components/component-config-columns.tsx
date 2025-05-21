@@ -1,6 +1,7 @@
 import type React from 'react';
 import { ComponentConfig } from "@/lib/entities";
 import { Badge } from './ui/badge';
+import { useRelativeTime } from '@/lib/utils';
 
 export const columns = () => [
   { key: "name" as keyof ComponentConfig, title: "Name" },
@@ -28,5 +29,15 @@ export const columns = () => [
     title: "Component",
     render: (value: string) => <Badge variant="outline">{value}</Badge>,
   },
-  { key: "createdAt" as keyof ComponentConfig, title: "Last versioned at" },
+  {
+    key: "createdAt" as keyof ComponentConfig,
+    title: "Last versioned",
+    render: (value: string) => {
+      const RelativeTime = () => {
+        const time = useRelativeTime(value);
+        return <>{time}</>;
+      };
+      return <RelativeTime />;
+    }
+  },
 ]; 

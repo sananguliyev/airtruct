@@ -195,7 +195,7 @@ function StreamBuilderContent({
             <SelectContent>
               <SelectItem value="active">Active</SelectItem>
               <SelectItem value="paused">Paused</SelectItem>
-              <SelectItem value="finished">Finished</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
             </SelectContent>
           </Select>
         </div>

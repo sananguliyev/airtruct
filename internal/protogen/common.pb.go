@@ -229,16 +229,18 @@ type Stream struct {
 	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	ParentId      *int64                 `protobuf:"varint,2,opt,name=parent_id,proto3,oneof" json:"parent_id,omitempty"`
 	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	InputLabel    string                 `protobuf:"bytes,4,opt,name=input_label,proto3" json:"input_label,omitempty"`
-	InputId       int64                  `protobuf:"varint,5,opt,name=input_id,proto3" json:"input_id,omitempty"`
-	OutputLabel   string                 `protobuf:"bytes,6,opt,name=output_label,proto3" json:"output_label,omitempty"`
-	OutputId      int64                  `protobuf:"varint,7,opt,name=output_id,proto3" json:"output_id,omitempty"`
-	IsCurrent     bool                   `protobuf:"varint,8,opt,name=is_current,proto3" json:"is_current,omitempty"`
-	Status        string                 `protobuf:"bytes,9,opt,name=status,proto3" json:"status,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=created_at,proto3" json:"created_at,omitempty"`
-	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=updated_at,proto3,oneof" json:"updated_at,omitempty"`
-	Processors    []*Stream_Processor    `protobuf:"bytes,12,rep,name=processors,proto3" json:"processors,omitempty"`
-	IsHttpServer  bool                   `protobuf:"varint,13,opt,name=is_http_server,proto3" json:"is_http_server,omitempty"`
+	InputHint     string                 `protobuf:"bytes,4,opt,name=input_hint,proto3" json:"input_hint,omitempty"`
+	InputLabel    string                 `protobuf:"bytes,5,opt,name=input_label,proto3" json:"input_label,omitempty"`
+	InputId       int64                  `protobuf:"varint,6,opt,name=input_id,proto3" json:"input_id,omitempty"`
+	OutputHint    string                 `protobuf:"bytes,7,opt,name=output_hint,proto3" json:"output_hint,omitempty"`
+	OutputLabel   string                 `protobuf:"bytes,8,opt,name=output_label,proto3" json:"output_label,omitempty"`
+	OutputId      int64                  `protobuf:"varint,9,opt,name=output_id,proto3" json:"output_id,omitempty"`
+	IsCurrent     bool                   `protobuf:"varint,10,opt,name=is_current,proto3" json:"is_current,omitempty"`
+	Status        string                 `protobuf:"bytes,11,opt,name=status,proto3" json:"status,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=created_at,proto3" json:"created_at,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,13,opt,name=updated_at,proto3,oneof" json:"updated_at,omitempty"`
+	Processors    []*Stream_Processor    `protobuf:"bytes,14,rep,name=processors,proto3" json:"processors,omitempty"`
+	IsHttpServer  bool                   `protobuf:"varint,15,opt,name=is_http_server,proto3" json:"is_http_server,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -294,6 +296,13 @@ func (x *Stream) GetName() string {
 	return ""
 }
 
+func (x *Stream) GetInputHint() string {
+	if x != nil {
+		return x.InputHint
+	}
+	return ""
+}
+
 func (x *Stream) GetInputLabel() string {
 	if x != nil {
 		return x.InputLabel
@@ -306,6 +315,13 @@ func (x *Stream) GetInputId() int64 {
 		return x.InputId
 	}
 	return 0
+}
+
+func (x *Stream) GetOutputHint() string {
+	if x != nil {
+		return x.OutputHint
+	}
+	return ""
 }
 
 func (x *Stream) GetOutputLabel() string {
@@ -454,30 +470,34 @@ const file_common_proto_rawDesc = "" +
 	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"created_atB\f\n" +
 	"\n" +
-	"_parent_id\"\xf9\x05\n" +
+	"_parent_id\"\xbb\x06\n" +
 	"\x06Stream\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12!\n" +
 	"\tparent_id\x18\x02 \x01(\x03H\x00R\tparent_id\x88\x01\x01\x12\x1d\n" +
-	"\x04name\x18\x03 \x01(\tB\t\xfaB\x06r\x04\x10\x01\x18dR\x04name\x12>\n" +
-	"\vinput_label\x18\x04 \x01(\tB\x1c\xfaB\x19r\x17\x10\x01\x18d2\x11^[a-zA-Z0-9 _-]+$R\vinput_label\x12#\n" +
-	"\binput_id\x18\x05 \x01(\x03B\a\xfaB\x04\"\x02 \x00R\binput_id\x12@\n" +
-	"\foutput_label\x18\x06 \x01(\tB\x1c\xfaB\x19r\x17\x10\x01\x18d2\x11^[a-zA-Z0-9 _-]+$R\foutput_label\x12%\n" +
-	"\toutput_id\x18\a \x01(\x03B\a\xfaB\x04\"\x02 \x00R\toutput_id\x12\x1e\n" +
+	"\x04name\x18\x03 \x01(\tB\t\xfaB\x06r\x04\x10\x01\x18dR\x04name\x12\x1e\n" +
 	"\n" +
-	"is_current\x18\b \x01(\bR\n" +
+	"input_hint\x18\x04 \x01(\tR\n" +
+	"input_hint\x12>\n" +
+	"\vinput_label\x18\x05 \x01(\tB\x1c\xfaB\x19r\x17\x10\x01\x18d2\x11^[a-zA-Z0-9 _-]+$R\vinput_label\x12#\n" +
+	"\binput_id\x18\x06 \x01(\x03B\a\xfaB\x04\"\x02 \x00R\binput_id\x12 \n" +
+	"\voutput_hint\x18\a \x01(\tR\voutput_hint\x12@\n" +
+	"\foutput_label\x18\b \x01(\tB\x1c\xfaB\x19r\x17\x10\x01\x18d2\x11^[a-zA-Z0-9 _-]+$R\foutput_label\x12%\n" +
+	"\toutput_id\x18\t \x01(\x03B\a\xfaB\x04\"\x02 \x00R\toutput_id\x12\x1e\n" +
+	"\n" +
+	"is_current\x18\n" +
+	" \x01(\bR\n" +
 	"is_current\x12@\n" +
-	"\x06status\x18\t \x01(\tB(\xfaB%r#R\x06activeR\tcompletedR\x06pausedR\x06failedR\x06status\x12:\n" +
+	"\x06status\x18\v \x01(\tB(\xfaB%r#R\x06activeR\tcompletedR\x06pausedR\x06failedR\x06status\x12:\n" +
 	"\n" +
-	"created_at\x18\n" +
-	" \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"created_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"created_at\x12?\n" +
 	"\n" +
-	"updated_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampH\x01R\n" +
+	"updated_at\x18\r \x01(\v2\x1a.google.protobuf.TimestampH\x01R\n" +
 	"updated_at\x88\x01\x01\x12=\n" +
 	"\n" +
-	"processors\x18\f \x03(\v2\x1d.protorender.Stream.ProcessorR\n" +
+	"processors\x18\x0e \x03(\v2\x1d.protorender.Stream.ProcessorR\n" +
 	"processors\x12&\n" +
-	"\x0eis_http_server\x18\r \x01(\bR\x0eis_http_server\x1al\n" +
+	"\x0eis_http_server\x18\x0f \x01(\bR\x0eis_http_server\x1al\n" +
 	"\tProcessor\x122\n" +
 	"\x05label\x18\x01 \x01(\tB\x1c\xfaB\x19r\x17\x10\x01\x18d2\x11^[a-zA-Z0-9 _-]+$R\x05label\x12+\n" +
 	"\fprocessor_id\x18\x02 \x01(\x03B\a\xfaB\x04\"\x02 \x00R\fprocessor_idB\f\n" +

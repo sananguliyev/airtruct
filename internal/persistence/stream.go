@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	pb "github.com/sananguliyev/airtruct/internal/protogen"
@@ -47,9 +48,11 @@ func (s *Stream) ToProto() *pb.Stream {
 		Id:           s.ID,
 		ParentId:     s.ParentID,
 		Name:         s.Name,
+		InputHint:    fmt.Sprintf("%s (%s)", s.Input.Name, s.Input.Component),
 		InputLabel:   s.InputLabel,
 		InputId:      s.InputID,
 		Processors:   make([]*pb.Stream_Processor, len(s.Processors)),
+		OutputHint:   fmt.Sprintf("%s (%s)", s.Output.Name, s.Output.Component),
 		OutputLabel:  s.OutputLabel,
 		OutputId:     s.OutputID,
 		IsCurrent:    s.IsCurrent,

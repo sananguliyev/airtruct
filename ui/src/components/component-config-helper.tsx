@@ -8,6 +8,10 @@ export const initializeDefaultValues = (
   values: Record<string, any>
 ) => {
   Object.entries(schema).forEach(([key, field]: [string, any]) => {
+    if (typeof field !== 'object' || field === null) {
+      return;
+    }
+
     if (field.type === "object" && field.properties) {
       values[key] = {};
       initializeDefaultValues(field.properties, values[key]);

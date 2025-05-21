@@ -74,7 +74,8 @@ message Stream {
       max_len: 100
     }
   ];
-  string input_label = 4 [
+  string input_hint = 4 [json_name = "input_hint"];
+  string input_label = 5 [
     json_name = "input_label",
     (validate.rules).string = {
       min_len: 1,
@@ -82,8 +83,9 @@ message Stream {
       pattern: "^[a-zA-Z0-9 _-]+$"
     }
   ];
-  int64 input_id = 5 [json_name = "input_id", (validate.rules).int64.gt = 0];
-  string output_label = 6 [
+  int64 input_id = 6 [json_name = "input_id", (validate.rules).int64.gt = 0];
+  string output_hint = 7 [json_name = "output_hint"];
+  string output_label = 8 [
     json_name = "output_label",
     (validate.rules).string = {
       min_len: 1,
@@ -91,19 +93,15 @@ message Stream {
       pattern: "^[a-zA-Z0-9 _-]+$"
     }
   ];
-  int64 output_id = 7 [json_name = "output_id", (validate.rules).int64.gt = 0];
-  bool is_current = 8 [ json_name = "is_current" ];
-  string status = 9 [
+  int64 output_id = 9 [json_name = "output_id", (validate.rules).int64.gt = 0];
+  bool is_current = 10 [ json_name = "is_current" ];
+  string status = 11 [
     (validate.rules).string = {
       in: ["active", "completed", "paused", "failed"]
     }
   ];
-  google.protobuf.Timestamp created_at = 10 [ json_name = "created_at" ];
-  optional google.protobuf.Timestamp updated_at = 11 [ json_name = "updated_at" ];
-
-  repeated Processor processors = 12 [
-    json_name = "processors"
-  ];
-
-  bool is_http_server = 13 [json_name = "is_http_server"];
+  google.protobuf.Timestamp created_at = 12 [ json_name = "created_at" ];
+  optional google.protobuf.Timestamp updated_at = 13 [ json_name = "updated_at" ];
+  repeated Processor processors = 14 [json_name = "processors"];
+  bool is_http_server = 15 [json_name = "is_http_server"];
 }

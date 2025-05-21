@@ -1,5 +1,6 @@
 import { Stream } from "@/lib/entities";
 import { Badge } from "./ui/badge";
+import { useRelativeTime } from "@/lib/utils";
 
 export const columns = () => [
   { key: "name" as keyof Stream, title: "Name" },
@@ -31,5 +32,15 @@ export const columns = () => [
     },
   },
   { key: "outputLabel" as keyof Stream, title: "Output" },
-  { key: "createdAt" as keyof Stream, title: "Created At" },
+  {
+    key: "createdAt" as keyof Stream,
+    title: "Last versioned",
+    render: (value: string) => {
+      const RelativeTime = () => {
+        const time = useRelativeTime(value);
+        return <>{time}</>;
+      };
+      return <RelativeTime />;
+    }
+  },
 ];

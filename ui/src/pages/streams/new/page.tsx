@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { Loader2 } from "lucide-react";
-import { streamsData } from "@/lib/mock-data";
 import { useToast } from "@/components/toast";
 import { StreamBuilder } from "@/components/stream-builder/stream-builder";
 import type { Node, Edge } from "reactflow";
@@ -84,6 +83,8 @@ export default function NewStreamPage() {
         processors: processors.length > 0 ? processors : [],
         outputLabel: outputNode.data.label,
         outputID: outputComponentID,
+        parentID: "",
+        isHttpServer: false,
       };
 
       const response = await createStream(newStream);

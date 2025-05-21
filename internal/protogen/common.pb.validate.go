@@ -376,6 +376,8 @@ func (m *Stream) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	// no validation rules for InputHint
+
 	if l := utf8.RuneCountInString(m.GetInputLabel()); l < 1 || l > 100 {
 		err := StreamValidationError{
 			field:  "InputLabel",
@@ -408,6 +410,8 @@ func (m *Stream) validate(all bool) error {
 		}
 		errors = append(errors, err)
 	}
+
+	// no validation rules for OutputHint
 
 	if l := utf8.RuneCountInString(m.GetOutputLabel()); l < 1 || l > 100 {
 		err := StreamValidationError{
@@ -517,6 +521,8 @@ func (m *Stream) validate(all bool) error {
 		}
 
 	}
+
+	// no validation rules for IsHttpServer
 
 	if m.ParentId != nil {
 		// no validation rules for ParentId

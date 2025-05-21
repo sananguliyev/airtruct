@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/components/toast";
@@ -25,25 +25,18 @@ export default function EditStreamPage() {
     ComponentConfig[]
   >([] as ComponentConfig[]);
   const [stream, setStream] = useState<Stream | null>();
+  const loadedRef = useRef(false);
 
   useEffect(() => {
-    async function loadComponentConfigs() {
+    async function loadData() {
+      if (loadedRef.current) return;
+      loadedRef.current = true;
+
       try {
         const data = await fetchComponentConfigs();
         setComponentConfigsData(data);
-      } catch (error) {
-        console.error("Error fetching component configs data:", error);
-      }
-    }
-
-    loadComponentConfigs();
-  }, []);
-
-  // Load stream data
-  useEffect(() => {
-    setIsLoading(true);
-    const loadStream = async () => {
-      try {
+        
+        setIsLoading(true);
         const streamResponse = await fetchStream(id || "");
         setStream(streamResponse);
         // If the stream has visual data, use it
@@ -67,7 +60,7 @@ export default function EditStreamPage() {
             data: {
               label: streamResponse.inputLabel || "Input",
               type: "input",
-              component: getComponentLabel(streamResponse.inputID.toString()),
+              component: getComponentLabel(streamResponse.inputID.toString(), data),
               componentId: streamResponse.inputID.toString(),
               status: streamResponse.status,
             },
@@ -89,7 +82,7 @@ export default function EditStreamPage() {
                   data: {
                     label: processor.label || `Processor ${index + 1}`,
                     type: "processor",
-                    component: getComponentLabel(processor.processorID.toString()),
+                    component: getComponentLabel(processor.processorID.toString(), data),
                     componentId: processor.processorID.toString(),
                     status: streamResponse.status,
                   },
@@ -117,7 +110,7 @@ export default function EditStreamPage() {
             data: {
               label: streamResponse.outputLabel || "Output",
               type: "output",
-              component: getComponentLabel(streamResponse.outputID.toString()),
+              component: getComponentLabel(streamResponse.outputID.toString(), data),
               componentId: streamResponse.outputID.toString(),
               status: streamResponse.status,
             },
@@ -142,10 +135,10 @@ export default function EditStreamPage() {
 
         setIsLoading(false);
       } catch (error) {
-        console.error("Error fetching stream data:", error);
+        console.error("Error loading data:", error);
         addToast({
           id: "fetch-error",
-          title: "Error Fetching Stream",
+          title: "Error Loading Data",
           description:
             error instanceof Error
               ? error.message
@@ -155,7 +148,8 @@ export default function EditStreamPage() {
         navigate("/streams");
       }
     }
-    loadStream();
+
+    loadData();
   }, [id, navigate]);
 
   const handleSaveStream = async (data: {
@@ -205,6 +199,8 @@ export default function EditStreamPage() {
         processors,
         outputLabel: outputNode.data.label,
         outputID: parseInt(outputNode.data.componentId || "0"),
+        parentID: stream?.parentID || "",
+        isHttpServer: stream?.isHttpServer || false,
       };
 
       const response = await updateStream(id || "", updatedStreamData);
@@ -234,8 +230,8 @@ export default function EditStreamPage() {
   };
 
   // Helper to get component label from ID
-  const getComponentLabel = (componentId: string): string => {
-    const component = componentConfigsData.find((c) => c.id === componentId);
+  const getComponentLabel = (componentId: string, configs: ComponentConfig[]): string => {
+    const component = configs.find((c) => c.id === componentId);
     return component ? `${component.name} (${component.component})` : "";
   };
 

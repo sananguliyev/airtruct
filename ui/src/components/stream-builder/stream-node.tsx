@@ -22,10 +22,12 @@ const StreamNode = ({ data, selected }: NodeProps<StreamNodeData>) => {
           {status && (
             <Badge
               variant={
-                status === "Active"
-                  ? "success"
-                  : status === "Paused"
+                status === "active"
+                  ? "info"
+                  : status === "paused"
                   ? "warning"
+                  : status === "completed"
+                  ? "success"
                   : "secondary"
               }
               className="text-xs"
