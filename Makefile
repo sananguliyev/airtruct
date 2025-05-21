@@ -18,7 +18,7 @@ build:
 	go build -o dist/airtruct ./cmd/... 
 
 run-coordinator:
-	export DATABASE_URI="file:./airtruct.sqlite?_foreign_keys=1&mode=rwc" 
+	export DATABASE_URI="file:./airtruct.sqlite?_foreign_keys=1&mode=rwc" && \
 	./dist/airtruct -gp 50000
 
 run-worker:
