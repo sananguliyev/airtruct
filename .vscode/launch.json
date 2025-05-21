@@ -1,0 +1,31 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "coordinator",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/airtruct/.",
+            "env": {
+                "ROLE": "coordinator",
+                "NODE_DISCOVERY_URI": "localhost:50000",
+                "GRPC_PORT": "50000",
+                "DATABASE_URI": "file:/Users/sananguliyev/Git/sananguliyev/airtruct/airtruct.sqlite?_foreign_keys=1&mode=rwc",
+            }
+        },
+        {
+            "name": "worker",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/airtruct/.",
+            "env": {
+                "ROLE": "worker",
+                "GRPC_PORT": "50001",
+                "DEBUG_MODE": "false",
+                "NODE_DISCOVERY_URI": "localhost:50000",
+            }
+        }
+    ]
+}
