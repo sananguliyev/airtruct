@@ -16,13 +16,12 @@ import ScannersPage from './pages/scanners/page.tsx';
 import BuffersPage from './pages/buffers/page.tsx';
 import CachesPage from './pages/caches/page.tsx';
 // Import edit pages
-import StreamEditPage from './pages/streams/:id/edit/page.tsx';
-import ComponentConfigEditPage from './pages/component-configs/:id/edit/page.tsx';
+import StreamEditPage from './pages/streams/[id]/edit/page.tsx';
+import ComponentConfigEditPage from './pages/component-configs/[id]/edit/page.tsx';
 // Import new pages
 import StreamNewPage from './pages/streams/new/page.tsx';
 import ComponentConfigNewPage from './pages/component-configs/new/page.tsx';
 
-// RootLayout now incorporates providers from old app/layout.tsx and uses the main Layout component
 const AppLayout: React.FC = () => {
   return (
     <ThemeProvider
