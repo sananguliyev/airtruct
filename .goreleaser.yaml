@@ -1,5 +1,6 @@
 version: 2
 
 builds:
-  - env:
+  - main: ./cmd/airtruct
+    env:
       - CGO_ENABLED=1
