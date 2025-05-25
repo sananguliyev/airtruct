@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
+import { Routes, Route, Outlet } from 'react-router-dom';
 import { ThemeProvider } from "@/components/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { ToastProvider } from "@/components/toast"
@@ -47,25 +47,21 @@ const AppLayout: React.FC = () => {
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<AppLayout />}>
-          <Route index element={<HomePage />} />
-          <Route path="streams" element={<StreamsPage />} />
-          <Route path="streams/new" element={<StreamNewPage />} />
-          <Route path="streams/:id/edit" element={<StreamEditPage />} />
-          <Route path="workers" element={<WorkersPage />} />
-          <Route path="component-configs" element={<ComponentConfigsPage />} />
-          <Route path="component-configs/new" element={<ComponentConfigNewPage />} />
-          <Route path="component-configs/:id/edit" element={<ComponentConfigEditPage />} />
-          <Route path="scanners" element={<ScannersPage />} />
-          <Route path="buffers" element={<BuffersPage />} />
-          <Route path="caches" element={<CachesPage />} />
-          {/* Add routes for /new pages if they exist and need separate routes */}
-          {/* Example: <Route path="streams/new" element={<StreamNewPage />} /> */}
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <Routes>
+      <Route path="/" element={<AppLayout />}>
+        <Route index element={<HomePage />} />
+        <Route path="streams" element={<StreamsPage />} />
+        <Route path="streams/new" element={<StreamNewPage />} />
+        <Route path="streams/:id/edit" element={<StreamEditPage />} />
+        <Route path="workers" element={<WorkersPage />} />
+        <Route path="component-configs" element={<ComponentConfigsPage />} />
+        <Route path="component-configs/new" element={<ComponentConfigNewPage />} />
+        <Route path="component-configs/:id/edit" element={<ComponentConfigEditPage />} />
+        <Route path="scanners" element={<ScannersPage />} />
+        <Route path="buffers" element={<BuffersPage />} />
+        <Route path="caches" element={<CachesPage />} />
+      </Route>
+    </Routes>
   );
 }
 
