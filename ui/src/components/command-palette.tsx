@@ -19,6 +19,7 @@ import {
   Layers,
   ScanLine,
   Waypoints,
+  Monitor,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 
@@ -57,12 +58,6 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
               >
                 <LayoutDashboard className="mr-2 h-4 w-4" />
                 Dashboard
-              </CommandItem>
-              <CommandItem
-                onSelect={() => runCommand(() => navigate("/components"))}
-              >
-                <Component className="mr-2 h-4 w-4" />
-                Components
               </CommandItem>
               <CommandItem
                 onSelect={() => runCommand(() => navigate("/streams/new"))}
@@ -109,6 +104,12 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
               >
                 <Moon className="mr-2 h-4 w-4" />
                 Dark
+              </CommandItem>
+              <CommandItem
+                onSelect={() => runCommand(() => setTheme("system"))}
+              >
+                <Monitor className="mr-2 h-4 w-4" />
+                System
               </CommandItem>
             </CommandGroup>
           </CommandList>
