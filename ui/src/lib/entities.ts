@@ -1,5 +1,3 @@
-import type { Node, Edge } from "reactflow";
-
 export type Worker = {
   id: string;
   status: string;
@@ -7,16 +5,6 @@ export type Worker = {
   lastHeartbeat: string;
   activeStreams: number;
   createdAt: string;
-};
-
-export type ComponentConfig = {
-  id: string;
-  name: string;
-  type: string;
-  section: string;
-  component: string;
-  createdAt: string;
-  config: Record<string, any>;
 };
 
 export type Stream = {
@@ -46,11 +34,6 @@ export type Stream = {
   outputID?: number;
   outputLabel?: string;
   isHttpServer?: boolean;
-
-  visualData?: {
-    nodes: Node[];
-    edges: Edge[];
-  };
 };
 
 export type StreamProcessor = {

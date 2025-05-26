@@ -11,16 +11,13 @@ import Layout from './components/Layout'
 import HomePage from './pages/HomePage.tsx';
 import StreamsPage from './pages/streams/page.tsx'; // Assuming structure from Next.js App Router
 import WorkersPage from './pages/workers/page.tsx';
-import ComponentConfigsPage from './pages/component-configs/page.tsx';
 import ScannersPage from './pages/scanners/page.tsx';
 import BuffersPage from './pages/buffers/page.tsx';
 import CachesPage from './pages/caches/page.tsx';
 // Import edit pages
 import StreamEditPage from './pages/streams/[id]/edit/page.tsx';
-import ComponentConfigEditPage from './pages/component-configs/[id]/edit/page.tsx';
 // Import new pages
 import StreamNewPage from './pages/streams/new/page.tsx';
-import ComponentConfigNewPage from './pages/component-configs/new/page.tsx';
 
 const AppLayout: React.FC = () => {
   return (
@@ -54,9 +51,6 @@ function App() {
         <Route path="streams/new" element={<StreamNewPage />} />
         <Route path="streams/:id/edit" element={<StreamEditPage />} />
         <Route path="workers" element={<WorkersPage />} />
-        <Route path="component-configs" element={<ComponentConfigsPage />} />
-        <Route path="component-configs/new" element={<ComponentConfigNewPage />} />
-        <Route path="component-configs/:id/edit" element={<ComponentConfigEditPage />} />
         <Route path="scanners" element={<ScannersPage />} />
         <Route path="buffers" element={<BuffersPage />} />
         <Route path="caches" element={<CachesPage />} />

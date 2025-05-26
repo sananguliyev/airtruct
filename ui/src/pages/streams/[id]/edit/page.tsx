@@ -3,15 +3,22 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/components/toast";
 import { StreamBuilder } from "@/components/stream-builder/stream-builder";
-import type { Node, Edge } from "reactflow";
-import type { StreamNodeData } from "@/components/stream-builder/stream-node";
-import { v4 as uuidv4 } from "uuid";
 import { fetchStream, updateStream } from "@/lib/api";
 import { 
   componentSchemas as rawComponentSchemas, 
   componentLists 
 } from "@/lib/component-schemas";
 import type { AllComponentSchemas } from "@/components/stream-builder/node-config-panel";
+
+// Define StreamNodeData type locally since the file was deleted
+export interface StreamNodeData {
+  label: string;
+  type: "input" | "processor" | "output";
+  componentId?: string;
+  component?: string;
+  configYaml?: string;
+  status?: string;
+}
 
 const transformComponentSchemas = (): AllComponentSchemas => {
   const allSchemas: AllComponentSchemas = {

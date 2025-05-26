@@ -1,7 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import type { Node } from "reactflow";
 import Editor from "@monaco-editor/react";
-import type { StreamNodeData } from "./stream-node";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +11,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+
+// Define StreamNodeData type locally since the file was deleted
+export interface StreamNodeData {
+  label: string;
+  type: "input" | "processor" | "output";
+  componentId?: string;
+  component?: string;
+  configYaml?: string;
+}
 
 // Define a basic structure for ComponentSchema, assuming it will be passed from props
 export interface ComponentSchema {
@@ -30,7 +37,7 @@ export interface AllComponentSchemas {
 }
 
 interface NodeConfigPanelProps {
-  selectedNode: Node<StreamNodeData> | null;
+  selectedNode: { id: string; data: StreamNodeData } | null;
   allComponentSchemas: AllComponentSchemas;
   onUpdateNode: (nodeId: string, data: StreamNodeData) => void;
   onDeleteNode: (nodeId: string) => void;

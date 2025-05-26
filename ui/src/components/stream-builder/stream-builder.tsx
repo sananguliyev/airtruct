@@ -3,12 +3,20 @@ import { useCallback, useState, useRef, useEffect, useMemo } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { Button } from "@/components/ui/button";
 import { Save, Trash2, PlusCircle } from "lucide-react"; 
-// Removed React Flow imports
 
-// Re-using StreamNodeData for individual node configuration, but it won't be a React Flow node data anymore
-import type { StreamNodeData as CustomNodeDataType } from "./stream-node"; 
-// Re-using SectionNodeData for section properties
-import type { SectionNodeData as CustomSectionDataType } from "./section-node"; 
+// Define types locally since the files were deleted
+export interface StreamNodeData {
+  label: string;
+  type: "input" | "processor" | "output";
+  componentId?: string;
+  component?: string;
+  configYaml?: string;
+}
+
+export interface SectionNodeData {
+  label: string;
+  type: "input" | "processor" | "output";
+}
 
 import { 
   NodeConfigPanel, 
@@ -33,8 +41,7 @@ export interface CustomNode {
   id: string;
   type: NodeType;
   parentId: string; // id of the section it belongs to
-  data: CustomNodeDataType;
-  // Positional data might be managed by order in an array for vertical layout
+  data: StreamNodeData;
 }
 
 export interface CustomSection {
@@ -42,7 +49,7 @@ export interface CustomSection {
   type: NodeType; // Corresponds to the type of nodes it can contain
   label: string;
   nodes: CustomNode[]; // Nodes belonging to this section
-  data: CustomSectionDataType;
+  data: SectionNodeData;
 }
 // --- End Custom Types Definition ---
 
@@ -62,13 +69,13 @@ interface StreamBuilderProps {
     name: string;
     status: string;
     // initialData.nodes will now be our CustomNodeDataType array
-    nodes: CustomNodeDataType[]; 
+    nodes: StreamNodeData[]; 
     // Edges are implicit in order for now, or can be rebuilt if source/target provided
   };
   onSave: (data: {
     name: string;
     status: string;
-    nodes: CustomNodeDataType[]; // Save will be an array of node data objects
+    nodes: StreamNodeData[]; // Save will be an array of node data objects
   }) => void;
 }
 
@@ -192,7 +199,7 @@ function StreamBuilderContent({
     let label = `new_${sectionType}`;
     if (sectionType === 'processor') label = getNextProcessorLabel();
     
-    const newNodeData: CustomNodeDataType = { label, type: sectionType, componentId: "" };
+    const newNodeData: StreamNodeData = { label, type: sectionType, componentId: "" };
     // Corrected parentId to match section IDs for processors
     const parentId = sectionType === 'processor' ? 'pipeline-section' : `${sectionType}-section`;
     const newNode: CustomNode = { id: uuidv4(), type: sectionType, parentId, data: newNodeData };
@@ -223,7 +230,7 @@ function StreamBuilderContent({
     if (selectedNodeId === nodeId) setSelectedNodeId(null);
   }, [selectedNodeId]);
 
-  const handleUpdateNode = useCallback((nodeId: string, data: CustomNodeDataType) => {
+  const handleUpdateNode = useCallback((nodeId: string, data: StreamNodeData) => {
     setNodes(prevNodes => prevNodes.map(n => n.id === nodeId ? { ...n, data: {...data} } : n));
   }, []);
 
@@ -376,7 +383,7 @@ function StreamBuilderContent({
   );
 }
 
-// Main export (No ReactFlowProvider needed)
+// Main export
 export function StreamBuilder(props: StreamBuilderProps) {
   return <StreamBuilderContent {...props} />;
 }
