@@ -14,12 +14,11 @@ import (
 func InitializeCoordinatorCommand(httpPort, grpcPort uint32) *cli.CoordinatorCLI {
 	databaseConfig := config.NewDatabaseConfig()
 	db := persistence.NewGormDB(databaseConfig)
-	componentConfigRepository := persistence.NewComponentRepository(db)
 	eventRepository := persistence.NewEventRepository(db)
 	streamRepository := persistence.NewStreamRepository(db)
 	workerRepository := persistence.NewWorkerRepository(db)
 	workerStreamRepository := persistence.NewWorkerStreamRepository(db)
-	coordinatorAPI := coordinator.NewCoordinatorAPI(componentConfigRepository, eventRepository, streamRepository, workerRepository, workerStreamRepository)
+	coordinatorAPI := coordinator.NewCoordinatorAPI(eventRepository, streamRepository, workerRepository, workerStreamRepository)
 	coordinatorExecutor := executor.NewCoordinatorExecutor(workerRepository, streamRepository, workerStreamRepository)
 	coordinatorCLI := cli.NewCoordinatorCLI(coordinatorAPI, coordinatorExecutor, httpPort, grpcPort)
 	return coordinatorCLI
