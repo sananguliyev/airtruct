@@ -3,14 +3,10 @@ import { useNavigate } from "react-router-dom"
 import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Component, Layers } from "lucide-react"
+import { Layers } from "lucide-react"
 
 export function QuickCreate({ isCollapsed }: { isCollapsed: boolean }) {
   const navigate = useNavigate()
-
-  const handleCreateComponent = () => {
-    navigate("/component-configs/new")
-  }
 
   const handleCreateStream = () => {
     navigate("/streams/new")
@@ -32,10 +28,6 @@ export function QuickCreate({ isCollapsed }: { isCollapsed: boolean }) {
         )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-56">
-        <DropdownMenuItem onSelect={handleCreateComponent}>
-          <Component className="mr-2 h-4 w-4" />
-          New Component
-        </DropdownMenuItem>
         <DropdownMenuItem onSelect={handleCreateStream}>
           <Layers className="mr-2 h-4 w-4" />
           New Stream

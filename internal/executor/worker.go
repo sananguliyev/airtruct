@@ -216,9 +216,9 @@ func (e *workerExecutor) ShipLogs(ctx context.Context) {
 				sentEvents := 0
 				for workerStreamId, tracingSummary := range e.tracingSummaries {
 					eventGetters := map[string]func(bool) map[string][]service.TracingEvent{
-						string(persistence.ComponentSectionInput):    tracingSummary.InputEvents,
-						string(persistence.ComponentSectionPipeline): tracingSummary.ProcessorEvents,
-						string(persistence.ComponentSectionOutput):   tracingSummary.OutputEvents,
+						string(persistence.StreamSectionInput):    tracingSummary.InputEvents,
+						string(persistence.StreamSectionPipeline): tracingSummary.ProcessorEvents,
+						string(persistence.StreamSectionOutput):   tracingSummary.OutputEvents,
 					}
 					for section, getEvents := range eventGetters {
 						for componentName, events := range getEvents(true) {

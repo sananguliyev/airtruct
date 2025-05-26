@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom"
-import { LayoutDashboard, Component, Cpu, MemoryStick, Layers, ScanLine, Waypoints, Truck } from "lucide-react"
+import { LayoutDashboard, Cpu, MemoryStick, Layers, ScanLine, Waypoints, Truck } from "lucide-react"
 
 import { ThemeSwitcher } from "./theme-switcher"
 
@@ -17,11 +17,6 @@ const menuItems = [
         name: "Dashboard",
         href: "/",
         icon: LayoutDashboard,
-      },
-      {
-        name: "Component Configs",
-        href: "/component-configs",
-        icon: Component,
       },
       {
         name: "Streams",

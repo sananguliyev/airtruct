@@ -1,111 +1,137 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/components/toast";
 import { StreamBuilder } from "@/components/stream-builder/stream-builder";
-import type { Node, Edge } from "reactflow";
-import type { StreamNodeData } from "@/components/stream-builder/stream-node";
-import { ComponentConfig } from "@/lib/entities";
-import { createStream, fetchComponentConfigs } from "@/lib/api";
+import { createStream } from "@/lib/api";
+import { 
+  componentSchemas as rawComponentSchemas, 
+  componentLists 
+} from "@/lib/component-schemas";
+import type { AllComponentSchemas, ComponentSchema } from "@/components/stream-builder/node-config-panel";
+
+// Define StreamNodeData type locally since the file was deleted
+export interface StreamNodeData {
+  label: string;
+  type: "input" | "processor" | "output";
+  componentId?: string;
+  component?: string;
+  configYaml?: string;
+}
+
+const transformComponentSchemas = (): AllComponentSchemas => {
+  const allSchemas: AllComponentSchemas = {
+    input: [],
+    processor: [],
+    output: [],
+  };
+
+  for (const typeKey of ["input", "pipeline", "output"] as const) {
+    const list = componentLists[typeKey] || [];
+    const targetTypeForApp = typeKey === 'pipeline' ? 'processor' : typeKey;
+    
+    let schemaCategory: typeof rawComponentSchemas.input | typeof rawComponentSchemas.pipeline | typeof rawComponentSchemas.output | undefined;
+    if (typeKey === 'input') schemaCategory = rawComponentSchemas.input;
+    else if (typeKey === 'pipeline') schemaCategory = rawComponentSchemas.pipeline;
+    else if (typeKey === 'output') schemaCategory = rawComponentSchemas.output;
+
+    list.forEach((componentName: string) => {
+      const rawSchema = schemaCategory?.[componentName as keyof typeof schemaCategory];
+      if (rawSchema) {
+        allSchemas[targetTypeForApp].push({
+          id: componentName,
+          name: (rawSchema as any).title || componentName,
+          component: componentName,
+          type: targetTypeForApp,
+          schema: rawSchema,
+        });
+      }
+    });
+  }
+  return allSchemas;
+};
 
 export default function NewStreamPage() {
   const navigate = useNavigate();
   const { addToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [componentConfigsData, setComponentConfigsData] = useState<
-    ComponentConfig[]
-  >([] as ComponentConfig[]);
+  const [transformedSchemas, setTransformedSchemas] = useState<AllComponentSchemas | null>(null);
 
   useEffect(() => {
-    async function loadComponentConfigs() {
-      try {
-        const data = await fetchComponentConfigs();
-        setComponentConfigsData(data);
-      } catch (error) {
-        console.error("Error fetching component configs data:", error);
-      }
-    }
-
-    loadComponentConfigs();
+    setTransformedSchemas(transformComponentSchemas());
   }, []);
 
-  const handleSaveStream = async (data: {
-    name: string;
-    status: string;
-    nodes: Node<StreamNodeData>[];
-    edges: Edge[];
-  }) => {
+  const handleSaveStream = async (data: { name: string; status: string; nodes: StreamNodeData[] }) => {
     setIsSubmitting(true);
-
     try {
       // Extract input, processors, and output from the nodes
-      const inputNode = data.nodes.find((node) => node.data.type === "input");
-      const processorNodes = data.nodes.filter(
-        (node) => node.data.type === "processor"
-      );
-      const outputNode = data.nodes.find((node) => node.data.type === "output");
+      const inputNode = data.nodes.find((node) => node.type === "input");
+      const processorNodes = data.nodes.filter((node) => node.type === "processor");
+      const outputNode = data.nodes.find((node) => node.type === "output");
 
       // Validate the stream configuration
       if (!inputNode || !outputNode) {
         throw new Error("Stream must have at least one input and one output");
       }
 
-      // Check if the stream is properly connected
-      const isConnected = validateConnections(data.nodes, data.edges);
-      if (!isConnected) {
-        throw new Error("All nodes must be connected in a valid flow");
+      // Validate that nodes have required data
+      if (!inputNode.componentId || !outputNode.componentId) {
+        throw new Error("Input and output nodes must have components selected");
+      }
+
+      // Find component details from schemas
+      const inputComponent = transformedSchemas?.input.find(c => c.id === inputNode.componentId);
+      const outputComponent = transformedSchemas?.output.find(c => c.id === outputNode.componentId);
+
+      if (!inputComponent || !outputComponent) {
+        throw new Error("Selected components not found in available schemas");
       }
 
       // Create processors array
-      const processors = processorNodes.map((node) => ({
-        label: node.data.label,
-        processorID: parseInt(node.data.componentId || "0"),
-      }));
+      const processors = processorNodes.map((node) => {
+        if (!node.componentId) {
+          throw new Error(`Processor node "${node.label}" must have a component selected`);
+        }
+        
+        const processorComponent = transformedSchemas?.processor.find(c => c.id === node.componentId);
+        if (!processorComponent) {
+          throw new Error(`Processor component not found for node "${node.label}"`);
+        }
 
-      let inputComponentID: number = 0;
-      let outputComponentID: number = 0;
-      if (inputNode.data.componentId && outputNode.data.componentId) {
-        inputComponentID = parseInt(inputNode.data.componentId);
-        outputComponentID = parseInt(outputNode.data.componentId);
-      } else {
-        throw new Error(
-          "Not possible to create stream without input and output component IDs"
-        );
-      }
+        return {
+          label: node.label,
+          component: processorComponent.component,
+          config: node.configYaml || ""
+        };
+      });
 
-      const newStream = {
+      const streamData = {
         name: data.name,
         status: data.status,
-        inputLabel: inputNode.data.label,
-        inputID: inputComponentID,
-        processors: processors.length > 0 ? processors : [],
-        outputLabel: outputNode.data.label,
-        outputID: outputComponentID,
-        parentID: "",
-        isHttpServer: false,
+        input_component: inputComponent.component,
+        input_label: inputNode.label,
+        input_config: inputNode.configYaml || "",
+        output_component: outputComponent.component,
+        output_label: outputNode.label,
+        output_config: outputNode.configYaml || "",
+        processors: processors
       };
 
-      const response = await createStream(newStream);
-
-      // Show success toast
+      await createStream(streamData);
       addToast({
         id: "stream-created",
         title: "Stream Created",
         description: `${data.name} has been created successfully.`,
         variant: "success",
       });
-
-      // Navigate back to the streams list
       navigate("/streams");
     } catch (error) {
-      // Show error toast
+      console.error("Error creating stream:", error);
       addToast({
-        id: "stream-error",
-        title: "Error Creating Stream",
-        description:
-          error instanceof Error ? error.message : "An unknown error occurred",
+        id: "stream-creation-error",
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to create stream.",
         variant: "error",
       });
     } finally {
@@ -113,42 +139,13 @@ export default function NewStreamPage() {
     }
   };
 
-  // Validate that all nodes are connected in a valid flow
-  const validateConnections = (nodes: Node[], edges: Edge[]): boolean => {
-    if (nodes.length <= 1) return false;
-
-    // Check if there's at least one input and one output
-    const hasInput = nodes.some((node) => node.data.type === "input");
-    const hasOutput = nodes.some((node) => node.data.type === "output");
-
-    if (!hasInput || !hasOutput) return false;
-
-    // Check if all nodes are connected
-    const connectedNodeIds = new Set<string>();
-
-    // Start with input nodes
-    const inputNodes = nodes.filter((node) => node.data.type === "input");
-    inputNodes.forEach((node) => connectedNodeIds.add(node.id));
-
-    // Traverse the graph
-    let newNodesAdded = true;
-    while (newNodesAdded) {
-      newNodesAdded = false;
-
-      edges.forEach((edge) => {
-        if (
-          connectedNodeIds.has(edge.source) &&
-          !connectedNodeIds.has(edge.target)
-        ) {
-          connectedNodeIds.add(edge.target);
-          newNodesAdded = true;
-        }
-      });
-    }
-
-    // Check if all nodes are in the connected set
-    return connectedNodeIds.size === nodes.length;
-  };
+  if (!transformedSchemas) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
@@ -165,7 +162,7 @@ export default function NewStreamPage() {
         </div>
       ) : (
         <StreamBuilder
-          componentConfigsData={componentConfigsData}
+          allComponentSchemas={transformedSchemas}
           onSave={handleSaveStream}
         />
       )}

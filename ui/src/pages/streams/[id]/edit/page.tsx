@@ -3,11 +3,55 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/components/toast";
 import { StreamBuilder } from "@/components/stream-builder/stream-builder";
-import type { Node, Edge } from "reactflow";
-import type { StreamNodeData } from "@/components/stream-builder/stream-node";
-import { v4 as uuidv4 } from "uuid";
-import { ComponentConfig, Stream, StreamProcessor } from "@/lib/entities";
-import { fetchComponentConfigs, fetchStream, updateStream } from "@/lib/api";
+import { fetchStream, updateStream } from "@/lib/api";
+import { 
+  componentSchemas as rawComponentSchemas, 
+  componentLists 
+} from "@/lib/component-schemas";
+import type { AllComponentSchemas } from "@/components/stream-builder/node-config-panel";
+
+// Define StreamNodeData type locally since the file was deleted
+export interface StreamNodeData {
+  label: string;
+  type: "input" | "processor" | "output";
+  componentId?: string;
+  component?: string;
+  configYaml?: string;
+  status?: string;
+}
+
+const transformComponentSchemas = (): AllComponentSchemas => {
+  const allSchemas: AllComponentSchemas = {
+    input: [],
+    processor: [],
+    output: [],
+  };
+
+  for (const typeKey of ["input", "pipeline", "output"] as const) {
+    const list = componentLists[typeKey] || [];
+    const targetTypeForApp = typeKey === 'pipeline' ? 'processor' : typeKey;
+    
+    let schemaCategory: typeof rawComponentSchemas.input | typeof rawComponentSchemas.pipeline | typeof rawComponentSchemas.output | undefined;
+    if (typeKey === 'input') schemaCategory = rawComponentSchemas.input;
+    else if (typeKey === 'pipeline') schemaCategory = rawComponentSchemas.pipeline;
+    else if (typeKey === 'output') schemaCategory = rawComponentSchemas.output;
+
+    list.forEach((componentName: string) => {
+      const rawSchema = schemaCategory?.[componentName as keyof typeof schemaCategory];
+      if (rawSchema) {
+        allSchemas[targetTypeForApp].push({
+          id: componentName,
+          name: (rawSchema as any).title || componentName,
+          component: componentName,
+          type: targetTypeForApp,
+          schema: rawSchema,
+        });
+      }
+    });
+  }
+  return allSchemas;
+};
+
 export default function EditStreamPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -18,120 +62,69 @@ export default function EditStreamPage() {
   const [streamData, setStreamData] = useState<{
     name: string;
     status: string;
-    nodes: Node<StreamNodeData>[];
-    edges: Edge[];
+    nodes: StreamNodeData[];
   } | null>(null);
-  const [componentConfigsData, setComponentConfigsData] = useState<
-    ComponentConfig[]
-  >([] as ComponentConfig[]);
-  const [stream, setStream] = useState<Stream | null>();
+  const [transformedSchemas, setTransformedSchemas] = useState<AllComponentSchemas | null>(null);
   const loadedRef = useRef(false);
 
   useEffect(() => {
+    setTransformedSchemas(transformComponentSchemas());
+  }, []);
+
+  useEffect(() => {
     async function loadData() {
-      if (loadedRef.current) return;
+      if (loadedRef.current || !transformedSchemas) return;
       loadedRef.current = true;
 
       try {
-        const data = await fetchComponentConfigs();
-        setComponentConfigsData(data);
-        
         setIsLoading(true);
         const streamResponse = await fetchStream(id || "");
-        setStream(streamResponse);
-        // If the stream has visual data, use it
-        if (streamResponse.visualData) {
-          setStreamData({
-            name: streamResponse.name,
-            status: streamResponse.status,
-            nodes: streamResponse.visualData.nodes,
-            edges: streamResponse.visualData.edges,
-          });
-        } else {
-          // Otherwise, create visual data from the stream configuration
-          const nodes: Node<StreamNodeData>[] = [];
-          const edges: Edge[] = [];
+        
+        // Create visual data from the stream configuration
+        const nodes: StreamNodeData[] = [];
 
-          // Create input node
-          const inputNode: Node<StreamNodeData> = {
-            id: uuidv4(),
-            type: "streamNode",
-            position: { x: 100, y: 100 },
-            data: {
-              label: streamResponse.inputLabel || "Input",
-              type: "input",
-              component: getComponentLabel(streamResponse.inputID.toString(), data),
-              componentId: streamResponse.inputID.toString(),
+        // Create input node
+        const inputNode: StreamNodeData = {
+          label: streamResponse.input_label || "Input",
+          type: "input",
+          component: getComponentDisplayName(streamResponse.input_component, "input"),
+          componentId: streamResponse.input_component,
+          configYaml: streamResponse.input_config || "",
+          status: streamResponse.status,
+        };
+        nodes.push(inputNode);
+
+        // Create processor nodes
+        if (streamResponse.processors && streamResponse.processors.length > 0) {
+          streamResponse.processors.forEach((processor: any) => {
+            const processorNode: StreamNodeData = {
+              label: processor.label || "Processor",
+              type: "processor",
+              component: getComponentDisplayName(processor.component, "processor"),
+              componentId: processor.component,
+              configYaml: processor.config || "",
               status: streamResponse.status,
-            },
-          };
-          nodes.push(inputNode);
-
-          // Create processor nodes
-          let lastNodeId = inputNode.id;
-          if (
-            streamResponse.processors &&
-            streamResponse.processors.length > 0
-          ) {
-            streamResponse.processors.forEach(
-              (processor: StreamProcessor, index: number) => {
-                const processorNode: Node<StreamNodeData> = {
-                  id: uuidv4(),
-                  type: "streamNode",
-                  position: { x: 400, y: 100 + index * 150 },
-                  data: {
-                    label: processor.label || `Processor ${index + 1}`,
-                    type: "processor",
-                    component: getComponentLabel(processor.processorID.toString(), data),
-                    componentId: processor.processorID.toString(),
-                    status: streamResponse.status,
-                  },
-                };
-                nodes.push(processorNode);
-
-                // Connect to previous node
-                edges.push({
-                  id: `e-${lastNodeId}-${processorNode.id}`,
-                  source: lastNodeId,
-                  target: processorNode.id,
-                  animated: true,
-                });
-
-                lastNodeId = processorNode.id;
-              }
-            );
-          }
-
-          // Create output node
-          const outputNode: Node<StreamNodeData> = {
-            id: uuidv4(),
-            type: "streamNode",
-            position: { x: 700, y: 100 },
-            data: {
-              label: streamResponse.outputLabel || "Output",
-              type: "output",
-              component: getComponentLabel(streamResponse.outputID.toString(), data),
-              componentId: streamResponse.outputID.toString(),
-              status: streamResponse.status,
-            },
-          };
-          nodes.push(outputNode);
-
-          // Connect to last processor or input
-          edges.push({
-            id: `e-${lastNodeId}-${outputNode.id}`,
-            source: lastNodeId,
-            target: outputNode.id,
-            animated: true,
-          });
-
-          setStreamData({
-            name: streamResponse.name,
-            status: streamResponse.status,
-            nodes,
-            edges,
+            };
+            nodes.push(processorNode);
           });
         }
+
+        // Create output node
+        const outputNode: StreamNodeData = {
+          label: streamResponse.output_label || "Output",
+          type: "output",
+          component: getComponentDisplayName(streamResponse.output_component, "output"),
+          componentId: streamResponse.output_component,
+          configYaml: streamResponse.output_config || "",
+          status: streamResponse.status,
+        };
+        nodes.push(outputNode);
+
+        setStreamData({
+          name: streamResponse.name,
+          status: streamResponse.status,
+          nodes,
+        });
 
         setIsLoading(false);
       } catch (error) {
@@ -150,60 +143,66 @@ export default function EditStreamPage() {
     }
 
     loadData();
-  }, [id, navigate]);
+  }, [id, navigate, transformedSchemas]);
 
-  const handleSaveStream = async (data: {
-    name: string;
-    status: string;
-    nodes: Node<StreamNodeData>[];
-    edges: Edge[];
-  }) => {
+  const handleSaveStream = async (data: { name: string; status: string; nodes: StreamNodeData[] }) => {
     setIsSubmitting(true);
 
     try {
       // Extract input, processors, and output from the nodes
-      const inputNode = data.nodes.find((node) => node.data.type === "input");
-      const processorNodes = data.nodes.filter(
-        (node) => node.data.type === "processor"
-      );
-      const outputNode = data.nodes.find((node) => node.data.type === "output");
+      const inputNode = data.nodes.find((node) => node.type === "input");
+      const processorNodes = data.nodes.filter((node) => node.type === "processor");
+      const outputNode = data.nodes.find((node) => node.type === "output");
 
       // Validate the stream configuration
       if (!inputNode || !outputNode) {
         throw new Error("Stream must have at least one input and one output");
       }
 
-      // Check if the stream is properly connected
-      const isConnected = validateConnections(data.nodes, data.edges);
-      if (!isConnected) {
-        throw new Error("All nodes must be connected in a valid flow");
+      // Validate that nodes have required data
+      if (!inputNode.componentId || !outputNode.componentId) {
+        throw new Error("Input and output nodes must have components selected");
+      }
+
+      // Find component details from schemas
+      const inputComponent = transformedSchemas?.input.find(c => c.id === inputNode.componentId);
+      const outputComponent = transformedSchemas?.output.find(c => c.id === outputNode.componentId);
+
+      if (!inputComponent || !outputComponent) {
+        throw new Error("Selected components not found in available schemas");
       }
 
       // Create processors array
-      const processors = processorNodes.map((node) => ({
-        label: node.data.label,
-        processorID: parseInt(node.data.componentId || "0"),
-      }));
+      const processors = processorNodes.map((node) => {
+        if (!node.componentId) {
+          throw new Error(`Processor node "${node.label}" must have a component selected`);
+        }
+        
+        const processorComponent = transformedSchemas?.processor.find(c => c.id === node.componentId);
+        if (!processorComponent) {
+          throw new Error(`Processor component not found for node "${node.label}"`);
+        }
 
-      if (!inputNode.data.componentId || !outputNode.data.componentId)  {
-        throw new Error(
-          "Not possible to create stream without input and output component IDs"
-        );
-      }
+        return {
+          label: node.label,
+          component: processorComponent.component,
+          config: node.configYaml || ""
+        };
+      });
 
       const updatedStreamData = {
         name: data.name,
         status: data.status,
-        inputLabel: inputNode.data.label,
-        inputID: parseInt(inputNode.data.componentId || "0"),
-        processors,
-        outputLabel: outputNode.data.label,
-        outputID: parseInt(outputNode.data.componentId || "0"),
-        parentID: stream?.parentID || "",
-        isHttpServer: stream?.isHttpServer || false,
+        input_component: inputComponent.component,
+        input_label: inputNode.label,
+        input_config: inputNode.configYaml || "",
+        output_component: outputComponent.component,
+        output_label: outputNode.label,
+        output_config: outputNode.configYaml || "",
+        processors: processors
       };
 
-      const response = await updateStream(id || "", updatedStreamData);
+      await updateStream(id || "", updatedStreamData);
 
       // Show success toast
       addToast({
@@ -229,50 +228,15 @@ export default function EditStreamPage() {
     }
   };
 
-  // Helper to get component label from ID
-  const getComponentLabel = (componentId: string, configs: ComponentConfig[]): string => {
-    const component = configs.find((c) => c.id === componentId);
-    return component ? `${component.name} (${component.component})` : "";
+  // Helper to get component display name
+  const getComponentDisplayName = (componentId: string, type: "input" | "processor" | "output"): string => {
+    if (!transformedSchemas) return componentId;
+    
+    const component = transformedSchemas[type].find((c) => c.id === componentId);
+    return component ? `${component.name} (${component.component})` : componentId;
   };
 
-  // Validate that all nodes are connected in a valid flow
-  const validateConnections = (nodes: Node[], edges: Edge[]): boolean => {
-    if (nodes.length <= 1) return false;
-
-    // Check if there's at least one input and one output
-    const hasInput = nodes.some((node) => node.data.type === "input");
-    const hasOutput = nodes.some((node) => node.data.type === "output");
-
-    if (!hasInput || !hasOutput) return false;
-
-    // Check if all nodes are connected
-    const connectedNodeIds = new Set<string>();
-
-    // Start with input nodes
-    const inputNodes = nodes.filter((node) => node.data.type === "input");
-    inputNodes.forEach((node) => connectedNodeIds.add(node.id));
-
-    // Traverse the graph
-    let newNodesAdded = true;
-    while (newNodesAdded) {
-      newNodesAdded = false;
-
-      edges.forEach((edge) => {
-        if (
-          connectedNodeIds.has(edge.source) &&
-          !connectedNodeIds.has(edge.target)
-        ) {
-          connectedNodeIds.add(edge.target);
-          newNodesAdded = true;
-        }
-      });
-    }
-
-    // Check if all nodes are in the connected set
-    return connectedNodeIds.size === nodes.length;
-  };
-
-  if (isLoading) {
+  if (isLoading || !transformedSchemas) {
     return (
       <div className="p-6 flex justify-center items-center h-64">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -295,7 +259,7 @@ export default function EditStreamPage() {
         </div>
       ) : (
         <StreamBuilder
-          componentConfigsData={componentConfigsData}
+          allComponentSchemas={transformedSchemas}
           initialData={streamData!}
           onSave={handleSaveStream}
         />

@@ -2,7 +2,6 @@ syntax = "proto3";
 
 import "google/protobuf/descriptor.proto";
 import "google/protobuf/timestamp.proto";
-import "google/protobuf/struct.proto";
 
 import "validate/validate.proto";
 
@@ -26,32 +25,6 @@ message CommonResponse {
   string message = 1;
 }
 
-message ComponentConfig {
-  int64 id = 1 [json_name = "id"];
-  optional int64 parent_id = 2 [ json_name = "parent_id" ];
-  string name = 3 [
-    json_name = "name",
-    (validate.rules).string = {
-      min_len: 1,
-      max_len: 100
-    }
-  ];
-  string section = 4 [
-    json_name = "section",
-    (validate.rules).string = {in: ["input", "pipeline", "output"]}
-  ];
-  string component = 5 [
-    json_name = "component",
-    (validate.rules).string = {
-      min_len: 1,
-      max_len: 50
-    }
-  ];
-  google.protobuf.Struct config = 6 [json_name = "config"];
-  bool is_current = 7 [ json_name = "is_current" ];
-  google.protobuf.Timestamp created_at = 8 [ json_name = "created_at" ];
-}
-
 message Stream {
   message Processor {
     string label = 1 [
@@ -62,7 +35,8 @@ message Stream {
         pattern: "^[a-zA-Z0-9 _-]+$"
       }
     ];
-    int64 processor_id = 2 [json_name = "processor_id", (validate.rules).int64.gt = 0];
+    string component = 2 [json_name = "component"];
+    string config = 3 [json_name = "config"];
   }
 
   int64 id = 1 [json_name = "id"];
@@ -74,7 +48,7 @@ message Stream {
       max_len: 100
     }
   ];
-  string input_hint = 4 [json_name = "input_hint"];
+  string input_config = 4 [json_name = "input_config"];
   string input_label = 5 [
     json_name = "input_label",
     (validate.rules).string = {
@@ -83,8 +57,8 @@ message Stream {
       pattern: "^[a-zA-Z0-9 _-]+$"
     }
   ];
-  int64 input_id = 6 [json_name = "input_id", (validate.rules).int64.gt = 0];
-  string output_hint = 7 [json_name = "output_hint"];
+  string input_component = 6 [json_name = "input_component"];
+  string output_config = 7 [json_name = "output_config"];
   string output_label = 8 [
     json_name = "output_label",
     (validate.rules).string = {
@@ -93,7 +67,7 @@ message Stream {
       pattern: "^[a-zA-Z0-9 _-]+$"
     }
   ];
-  int64 output_id = 9 [json_name = "output_id", (validate.rules).int64.gt = 0];
+  string output_component = 9 [json_name = "output_component"];
   bool is_current = 10 [ json_name = "is_current" ];
   string status = 11 [
     (validate.rules).string = {

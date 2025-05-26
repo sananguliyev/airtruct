@@ -1,5 +1,3 @@
-import type { Node, Edge } from "reactflow";
-
 export type Worker = {
   id: string;
   status: string;
@@ -9,35 +7,33 @@ export type Worker = {
   createdAt: string;
 };
 
-export type ComponentConfig = {
-  id: string;
-  name: string;
-  type: string;
-  section: string;
-  component: string;
-  createdAt: string;
-  config: Record<string, any>;
-};
-
 export type Stream = {
   id: string;
-  parentID: string;
+  parentID?: string;
   name: string;
   status: string;
-  inputLabel: string;
-  inputID: number;
-  input: string;
-  output: string;
-  outputID: number;
-  outputLabel: string;
-  processors: StreamProcessor[];
+  input_label: string;
+  input_component: string;
+  input_config: string;
+  output_label: string;
+  output_component: string;
+  output_config: string;
+  processors: Array<{
+    label: string;
+    component: string;
+    config: string;
+  }>;
   createdAt: string;
-  isHttpServer: boolean;
+  is_http_server: boolean;
 
-  visualData?: {
-    nodes: Node[];
-    edges: Edge[];
-  };
+  // Legacy fields for backward compatibility
+  inputLabel?: string;
+  inputID?: number;
+  input?: string;
+  output?: string;
+  outputID?: number;
+  outputLabel?: string;
+  isHttpServer?: boolean;
 };
 
 export type StreamProcessor = {

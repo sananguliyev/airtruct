@@ -7,14 +7,14 @@ import (
 )
 
 type StreamProcessor struct {
-	ID          int64     `json:"id" gorm:"primaryKey"`
-	StreamID    int64     `json:"stream_id" gorm:"not null"`
-	ProcessorID int64     `json:"processor_id" gorm:"not null"`
-	Label       string    `json:"label"`
-	CreatedAt   time.Time `json:"created_at" gorm:"not null"`
+	ID        int64     `json:"id" gorm:"primaryKey"`
+	StreamID  int64     `json:"stream_id" gorm:"not null"`
+	Component string    `json:"component" gorm:"not null"`
+	Label     string    `json:"label"`
+	Config    []byte    `json:"config"`
+	CreatedAt time.Time `json:"created_at" gorm:"not null"`
 
-	Stream    Stream          `json:"stream" gorm:"foreignKey:StreamID"`
-	Processor ComponentConfig `json:"processor" gorm:"foreignKey:ProcessorID"`
+	Stream Stream `json:"stream" gorm:"foreignKey:StreamID"`
 }
 
 type StreamProcessorRepository interface {

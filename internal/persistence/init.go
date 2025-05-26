@@ -25,7 +25,7 @@ func NewGormDB(config *configstruct.DatabaseConfig) *gorm.DB {
 	}
 
 	// Auto Migrate
-	err = db.AutoMigrate(&ComponentConfig{}, &Event{}, &Stream{}, &StreamProcessor{}, &Worker{}, &WorkerStream{})
+	err = db.AutoMigrate(&Event{}, &Stream{}, &StreamProcessor{}, &Worker{}, &WorkerStream{})
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to migrate database")
 	}

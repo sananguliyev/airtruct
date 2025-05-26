@@ -24,8 +24,9 @@ func (c *CoordinatorAPI) CreateStream(_ context.Context, in *pb.Stream) (*pb.Str
 
 	for i, processor := range in.Processors {
 		stream.Processors[i] = persistence.StreamProcessor{
-			Label:       processor.GetLabel(),
-			ProcessorID: processor.GetProcessorId(),
+			Label:     processor.GetLabel(),
+			Component: processor.GetComponent(),
+			Config:    []byte(processor.GetConfig()),
 		}
 	}
 	if err := c.streamRepo.Create(stream); err != nil {
@@ -113,8 +114,9 @@ func (c *CoordinatorAPI) UpdateStream(_ context.Context, in *pb.Stream) (*pb.Str
 
 	for i, processor := range in.Processors {
 		newStream.Processors[i] = persistence.StreamProcessor{
-			Label:       processor.GetLabel(),
-			ProcessorID: processor.GetProcessorId(),
+			Label:     processor.GetLabel(),
+			Component: processor.GetComponent(),
+			Config:    []byte(processor.GetConfig()),
 		}
 	}
 	newStream.ParentID = stream.ParentID

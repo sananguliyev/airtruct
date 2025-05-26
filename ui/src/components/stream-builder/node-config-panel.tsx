@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
-import type { Node } from "reactflow";
-import type { StreamNodeData } from "./stream-node";
+import { useState, useEffect, useCallback } from "react";
+import Editor from "@monaco-editor/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,35 +11,93 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { ComponentConfig } from "@/lib/entities";
+
+// Define StreamNodeData type locally since the file was deleted
+export interface StreamNodeData {
+  label: string;
+  type: "input" | "processor" | "output";
+  componentId?: string;
+  component?: string;
+  configYaml?: string;
+}
+
+// Define a basic structure for ComponentSchema, assuming it will be passed from props
+export interface ComponentSchema {
+  id: string;
+  name: string; 
+  component: string; 
+  type: "input" | "processor" | "output";
+  schema?: any; // For YAML validation later
+}
+
+export interface AllComponentSchemas {
+  input: ComponentSchema[];
+  processor: ComponentSchema[];
+  output: ComponentSchema[];
+}
 
 interface NodeConfigPanelProps {
-  selectedNode: Node<StreamNodeData> | null;
-  componentConfigsData: ComponentConfig[];
+  selectedNode: { id: string; data: StreamNodeData } | null;
+  allComponentSchemas: AllComponentSchemas;
   onUpdateNode: (nodeId: string, data: StreamNodeData) => void;
   onDeleteNode: (nodeId: string) => void;
 }
 
 export function NodeConfigPanel({
   selectedNode,
-  componentConfigsData,
+  allComponentSchemas,
   onUpdateNode,
   onDeleteNode,
 }: NodeConfigPanelProps) {
   const [nodeData, setNodeData] = useState<StreamNodeData | null>(null);
 
-  // Filter component configs by section
-  const componentConfigs = selectedNode
-    ? componentConfigsData.filter((c) => c.type === selectedNode.data.type)
+  const availableBaseComponents: ComponentSchema[] = selectedNode && selectedNode.data.type && allComponentSchemas
+    ? allComponentSchemas[selectedNode.data.type as "input" | "processor" | "output"] || []
     : [];
 
   useEffect(() => {
     if (selectedNode) {
-      setNodeData({ ...selectedNode.data });
+      const currentData = selectedNode.data as StreamNodeData;
+      setNodeData({ ...currentData });
     } else {
       setNodeData(null);
     }
   }, [selectedNode]);
+
+  const handleDebouncedUpdate = useCallback(
+    (field: keyof StreamNodeData, value: any) => {
+      if (selectedNode && nodeData) {
+        const currentComponentId = field === 'componentId' ? value : nodeData.componentId;
+        const currentYaml = field === 'configYaml' ? value : nodeData.configYaml;
+
+        const updatedData = { 
+            ...nodeData, 
+            [field]: value 
+        };
+        
+        if (field === 'componentId') {
+          const baseComp = availableBaseComponents.find(c => c.id === value);
+          updatedData.component = baseComp ? `${baseComp.name} (${baseComp.component})` : "";
+          if (value !== nodeData.componentId) {
+            updatedData.configYaml = "";
+          }
+        }
+        setNodeData(updatedData);
+        onUpdateNode(selectedNode.id, updatedData);
+      }
+    },
+    [selectedNode, nodeData, onUpdateNode, availableBaseComponents]
+  );
+
+  const handleBaseComponentChange = (componentId: string) => {
+    handleDebouncedUpdate("componentId", componentId);
+  };
+
+  const handleEditorChange = (value: string | undefined) => {
+    if (value !== undefined && nodeData && value !== nodeData.configYaml) {
+      handleDebouncedUpdate("configYaml", value);
+    }
+  };
 
   if (!selectedNode || !nodeData) {
     return (
@@ -55,72 +112,80 @@ export function NodeConfigPanel({
     );
   }
 
-  const handleChange = (field: keyof StreamNodeData, value: string) => {
-    const updatedData = { ...nodeData, [field]: value };
-    setNodeData(updatedData);
-    onUpdateNode(selectedNode.id, updatedData);
-  };
-
-  const handleComponentChange = (componentId: string) => {
-    const component = componentConfigsData.find((c) => c.id === componentId);
-    if (component) {
-      // Update both component display name and componentId
-      const updatedData = {
-        ...nodeData,
-        component: `${component.name} (${component.component})`,
-        componentId: component.id,
-      };
-      setNodeData(updatedData);
-      onUpdateNode(selectedNode.id, updatedData);
-    }
-  };
-
   return (
-    <Card className="w-full">
+    <Card className="w-full h-full flex flex-col">
       <CardHeader>
         <CardTitle>
           Configure{" "}
-          {nodeData.type.charAt(0).toUpperCase() + nodeData.type.slice(1)} Node
+          {(nodeData.type.charAt(0).toUpperCase() + nodeData.type.slice(1))} Node
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="node-label">Label</Label>
-          <Input
-            id="node-label"
-            value={nodeData.label}
-            onChange={(e) => {
-              const value = e.target.value;
-              if (/^[a-z0-9_-]*$/.test(value)) {
-                handleChange("label", value);
-              }
-            }}
-            placeholder="Node label"
-          />
+      <CardContent className="flex flex-col flex-1 p-4 min-h-0">
+        <div className="space-y-4 flex-shrink-0">
+          <div className="space-y-2">
+            <Label htmlFor="node-label">Label</Label>
+            <Input
+              id="node-label"
+              value={nodeData.label}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (/^[a-z0-9_-]*$/.test(val)) {
+                  if (selectedNode && nodeData) {
+                      const updatedData = { ...nodeData, label: val };
+                      setNodeData(updatedData);
+                      onUpdateNode(selectedNode.id, updatedData);
+                  }
+                }
+              }}
+              placeholder="Node label (e.g., my_kafka_input)"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="base-component">Component</Label>
+            <Select
+              value={nodeData.componentId || ""}
+              onValueChange={handleBaseComponentChange}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select base component" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableBaseComponents.map((comp) => (
+                  <SelectItem key={comp.id} value={comp.id}>
+                    {comp.name} ({comp.component})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="node-component">Component</Label>
-          <Select
-            value={nodeData.componentId || ""}
-            onValueChange={handleComponentChange}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select component" />
-            </SelectTrigger>
-            <SelectContent>
-              {componentConfigs.map((comp) => (
-                <SelectItem key={comp.id} value={comp.id}>
-                  {comp.name} ({comp.component})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {nodeData.componentId && (
+          <div className="flex flex-col flex-1 min-h-0 mt-4">
+            <Label htmlFor="yaml-config" className="mb-2">YAML Configuration</Label>
+            <div className="flex-1 min-h-0 border rounded-md overflow-hidden">
+              <Editor 
+                height="100%"
+                language="yaml"
+                theme="vs-dark"
+                value={nodeData.configYaml || ""}
+                onChange={handleEditorChange}
+                options={{
+                  minimap: { enabled: false },
+                  scrollBeyondLastLine: false,
+                  fontSize: 13,
+                  wordWrap: "on",
+                  automaticLayout: true,
+                }}
+              />
+            </div>
+          </div>
+        )}
 
         <Button
           variant="destructive"
-          className="mt-4"
+          className="mt-4 flex-shrink-0"
           onClick={() => onDeleteNode(selectedNode.id)}
         >
           Delete Node

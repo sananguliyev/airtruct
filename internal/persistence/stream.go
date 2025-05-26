@@ -2,7 +2,6 @@ package persistence
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	pb "github.com/sananguliyev/airtruct/internal/protogen"
@@ -11,30 +10,35 @@ import (
 )
 
 type StreamStatus string
+type StreamSection string
 
 const (
 	StreamStatusActive    StreamStatus = "active"
 	StreamStatusCompleted StreamStatus = "completed"
 	StreamStatusPaused    StreamStatus = "paused"
 	StreamStatusFailed    StreamStatus = "failed"
+
+	StreamSectionInput    StreamSection = "input"
+	StreamSectionPipeline StreamSection = "pipeline"
+	StreamSectionOutput   StreamSection = "output"
 )
 
 type Stream struct {
-	ID          int64        `json:"id" gorm:"primaryKey"`
-	ParentID    *int64       `json:"parent_id"`
-	Name        string       `json:"name" gorm:"not null"`
-	InputLabel  string       `json:"input_label"`
-	InputID     int64        `json:"input_id" gorm:"not null"`
-	OutputLabel string       `json:"output_label"`
-	OutputID    int64        `json:"output_id" gorm:"not null"`
-	IsCurrent   bool         `json:"is_current" gorm:"default:true"`
-	Status      StreamStatus `json:"status" gorm:"not null"`
-	CreatedAt   time.Time    `json:"created_at" gorm:"not null"`
-	UpdatedAt   *time.Time   `json:"updated_at"`
+	ID              int64        `json:"id" gorm:"primaryKey"`
+	ParentID        *int64       `json:"parent_id"`
+	Name            string       `json:"name" gorm:"not null"`
+	InputLabel      string       `json:"input_label"`
+	InputComponent  string       `json:"input_component" gorm:"not null"`
+	InputConfig     []byte       `json:"input_config" gorm:"not null"`
+	OutputLabel     string       `json:"output_label"`
+	OutputComponent string       `json:"output_component" gorm:"not null"`
+	OutputConfig    []byte       `json:"output_config" gorm:"not null"`
+	IsCurrent       bool         `json:"is_current" gorm:"default:true"`
+	Status          StreamStatus `json:"status" gorm:"not null"`
+	CreatedAt       time.Time    `json:"created_at" gorm:"not null"`
+	UpdatedAt       *time.Time   `json:"updated_at"`
 
 	ParentStream *Stream           `json:"parent_stream" gorm:"foreignKey:ParentID"`
-	Input        ComponentConfig   `json:"input" gorm:"foreignKey:InputID"`
-	Output       ComponentConfig   `json:"output" gorm:"foreignKey:OutputID"`
 	Processors   []StreamProcessor `json:"processors" gorm:"foreignKey:StreamID;references:ID"`
 }
 
@@ -45,27 +49,28 @@ func (s *Stream) ToProto() *pb.Stream {
 	}
 
 	result := &pb.Stream{
-		Id:           s.ID,
-		ParentId:     s.ParentID,
-		Name:         s.Name,
-		InputHint:    fmt.Sprintf("%s (%s)", s.Input.Name, s.Input.Component),
-		InputLabel:   s.InputLabel,
-		InputId:      s.InputID,
-		Processors:   make([]*pb.Stream_Processor, len(s.Processors)),
-		OutputHint:   fmt.Sprintf("%s (%s)", s.Output.Name, s.Output.Component),
-		OutputLabel:  s.OutputLabel,
-		OutputId:     s.OutputID,
-		IsCurrent:    s.IsCurrent,
-		Status:       string(s.Status),
-		CreatedAt:    timestamppb.New(s.CreatedAt),
-		UpdatedAt:    updatedAt,
-		IsHttpServer: s.Input.Component == "http_server",
+		Id:              s.ID,
+		ParentId:        s.ParentID,
+		Name:            s.Name,
+		InputLabel:      s.InputLabel,
+		InputComponent:  s.InputComponent,
+		InputConfig:     string(s.InputConfig),
+		Processors:      make([]*pb.Stream_Processor, len(s.Processors)),
+		OutputLabel:     s.OutputLabel,
+		OutputComponent: s.OutputComponent,
+		OutputConfig:    string(s.OutputConfig),
+		IsCurrent:       s.IsCurrent,
+		Status:          string(s.Status),
+		CreatedAt:       timestamppb.New(s.CreatedAt),
+		UpdatedAt:       updatedAt,
+		IsHttpServer:    s.InputComponent == "http_server",
 	}
 
 	for i, processor := range s.Processors {
 		result.Processors[i] = &pb.Stream_Processor{
-			Label:       processor.Label,
-			ProcessorId: processor.ProcessorID,
+			Label:     processor.Label,
+			Component: processor.Component,
+			Config:    string(processor.Config),
 		}
 	}
 
@@ -79,9 +84,11 @@ func (s *Stream) FromProto(p *pb.Stream) {
 	s.ParentID = p.ParentId
 	s.Name = p.Name
 	s.InputLabel = p.InputLabel
-	s.InputID = p.InputId
+	s.InputComponent = p.InputComponent
+	s.InputConfig = []byte(p.InputConfig)
 	s.OutputLabel = p.OutputLabel
-	s.OutputID = p.OutputId
+	s.OutputComponent = p.OutputComponent
+	s.OutputConfig = []byte(p.OutputConfig)
 	s.IsCurrent = p.GetIsCurrent()
 	s.Status = StreamStatus(p.GetStatus())
 	s.CreatedAt = p.CreatedAt.AsTime()
@@ -154,10 +161,7 @@ func (r *streamRepository) FindByID(id int64) (*Stream, error) {
 		ID: id,
 	}
 	err := r.db.
-		Preload("Input").
-		Preload("Output").
 		Preload("Processors").
-		Preload("Processors.Processor").
 		Preload("ParentStream").
 		First(stream).
 		Error
@@ -185,8 +189,6 @@ func (r *streamRepository) Delete(id int64) error {
 func (r *streamRepository) ListAllByStatuses(statuses ...StreamStatus) ([]Stream, error) {
 	var streams []Stream
 	db := r.db.
-		Preload("Input").
-		Preload("Output").
 		Preload("Processors")
 
 	if len(statuses) > 0 {
@@ -203,10 +205,7 @@ func (r *streamRepository) ListAllActiveAndNonAssigned() ([]Stream, error) {
 	var streams []Stream
 
 	err := r.db.
-		Preload("Input").
-		Preload("Output").
 		Preload("Processors").
-		Preload("Processors.Processor").
 		Where("is_current = true AND status = ?", StreamStatusActive).
 		Where(
 			"NOT EXISTS (?)",

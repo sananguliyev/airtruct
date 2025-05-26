@@ -10,9 +10,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Stream, ComponentConfig } from "@/lib/entities";
+import { Stream } from "@/lib/entities";
 import { columns } from "@/components/stream-columns";
-import { fetchComponentConfigs, fetchStreams } from "@/lib/api";
+import { fetchStreams } from "@/lib/api";
 
 // Replace next/dynamic with React.lazy
 const StreamPreview = lazy(
@@ -23,7 +23,6 @@ export default function StreamsPage() {
   const navigate = useNavigate();
   const { addToast } = useToast();
   const [streams, setStreams] = useState<Stream[]>([] as Stream[]);
-  const [componentConfigsData, setComponentConfigsData] = useState<ComponentConfig[]>([]);
   const [previewStream, setPreviewStream] = useState<Stream | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -56,8 +55,6 @@ export default function StreamsPage() {
       try {
         setLoading(true);
         const data = await fetchStreams();
-        const componentConfigs = await fetchComponentConfigs();
-        setComponentConfigsData(componentConfigs);
         setStreams(data);
         setError(null);
       } catch (err) {
@@ -108,14 +105,14 @@ export default function StreamsPage() {
         open={!!previewStream}
         onOpenChange={(open: boolean) => !open && setPreviewStream(null)}
       >
-        <DialogContent className="max-w-4xl h-[80vh]">
-          <DialogHeader>
+        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>{previewStream?.name} - Visual Preview</DialogTitle>
           </DialogHeader>
-          <div className="h-[calc(80vh-80px)]">
+          <div className="flex-1 min-h-0 overflow-hidden">
             {/* Wrap lazy component in Suspense */}
             <Suspense fallback={<div>Loading Preview...</div>}>
-              {previewStream && <StreamPreview stream={previewStream} componentConfigs={componentConfigsData} />}
+              {previewStream && <StreamPreview stream={previewStream} />}
             </Suspense>
           </div>
         </DialogContent>
