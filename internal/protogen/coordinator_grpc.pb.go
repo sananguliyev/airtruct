@@ -21,10 +21,6 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	Coordinator_UpdateWorkerStreamStatus_FullMethodName = "/protorender.Coordinator/UpdateWorkerStreamStatus"
-	Coordinator_CreateComponentConfig_FullMethodName    = "/protorender.Coordinator/CreateComponentConfig"
-	Coordinator_UpdateComponentConfig_FullMethodName    = "/protorender.Coordinator/UpdateComponentConfig"
-	Coordinator_GetComponentConfig_FullMethodName       = "/protorender.Coordinator/GetComponentConfig"
-	Coordinator_ListComponentConfigs_FullMethodName     = "/protorender.Coordinator/ListComponentConfigs"
 	Coordinator_RegisterWorker_FullMethodName           = "/protorender.Coordinator/RegisterWorker"
 	Coordinator_DeregisterWorker_FullMethodName         = "/protorender.Coordinator/DeregisterWorker"
 	Coordinator_ListWorkers_FullMethodName              = "/protorender.Coordinator/ListWorkers"
@@ -42,11 +38,6 @@ const (
 type CoordinatorClient interface {
 	// Worker stream methods
 	UpdateWorkerStreamStatus(ctx context.Context, in *WorkerStreamStatusRequest, opts ...grpc.CallOption) (*CommonResponse, error)
-	// Component config methods
-	CreateComponentConfig(ctx context.Context, in *ComponentConfig, opts ...grpc.CallOption) (*ComponentConfigResponse, error)
-	UpdateComponentConfig(ctx context.Context, in *ComponentConfig, opts ...grpc.CallOption) (*ComponentConfigResponse, error)
-	GetComponentConfig(ctx context.Context, in *GetComponentConfigRequest, opts ...grpc.CallOption) (*ComponentConfigResponse, error)
-	ListComponentConfigs(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListComponentConfigsResponse, error)
 	// Worker methods
 	RegisterWorker(ctx context.Context, in *RegisterWorkerRequest, opts ...grpc.CallOption) (*CommonResponse, error)
 	DeregisterWorker(ctx context.Context, in *DeregisterWorkerRequest, opts ...grpc.CallOption) (*CommonResponse, error)
@@ -73,46 +64,6 @@ func (c *coordinatorClient) UpdateWorkerStreamStatus(ctx context.Context, in *Wo
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CommonResponse)
 	err := c.cc.Invoke(ctx, Coordinator_UpdateWorkerStreamStatus_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *coordinatorClient) CreateComponentConfig(ctx context.Context, in *ComponentConfig, opts ...grpc.CallOption) (*ComponentConfigResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ComponentConfigResponse)
-	err := c.cc.Invoke(ctx, Coordinator_CreateComponentConfig_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *coordinatorClient) UpdateComponentConfig(ctx context.Context, in *ComponentConfig, opts ...grpc.CallOption) (*ComponentConfigResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ComponentConfigResponse)
-	err := c.cc.Invoke(ctx, Coordinator_UpdateComponentConfig_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *coordinatorClient) GetComponentConfig(ctx context.Context, in *GetComponentConfigRequest, opts ...grpc.CallOption) (*ComponentConfigResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ComponentConfigResponse)
-	err := c.cc.Invoke(ctx, Coordinator_GetComponentConfig_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *coordinatorClient) ListComponentConfigs(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListComponentConfigsResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListComponentConfigsResponse)
-	err := c.cc.Invoke(ctx, Coordinator_ListComponentConfigs_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -218,11 +169,6 @@ func (c *coordinatorClient) IngestMetrics(ctx context.Context, in *MetricsReques
 type CoordinatorServer interface {
 	// Worker stream methods
 	UpdateWorkerStreamStatus(context.Context, *WorkerStreamStatusRequest) (*CommonResponse, error)
-	// Component config methods
-	CreateComponentConfig(context.Context, *ComponentConfig) (*ComponentConfigResponse, error)
-	UpdateComponentConfig(context.Context, *ComponentConfig) (*ComponentConfigResponse, error)
-	GetComponentConfig(context.Context, *GetComponentConfigRequest) (*ComponentConfigResponse, error)
-	ListComponentConfigs(context.Context, *emptypb.Empty) (*ListComponentConfigsResponse, error)
 	// Worker methods
 	RegisterWorker(context.Context, *RegisterWorkerRequest) (*CommonResponse, error)
 	DeregisterWorker(context.Context, *DeregisterWorkerRequest) (*CommonResponse, error)
@@ -247,18 +193,6 @@ type UnimplementedCoordinatorServer struct{}
 
 func (UnimplementedCoordinatorServer) UpdateWorkerStreamStatus(context.Context, *WorkerStreamStatusRequest) (*CommonResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateWorkerStreamStatus not implemented")
-}
-func (UnimplementedCoordinatorServer) CreateComponentConfig(context.Context, *ComponentConfig) (*ComponentConfigResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateComponentConfig not implemented")
-}
-func (UnimplementedCoordinatorServer) UpdateComponentConfig(context.Context, *ComponentConfig) (*ComponentConfigResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateComponentConfig not implemented")
-}
-func (UnimplementedCoordinatorServer) GetComponentConfig(context.Context, *GetComponentConfigRequest) (*ComponentConfigResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetComponentConfig not implemented")
-}
-func (UnimplementedCoordinatorServer) ListComponentConfigs(context.Context, *emptypb.Empty) (*ListComponentConfigsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListComponentConfigs not implemented")
 }
 func (UnimplementedCoordinatorServer) RegisterWorker(context.Context, *RegisterWorkerRequest) (*CommonResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterWorker not implemented")
@@ -322,78 +256,6 @@ func _Coordinator_UpdateWorkerStreamStatus_Handler(srv interface{}, ctx context.
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CoordinatorServer).UpdateWorkerStreamStatus(ctx, req.(*WorkerStreamStatusRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Coordinator_CreateComponentConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ComponentConfig)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CoordinatorServer).CreateComponentConfig(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Coordinator_CreateComponentConfig_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CoordinatorServer).CreateComponentConfig(ctx, req.(*ComponentConfig))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Coordinator_UpdateComponentConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ComponentConfig)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CoordinatorServer).UpdateComponentConfig(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Coordinator_UpdateComponentConfig_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CoordinatorServer).UpdateComponentConfig(ctx, req.(*ComponentConfig))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Coordinator_GetComponentConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetComponentConfigRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CoordinatorServer).GetComponentConfig(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Coordinator_GetComponentConfig_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CoordinatorServer).GetComponentConfig(ctx, req.(*GetComponentConfigRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Coordinator_ListComponentConfigs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CoordinatorServer).ListComponentConfigs(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Coordinator_ListComponentConfigs_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CoordinatorServer).ListComponentConfigs(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -559,22 +421,6 @@ var Coordinator_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateWorkerStreamStatus",
 			Handler:    _Coordinator_UpdateWorkerStreamStatus_Handler,
-		},
-		{
-			MethodName: "CreateComponentConfig",
-			Handler:    _Coordinator_CreateComponentConfig_Handler,
-		},
-		{
-			MethodName: "UpdateComponentConfig",
-			Handler:    _Coordinator_UpdateComponentConfig_Handler,
-		},
-		{
-			MethodName: "GetComponentConfig",
-			Handler:    _Coordinator_GetComponentConfig_Handler,
-		},
-		{
-			MethodName: "ListComponentConfigs",
-			Handler:    _Coordinator_ListComponentConfigs_Handler,
 		},
 		{
 			MethodName: "RegisterWorker",

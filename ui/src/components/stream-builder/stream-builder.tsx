@@ -151,10 +151,6 @@ function StreamBuilderContent({
   const { addToast } = useToast();
 
   // Sizing constants for panels and cards within the stream (right) panel
-  const LEFT_PANEL_FLEX_GROW = 3;
-  const RIGHT_PANEL_FLEX_GROW = 2;
-  const LEFT_PANEL_MIN_WIDTH = "400px"; // Min width for the config panel
-  const RIGHT_PANEL_MAX_WIDTH = "550px"; // Max width for the stream panel container
   const CARD_MAX_WIDTH_STREAM_PANEL = "500px"; // Max width for cards in the stream panel
   const CARD_MIN_WIDTH_STREAM_PANEL = "240px"; // Min width for cards in the stream panel
 

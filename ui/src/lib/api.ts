@@ -42,17 +42,19 @@ export async function fetchStreams(): Promise<Stream[]> {
       parentID: stream.parent_id || stream.id,
       name: stream.name,
       status: stream.status,
-      inputID: stream.input_id,
-      inputLabel: stream.input_label,
-      processors:
-        stream.processors?.map((processor: any) => ({
-          processorID: processor.processor_id,
-          label: processor.label,
-        })) || [],
-      outputID: stream.output_id,
-      outputLabel: stream.output_label,
+      input_label: stream.input_label,
+      input_component: stream.input_component,
+      input_config: stream.input_config || "",
+      output_label: stream.output_label,
+      output_component: stream.output_component,
+      output_config: stream.output_config || "",
+      processors: stream.processors?.map((processor: any) => ({
+        label: processor.label,
+        component: processor.component,
+        config: processor.config || "",
+      })) || [],
       createdAt: new Date(stream.created_at).toLocaleString(),
-      isHttpServer: stream.is_http_server || false,
+      is_http_server: stream.is_http_server || false,
     }));
   } catch (error) {
     console.error("Error fetching streams:", error);
@@ -73,21 +75,19 @@ export async function fetchStream(id: string): Promise<Stream> {
       parentID: data.data.parent_id || data.data.id,
       name: data.data.name,
       status: data.data.status,
-      inputID: data.data.input_id,
-      inputLabel: data.data.input_label,
-      processors:
-        data.data.processors?.map((processor: any) => ({
-          processorID: processor.processor_id,
-          label: processor.label,
-          createdAt: new Date(processor.created_at).toLocaleString(),
-        })) || [],
-      outputID: data.data.output_id,
-      outputLabel: data.data.output_label,
+      input_label: data.data.input_label,
+      input_component: data.data.input_component,
+      input_config: data.data.input_config || "",
+      output_label: data.data.output_label,
+      output_component: data.data.output_component,
+      output_config: data.data.output_config || "",
+      processors: data.data.processors?.map((processor: any) => ({
+        label: processor.label,
+        component: processor.component,
+        config: processor.config || "",
+      })) || [],
       createdAt: new Date(data.data.created_at).toLocaleString(),
-      visualData: data.data.visualData || undefined,
-      input: data.data.input || undefined,
-      output: data.data.output || undefined,
-      isHttpServer: data.data.is_http_server || false,
+      is_http_server: data.data.is_http_server || false,
     };
   } catch (error) {
     console.error("Error fetching stream:", error);
@@ -96,7 +96,21 @@ export async function fetchStream(id: string): Promise<Stream> {
 }
 
 export async function createStream(
-  stream: Omit<Stream, "id" | "createdAt" | "visualData" | "input" | "output">
+  stream: {
+    name: string;
+    status: string;
+    input_component: string;
+    input_label: string;
+    input_config: string;
+    output_component: string;
+    output_label: string;
+    output_config: string;
+    processors: Array<{
+      label: string;
+      component: string;
+      config: string;
+    }>;
+  }
 ): Promise<Stream> {
   try {
     const response = await fetch(`${API_BASE_URL}/streams`, {
@@ -107,13 +121,16 @@ export async function createStream(
       body: JSON.stringify({
         name: stream.name,
         status: stream.status,
-        input_id: stream.inputID,
-        input_label: stream.inputLabel,
-        output_id: stream.outputID,
-        output_label: stream.outputLabel,
-        processors: stream.processors.map((processor: any) => ({
-          processor_id: processor.processorID,
+        input_component: stream.input_component,
+        input_label: stream.input_label,
+        input_config: stream.input_config,
+        output_component: stream.output_component,
+        output_label: stream.output_label,
+        output_config: stream.output_config,
+        processors: stream.processors.map((processor) => ({
           label: processor.label,
+          component: processor.component,
+          config: processor.config,
         })),
       }),
     });
@@ -127,20 +144,19 @@ export async function createStream(
       parentID: data.data.parent_id || data.data.id,
       name: data.data.name,
       status: data.data.status,
-      inputID: data.data.input_id,
-      inputLabel: data.data.input_label,
+      input_label: data.data.input_label,
+      input_component: data.data.input_component,
+      input_config: data.data.input_config,
+      output_label: data.data.output_label,
+      output_component: data.data.output_component,
+      output_config: data.data.output_config,
       processors:
         data.data.processors?.map((processor: any) => ({
           processorID: processor.processor_id,
           label: processor.label,
         })) || [],
-      outputID: data.data.output_id,
-      outputLabel: data.data.output_label,
       createdAt: new Date(data.data.created_at).toLocaleString(),
-      visualData: data.data.visualData || undefined,
-      input: data.data.input || undefined,
-      output: data.data.output || undefined,
-      isHttpServer: data.data.is_http_server || false,
+      is_http_server: data.data.is_http_server || false,
     };
   } catch (error) {
     console.error("Error creating stream:", error);
@@ -150,7 +166,21 @@ export async function createStream(
 
 export async function updateStream(
   id: string,
-  stream: Omit<Stream, "id" | "createdAt" | "visualData" | "input" | "output">
+  stream: {
+    name: string;
+    status: string;
+    input_component: string;
+    input_label: string;
+    input_config: string;
+    output_component: string;
+    output_label: string;
+    output_config: string;
+    processors: Array<{
+      label: string;
+      component: string;
+      config: string;
+    }>;
+  }
 ): Promise<Stream> {
   try {
     const response = await fetch(`${API_BASE_URL}/streams/${id}`, {
@@ -161,13 +191,16 @@ export async function updateStream(
       body: JSON.stringify({
         name: stream.name,
         status: stream.status,
-        input_id: stream.inputID,
-        input_label: stream.inputLabel,
-        output_id: stream.outputID,
-        output_label: stream.outputLabel,
-        processors: stream.processors.map((processor: any) => ({
-          processor_id: processor.processorID,
+        input_component: stream.input_component,
+        input_label: stream.input_label,
+        input_config: stream.input_config,
+        output_component: stream.output_component,
+        output_label: stream.output_label,
+        output_config: stream.output_config,
+        processors: stream.processors.map((processor) => ({
           label: processor.label,
+          component: processor.component,
+          config: processor.config,
         })),
       }),
     });
@@ -181,20 +214,19 @@ export async function updateStream(
       parentID: data.data.parent_id || data.data.id,
       name: data.data.name,
       status: data.data.status,
-      inputID: data.data.input_id,
-      inputLabel: data.data.input_label,
-      processors:
-        data.data.processors?.map((processor: any) => ({
-          processorID: processor.processor_id,
-          label: processor.label,
-        })) || [],
-      outputID: data.data.output_id,
-      outputLabel: data.data.output_label,
+      input_label: data.data.input_label,
+      input_component: data.data.input_component,
+      input_config: data.data.input_config,
+      output_label: data.data.output_label,
+      output_component: data.data.output_component,
+      output_config: data.data.output_config,
+      processors: data.data.processors?.map((processor: any) => ({
+        label: processor.label,
+        component: processor.component,
+        config: processor.config,
+      })) || [],
       createdAt: new Date(data.data.created_at).toLocaleString(),
-      visualData: data.data.visualData || undefined,
-      input: data.data.input || undefined,
-      output: data.data.output || undefined,
-      isHttpServer: data.data.is_http_server || false,
+      is_http_server: data.data.is_http_server || false,
     };
   } catch (error) {
     console.error("Error updating stream:", error);

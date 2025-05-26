@@ -56,19 +56,63 @@ export default function NewStreamPage() {
     setTransformedSchemas(transformComponentSchemas());
   }, []);
 
-  const handleSaveStream = async (data: {
-    name: string;
-    status: string;
-    nodes: Node<StreamNodeData>[];
-    edges: Edge[];
-  }) => {
+  const handleSaveStream = async (data: { name: string; status: string; nodes: StreamNodeData[] }) => {
     setIsSubmitting(true);
     try {
+      // Extract input, processors, and output from the nodes
+      const inputNode = data.nodes.find((node) => node.type === "input");
+      const processorNodes = data.nodes.filter((node) => node.type === "processor");
+      const outputNode = data.nodes.find((node) => node.type === "output");
+
+      // Validate the stream configuration
+      if (!inputNode || !outputNode) {
+        throw new Error("Stream must have at least one input and one output");
+      }
+
+      // Validate that nodes have required data
+      if (!inputNode.componentId || !outputNode.componentId) {
+        throw new Error("Input and output nodes must have components selected");
+      }
+
+      // Find component details from schemas
+      const inputComponent = transformedSchemas?.input.find(c => c.id === inputNode.componentId);
+      const outputComponent = transformedSchemas?.output.find(c => c.id === outputNode.componentId);
+
+      if (!inputComponent || !outputComponent) {
+        throw new Error("Selected components not found in available schemas");
+      }
+
+      // Create processors array
+      const processors = processorNodes.map((node) => {
+        if (!node.componentId) {
+          throw new Error(`Processor node "${node.label}" must have a component selected`);
+        }
+        
+        const processorComponent = transformedSchemas?.processor.find(c => c.id === node.componentId);
+        if (!processorComponent) {
+          throw new Error(`Processor component not found for node "${node.label}"`);
+        }
+
+        return {
+          label: node.label,
+          component: processorComponent.component,
+          config: node.configYaml || ""
+        };
+      });
+
       const streamData = {
-        id: uuidv4(),
-        ...data,
+        name: data.name,
+        status: data.status,
+        input_component: inputComponent.component,
+        input_label: inputNode.label,
+        input_config: inputNode.configYaml || "",
+        output_component: outputComponent.component,
+        output_label: outputNode.label,
+        output_config: outputNode.configYaml || "",
+        processors: processors
       };
-      await createStream(streamData as any);
+
+      await createStream(streamData);
       addToast({
         id: "stream-created",
         title: "Stream Created",
@@ -81,7 +125,7 @@ export default function NewStreamPage() {
       addToast({
         id: "stream-creation-error",
         title: "Error",
-        description: "Failed to create stream.",
+        description: error instanceof Error ? error.message : "Failed to create stream.",
         variant: "error",
       });
     } finally {

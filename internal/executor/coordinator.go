@@ -3,7 +3,6 @@ package executor
 import (
 	"container/heap"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -288,13 +287,15 @@ func (e *coordinatorExecutor) assignJob(ctx context.Context, worker persistence.
 	configMap := make(map[string]any)
 
 	input := make(map[string]any)
-	if err := json.Unmarshal(stream.Input.Config, &input); err != nil {
+	input[stream.InputComponent] = make(map[string]any)
+	if err := yaml.Unmarshal(stream.InputConfig, input[stream.InputComponent]); err != nil {
 		return err
 	}
 	input["label"] = stream.InputLabel
 
 	output := make(map[string]any)
-	if err := json.Unmarshal(stream.Output.Config, &output); err != nil {
+	output[stream.OutputComponent] = make(map[string]any)
+	if err := yaml.Unmarshal(stream.OutputConfig, output[stream.OutputComponent]); err != nil {
 		return err
 	}
 	output["label"] = stream.OutputLabel
@@ -305,8 +306,13 @@ func (e *coordinatorExecutor) assignJob(ctx context.Context, worker persistence.
 
 	for i, processor := range stream.Processors {
 		processorConfig := make(map[string]any)
-		if err := json.Unmarshal(processor.Processor.Config, &processorConfig); err != nil {
-			return err
+		if processor.Component == "mapping" {
+			processorConfig[processor.Component] = string(processor.Config)
+		} else {
+			processorConfig[processor.Component] = make(map[string]any)
+			if err := yaml.Unmarshal(processor.Config, processorConfig[processor.Component]); err != nil {
+				return err
+			}
 		}
 		processorConfig["label"] = processor.Label
 

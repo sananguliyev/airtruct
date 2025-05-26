@@ -26,19 +26,6 @@ message WorkerStreamStatusRequest {
   WorkerStreamStatus status = 2;
 }
 
-message ListComponentConfigsResponse {
-  repeated ComponentConfig data = 1;
-}
-
-message GetComponentConfigRequest {
-  int64 id = 1 [(validate.rules).int64.gt = 0];
-}
-
-message ComponentConfigResponse {
-  ComponentConfig data = 1;
-  CommonResponse meta = 2;
-}
-
 message ListWorkersRequest {
   string status = 1 [
     (validate.rules).string = {
@@ -104,30 +91,6 @@ message MetricsRequest {
 service Coordinator {
   // Worker stream methods
   rpc UpdateWorkerStreamStatus(WorkerStreamStatusRequest) returns (CommonResponse) {}
-
-  // Component config methods
-  rpc CreateComponentConfig(ComponentConfig) returns (ComponentConfigResponse) {
-    option (google.api.http) = {
-      post: "/v0/component-configs",
-      body: "*"
-    };
-  }
-  rpc UpdateComponentConfig(ComponentConfig) returns (ComponentConfigResponse) {
-    option (google.api.http) = {
-      put: "/v0/component-configs/{id}",
-      body: "*"
-    };
-  }
-  rpc GetComponentConfig(GetComponentConfigRequest) returns (ComponentConfigResponse) {
-    option (google.api.http) = {
-      get: "/v0/component-configs/{id}",
-    };
-  }
-  rpc ListComponentConfigs(google.protobuf.Empty) returns (ListComponentConfigsResponse) {
-    option (google.api.http) = {
-      get: "/v0/component-configs",
-    };
-  }
 
   // Worker methods
   rpc RegisterWorker(RegisterWorkerRequest) returns (CommonResponse) {}

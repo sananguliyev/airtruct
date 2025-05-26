@@ -21,18 +21,31 @@ export type ComponentConfig = {
 
 export type Stream = {
   id: string;
-  parentID: string;
+  parentID?: string;
   name: string;
   status: string;
-  inputLabel: string;
-  inputID: number;
-  input: string;
-  output: string;
-  outputID: number;
-  outputLabel: string;
-  processors: StreamProcessor[];
+  input_label: string;
+  input_component: string;
+  input_config: string;
+  output_label: string;
+  output_component: string;
+  output_config: string;
+  processors: Array<{
+    label: string;
+    component: string;
+    config: string;
+  }>;
   createdAt: string;
-  isHttpServer: boolean;
+  is_http_server: boolean;
+
+  // Legacy fields for backward compatibility
+  inputLabel?: string;
+  inputID?: number;
+  input?: string;
+  output?: string;
+  outputID?: number;
+  outputLabel?: string;
+  isHttpServer?: boolean;
 
   visualData?: {
     nodes: Node[];

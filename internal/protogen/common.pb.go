@@ -11,7 +11,6 @@ import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	descriptorpb "google.golang.org/protobuf/types/descriptorpb"
-	structpb "google.golang.org/protobuf/types/known/structpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
@@ -124,130 +123,30 @@ func (x *CommonResponse) GetMessage() string {
 	return ""
 }
 
-type ComponentConfig struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	ParentId      *int64                 `protobuf:"varint,2,opt,name=parent_id,proto3,oneof" json:"parent_id,omitempty"`
-	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	Section       string                 `protobuf:"bytes,4,opt,name=section,proto3" json:"section,omitempty"`
-	Component     string                 `protobuf:"bytes,5,opt,name=component,proto3" json:"component,omitempty"`
-	Config        *structpb.Struct       `protobuf:"bytes,6,opt,name=config,proto3" json:"config,omitempty"`
-	IsCurrent     bool                   `protobuf:"varint,7,opt,name=is_current,proto3" json:"is_current,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,proto3" json:"created_at,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ComponentConfig) Reset() {
-	*x = ComponentConfig{}
-	mi := &file_common_proto_msgTypes[1]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ComponentConfig) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ComponentConfig) ProtoMessage() {}
-
-func (x *ComponentConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_common_proto_msgTypes[1]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ComponentConfig.ProtoReflect.Descriptor instead.
-func (*ComponentConfig) Descriptor() ([]byte, []int) {
-	return file_common_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *ComponentConfig) GetId() int64 {
-	if x != nil {
-		return x.Id
-	}
-	return 0
-}
-
-func (x *ComponentConfig) GetParentId() int64 {
-	if x != nil && x.ParentId != nil {
-		return *x.ParentId
-	}
-	return 0
-}
-
-func (x *ComponentConfig) GetName() string {
-	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-func (x *ComponentConfig) GetSection() string {
-	if x != nil {
-		return x.Section
-	}
-	return ""
-}
-
-func (x *ComponentConfig) GetComponent() string {
-	if x != nil {
-		return x.Component
-	}
-	return ""
-}
-
-func (x *ComponentConfig) GetConfig() *structpb.Struct {
-	if x != nil {
-		return x.Config
-	}
-	return nil
-}
-
-func (x *ComponentConfig) GetIsCurrent() bool {
-	if x != nil {
-		return x.IsCurrent
-	}
-	return false
-}
-
-func (x *ComponentConfig) GetCreatedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.CreatedAt
-	}
-	return nil
-}
-
 type Stream struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	ParentId      *int64                 `protobuf:"varint,2,opt,name=parent_id,proto3,oneof" json:"parent_id,omitempty"`
-	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	InputHint     string                 `protobuf:"bytes,4,opt,name=input_hint,proto3" json:"input_hint,omitempty"`
-	InputLabel    string                 `protobuf:"bytes,5,opt,name=input_label,proto3" json:"input_label,omitempty"`
-	InputId       int64                  `protobuf:"varint,6,opt,name=input_id,proto3" json:"input_id,omitempty"`
-	OutputHint    string                 `protobuf:"bytes,7,opt,name=output_hint,proto3" json:"output_hint,omitempty"`
-	OutputLabel   string                 `protobuf:"bytes,8,opt,name=output_label,proto3" json:"output_label,omitempty"`
-	OutputId      int64                  `protobuf:"varint,9,opt,name=output_id,proto3" json:"output_id,omitempty"`
-	IsCurrent     bool                   `protobuf:"varint,10,opt,name=is_current,proto3" json:"is_current,omitempty"`
-	Status        string                 `protobuf:"bytes,11,opt,name=status,proto3" json:"status,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=created_at,proto3" json:"created_at,omitempty"`
-	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,13,opt,name=updated_at,proto3,oneof" json:"updated_at,omitempty"`
-	Processors    []*Stream_Processor    `protobuf:"bytes,14,rep,name=processors,proto3" json:"processors,omitempty"`
-	IsHttpServer  bool                   `protobuf:"varint,15,opt,name=is_http_server,proto3" json:"is_http_server,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Id              int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	ParentId        *int64                 `protobuf:"varint,2,opt,name=parent_id,proto3,oneof" json:"parent_id,omitempty"`
+	Name            string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	InputConfig     string                 `protobuf:"bytes,4,opt,name=input_config,proto3" json:"input_config,omitempty"`
+	InputLabel      string                 `protobuf:"bytes,5,opt,name=input_label,proto3" json:"input_label,omitempty"`
+	InputComponent  string                 `protobuf:"bytes,6,opt,name=input_component,proto3" json:"input_component,omitempty"`
+	OutputConfig    string                 `protobuf:"bytes,7,opt,name=output_config,proto3" json:"output_config,omitempty"`
+	OutputLabel     string                 `protobuf:"bytes,8,opt,name=output_label,proto3" json:"output_label,omitempty"`
+	OutputComponent string                 `protobuf:"bytes,9,opt,name=output_component,proto3" json:"output_component,omitempty"`
+	IsCurrent       bool                   `protobuf:"varint,10,opt,name=is_current,proto3" json:"is_current,omitempty"`
+	Status          string                 `protobuf:"bytes,11,opt,name=status,proto3" json:"status,omitempty"`
+	CreatedAt       *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=created_at,proto3" json:"created_at,omitempty"`
+	UpdatedAt       *timestamppb.Timestamp `protobuf:"bytes,13,opt,name=updated_at,proto3,oneof" json:"updated_at,omitempty"`
+	Processors      []*Stream_Processor    `protobuf:"bytes,14,rep,name=processors,proto3" json:"processors,omitempty"`
+	IsHttpServer    bool                   `protobuf:"varint,15,opt,name=is_http_server,proto3" json:"is_http_server,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *Stream) Reset() {
 	*x = Stream{}
-	mi := &file_common_proto_msgTypes[2]
+	mi := &file_common_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -259,7 +158,7 @@ func (x *Stream) String() string {
 func (*Stream) ProtoMessage() {}
 
 func (x *Stream) ProtoReflect() protoreflect.Message {
-	mi := &file_common_proto_msgTypes[2]
+	mi := &file_common_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -272,7 +171,7 @@ func (x *Stream) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Stream.ProtoReflect.Descriptor instead.
 func (*Stream) Descriptor() ([]byte, []int) {
-	return file_common_proto_rawDescGZIP(), []int{2}
+	return file_common_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *Stream) GetId() int64 {
@@ -296,9 +195,9 @@ func (x *Stream) GetName() string {
 	return ""
 }
 
-func (x *Stream) GetInputHint() string {
+func (x *Stream) GetInputConfig() string {
 	if x != nil {
-		return x.InputHint
+		return x.InputConfig
 	}
 	return ""
 }
@@ -310,16 +209,16 @@ func (x *Stream) GetInputLabel() string {
 	return ""
 }
 
-func (x *Stream) GetInputId() int64 {
+func (x *Stream) GetInputComponent() string {
 	if x != nil {
-		return x.InputId
+		return x.InputComponent
 	}
-	return 0
+	return ""
 }
 
-func (x *Stream) GetOutputHint() string {
+func (x *Stream) GetOutputConfig() string {
 	if x != nil {
-		return x.OutputHint
+		return x.OutputConfig
 	}
 	return ""
 }
@@ -331,11 +230,11 @@ func (x *Stream) GetOutputLabel() string {
 	return ""
 }
 
-func (x *Stream) GetOutputId() int64 {
+func (x *Stream) GetOutputComponent() string {
 	if x != nil {
-		return x.OutputId
+		return x.OutputComponent
 	}
-	return 0
+	return ""
 }
 
 func (x *Stream) GetIsCurrent() bool {
@@ -383,14 +282,15 @@ func (x *Stream) GetIsHttpServer() bool {
 type Stream_Processor struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Label         string                 `protobuf:"bytes,1,opt,name=label,proto3" json:"label,omitempty"`
-	ProcessorId   int64                  `protobuf:"varint,2,opt,name=processor_id,proto3" json:"processor_id,omitempty"`
+	Component     string                 `protobuf:"bytes,2,opt,name=component,proto3" json:"component,omitempty"`
+	Config        string                 `protobuf:"bytes,3,opt,name=config,proto3" json:"config,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Stream_Processor) Reset() {
 	*x = Stream_Processor{}
-	mi := &file_common_proto_msgTypes[3]
+	mi := &file_common_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -402,7 +302,7 @@ func (x *Stream_Processor) String() string {
 func (*Stream_Processor) ProtoMessage() {}
 
 func (x *Stream_Processor) ProtoReflect() protoreflect.Message {
-	mi := &file_common_proto_msgTypes[3]
+	mi := &file_common_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -415,7 +315,7 @@ func (x *Stream_Processor) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Stream_Processor.ProtoReflect.Descriptor instead.
 func (*Stream_Processor) Descriptor() ([]byte, []int) {
-	return file_common_proto_rawDescGZIP(), []int{2, 0}
+	return file_common_proto_rawDescGZIP(), []int{1, 0}
 }
 
 func (x *Stream_Processor) GetLabel() string {
@@ -425,11 +325,18 @@ func (x *Stream_Processor) GetLabel() string {
 	return ""
 }
 
-func (x *Stream_Processor) GetProcessorId() int64 {
+func (x *Stream_Processor) GetComponent() string {
 	if x != nil {
-		return x.ProcessorId
+		return x.Component
 	}
-	return 0
+	return ""
+}
+
+func (x *Stream_Processor) GetConfig() string {
+	if x != nil {
+		return x.Config
+	}
+	return ""
 }
 
 var file_common_proto_extTypes = []protoimpl.ExtensionInfo{
@@ -453,36 +360,19 @@ var File_common_proto protoreflect.FileDescriptor
 
 const file_common_proto_rawDesc = "" +
 	"\n" +
-	"\fcommon.proto\x12\vprotorender\x1a google/protobuf/descriptor.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x17validate/validate.proto\"*\n" +
+	"\fcommon.proto\x12\vprotorender\x1a google/protobuf/descriptor.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x17validate/validate.proto\"*\n" +
 	"\x0eCommonResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage\"\xe1\x02\n" +
-	"\x0fComponentConfig\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\x12!\n" +
-	"\tparent_id\x18\x02 \x01(\x03H\x00R\tparent_id\x88\x01\x01\x12\x1d\n" +
-	"\x04name\x18\x03 \x01(\tB\t\xfaB\x06r\x04\x10\x01\x18dR\x04name\x128\n" +
-	"\asection\x18\x04 \x01(\tB\x1e\xfaB\x1br\x19R\x05inputR\bpipelineR\x06outputR\asection\x12'\n" +
-	"\tcomponent\x18\x05 \x01(\tB\t\xfaB\x06r\x04\x10\x01\x182R\tcomponent\x12/\n" +
-	"\x06config\x18\x06 \x01(\v2\x17.google.protobuf.StructR\x06config\x12\x1e\n" +
-	"\n" +
-	"is_current\x18\a \x01(\bR\n" +
-	"is_current\x12:\n" +
-	"\n" +
-	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"created_atB\f\n" +
-	"\n" +
-	"_parent_id\"\xbb\x06\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\"\xd6\x06\n" +
 	"\x06Stream\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12!\n" +
 	"\tparent_id\x18\x02 \x01(\x03H\x00R\tparent_id\x88\x01\x01\x12\x1d\n" +
-	"\x04name\x18\x03 \x01(\tB\t\xfaB\x06r\x04\x10\x01\x18dR\x04name\x12\x1e\n" +
-	"\n" +
-	"input_hint\x18\x04 \x01(\tR\n" +
-	"input_hint\x12>\n" +
-	"\vinput_label\x18\x05 \x01(\tB\x1c\xfaB\x19r\x17\x10\x01\x18d2\x11^[a-zA-Z0-9 _-]+$R\vinput_label\x12#\n" +
-	"\binput_id\x18\x06 \x01(\x03B\a\xfaB\x04\"\x02 \x00R\binput_id\x12 \n" +
-	"\voutput_hint\x18\a \x01(\tR\voutput_hint\x12@\n" +
-	"\foutput_label\x18\b \x01(\tB\x1c\xfaB\x19r\x17\x10\x01\x18d2\x11^[a-zA-Z0-9 _-]+$R\foutput_label\x12%\n" +
-	"\toutput_id\x18\t \x01(\x03B\a\xfaB\x04\"\x02 \x00R\toutput_id\x12\x1e\n" +
+	"\x04name\x18\x03 \x01(\tB\t\xfaB\x06r\x04\x10\x01\x18dR\x04name\x12\"\n" +
+	"\finput_config\x18\x04 \x01(\tR\finput_config\x12>\n" +
+	"\vinput_label\x18\x05 \x01(\tB\x1c\xfaB\x19r\x17\x10\x01\x18d2\x11^[a-zA-Z0-9 _-]+$R\vinput_label\x12(\n" +
+	"\x0finput_component\x18\x06 \x01(\tR\x0finput_component\x12$\n" +
+	"\routput_config\x18\a \x01(\tR\routput_config\x12@\n" +
+	"\foutput_label\x18\b \x01(\tB\x1c\xfaB\x19r\x17\x10\x01\x18d2\x11^[a-zA-Z0-9 _-]+$R\foutput_label\x12*\n" +
+	"\x10output_component\x18\t \x01(\tR\x10output_component\x12\x1e\n" +
 	"\n" +
 	"is_current\x18\n" +
 	" \x01(\bR\n" +
@@ -497,10 +387,11 @@ const file_common_proto_rawDesc = "" +
 	"\n" +
 	"processors\x18\x0e \x03(\v2\x1d.protorender.Stream.ProcessorR\n" +
 	"processors\x12&\n" +
-	"\x0eis_http_server\x18\x0f \x01(\bR\x0eis_http_server\x1al\n" +
+	"\x0eis_http_server\x18\x0f \x01(\bR\x0eis_http_server\x1au\n" +
 	"\tProcessor\x122\n" +
-	"\x05label\x18\x01 \x01(\tB\x1c\xfaB\x19r\x17\x10\x01\x18d2\x11^[a-zA-Z0-9 _-]+$R\x05label\x12+\n" +
-	"\fprocessor_id\x18\x02 \x01(\x03B\a\xfaB\x04\"\x02 \x00R\fprocessor_idB\f\n" +
+	"\x05label\x18\x01 \x01(\tB\x1c\xfaB\x19r\x17\x10\x01\x18d2\x11^[a-zA-Z0-9 _-]+$R\x05label\x12\x1c\n" +
+	"\tcomponent\x18\x02 \x01(\tR\tcomponent\x12\x16\n" +
+	"\x06config\x18\x03 \x01(\tR\x06configB\f\n" +
 	"\n" +
 	"_parent_idB\r\n" +
 	"\v_updated_at*\x98\x01\n" +
@@ -526,29 +417,25 @@ func file_common_proto_rawDescGZIP() []byte {
 }
 
 var file_common_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_common_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_common_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_common_proto_goTypes = []any{
 	(WorkerStreamStatus)(0),               // 0: protorender.WorkerStreamStatus
 	(*CommonResponse)(nil),                // 1: protorender.CommonResponse
-	(*ComponentConfig)(nil),               // 2: protorender.ComponentConfig
-	(*Stream)(nil),                        // 3: protorender.Stream
-	(*Stream_Processor)(nil),              // 4: protorender.Stream.Processor
-	(*structpb.Struct)(nil),               // 5: google.protobuf.Struct
-	(*timestamppb.Timestamp)(nil),         // 6: google.protobuf.Timestamp
-	(*descriptorpb.EnumValueOptions)(nil), // 7: google.protobuf.EnumValueOptions
+	(*Stream)(nil),                        // 2: protorender.Stream
+	(*Stream_Processor)(nil),              // 3: protorender.Stream.Processor
+	(*timestamppb.Timestamp)(nil),         // 4: google.protobuf.Timestamp
+	(*descriptorpb.EnumValueOptions)(nil), // 5: google.protobuf.EnumValueOptions
 }
 var file_common_proto_depIdxs = []int32{
-	5, // 0: protorender.ComponentConfig.config:type_name -> google.protobuf.Struct
-	6, // 1: protorender.ComponentConfig.created_at:type_name -> google.protobuf.Timestamp
-	6, // 2: protorender.Stream.created_at:type_name -> google.protobuf.Timestamp
-	6, // 3: protorender.Stream.updated_at:type_name -> google.protobuf.Timestamp
-	4, // 4: protorender.Stream.processors:type_name -> protorender.Stream.Processor
-	7, // 5: protorender.string_value:extendee -> google.protobuf.EnumValueOptions
-	6, // [6:6] is the sub-list for method output_type
-	6, // [6:6] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	5, // [5:6] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	4, // 0: protorender.Stream.created_at:type_name -> google.protobuf.Timestamp
+	4, // 1: protorender.Stream.updated_at:type_name -> google.protobuf.Timestamp
+	3, // 2: protorender.Stream.processors:type_name -> protorender.Stream.Processor
+	5, // 3: protorender.string_value:extendee -> google.protobuf.EnumValueOptions
+	4, // [4:4] is the sub-list for method output_type
+	4, // [4:4] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	3, // [3:4] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_common_proto_init() }
@@ -557,14 +444,13 @@ func file_common_proto_init() {
 		return
 	}
 	file_common_proto_msgTypes[1].OneofWrappers = []any{}
-	file_common_proto_msgTypes[2].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_proto_rawDesc), len(file_common_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   4,
+			NumMessages:   3,
 			NumExtensions: 1,
 			NumServices:   0,
 		},
