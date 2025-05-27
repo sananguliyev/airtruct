@@ -1157,7 +1157,7 @@ func (m *Event) validate(all bool) error {
 
 	// no validation rules for Section
 
-	// no validation rules for ComponentName
+	// no validation rules for ComponentLabel
 
 	if _, ok := _Event_Type_InLookup[m.GetType()]; !ok {
 		err := EventValidationError{

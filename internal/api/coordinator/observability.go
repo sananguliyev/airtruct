@@ -32,7 +32,7 @@ func (c *CoordinatorAPI) IngestEvents(stream grpc.BidiStreamingServer[pb.Event, 
 		evetEntity := &persistence.Event{
 			WorkerStreamID: event.GetWorkerStreamId(),
 			Section:        event.GetSection(),
-			ComponentName:  event.GetComponentName(),
+			ComponentLabel: event.GetComponentLabel(),
 			Type:           persistence.EventType(event.GetType()),
 			Meta:           meta,
 			Content:        event.GetContent(),

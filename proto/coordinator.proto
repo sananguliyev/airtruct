@@ -68,7 +68,7 @@ message StreamResponse {
 message Event {
   int64 worker_stream_id = 1;
   string section = 2;
-  string component_name = 3;
+  string component_label = 3;
   string type = 4 [
     (validate.rules).string = {
       in: ["PRODUCE", "CONSUME", "DELETE", "ERROR", "UNKNOWN"]

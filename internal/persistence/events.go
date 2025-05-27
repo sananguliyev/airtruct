@@ -21,7 +21,7 @@ type Event struct {
 	ID             int64           `json:"id" gorm:"primaryKey"`
 	WorkerStreamID int64           `json:"worker_stream_id" gorm:"not null"`
 	Section        string          `json:"section" gorm:"not null"`
-	ComponentName  string          `json:"component_name"`
+	ComponentLabel string          `json:"component_label"`
 	Type           EventType       `json:"type" gorm:"not null"`
 	Content        string          `json:"content" gorm:"not null"`
 	Meta           json.RawMessage `json:"meta" gorm:"not null"`

@@ -221,14 +221,14 @@ func (e *workerExecutor) ShipLogs(ctx context.Context) {
 						string(persistence.StreamSectionOutput):   tracingSummary.OutputEvents,
 					}
 					for section, getEvents := range eventGetters {
-						for componentName, events := range getEvents(true) {
+						for componentLabel, events := range getEvents(true) {
 							for _, event := range events {
 								metaStruct, err := structpb.NewStruct(event.Meta)
 								if err != nil {
 									log.Error().
 										Err(err).
 										Int64("worker_stream_id", workerStreamId).
-										Str("component_name", componentName).
+										Str("component_label", componentLabel).
 										Str("event_type", string(event.Type)).
 										Str("event_content", event.Content).
 										Any("event_meta", event.Meta).
@@ -237,7 +237,7 @@ func (e *workerExecutor) ShipLogs(ctx context.Context) {
 								}
 								if err := streamClient.Send(&pb.Event{
 									WorkerStreamId: workerStreamId,
-									ComponentName:  componentName,
+									ComponentLabel: componentLabel,
 									Section:        section,
 									Type:           string(event.Type),
 									Content:        event.Content,

@@ -150,11 +150,11 @@ export async function createStream(
       output_label: data.data.output_label,
       output_component: data.data.output_component,
       output_config: data.data.output_config,
-      processors:
-        data.data.processors?.map((processor: any) => ({
-          processorID: processor.processor_id,
-          label: processor.label,
-        })) || [],
+      processors: data.data.processors?.map((processor: any) => ({
+        label: processor.label,
+        component: processor.component,
+        config: processor.config || "",
+      })) || [],
       createdAt: new Date(data.data.created_at).toLocaleString(),
       is_http_server: data.data.is_http_server || false,
     };

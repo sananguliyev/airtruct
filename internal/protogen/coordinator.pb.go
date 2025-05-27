@@ -450,7 +450,7 @@ type Event struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	WorkerStreamId int64                  `protobuf:"varint,1,opt,name=worker_stream_id,json=workerStreamId,proto3" json:"worker_stream_id,omitempty"`
 	Section        string                 `protobuf:"bytes,2,opt,name=section,proto3" json:"section,omitempty"`
-	ComponentName  string                 `protobuf:"bytes,3,opt,name=component_name,json=componentName,proto3" json:"component_name,omitempty"`
+	ComponentLabel string                 `protobuf:"bytes,3,opt,name=component_label,json=componentLabel,proto3" json:"component_label,omitempty"`
 	Type           string                 `protobuf:"bytes,4,opt,name=type,proto3" json:"type,omitempty"`
 	Content        string                 `protobuf:"bytes,5,opt,name=content,proto3" json:"content,omitempty"`
 	Meta           *structpb.Struct       `protobuf:"bytes,6,opt,name=meta,proto3" json:"meta,omitempty"`
@@ -502,9 +502,9 @@ func (x *Event) GetSection() string {
 	return ""
 }
 
-func (x *Event) GetComponentName() string {
+func (x *Event) GetComponentLabel() string {
 	if x != nil {
-		return x.ComponentName
+		return x.ComponentLabel
 	}
 	return ""
 }
@@ -720,11 +720,11 @@ const file_coordinator_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\x03B\a\xfaB\x04\"\x02 \x00R\x02id\"j\n" +
 	"\x0eStreamResponse\x12'\n" +
 	"\x04data\x18\x01 \x01(\v2\x13.protorender.StreamR\x04data\x12/\n" +
-	"\x04meta\x18\x02 \x01(\v2\x1b.protorender.CommonResponseR\x04meta\"\xfe\x01\n" +
+	"\x04meta\x18\x02 \x01(\v2\x1b.protorender.CommonResponseR\x04meta\"\x80\x02\n" +
 	"\x05Event\x12(\n" +
 	"\x10worker_stream_id\x18\x01 \x01(\x03R\x0eworkerStreamId\x12\x18\n" +
-	"\asection\x18\x02 \x01(\tR\asection\x12%\n" +
-	"\x0ecomponent_name\x18\x03 \x01(\tR\rcomponentName\x12C\n" +
+	"\asection\x18\x02 \x01(\tR\asection\x12'\n" +
+	"\x0fcomponent_label\x18\x03 \x01(\tR\x0ecomponentLabel\x12C\n" +
 	"\x04type\x18\x04 \x01(\tB/\xfaB,r*R\aPRODUCER\aCONSUMER\x06DELETER\x05ERRORR\aUNKNOWNR\x04type\x12\x18\n" +
 	"\acontent\x18\x05 \x01(\tR\acontent\x12+\n" +
 	"\x04meta\x18\x06 \x01(\v2\x17.google.protobuf.StructR\x04meta\"\x87\x06\n" +
