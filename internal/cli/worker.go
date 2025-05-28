@@ -72,6 +72,7 @@ func (c *WorkerCLI) Run(ctx context.Context) {
 			case <-ticker.C:
 				if err := c.executor.JoinToCoordinator(ctx); err != nil {
 					log.Error().Err(err).Msg("Periodic registration on coordinator failed")
+					continue
 				}
 				c.executor.ShipMetrics(ctx)
 			}

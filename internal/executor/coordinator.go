@@ -376,7 +376,7 @@ func (e *coordinatorExecutor) deactivateWorker(workerID string) {
 		return
 	}
 
-	if err := e.workerStreamRepo.StopAllByWorkerID(workerID); err != nil {
+	if err := e.workerStreamRepo.StopAllRunningAndWaitingByWorkerID(workerID); err != nil {
 		log.Warn().Err(err).Str("worker_id", workerID).Msg("Failed to update all worker streams statuses in worker")
 		return
 	}

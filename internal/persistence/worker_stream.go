@@ -37,7 +37,7 @@ type WorkerStreamRepository interface {
 	FindByID(id int64) (*WorkerStream, error)
 	UpdateStatus(id int64, status WorkerStreamStatus) error
 	UpdateMetrics(id int64, inputEvents, processorErrors, outputEvents uint64) error
-	StopAllByWorkerID(workerID string) error
+	StopAllRunningAndWaitingByWorkerID(workerID string) error
 	ListAllByWorkerID(workerID string) ([]WorkerStream, error)
 	ListAllByStreamID(streamID int64) ([]WorkerStream, error)
 	ListAllByStatuses(statuses ...WorkerStreamStatus) ([]WorkerStream, error)
@@ -104,10 +104,11 @@ func (r *workerStreamRepository) FindByID(id int64) (*WorkerStream, error) {
 	return workerStream, nil
 }
 
-func (r *workerStreamRepository) StopAllByWorkerID(workerID string) error {
+func (r *workerStreamRepository) StopAllRunningAndWaitingByWorkerID(workerID string) error {
 	return r.db.
 		Model(&WorkerStream{}).
 		Where("worker_id = ?", workerID).
+		Where("status IN ?", []WorkerStreamStatus{WorkerStreamStatusRunning, WorkerStreamStatusWaiting}).
 		Updates(map[string]any{"status": WorkerStreamStatusStopped, "updated_at": time.Now()}).
 		Error
 }

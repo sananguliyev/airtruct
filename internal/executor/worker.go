@@ -3,6 +3,7 @@ package executor
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -17,6 +18,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/warpstreamlabs/bento/public/service"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/structpb"
 )
@@ -49,19 +51,19 @@ type streamQueueItem struct {
 }
 
 type serviceStream struct {
-	Stream *service.Stream
-	Mux    *http.ServeMux
-	Status persistence.WorkerStreamStatus
+	Stream         *service.Stream
+	Cancel         context.CancelFunc
+	Mux            *http.ServeMux
+	Status         persistence.WorkerStreamStatus
+	TracingSummary *service.TracingSummary
 }
 
 type workerExecutor struct {
 	clientConn        *grpc.ClientConn
 	coordinatorClient pb.CoordinatorClient
-	mainMux           *http.ServeMux
 	mu                sync.Mutex
 	streamQueue       chan streamQueueItem
 	streams           map[int64]*serviceStream
-	tracingSummaries  map[int64]*service.TracingSummary
 	grpcPort          uint32
 	joined            bool
 }
@@ -77,16 +79,32 @@ func NewWorkerExecutor(discoveryUri string, grpcPort uint32) WorkerExecutor {
 
 	coordinatorGRPCClient := pb.NewCoordinatorClient(grpcConn)
 
-	return &workerExecutor{
+	executor := &workerExecutor{
 		clientConn:        grpcConn,
 		coordinatorClient: coordinatorGRPCClient,
 		streamQueue:       make(chan streamQueueItem, MaxItemsInStreamQueue),
-		mainMux:           http.NewServeMux(),
 		streams:           make(map[int64]*serviceStream),
-		tracingSummaries:  make(map[int64]*service.TracingSummary),
 		grpcPort:          grpcPort,
 		joined:            false,
 	}
+
+	// Start a goroutine to continuously check gRPC connection status
+	go func() {
+		ticker := time.NewTicker(5 * time.Second)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			state := grpcConn.GetState()
+			if state == connectivity.TransientFailure || state == connectivity.Shutdown {
+				log.Warn().Str("state", state.String()).Msg("gRPC connection is down")
+				executor.mu.Lock()
+				executor.joined = false
+				executor.mu.Unlock()
+			}
+		}
+	}()
+
+	return executor
 }
 
 func (e *workerExecutor) JoinToCoordinator(ctx context.Context) error {
@@ -105,7 +123,8 @@ func (e *workerExecutor) JoinToCoordinator(ctx context.Context) error {
 		Port: e.grpcPort,
 	})
 	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to register on coordinator")
+		log.Error().Err(err).Msg("Failed to register on coordinator")
+		return err
 	}
 
 	e.joined = true
@@ -162,14 +181,11 @@ func (e *workerExecutor) DeleteWorkerStream(ctx context.Context, workerStreamID 
 	defer e.mu.Unlock()
 
 	if stream, exists := e.streams[workerStreamID]; exists && stream != nil {
-		if err := stream.Stream.Stop(ctx); err != nil {
-			log.Error().Err(err).Int64("worker_stream_id", workerStreamID).Msg("Failed to stop stream in worker")
-			return err
-		}
+		log.Info().Int64("worker_stream_id", workerStreamID).Msg("Canceling stream")
+		stream.Cancel()
 
 		e.ShipMetrics(ctx)
 		delete(e.streams, workerStreamID)
-		delete(e.tracingSummaries, workerStreamID)
 
 		log.Info().Int64("worker_stream_id", workerStreamID).Msg("Stream deleted")
 	} else {
@@ -214,7 +230,8 @@ func (e *workerExecutor) ShipLogs(ctx context.Context) {
 			default:
 				e.mu.Lock()
 				sentEvents := 0
-				for workerStreamId, tracingSummary := range e.tracingSummaries {
+				for workerStreamId, stream := range e.streams {
+					tracingSummary := stream.TracingSummary
 					eventGetters := map[string]func(bool) map[string][]service.TracingEvent{
 						string(persistence.StreamSectionInput):    tracingSummary.InputEvents,
 						string(persistence.StreamSectionPipeline): tracingSummary.ProcessorEvents,
@@ -278,7 +295,8 @@ func (e *workerExecutor) ShipLogs(ctx context.Context) {
 }
 
 func (e *workerExecutor) ShipMetrics(ctx context.Context) {
-	for workerStreamID, tracingSummary := range e.tracingSummaries {
+	for workerStreamID, stream := range e.streams {
+		tracingSummary := stream.TracingSummary
 		_, err := e.coordinatorClient.IngestMetrics(ctx, &pb.MetricsRequest{
 			WorkerStreamId:  workerStreamID,
 			InputEvents:     tracingSummary.TotalInput(),
@@ -308,8 +326,6 @@ func (e *workerExecutor) ConsumeStreamQueue(ctx context.Context) {
 			streamBuilder := service.NewStreamBuilder()
 			streamMux := http.NewServeMux()
 			streamBuilder.SetHTTPMux(streamMux)
-			//rootPath := fmt.Sprintf("/%d", msg.workerStreamID)
-			//e.mainMux.Handle(fmt.Sprintf("%s/", rootPath), http.StripPrefix(rootPath, streamMux))
 			if err = streamBuilder.SetYAML(msg.config); err != nil {
 				log.Error().Err(err).Msg("Failed to set stream YAML")
 				e.mu.Unlock()
@@ -324,15 +340,17 @@ func (e *workerExecutor) ConsumeStreamQueue(ctx context.Context) {
 			}
 
 			e.streams[msg.workerStreamID] = &serviceStream{
-				Stream: stream,
-				Mux:    streamMux,
-				Status: persistence.WorkerStreamStatusRunning,
+				Stream:         stream,
+				Mux:            streamMux,
+				Status:         persistence.WorkerStreamStatusRunning,
+				TracingSummary: tracingSummary,
 			}
-			e.tracingSummaries[msg.workerStreamID] = tracingSummary
 			e.mu.Unlock()
 			log.Info().Int64("worker_stream_id", msg.workerStreamID).Msg("Starting stream")
 
 			go func(serviceStream *serviceStream) {
+				var streamStatus persistence.WorkerStreamStatus
+
 				defer func() {
 					if r := recover(); r != nil {
 						log.Error().
@@ -340,46 +358,39 @@ func (e *workerExecutor) ConsumeStreamQueue(ctx context.Context) {
 							Int64("worker_stream_id", msg.workerStreamID).
 							Msg("Stream panicked")
 					}
-					log.Info().Int64("worker_stream_id", msg.workerStreamID).Msg("Stopping stream")
-					if err := serviceStream.Stream.Stop(ctx); err != nil {
-						log.Error().Err(err).Int64("worker_stream_id", msg.workerStreamID).Msg("Failed to stop stream in worker")
-					}
+					log.Info().Int64("worker_stream_id", msg.workerStreamID).Str("status", string(streamStatus)).Msg("Finishing stream")
 					e.mu.Lock()
+					e.ShipMetrics(ctx)
 					delete(e.streams, msg.workerStreamID)
-					delete(e.tracingSummaries, msg.workerStreamID)
 					e.mu.Unlock()
-					if err := e.updateWorkerStreamStatus(ctx, msg.workerStreamID, persistence.WorkerStreamStatusStopped); err != nil {
+					if err := e.updateWorkerStreamStatus(ctx, msg.workerStreamID, streamStatus); err != nil {
 						log.Warn().
 							Err(err).
 							Int64("worker_stream_id", msg.workerStreamID).
-							Str("status", string(persistence.WorkerStreamStatusStopped)).
+							Str("status", string(streamStatus)).
 							Msg("Failed to update worker stream status")
 					}
-					log.Info().Int64("worker_stream_id", msg.workerStreamID).Msg("Stream has been stopped")
+					log.Info().Int64("worker_stream_id", msg.workerStreamID).Str("status", string(streamStatus)).Msg("Stream has been finished")
 				}()
 				log.Info().Int64("worker_stream_id", msg.workerStreamID).Msg("Stream started running")
-				if err = stream.Run(ctx); err != nil {
-					log.Error().Err(err).Msg("Failed to run stream")
-					e.mu.Lock()
-					delete(e.streams, msg.workerStreamID)
-					delete(e.tracingSummaries, msg.workerStreamID)
-					e.mu.Unlock()
-
-					if err = e.updateWorkerStreamStatus(ctx, msg.workerStreamID, persistence.WorkerStreamStatusFailed); err != nil {
-						log.Warn().
-							Err(err).
-							Int64("worker_stream_id", msg.workerStreamID).
-							Str("status", string(persistence.WorkerStreamStatusFailed)).
-							Msg("Failed to update worker stream status")
+				// Create a new context for the stream to be able to cancel it separately from the main context
+				streamCtx, cancel := context.WithCancel(ctx)
+				serviceStream.Cancel = cancel
+				if err = stream.Run(streamCtx); err != nil {
+					switch {
+					case errors.Is(err, context.Canceled):
+						log.Info().Int64("worker_stream_id", msg.workerStreamID).Msg("Stream stopped: context canceled")
+						streamStatus = persistence.WorkerStreamStatusStopped
+					case errors.Is(err, context.DeadlineExceeded):
+						log.Info().Int64("worker_stream_id", msg.workerStreamID).Msg("Stream stopped: timeout exceeded")
+						streamStatus = persistence.WorkerStreamStatusStopped
+					default:
+						log.Error().Err(err).Msg("Failed to run stream")
+						streamStatus = persistence.WorkerStreamStatusFailed
 					}
-				}
-				log.Info().Int64("worker_stream_id", msg.workerStreamID).Msg("Stream has been completed")
-				if err = e.updateWorkerStreamStatus(ctx, msg.workerStreamID, persistence.WorkerStreamStatusCompleted); err != nil {
-					log.Warn().
-						Err(err).
-						Int64("worker_stream_id", msg.workerStreamID).
-						Str("status", string(persistence.WorkerStreamStatusFailed)).
-						Msg("Failed to update worker stream status")
+				} else {
+					log.Info().Int64("worker_stream_id", msg.workerStreamID).Msg("Stream has been completed")
+					streamStatus = persistence.WorkerStreamStatusCompleted
 				}
 			}(e.streams[msg.workerStreamID])
 
@@ -395,12 +406,12 @@ func (e *workerExecutor) ConsumeStreamQueue(ctx context.Context) {
 			log.Info().Msg("Stopping streams...")
 			e.mu.Lock()
 			for workerStreamID, stream := range e.streams {
-				if err := stream.Stream.Stop(ctx); err != nil {
-					log.Error().Err(err).Int64("worker_stream_id", workerStreamID).Msg("Failed to stop stream in worker")
-				}
+				log.Info().Int64("worker_stream_id", workerStreamID).Msg("Canceling stream")
+				stream.Cancel()
 			}
+			// Wait for 1 second to make sure that the streams are stopped and ship metrics
+			time.Sleep(1 * time.Second)
 			e.streams = make(map[int64]*serviceStream)
-			e.tracingSummaries = make(map[int64]*service.TracingSummary)
 			e.mu.Unlock()
 			log.Info().Msg("Streams have been stopped")
 			return
@@ -435,7 +446,6 @@ func (e *workerExecutor) IngestData(ctx context.Context, workerStreamID int64, m
 
 	if stream, exists := e.streams[workerStreamID]; exists && stream != nil {
 		rr := httptest.NewRecorder()
-		//rootPath := fmt.Sprintf("/%d", workerStreamID)
 		req, err := http.NewRequest(method, path, bytes.NewBuffer(payload))
 		req.Header.Set("Content-Type", contentType)
 		if err != nil {
