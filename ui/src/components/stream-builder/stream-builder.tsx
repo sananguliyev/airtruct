@@ -100,7 +100,7 @@ const NodeCard: React.FC<{
   return (
     <div className="flex flex-col items-center w-full relative">
       {showTopPlus && (
-        <div className="flex justify-center items-center w-full mb-1" style={{ height: `${pipelineNodeSpacing}px` }}>
+        <div className="flex justify-center items-center w-full py-2">
           <Button
             variant="ghost"
             size="icon"
@@ -134,7 +134,7 @@ const NodeCard: React.FC<{
         </CardContent>
       </Card>
       {showBottomPlus && (
-        <div className="flex justify-center items-center w-full mt-1" style={{ height: `${pipelineNodeSpacing}px` }}>
+        <div className="flex justify-center items-center w-full py-2">
           <Button
             variant="ghost"
             size="icon"
@@ -236,28 +236,28 @@ function StreamBuilderContent({
 
   const selectedNodeDetails = useMemo(() => nodes.find(n => n.id === selectedNodeId), [nodes, selectedNodeId]);
   
-  // Calculate Pipeline section height
+  // Calculate Pipeline section height - simplified approach
   const pipelineSectionHeight = useMemo(() => {
     const numPipelineNodes = pipelineNodes.length;
-    // Calculate height based on card min height and spacing, plus padding
-    const contentHeight = numPipelineNodes * streamNodeCardMinHeight + 
-                         Math.max(0, numPipelineNodes) * pipelineNodeSpacing + // Spacing for each node (includes one after last)
-                         (2 * pipelineInternalPaddingY);
-    return `${Math.max(parseInt(defaultSectionMinHeight.replace('px','')), contentHeight)}px`;
+    if (numPipelineNodes === 0) {
+      return defaultSectionMinHeight;
+    }
+    
+    // Simple calculation: just let it grow naturally, no fixed height
+    return 'auto';
   }, [pipelineNodes.length]);
 
   const renderSection = (type: NodeType, labelText: string, specificNodes: CustomNode[], fixedHeight?: string) => {
     const sectionId = type === 'processor' ? 'pipeline-section' : `${type}-section`;
-    const currentMinHeight = type === 'processor' ? pipelineSectionHeight : (fixedHeight || defaultSectionMinHeight);
-    const currentMarginBottom = type === 'processor' ? `${sectionVerticalSpacing + 10}px` : `${sectionVerticalSpacing}px`; // Increased for processor
+    const currentMinHeight = type === 'processor' ? defaultSectionMinHeight : (fixedHeight || defaultSectionMinHeight);
     
     // For pipeline, only show top plus if list is empty
     const showTopPlusForEmptyPipeline = type === 'processor' && specificNodes.length === 0;
 
     return (
       <div 
-        className="border-2 border-dashed border-slate-400 rounded-md p-4 flex flex-col items-center relative w-full" // w-full, removed specific max/min/mx-auto for section
-        style={{ minHeight: currentMinHeight, marginBottom: currentMarginBottom }}
+        className="border-2 border-dashed border-slate-400 rounded-md p-4 flex flex-col items-center relative w-full"
+        style={{ minHeight: currentMinHeight }}
       >
         <div className="absolute -top-3.5 bg-background px-2 text-slate-500 text-sm font-medium">{labelText}</div>
         
@@ -273,21 +273,23 @@ function StreamBuilderContent({
             </Button>
         )}
 
-        {specificNodes.map((node, index) => (
-            <NodeCard 
-              key={node.id} 
-              node={node} 
-              onClick={() => setSelectedNodeId(node.id)} 
-              selected={selectedNodeId === node.id}
-              onDelete={() => handleDeleteNode(node.id)}
-              isPipeline={type === 'processor'}
-              isFirstInPipeline={type === 'processor' && index === 0}
-              onAddAbove={type === 'processor' ? () => handleAddNode('processor', node.id, 'above') : undefined}
-              onAddBelow={type === 'processor' ? () => handleAddNode('processor', node.id, 'below') : undefined}
-              cardMaxWidth={CARD_MAX_WIDTH_STREAM_PANEL}
-              cardMinWidth={CARD_MIN_WIDTH_STREAM_PANEL}
-            />
-          ))}
+        <div className="flex flex-col items-center w-full gap-1">
+          {specificNodes.map((node, index) => (
+              <NodeCard 
+                key={node.id} 
+                node={node} 
+                onClick={() => setSelectedNodeId(node.id)} 
+                selected={selectedNodeId === node.id}
+                onDelete={() => handleDeleteNode(node.id)}
+                isPipeline={type === 'processor'}
+                isFirstInPipeline={type === 'processor' && index === 0}
+                onAddAbove={type === 'processor' ? () => handleAddNode('processor', node.id, 'above') : undefined}
+                onAddBelow={type === 'processor' ? () => handleAddNode('processor', node.id, 'below') : undefined}
+                cardMaxWidth={CARD_MAX_WIDTH_STREAM_PANEL}
+                cardMinWidth={CARD_MIN_WIDTH_STREAM_PANEL}
+              />
+            ))}
+        </div>
       </div>
     );
   };
@@ -367,10 +369,14 @@ function StreamBuilderContent({
         </div>
 
         {/* Right Panel (Stream) */}
-        <div className="flex-[3] flex flex-col h-full border rounded-md p-4 pt-8 overflow-y-auto bg-background items-center relative min-w-0">
-          {renderSection('input', 'Input', inputNodes)}
-          {renderSection('processor', 'Pipeline', pipelineNodes)}
-          {renderSection('output', 'Output', outputNodes)}
+        <div className="flex-[3] flex flex-col h-full border rounded-md bg-background relative min-w-0">
+          <div className="p-4 pt-8 overflow-y-auto h-full">
+            <div className="flex flex-col items-center gap-6 min-h-full">
+              {renderSection('input', 'Input', inputNodes)}
+              {renderSection('processor', 'Pipeline', pipelineNodes)}
+              {renderSection('output', 'Output', outputNodes)}
+            </div>
+          </div>
         </div>
       </div>
 
