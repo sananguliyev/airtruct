@@ -11,11 +11,11 @@ ui-deps:
 
 statik:
 	pnpm --prefix ui build
-	statik -src=ui/dist -dest=internal/. 
+	statik -src=ui/dist -dest=internal/.
 
 build:
 	make statik
-	go build -o dist/airtruct ./cmd/... 
+	go build -o dist/ ./cmd/...
 
 run-coordinator:
 	export DATABASE_URI="file:./airtruct.sqlite?_foreign_keys=1&mode=rwc" && \

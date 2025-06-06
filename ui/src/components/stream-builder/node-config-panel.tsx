@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import Editor from "@monaco-editor/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { InlineYamlEditor } from "@/components/inline-yaml-editor";
 
 // Define StreamNodeData type locally since the file was deleted
 export interface StreamNodeData {
@@ -58,11 +58,21 @@ export function NodeConfigPanel({
   useEffect(() => {
     if (selectedNode) {
       const currentData = selectedNode.data as StreamNodeData;
-      setNodeData({ ...currentData });
+      // Only update if the data has actually changed
+      setNodeData(prev => {
+        if (!prev || 
+            prev.label !== currentData.label ||
+            prev.componentId !== currentData.componentId ||
+            prev.configYaml !== currentData.configYaml ||
+            prev.component !== currentData.component) {
+          return { ...currentData };
+        }
+        return prev;
+      });
     } else {
       setNodeData(null);
     }
-  }, [selectedNode]);
+  }, [selectedNode?.id, selectedNode?.data.label, selectedNode?.data.componentId, selectedNode?.data.configYaml, selectedNode?.data.component]);
 
   const handleDebouncedUpdate = useCallback(
     (field: keyof StreamNodeData, value: any) => {
@@ -93,10 +103,12 @@ export function NodeConfigPanel({
     handleDebouncedUpdate("componentId", componentId);
   };
 
-  const handleEditorChange = (value: string | undefined) => {
-    if (value !== undefined && nodeData && value !== nodeData.configYaml) {
-      handleDebouncedUpdate("configYaml", value);
-    }
+  const getComponentSchema = (componentId: string, nodeType: "input" | "processor" | "output") => {
+    const component = allComponentSchemas[nodeType]?.find(c => c.id === componentId);
+    const schema = component?.schema || {};
+    
+    // Return the full schema including flat property - InlineYamlEditor will handle it
+    return schema;
   };
 
   if (!selectedNode || !nodeData) {
@@ -163,21 +175,12 @@ export function NodeConfigPanel({
 
         {nodeData.componentId && (
           <div className="flex flex-col flex-1 min-h-0 mt-4">
-            <Label htmlFor="yaml-config" className="mb-2">YAML Configuration</Label>
-            <div className="flex-1 min-h-0 border rounded-md overflow-hidden">
-              <Editor 
-                height="100%"
-                language="yaml"
-                theme="vs-dark"
+            <Label htmlFor="yaml-config" className="mb-2">Component Configuration</Label>
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              <InlineYamlEditor
+                schema={getComponentSchema(nodeData.componentId, nodeData.type)}
                 value={nodeData.configYaml || ""}
-                onChange={handleEditorChange}
-                options={{
-                  minimap: { enabled: false },
-                  scrollBeyondLastLine: false,
-                  fontSize: 13,
-                  wordWrap: "on",
-                  automaticLayout: true,
-                }}
+                onChange={(yamlValue: string) => handleDebouncedUpdate("configYaml", yamlValue)}
               />
             </div>
           </div>

@@ -68,17 +68,24 @@ export default function EditStreamPage() {
   const loadedRef = useRef(false);
 
   useEffect(() => {
-    setTransformedSchemas(transformComponentSchemas());
-  }, []);
-
-  useEffect(() => {
-    async function loadData() {
-      if (loadedRef.current || !transformedSchemas) return;
+    async function loadDataWithSchemas() {
+      if (loadedRef.current) return;
       loadedRef.current = true;
 
       try {
         setIsLoading(true);
+        
+        // Load schemas and stream data
+        const schemas = transformComponentSchemas();
+        setTransformedSchemas(schemas);
+        
         const streamResponse = await fetchStream(id || "");
+        
+        // Helper function to get component display name with schemas available
+        const getDisplayName = (componentId: string, type: "input" | "processor" | "output"): string => {
+          const component = schemas[type].find((c) => c.id === componentId);
+          return component ? `${component.name} (${component.component})` : componentId;
+        };
         
         // Create visual data from the stream configuration
         const nodes: StreamNodeData[] = [];
@@ -87,7 +94,7 @@ export default function EditStreamPage() {
         const inputNode: StreamNodeData = {
           label: streamResponse.input_label || "Input",
           type: "input",
-          component: getComponentDisplayName(streamResponse.input_component, "input"),
+          component: getDisplayName(streamResponse.input_component, "input"),
           componentId: streamResponse.input_component,
           configYaml: streamResponse.input_config || "",
           status: streamResponse.status,
@@ -100,7 +107,7 @@ export default function EditStreamPage() {
             const processorNode: StreamNodeData = {
               label: processor.label || "Processor",
               type: "processor",
-              component: getComponentDisplayName(processor.component, "processor"),
+              component: getDisplayName(processor.component, "processor"),
               componentId: processor.component,
               configYaml: processor.config || "",
               status: streamResponse.status,
@@ -113,7 +120,7 @@ export default function EditStreamPage() {
         const outputNode: StreamNodeData = {
           label: streamResponse.output_label || "Output",
           type: "output",
-          component: getComponentDisplayName(streamResponse.output_component, "output"),
+          component: getDisplayName(streamResponse.output_component, "output"),
           componentId: streamResponse.output_component,
           configYaml: streamResponse.output_config || "",
           status: streamResponse.status,
@@ -142,8 +149,8 @@ export default function EditStreamPage() {
       }
     }
 
-    loadData();
-  }, [id, navigate, transformedSchemas]);
+    loadDataWithSchemas();
+  }, [id, navigate, addToast]);
 
   const handleSaveStream = async (data: { name: string; status: string; nodes: StreamNodeData[] }) => {
     setIsSubmitting(true);

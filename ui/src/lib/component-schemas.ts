@@ -6,6 +6,7 @@ export const componentSchemas = {
         type: "code",
         title: "Mapping",
         description: "A bloblang mapping to use for generating messages.",
+        required: true,
       },
       interval: {
         type: "input",
