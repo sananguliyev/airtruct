@@ -205,6 +205,9 @@ function StreamBuilderContent({
     const parentId = sectionType === 'processor' ? 'pipeline-section' : `${sectionType}-section`;
     const newNode: CustomNode = { id: uuidv4(), type: sectionType, parentId, data: newNodeData };
 
+    // Auto-select the newly created node
+    setSelectedNodeId(newNode.id);
+
     setNodes(prevNodes => {
       if (parentId === 'pipeline-section') {
           const pipelineOnlyNodes = prevNodes.filter(n => n.parentId === 'pipeline-section');
