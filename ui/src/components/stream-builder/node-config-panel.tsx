@@ -87,7 +87,7 @@ export function NodeConfigPanel({
         
         if (field === 'componentId') {
           const baseComp = availableBaseComponents.find(c => c.id === value);
-          updatedData.component = baseComp ? `${baseComp.name} (${baseComp.component})` : "";
+          updatedData.component = baseComp ? (baseComp.name === baseComp.component ? baseComp.component : `${baseComp.name} (${baseComp.component})`) : "";
           if (value !== nodeData.componentId) {
             updatedData.configYaml = "";
           }
@@ -107,7 +107,6 @@ export function NodeConfigPanel({
     const component = allComponentSchemas[nodeType]?.find(c => c.id === componentId);
     const schema = component?.schema || {};
     
-    // Return the full schema including flat property - InlineYamlEditor will handle it
     return schema;
   };
 
@@ -165,7 +164,7 @@ export function NodeConfigPanel({
               <SelectContent>
                 {availableBaseComponents.map((comp) => (
                   <SelectItem key={comp.id} value={comp.id}>
-                    {comp.name} ({comp.component})
+                    {comp.name === comp.component ? comp.component : `${comp.name} (${comp.component})`}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -181,6 +180,27 @@ export function NodeConfigPanel({
                 schema={getComponentSchema(nodeData.componentId, nodeData.type)}
                 value={nodeData.configYaml || ""}
                 onChange={(yamlValue: string) => handleDebouncedUpdate("configYaml", yamlValue)}
+                availableProcessors={allComponentSchemas.processor.map(p => ({
+                  id: p.id,
+                  name: p.name,
+                  component: p.component,
+                  type: p.type,
+                  schema: p.schema
+                }))}
+                availableInputs={allComponentSchemas.input.map(i => ({
+                  id: i.id,
+                  name: i.name,
+                  component: i.component,
+                  type: i.type,
+                  schema: i.schema
+                }))}
+                availableOutputs={allComponentSchemas.output.map(o => ({
+                  id: o.id,
+                  name: o.name,
+                  component: o.component,
+                  type: o.type,
+                  schema: o.schema
+                }))}
               />
             </div>
           </div>

@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/toast";
+import * as yaml from "js-yaml";
 
 // --- Custom Types Definition ---
 type NodeType = "input" | "processor" | "output";
@@ -294,32 +295,129 @@ function StreamBuilderContent({
     );
   };
 
+  const validateRequiredFields = useCallback((node: CustomNode): { isValid: boolean; missingFields: string[]; error?: string } => {
+    if (!node.data.componentId) {
+      return { isValid: false, missingFields: ['component selection'] };
+    }
+
+    const component = allComponentSchemas[node.type]?.find(c => c.id === node.data.componentId);
+    const schema = component?.schema || {};
+    const properties = schema.properties || {};
+    
+    // If component has no fields (like sync_response), it's valid
+    if (Object.keys(properties).length === 0) {
+      return { isValid: true, missingFields: [] };
+    }
+
+    // Parse the YAML config to check required fields
+    let configData: any = {};
+    if (node.data.configYaml && node.data.configYaml.trim()) {
+      try {
+        configData = yaml.load(node.data.configYaml) || {};
+      } catch (error) {
+        return { isValid: false, missingFields: [], error: 'Invalid YAML format' };
+      }
+    }
+
+    // Check required fields
+    const missingFields: string[] = [];
+    
+    // For flat components, check if there's any content in the YAML
+    if (schema.flat === true) {
+      // For flat components, if there's any valid YAML content, consider required fields satisfied
+      const hasContent = Object.keys(configData).length > 0 || 
+                        (Array.isArray(configData) && configData.length > 0) ||
+                        (typeof configData === 'string' && configData.trim().length > 0);
+      
+      if (!hasContent) {
+        // Find the first required field to report as missing
+        Object.entries(properties).forEach(([fieldKey, fieldSchema]) => {
+          if ((fieldSchema as any).required === true && missingFields.length === 0) {
+            missingFields.push(fieldKey);
+          }
+        });
+      }
+    } else {
+      // For non-flat components, check each required field individually
+      Object.entries(properties).forEach(([fieldKey, fieldSchema]) => {
+        if ((fieldSchema as any).required === true) {
+          const value = configData[fieldKey];
+          if (value === undefined || value === null || value === '') {
+            missingFields.push(fieldKey);
+          }
+        }
+      });
+    }
+
+    return { isValid: missingFields.length === 0, missingFields };
+  }, [allComponentSchemas]);
+
   const handleSave = useCallback(() => {
     const nodesToSave = nodes.map(n => n.data);
     const inputNode = nodes.find(n => n.type === 'input');
     const outputNode = nodes.find(n => n.type === 'output');
+    const processorNodes = nodes.filter(n => n.type === 'processor');
 
-    if (!name.trim()) { addToast({id: "name-req-toast", title: "Validation Error", description: "Stream Name is mandatory.", variant: "warning"}); return; }
-    if (!inputNode) { addToast({id: "input-req-toast", title: "Validation Error", description: "An Input node is mandatory.", variant: "warning" }); return; }
-    if (!outputNode) { addToast({id: "output-req-toast", title: "Validation Error", description: "An Output node is mandatory.", variant: "warning" }); return; }
+    // Basic validation
+    if (!name.trim()) { 
+      addToast({id: "name-req-toast", title: "Validation Error", description: "Stream Name is mandatory.", variant: "warning"}); 
+      return; 
+    }
+    if (!inputNode) { 
+      addToast({id: "input-req-toast", title: "Validation Error", description: "An Input node is mandatory.", variant: "warning" }); 
+      return; 
+    }
+    if (!outputNode) { 
+      addToast({id: "output-req-toast", title: "Validation Error", description: "An Output node is mandatory.", variant: "warning" }); 
+      return; 
+    }
 
-    // Validate input/output node config
-    const validateNode = (n: CustomNode) => {
-      if (!n.data.componentId) return false;
-      if (!n.data.configYaml || !n.data.configYaml.trim()) return false;
-      return true;
-    };
-    if (!validateNode(inputNode)) {
-      addToast({id: "input-config-toast", title: "Validation Error", description: "Input node must have a component selected and non-empty YAML config.", variant: "warning"});
+    // Validate input node required fields
+    const inputValidation = validateRequiredFields(inputNode);
+    if (!inputValidation.isValid) {
+      const errorMessage = inputValidation.error || 
+        `Missing required fields: ${inputValidation.missingFields.join(', ')}`;
+      addToast({
+        id: "input-validation-toast", 
+        title: "Input Validation Error", 
+        description: `Input node - ${errorMessage}`, 
+        variant: "warning"
+      });
       return;
     }
-    if (!validateNode(outputNode)) {
-      addToast({id: "output-config-toast", title: "Validation Error", description: "Output node must have a component selected and non-empty YAML config.", variant: "warning"});
+
+    // Validate output node required fields
+    const outputValidation = validateRequiredFields(outputNode);
+    if (!outputValidation.isValid) {
+      const errorMessage = outputValidation.error || 
+        `Missing required fields: ${outputValidation.missingFields.join(', ')}`;
+      addToast({
+        id: "output-validation-toast", 
+        title: "Output Validation Error", 
+        description: `Output node - ${errorMessage}`, 
+        variant: "warning"
+      });
       return;
+    }
+
+    // Validate processor nodes required fields
+    for (const processorNode of processorNodes) {
+      const processorValidation = validateRequiredFields(processorNode);
+      if (!processorValidation.isValid) {
+        const errorMessage = processorValidation.error || 
+          `Missing required fields: ${processorValidation.missingFields.join(', ')}`;
+        addToast({
+          id: "processor-validation-toast", 
+          title: "Processor Validation Error", 
+          description: `"${processorNode.data.label}" - ${errorMessage}`, 
+          variant: "warning"
+        });
+        return;
+      }
     }
 
     onSave({ name, status, nodes: nodesToSave });
-  }, [name, status, nodes, onSave, addToast]);
+  }, [name, status, nodes, onSave, addToast, validateRequiredFields]);
 
   return (
     <div className="flex flex-col h-[calc(100vh-10rem)] w-full">

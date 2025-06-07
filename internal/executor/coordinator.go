@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"regexp"
+	"slices"
 	"strconv"
 	"sync"
 
@@ -308,6 +309,12 @@ func (e *coordinatorExecutor) assignJob(ctx context.Context, worker persistence.
 		processorConfig := make(map[string]any)
 		if processor.Component == "mapping" {
 			processorConfig[processor.Component] = string(processor.Config)
+		} else if slices.Contains([]string{"catch", "switch"}, processor.Component) {
+			var catchProcessors []any
+			if err := yaml.Unmarshal(processor.Config, &catchProcessors); err != nil {
+				return err
+			}
+			processorConfig[processor.Component] = catchProcessors
 		} else {
 			processorConfig[processor.Component] = make(map[string]any)
 			if err := yaml.Unmarshal(processor.Config, processorConfig[processor.Component]); err != nil {

@@ -33,7 +33,7 @@ export function CodeEditor({
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     onChange(e.target.value);
-    console.log("Value changed:", e.target.value);
+    
   };
 
   // Handle tab key to insert spaces instead of changing focus
