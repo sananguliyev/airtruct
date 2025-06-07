@@ -109,9 +109,9 @@ export default function StreamsPage() {
           <DialogHeader className="flex-shrink-0">
             <DialogTitle>{previewStream?.name} - Visual Preview</DialogTitle>
           </DialogHeader>
-          <div className="flex-1 min-h-0 overflow-hidden">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             {/* Wrap lazy component in Suspense */}
-            <Suspense fallback={<div>Loading Preview...</div>}>
+            <Suspense fallback={<div className="flex items-center justify-center h-32">Loading Preview...</div>}>
               {previewStream && <StreamPreview stream={previewStream} />}
             </Suspense>
           </div>

@@ -15,7 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import Editor from "@monaco-editor/react";
+import { InlineYamlEditor } from "../inline-yaml-editor";
 
 const transformComponentSchemas = (): AllComponentSchemas => {
   const allSchemas: AllComponentSchemas = {
@@ -57,6 +57,7 @@ interface NodeData {
   label: string;
   type: "input" | "processor" | "output";
   component: string;
+  componentId: string; // Store the actual component ID for schema lookup
   config: string;
   status: string;
 }
@@ -84,6 +85,7 @@ export default function StreamPreview({ stream }: StreamPreviewProps) {
       label: stream.input_label || "Input",
       type: "input",
       component: getComponentDisplayName(stream.input_component, "input"),
+      componentId: stream.input_component,
       config: stream.input_config,
       status: stream.status,
     });
@@ -95,6 +97,7 @@ export default function StreamPreview({ stream }: StreamPreviewProps) {
           label: processor.label || "Processor",
           type: "processor",
           component: getComponentDisplayName(processor.component, "processor"),
+          componentId: processor.component,
           config: processor.config,
           status: stream.status,
         });
@@ -106,6 +109,7 @@ export default function StreamPreview({ stream }: StreamPreviewProps) {
       label: stream.output_label || "Output",
       type: "output",
       component: getComponentDisplayName(stream.output_component, "output"),
+      componentId: stream.output_component,
       config: stream.output_config,
       status: stream.status,
     });
@@ -119,16 +123,23 @@ export default function StreamPreview({ stream }: StreamPreviewProps) {
 
   const NodeCard = ({ node }: { node: NodeData }) => (
     <Card 
-      className="w-full mx-auto shadow-md"
+      className="w-full mx-auto shadow-md hover:shadow-lg transition-shadow border-border bg-card"
       style={{ 
-        minHeight: "60px",
-        maxWidth: "500px", 
-        minWidth: "240px" 
+        minHeight: "70px",
+        maxWidth: "480px", 
+        minWidth: "300px" 
       }}
     >
-      <CardHeader className="p-3 pb-1 flex-row justify-between items-center">
-        <CardTitle className="text-sm font-medium truncate">{node.label}</CardTitle>
-        <div className="flex items-center gap-2">
+      <CardHeader className="p-4 pb-2 flex-row justify-between items-start">
+        <div className="flex-1 min-w-0">
+          <CardTitle className="text-sm font-semibold truncate text-card-foreground">
+            {node.label}
+          </CardTitle>
+          <p className="text-xs text-muted-foreground mt-1 break-words">
+            {node.component}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0 ml-2">
           <Badge
             variant={
               node.status === "active"
@@ -143,12 +154,12 @@ export default function StreamPreview({ stream }: StreamPreviewProps) {
           >
             {node.status}
           </Badge>
-          {node.config && (
+          {node.config && node.config.trim() && (
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={() => handleViewConfig(node)}
-              className="h-6 w-6"
+              className="h-7 w-7 hover:bg-muted"
               title="View Configuration"
             >
               <Eye className="h-4 w-4" />
@@ -156,31 +167,38 @@ export default function StreamPreview({ stream }: StreamPreviewProps) {
           )}
         </div>
       </CardHeader>
-      <CardContent className="p-3 pt-0">
-        <p className="text-xs text-muted-foreground break-all">
-          {node.component}
-        </p>
-      </CardContent>
     </Card>
   );
 
   const renderSection = (type: "input" | "processor" | "output", labelText: string, nodes: NodeData[]) => (
     <div className="w-full">
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold text-center">{labelText}</h3>
-      </div>
       <div 
-        className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-4 bg-muted/10"
-        style={{ minHeight: "150px" }}
+        className="border-2 border-dashed border-border rounded-lg p-4 bg-card/50 relative"
+        style={{ minHeight: nodes.length === 0 ? "120px" : "auto" }}
       >
+        <div className="absolute -top-3 left-4 bg-background px-2 text-sm font-medium text-muted-foreground">
+          {labelText}
+        </div>
         {nodes.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+          <div className="flex items-center justify-center h-full text-muted-foreground text-sm min-h-[80px]">
             No {type} configured
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3 flex flex-col items-center">
             {nodes.map((node, index) => (
-              <NodeCard key={index} node={node} />
+              <React.Fragment key={index}>
+                <div className="w-full flex justify-center">
+                  <NodeCard node={node} />
+                </div>
+                {type === "processor" && index < nodes.length - 1 && (
+                  <div className="flex justify-center w-full">
+                    <div className="flex flex-col items-center">
+                      <div className="w-0.5 h-4 bg-border"></div>
+                      <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[6px] border-t-border"></div>
+                    </div>
+                  </div>
+                )}
+              </React.Fragment>
             ))}
           </div>
         )}
@@ -190,11 +208,29 @@ export default function StreamPreview({ stream }: StreamPreviewProps) {
 
   return (
     <>
-      <div className="flex flex-col h-full overflow-hidden">
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-2xl mx-auto space-y-6">
+      <div className="w-full">
+        <div className="p-6">
+          <div className="max-w-2xl mx-auto space-y-8">
             {renderSection("input", "Input", inputNodes)}
+            
+            {/* Connection arrow */}
+            <div className="flex justify-center">
+              <div className="flex flex-col items-center">
+                <div className="w-0.5 h-6 bg-border"></div>
+                <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-border"></div>
+              </div>
+            </div>
+            
             {renderSection("processor", "Pipeline", processorNodes)}
+            
+            {/* Connection arrow */}
+            <div className="flex justify-center">
+              <div className="flex flex-col items-center">
+                <div className="w-0.5 h-6 bg-border"></div>
+                <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-border"></div>
+              </div>
+            </div>
+            
             {renderSection("output", "Output", outputNodes)}
           </div>
         </div>
@@ -205,27 +241,48 @@ export default function StreamPreview({ stream }: StreamPreviewProps) {
         open={configDialog.open}
         onOpenChange={(open) => setConfigDialog({ open, node: null })}
       >
-        <DialogContent className="max-w-3xl h-[70vh]">
-          <DialogHeader>
-            <DialogTitle>
-              {configDialog.node?.label} - Configuration
+        <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
+            <DialogTitle className="text-lg font-semibold">
+              {configDialog.node?.label} - Configuration (Read-only)
             </DialogTitle>
           </DialogHeader>
-          <div className="flex-1 min-h-0">
-            <Editor 
-              height="100%"
-              language="yaml"
-              theme="vs-dark"
-              value={configDialog.node?.config || ""}
-              options={{
-                readOnly: true,
-                minimap: { enabled: false },
-                scrollBeyondLastLine: false,
-                fontSize: 13,
-                wordWrap: "on",
-                automaticLayout: true,
-              }}
-            />
+          <div className="flex-1 min-h-0 overflow-y-auto p-4 bg-muted/30 rounded-md border">
+                         {configDialog.node && (() => {
+               const component = componentSchemas[configDialog.node.type].find(
+                 (c) => c.id === configDialog.node?.componentId
+               );
+               
+               if (!component?.schema) {
+                 return (
+                   <div className="flex items-center justify-center h-32 text-muted-foreground">
+                     No configuration schema available for this component
+                   </div>
+                 );
+               }
+
+               if (!configDialog.node.config || !configDialog.node.config.trim()) {
+                 return (
+                   <div className="flex items-center justify-center h-32 text-muted-foreground">
+                     No configuration data available
+                   </div>
+                 );
+               }
+
+               return (
+                 <div className="pointer-events-none opacity-90">
+                   <InlineYamlEditor
+                     schema={component.schema}
+                     value={configDialog.node.config}
+                     onChange={() => {}} // Read-only - no-op function
+                     availableProcessors={componentSchemas.processor}
+                     availableInputs={componentSchemas.input}
+                     availableOutputs={componentSchemas.output}
+                     previewMode={true}
+                   />
+                 </div>
+               );
+             })()}
           </div>
         </DialogContent>
       </Dialog>

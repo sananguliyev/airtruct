@@ -1,0 +1,637 @@
+import React, { useState, useEffect, useMemo } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import * as yaml from "js-yaml";
+
+import { InlineYamlEditorProps, FieldState, FieldSchema } from "./types";
+import { getDefaultValue } from "./utils/defaults";
+import { useInternalState } from "./hooks/use-internal-state";
+import { 
+  convertOutputCasesToYaml,
+  convertOutputListToYaml,
+  convertInputListToYaml,
+  convertProcessorCasesToYaml,
+  convertYamlToOutputCases,
+  convertYamlToOutputList,
+  convertYamlToInputList,
+  convertYamlToProcessorCases
+} from "./utils/yaml-converter";
+import { 
+  TextInputField, 
+  KeyValueEditor,
+  OutputListEditor,
+  InputListEditor
+} from "./components";
+import { 
+  LazyOutputCasesEditor, 
+  LazyProcessorCasesEditor, 
+  LazyProcessorListEditor,
+  LazyCodeEditorField,
+  LazyObjectEditor,
+  LazyArrayEditor
+} from "./components/lazy-components";
+import { Suspense } from "react";
+
+export function InlineYamlEditor({ 
+  schema, 
+  value, 
+  onChange, 
+  availableProcessors = [], 
+  availableInputs = [], 
+  availableOutputs = [], 
+  previewMode = false 
+}: InlineYamlEditorProps) {
+  const [fieldStates, setFieldStates] = useState<Record<string, FieldState>>({});
+  const lastOutputRef = React.useRef<string>('');
+  
+  const {
+    internalProcessors,
+    setInternalProcessors,
+    internalInputs,
+    setInternalInputs,
+    internalOutputs,
+    setInternalOutputs,
+    internalOutputCases,
+    setInternalOutputCases,
+    internalProcessorCases,
+    setInternalProcessorCases,
+    isInternalUpdateRef
+  } = useInternalState();
+
+  const isFlat = schema.flat === true;
+  const actualSchema = schema.properties || {};
+  const flatFieldKey = isFlat ? Object.keys(actualSchema)[0] : null;
+  const flatFieldSchema = flatFieldKey ? actualSchema[flatFieldKey] : null;
+
+  useEffect(() => {
+    if (isFlat) return;
+
+    const initialStates: Record<string, FieldState> = {};
+    let existingData: any = {};
+
+    if (value && value.trim()) {
+      try {
+        existingData = yaml.load(value) || {};
+      } catch (error) {
+        console.warn("Failed to parse existing YAML:", error);
+      }
+    }
+
+    Object.entries(actualSchema).forEach(([fieldKey, fieldSchema]) => {
+      const hasExistingValue = existingData.hasOwnProperty(fieldKey);
+      const isRequired = fieldSchema.required === true;
+      
+      let initialValue = hasExistingValue 
+        ? existingData[fieldKey] 
+        : getDefaultValue(fieldSchema);
+      
+      if (hasExistingValue && Array.isArray(existingData[fieldKey])) {
+        if (fieldSchema.type === "output_cases") {
+          initialValue = convertYamlToOutputCases(existingData[fieldKey], availableOutputs);
+          setInternalOutputCases(initialValue);
+        } else if (fieldSchema.type === "output_list") {
+          initialValue = convertYamlToOutputList(existingData[fieldKey], availableOutputs);
+          setInternalOutputs(initialValue);
+        } else if (fieldSchema.type === "input_list") {
+          initialValue = convertYamlToInputList(existingData[fieldKey], availableInputs);
+          setInternalInputs(initialValue);
+        } else if (fieldSchema.type === "processor_cases") {
+          initialValue = convertYamlToProcessorCases(existingData[fieldKey], availableProcessors);
+          setInternalProcessorCases(initialValue);
+        }
+      }
+      
+      initialStates[fieldKey] = {
+        enabled: isRequired || hasExistingValue,
+        value: initialValue
+      };
+    });
+
+    setFieldStates(prev => {
+      const hasChanges = Object.keys(initialStates).some(key => 
+        !prev[key] || 
+        prev[key].enabled !== initialStates[key].enabled ||
+        JSON.stringify(prev[key].value) !== JSON.stringify(initialStates[key].value)
+      );
+      
+      if (hasChanges || Object.keys(prev).length !== Object.keys(initialStates).length) {
+        return initialStates;
+      }
+      
+      return prev;
+    });
+  }, [actualSchema, value, isFlat]);
+
+  const yamlOutput = useMemo(() => {
+    if (isFlat) return value || '';
+
+    const data: any = {};
+    
+    Object.entries(fieldStates).forEach(([fieldKey, state]) => {
+      if (state.enabled && state.value !== undefined) {
+        const fieldSchema = actualSchema[fieldKey];
+        
+        if (fieldSchema?.type === "output_cases") {
+          const sourceValue = internalOutputCases.length > 0 ? internalOutputCases : state.value;
+          const validCases = convertOutputCasesToYaml(sourceValue, availableOutputs);
+          data[fieldKey] = validCases;
+        } else if (fieldSchema?.type === "output_list") {
+          const sourceValue = internalOutputs.length > 0 ? internalOutputs : state.value;
+          const validOutputs = convertOutputListToYaml(sourceValue, availableOutputs);
+          data[fieldKey] = validOutputs;
+        } else if (fieldSchema?.type === "input_list") {
+          const sourceValue = internalInputs.length > 0 ? internalInputs : state.value;
+          const validInputs = convertInputListToYaml(sourceValue, availableInputs);
+          data[fieldKey] = validInputs;
+        } else if (fieldSchema?.type === "processor_cases") {
+          const sourceValue = internalProcessorCases.length > 0 ? internalProcessorCases : state.value;
+          const validCases = convertProcessorCasesToYaml(sourceValue, availableProcessors);
+          data[fieldKey] = validCases;
+        } else {
+          data[fieldKey] = state.value;
+        }
+      }
+    });
+
+    if (Object.keys(data).length === 0) {
+      return '';
+    }
+
+    try {
+      return yaml.dump(data, { 
+        indent: 2,
+        lineWidth: -1,
+        noRefs: true,
+        quotingType: '"',
+        forceQuotes: false
+      });
+    } catch (error) {
+      console.error("Failed to generate YAML:", error);
+      return '';
+    }
+  }, [fieldStates, isFlat, value, internalOutputCases, internalOutputs, internalInputs, internalProcessorCases, availableOutputs, availableInputs, availableProcessors, actualSchema]);
+
+  useEffect(() => {
+    if (isFlat) return;
+
+    if (lastOutputRef.current === yamlOutput) return;
+
+    let currentData: any = {};
+    let newData: any = {};
+
+    try {
+      if (value && value.trim()) {
+        currentData = yaml.load(value) || {};
+      }
+      if (yamlOutput && yamlOutput.trim()) {
+        newData = yaml.load(yamlOutput) || {};
+      }
+    } catch (error) {
+      if (yamlOutput !== value && lastOutputRef.current !== yamlOutput) {
+        lastOutputRef.current = yamlOutput;
+        onChange(yamlOutput);
+      }
+      return;
+    }
+
+    if (JSON.stringify(currentData) !== JSON.stringify(newData)) {
+      lastOutputRef.current = yamlOutput;
+      onChange(yamlOutput);
+    }
+  }, [yamlOutput, value, isFlat]);
+
+
+
+  const updateFieldState = (fieldKey: string, updates: Partial<FieldState>) => {
+    setFieldStates(prev => ({
+      ...prev,
+      [fieldKey]: { ...prev[fieldKey], ...updates }
+    }));
+  };
+
+  const renderValueInput = (fieldSchema: FieldSchema, state: FieldState, handleValueChange: (value: any) => void) => {
+    const inputStyle = {
+      fontFamily: 'monospace',
+      fontSize: '13px',
+      color: '#22c55e',
+      backgroundColor: '#2a2a2a',
+      border: '1px solid #404040',
+    };
+
+    const inputClassName = "h-6 text-sm p-1 focus-visible:ring-1 focus-visible:ring-green-500 focus-visible:border-green-500";
+
+    switch (fieldSchema.type) {
+      case "input":
+        return (
+          <TextInputField
+            value={state.value || ""}
+            onChange={handleValueChange}
+            previewMode={previewMode}
+            placeholder="Enter value..."
+          />
+        );
+
+      case "number":
+        return (
+          <Input
+            type="number"
+            value={state.value || 0}
+            onChange={(e) => handleValueChange(Number(e.target.value))}
+            className={inputClassName}
+            style={inputStyle}
+          />
+        );
+
+      case "bool":
+        return (
+          <div className="flex items-center">
+            <Switch
+              checked={state.value || false}
+              onCheckedChange={handleValueChange}
+              className="scale-75"
+            />
+            <span 
+              className="ml-2" 
+              style={{ 
+                fontFamily: 'monospace',
+                fontSize: '13px',
+                color: '#22c55e'
+              }}
+            >
+              {state.value ? 'true' : 'false'}
+            </span>
+          </div>
+        );
+
+      case "select":
+        return (
+          <Select value={state.value || ""} onValueChange={handleValueChange}>
+            <SelectTrigger 
+              className="h-6 text-sm w-auto min-w-[100px] focus-visible:ring-1 focus-visible:ring-green-500"
+              style={{
+                ...inputStyle,
+                color: '#22c55e'
+              }}
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {fieldSchema.options?.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
+
+      case "code":
+        return (
+          <Suspense fallback={<div className="text-xs text-gray-400">Loading...</div>}>
+            <LazyCodeEditorField value={state.value || ""} onChange={handleValueChange} previewMode={previewMode} />
+          </Suspense>
+        );
+
+      case "key_value":
+        return <KeyValueEditor value={state.value || {}} updateValue={handleValueChange} previewMode={previewMode} />;
+
+      case "array":
+        return (
+          <Suspense fallback={<div className="text-xs text-gray-400">Loading...</div>}>
+            <LazyArrayEditor value={state.value || []} updateValue={handleValueChange} previewMode={previewMode} />
+          </Suspense>
+        );
+
+      case "object":
+        return (
+          <Suspense fallback={<div className="text-xs text-gray-400">Loading...</div>}>
+            <LazyObjectEditor 
+              value={state.value || {}} 
+              updateValue={handleValueChange} 
+              fieldSchema={fieldSchema}
+              previewMode={previewMode} 
+            />
+          </Suspense>
+        );
+
+      case "processor_list":
+        return (
+          <Suspense fallback={<div className="text-xs text-gray-400">Loading...</div>}>
+            <LazyProcessorListEditor 
+              value={state.value || []} 
+              updateValue={handleValueChange} 
+              availableProcessors={availableProcessors}
+              availableInputs={availableInputs}
+              availableOutputs={availableOutputs}
+              previewMode={previewMode} 
+            />
+          </Suspense>
+        );
+
+      case "output_cases":
+        return (
+          <Suspense fallback={<div className="text-xs text-gray-400">Loading...</div>}>
+            <LazyOutputCasesEditor 
+              value={state.value || []} 
+              updateValue={handleValueChange} 
+              availableOutputs={availableOutputs}
+              availableProcessors={availableProcessors}
+              availableInputs={availableInputs}
+              internalValue={internalOutputCases}
+              setInternalValue={setInternalOutputCases}
+              isInternalUpdateRef={isInternalUpdateRef}
+              previewMode={previewMode} 
+            />
+          </Suspense>
+        );
+
+      case "output_list":
+        return (
+          <OutputListEditor 
+            value={state.value || []} 
+            updateValue={handleValueChange} 
+            availableOutputs={availableOutputs}
+            availableProcessors={availableProcessors}
+            availableInputs={availableInputs}
+            previewMode={previewMode} 
+          />
+        );
+
+      case "input_list":
+        return (
+          <InputListEditor 
+            value={state.value || []} 
+            updateValue={handleValueChange} 
+            availableInputs={availableInputs}
+            availableProcessors={availableProcessors}
+            availableOutputs={availableOutputs}
+            previewMode={previewMode} 
+          />
+        );
+
+      case "processor_cases":
+        return (
+          <Suspense fallback={<div className="text-xs text-gray-400">Loading...</div>}>
+            <LazyProcessorCasesEditor 
+              value={state.value || []} 
+              updateValue={handleValueChange} 
+              availableProcessors={availableProcessors}
+              availableInputs={availableInputs}
+              availableOutputs={availableOutputs}
+              previewMode={previewMode} 
+            />
+          </Suspense>
+        );
+
+      default:
+        return (
+          <TextInputField
+            value={String(state.value || "")}
+            onChange={handleValueChange}
+            previewMode={previewMode}
+            placeholder="Enter value..."
+          />
+        );
+    }
+  };
+
+  const renderInlineField = (fieldKey: string, fieldSchema: FieldSchema) => {
+    const state = fieldStates[fieldKey];
+    const isRequired = fieldSchema.required === true;
+
+    if (!state) return null;
+    
+    // In preview mode, hide non-selected fields
+    if (previewMode && !state.enabled) return null;
+
+    const handleValueChange = (newValue: any) => {
+      updateFieldState(fieldKey, { value: newValue });
+    };
+
+    return (
+      <div key={fieldKey} className="flex items-center space-x-2 py-1">
+        {!previewMode && (
+          <Checkbox
+            checked={state.enabled}
+            disabled={isRequired}
+            onCheckedChange={(checked) => 
+              updateFieldState(fieldKey, { enabled: checked as boolean })
+            }
+            className="h-4 w-4"
+          />
+        )}
+        <span 
+          className="min-w-0" 
+          style={{ 
+            fontFamily: 'monospace',
+            fontSize: '13px',
+            color: state.enabled ? '#e5e7eb' : '#6b7280'
+          }}
+        >
+          {fieldKey}:
+        </span>
+        {state.enabled && (
+          <div className="flex-1 min-w-0">
+            {renderValueInput(fieldSchema, state, handleValueChange)}
+          </div>
+        )}
+        {!previewMode && isRequired && (
+          <span className="text-red-500 text-xs">*</span>
+        )}
+      </div>
+    );
+  };
+
+  const getCurrentValue = (): any[] | string => {
+    if (flatFieldSchema?.type === "processor_list") {
+      if (!value || !value.trim()) return [];
+      try {
+        const parsedYaml = yaml.load(value) || [];
+        
+        if (Array.isArray(parsedYaml)) {
+          return parsedYaml.map(proc => {
+            if (typeof proc === 'object' && proc !== null) {
+              const componentName = Object.keys(proc)[0];
+              const config = proc[componentName];
+              const processorSchema = availableProcessors.find(p => p.component === componentName);
+              
+              if (processorSchema?.schema?.flat) {
+                return {
+                  componentId: processorSchema?.id || componentName,
+                  component: componentName,
+                  configYaml: typeof config === 'string' ? config : (config ? yaml.dump(config) : "")
+                };
+                              } else {
+                  return {
+                  componentId: processorSchema?.id || componentName,
+                  component: componentName,
+                  configYaml: config ? yaml.dump(config) : ""
+                };
+              }
+            }
+            return { componentId: "", component: "", configYaml: "" };
+          });
+        }
+        
+        return [];
+      } catch (error) {
+        console.warn("Failed to parse processor list YAML:", error);
+        return [];
+      }
+    } else if (flatFieldSchema?.type === "processor_cases") {
+      if (!value || !value.trim()) return [];
+      try {
+        const parsedYaml = yaml.load(value) || [];
+        if (Array.isArray(parsedYaml)) {
+          return convertYamlToProcessorCases(parsedYaml, availableProcessors);
+        }
+        return [];
+      } catch (error) {
+        console.warn("Failed to parse processor cases YAML:", error);
+        return [];
+      }
+    }
+    return value || "";
+  };
+
+  if (isFlat && flatFieldKey && flatFieldSchema) {
+    const handleFlatValueChange = (newValue: string | any[]) => {
+      if (typeof newValue === 'string') {
+        onChange(newValue);
+      } else if (flatFieldSchema.type === "processor_list") {
+        try {
+          const processorsForYaml = newValue
+            .filter(proc => {
+              if (!proc.componentId || !proc.component || !proc.configYaml || !proc.configYaml.trim()) {
+                return false;
+              }
+              
+              const selectedProcessor = availableProcessors.find(p => p.id === proc.componentId);
+              if (selectedProcessor?.schema?.flat) {
+                return proc.configYaml.trim().length > 0;
+              } else {
+                try {
+                  const config = yaml.load(proc.configYaml);
+                  return config && typeof config === 'object' && Object.keys(config).length > 0;
+                } catch {
+                  return false;
+                }
+              }
+            })
+            .map(proc => {
+              const selectedProcessor = availableProcessors.find(p => p.id === proc.componentId);
+              
+              if (selectedProcessor?.schema?.flat) {
+                return { [proc.component]: proc.configYaml.trim() };
+              } else {
+                const processorObj: any = { [proc.component]: {} };
+                try {
+                  const config = yaml.load(proc.configYaml) || {};
+                  processorObj[proc.component] = config;
+                } catch (error) {
+                  console.warn("Failed to parse processor config YAML:", error);
+                  processorObj[proc.component] = {};
+                }
+                return processorObj;
+              }
+            });
+          
+          const yamlOutput = processorsForYaml.length > 0 ? yaml.dump(processorsForYaml, {
+            lineWidth: -1,
+            noRefs: true,
+            quotingType: '"',
+            forceQuotes: false
+          }) : "";
+          onChange(yamlOutput);
+        } catch (error) {
+          console.warn("Failed to convert processor list to YAML:", error);
+          onChange("");
+        }
+      } else if (flatFieldSchema.type === "processor_cases") {
+        try {
+          const validCases = convertProcessorCasesToYaml(newValue, availableProcessors);
+          const yamlOutput = validCases.length > 0 ? yaml.dump(validCases, {
+            lineWidth: -1,
+            noRefs: true,
+            quotingType: '"',
+            forceQuotes: false
+          }) : "";
+          onChange(yamlOutput);
+        } catch (error) {
+          console.warn("Failed to convert processor cases to YAML:", error);
+          onChange("");
+        }
+      }
+    };
+
+    return (
+      <div 
+        className="font-mono text-sm p-4 bg-gray-900 text-gray-100 rounded-md border"
+        style={{ 
+          backgroundColor: '#1e1e1e',
+          border: '1px solid #333',
+          lineHeight: '1.5'
+        }}
+      >
+        <div className="space-y-2">
+          <span className="text-sm text-gray-400">{flatFieldSchema.title || flatFieldKey}</span>
+          {flatFieldSchema.type === "code" ? (
+            <Suspense fallback={<div className="text-xs text-gray-400">Loading...</div>}>
+              <LazyCodeEditorField value={value || ""} onChange={handleFlatValueChange as (value: string) => void} previewMode={previewMode} />
+            </Suspense>
+          ) : flatFieldSchema.type === "processor_list" ? (
+            <Suspense fallback={<div className="text-xs text-gray-400">Loading...</div>}>
+              <LazyProcessorListEditor 
+                value={Array.isArray(getCurrentValue()) ? getCurrentValue() as any[] : []} 
+                updateValue={handleFlatValueChange as (value: any[]) => void}
+                availableProcessors={availableProcessors}
+                previewMode={previewMode}
+              />
+            </Suspense>
+          ) : flatFieldSchema.type === "processor_cases" ? (
+            <Suspense fallback={<div className="text-xs text-gray-400">Loading...</div>}>
+              <LazyProcessorCasesEditor 
+                value={Array.isArray(getCurrentValue()) ? getCurrentValue() as any[] : []} 
+                updateValue={handleFlatValueChange as (value: any[]) => void}
+                availableProcessors={availableProcessors}
+                previewMode={previewMode}
+              />
+            </Suspense>
+          ) : (
+            <TextInputField
+              value={value || ""}
+              onChange={handleFlatValueChange as (value: string) => void}
+              previewMode={previewMode}
+              placeholder={flatFieldSchema.description}
+            />
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div 
+      className="font-mono text-sm p-4 bg-gray-900 text-gray-100 rounded-md border"
+      style={{ 
+        backgroundColor: '#1e1e1e',
+        border: '1px solid #333',
+        lineHeight: '1.5'
+      }}
+    >
+      <div className="space-y-1">
+        {Object.entries(actualSchema).map(([fieldKey, fieldSchema]) =>
+          renderInlineField(fieldKey, fieldSchema)
+        )}
+      </div>
+    </div>
+  );
+} 
