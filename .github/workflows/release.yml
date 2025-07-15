@@ -6,8 +6,22 @@ on:
       - 'v*'
 
 jobs:
-  goreleaser:
+  release:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        build_group:
+          - "linux-amd64"
+          - "linux-arm64"  
+          - "linux-arm"
+          - "darwin-amd64"
+          - "darwin-arm64"
+          - "windows-amd64"
+          - "windows-arm64"
+          - "freebsd-amd64"
+          - "freebsd-arm64"
+          - "openbsd-amd64"
+          - "openbsd-arm64"
     steps:
     - name: Check Out Repo
       uses: actions/checkout@v4
@@ -18,11 +32,119 @@ jobs:
         go-version: 1.24.x
         check-latest: true
 
-    - name: GoReleaser
-      uses: goreleaser/goreleaser-action@v6
+    - name: Build UI assets
+      run: |
+        cd ui
+        npm install -g pnpm
+        pnpm install
+        pnpm run build
+        cd ..
+        go run github.com/rakyll/statik -src=ui/dist -dest=internal/.
+
+    - name: Set build environment
+      run: |
+        case "${{ matrix.build_group }}" in
+          "linux-amd64")
+            echo "GOOS=linux" >> $GITHUB_ENV
+            echo "GOARCH=amd64" >> $GITHUB_ENV
+            ;;
+          "linux-arm64")
+            echo "GOOS=linux" >> $GITHUB_ENV
+            echo "GOARCH=arm64" >> $GITHUB_ENV
+            ;;
+          "linux-arm")
+            echo "GOOS=linux" >> $GITHUB_ENV
+            echo "GOARCH=arm" >> $GITHUB_ENV
+            echo "GOARM=7" >> $GITHUB_ENV
+            ;;
+          "darwin-amd64")
+            echo "GOOS=darwin" >> $GITHUB_ENV
+            echo "GOARCH=amd64" >> $GITHUB_ENV
+            ;;
+          "darwin-arm64")
+            echo "GOOS=darwin" >> $GITHUB_ENV
+            echo "GOARCH=arm64" >> $GITHUB_ENV
+            ;;
+          "windows-amd64")
+            echo "GOOS=windows" >> $GITHUB_ENV
+            echo "GOARCH=amd64" >> $GITHUB_ENV
+            ;;
+          "windows-arm64")
+            echo "GOOS=windows" >> $GITHUB_ENV
+            echo "GOARCH=arm64" >> $GITHUB_ENV
+            ;;
+          "freebsd-amd64")
+            echo "GOOS=freebsd" >> $GITHUB_ENV
+            echo "GOARCH=amd64" >> $GITHUB_ENV
+            ;;
+          "freebsd-arm64")
+            echo "GOOS=freebsd" >> $GITHUB_ENV
+            echo "GOARCH=arm64" >> $GITHUB_ENV
+            ;;
+          "openbsd-amd64")
+            echo "GOOS=openbsd" >> $GITHUB_ENV
+            echo "GOARCH=amd64" >> $GITHUB_ENV
+            ;;
+          "openbsd-arm64")
+            echo "GOOS=openbsd" >> $GITHUB_ENV
+            echo "GOARCH=arm64" >> $GITHUB_ENV
+            ;;
+        esac
+
+    - name: Build binary
+      run: |
+        mkdir -p dist
+        BINARY_NAME="airtruct"
+        if [ "$GOOS" = "windows" ]; then
+          BINARY_NAME="${BINARY_NAME}.exe"
+        fi
+        
+        CGO_ENABLED=0 go build \
+          -ldflags="-s -w -X main.Version=${{ github.ref_name }} -X main.DateBuilt=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+          -o "dist/${BINARY_NAME}" \
+          ./cmd/airtruct
+
+    - name: Create archive
+      run: |
+        cd dist
+        ARCHIVE_NAME="airtruct_${{ github.ref_name }}_${GOOS}_${GOARCH}"
+        if [ -n "$GOARM" ]; then
+          ARCHIVE_NAME="${ARCHIVE_NAME}v${GOARM}"
+        fi
+        
+        if [ "$GOOS" = "windows" ]; then
+          zip -r "${ARCHIVE_NAME}.zip" airtruct.exe ../README.md ../LICENSE
+        else
+          tar -czf "${ARCHIVE_NAME}.tar.gz" airtruct -C .. README.md LICENSE
+        fi
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
       with:
-        version: latest
-        args: release --timeout 120m
+        name: airtruct-${{ matrix.build_group }}
+        path: dist/*.tar.gz dist/*.zip
+        retention-days: 1
+
+  create-release:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check Out Repo
+      uses: actions/checkout@v4
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts/
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: artifacts/**/*
+        tag_name: ${{ github.ref_name }}
+        name: Release ${{ github.ref_name }}
+        draft: false
+        prerelease: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
