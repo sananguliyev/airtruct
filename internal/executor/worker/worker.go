@@ -1,13 +1,10 @@
-package executor
+package worker
 
 import (
 	"context"
 
-	"github.com/sananguliyev/airtruct/internal/executor/worker"
 	"github.com/sananguliyev/airtruct/internal/persistence"
 )
-
-type IngestResult = worker.IngestResult
 
 type WorkerExecutor interface {
 	JoinToCoordinator(context.Context) error
@@ -22,47 +19,55 @@ type WorkerExecutor interface {
 }
 
 type workerExecutor struct {
-	worker worker.WorkerExecutor
+	coordinatorConnection CoordinatorConnection
+	streamManager         StreamManager
+	streamQueue           StreamQueue
 }
 
 func NewWorkerExecutor(discoveryUri string, grpcPort uint32) WorkerExecutor {
+	coordinatorConnection := NewCoordinatorConnection(discoveryUri, grpcPort)
+
+	streamManager := NewStreamManager(coordinatorConnection)
+
+	streamQueue := NewStreamQueue(streamManager)
+
 	return &workerExecutor{
-		worker: worker.NewWorkerExecutor(discoveryUri, grpcPort),
+		coordinatorConnection: coordinatorConnection,
+		streamManager:         streamManager,
+		streamQueue:           streamQueue,
 	}
 }
 
 func (e *workerExecutor) JoinToCoordinator(ctx context.Context) error {
-	return e.worker.JoinToCoordinator(ctx)
+	return e.coordinatorConnection.JoinToCoordinator(ctx)
 }
 
 func (e *workerExecutor) LeaveCoordinator(ctx context.Context) error {
-	return e.worker.LeaveCoordinator(ctx)
+	return e.coordinatorConnection.LeaveCoordinator(ctx)
 }
 
 func (e *workerExecutor) AddStreamToQueue(ctx context.Context, workerStreamID int64, config string) error {
-	return e.worker.AddStreamToQueue(ctx, workerStreamID, config)
+	return e.streamQueue.AddStreamToQueue(workerStreamID, config)
 }
 
 func (e *workerExecutor) FetchWorkerStreamStatus(ctx context.Context, workerStreamID int64) (*persistence.WorkerStreamStatus, error) {
-	return e.worker.FetchWorkerStreamStatus(ctx, workerStreamID)
+	return e.streamManager.GetStreamStatus(workerStreamID)
 }
 
 func (e *workerExecutor) DeleteWorkerStream(ctx context.Context, workerStreamID int64) error {
-	return e.worker.DeleteWorkerStream(ctx, workerStreamID)
+	return e.streamManager.DeleteStream(workerStreamID)
 }
 
 func (e *workerExecutor) ShipLogs(ctx context.Context) {
-	e.worker.ShipLogs(ctx)
 }
 
 func (e *workerExecutor) ShipMetrics(ctx context.Context) {
-	e.worker.ShipMetrics(ctx)
 }
 
 func (e *workerExecutor) ConsumeStreamQueue(ctx context.Context) {
-	e.worker.ConsumeStreamQueue(ctx)
+	e.streamQueue.ConsumeStreamQueue(ctx)
 }
 
 func (e *workerExecutor) IngestData(ctx context.Context, workerStreamID int64, method, path, contentType string, payload []byte) (*IngestResult, error) {
-	return e.worker.IngestData(ctx, workerStreamID, method, path, contentType, payload)
+	return e.streamManager.IngestData(workerStreamID, method, path, contentType, payload)
 }
