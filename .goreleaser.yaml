@@ -1,7 +1,7 @@
 version: 2
 builds:
   - id: airtruct
-    main: cmd/airtruct/main.go
+    main: ./cmd/airtruct
     binary: airtruct
     goos: [ windows, darwin, linux, freebsd, openbsd ]
     goarch: [ amd64, arm, arm64 ]
@@ -22,7 +22,8 @@ builds:
 archives:
   - id: airtruct
     builds: [ airtruct ]
-    format: tar.gz
+    formats:
+      - tar.gz
     files:
       - README.md
       - LICENSE
