@@ -1,0 +1,60 @@
+package coordinator
+
+import (
+	"context"
+
+	"github.com/rs/zerolog/log"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/protobuf/types/known/timestamppb"
+
+	"github.com/sananguliyev/airtruct/internal/persistence"
+	pb "github.com/sananguliyev/airtruct/internal/protogen"
+)
+
+func (c *CoordinatorAPI) CreateSecret(_ context.Context, in *pb.SecretRequest) (*pb.CommonResponse, error) {
+	if err := in.Validate(); err != nil {
+		log.Debug().Err(err).Msg("Invalid request")
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	encryptedValue, err := c.aesgcm.Encrypt(in.GetValue())
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to encrypt secret")
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	secret := &persistence.Secret{
+		Key:            in.GetKey(),
+		EncryptedValue: encryptedValue,
+	}
+
+	if err := c.secretRepo.Create(secret); err != nil {
+		log.Error().Err(err).Msg("Failed to create secret")
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &pb.CommonResponse{Message: "Secret has been created successfully"}, nil
+}
+
+func (c *CoordinatorAPI) ListSecrets(_ context.Context, _ *emptypb.Empty) (*pb.ListSecretsResponse, error) {
+	secrets, err := c.secretRepo.List()
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to list secrets")
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	result := &pb.ListSecretsResponse{
+		Data: make([]*pb.Secret, len(secrets)),
+	}
+
+	for i, secret := range secrets {
+		result.Data[i] = &pb.Secret{
+			Key:       secret.Key,
+			CreatedAt: timestamppb.New(secret.CreatedAt),
+		}
+	}
+
+	return result, nil
+}

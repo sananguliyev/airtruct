@@ -88,6 +88,15 @@ message MetricsRequest {
   map<string, uint64> output_events_by_component = 7;
 }
 
+message SecretRequest {
+  string key = 1;
+  string value = 2;
+}
+
+message ListSecretsResponse {
+  repeated Secret data = 1;
+}
+
 service Coordinator {
   // Worker stream methods
   rpc UpdateWorkerStreamStatus(WorkerStreamStatusRequest) returns (CommonResponse) {}
@@ -121,6 +130,19 @@ service Coordinator {
   rpc UpdateStream(Stream) returns (StreamResponse) {
     option (google.api.http) = {
       put: "/v0/streams/{id}",
+      body: "*"
+    };
+  }
+
+  // Secret methods
+  rpc ListSecrets(google.protobuf.Empty) returns (ListSecretsResponse) {
+    option (google.api.http) = {
+      get: "/v0/secrets",
+    };
+  }
+  rpc CreateSecret(SecretRequest) returns (CommonResponse) {
+    option (google.api.http) = {
+      post: "/v0/secrets",
       body: "*"
     };
   }

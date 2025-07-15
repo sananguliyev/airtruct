@@ -29,10 +29,5 @@
   "include": [
     "src",
     "vite.config.js"
-  ],
-  "references": [
-    {
-      "path": "./tsconfig.node.json"
-    }
   ]
 }

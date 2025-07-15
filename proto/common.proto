@@ -79,3 +79,8 @@ message Stream {
   repeated Processor processors = 14 [json_name = "processors"];
   bool is_http_server = 15 [json_name = "is_http_server"];
 }
+
+message Secret {
+  string key = 1 [json_name = "key"];
+  google.protobuf.Timestamp created_at = 2 [ json_name = "created_at" ];
+}

@@ -279,6 +279,58 @@ func (x *Stream) GetIsHttpServer() bool {
 	return false
 }
 
+type Secret struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=created_at,proto3" json:"created_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Secret) Reset() {
+	*x = Secret{}
+	mi := &file_common_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Secret) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Secret) ProtoMessage() {}
+
+func (x *Secret) ProtoReflect() protoreflect.Message {
+	mi := &file_common_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Secret.ProtoReflect.Descriptor instead.
+func (*Secret) Descriptor() ([]byte, []int) {
+	return file_common_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *Secret) GetKey() string {
+	if x != nil {
+		return x.Key
+	}
+	return ""
+}
+
+func (x *Secret) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
 type Stream_Processor struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Label         string                 `protobuf:"bytes,1,opt,name=label,proto3" json:"label,omitempty"`
@@ -290,7 +342,7 @@ type Stream_Processor struct {
 
 func (x *Stream_Processor) Reset() {
 	*x = Stream_Processor{}
-	mi := &file_common_proto_msgTypes[2]
+	mi := &file_common_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -302,7 +354,7 @@ func (x *Stream_Processor) String() string {
 func (*Stream_Processor) ProtoMessage() {}
 
 func (x *Stream_Processor) ProtoReflect() protoreflect.Message {
-	mi := &file_common_proto_msgTypes[2]
+	mi := &file_common_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -394,7 +446,12 @@ const file_common_proto_rawDesc = "" +
 	"\x06config\x18\x03 \x01(\tR\x06configB\f\n" +
 	"\n" +
 	"_parent_idB\r\n" +
-	"\v_updated_at*\x98\x01\n" +
+	"\v_updated_at\"V\n" +
+	"\x06Secret\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12:\n" +
+	"\n" +
+	"created_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"created_at*\x98\x01\n" +
 	"\x12WorkerStreamStatus\x12\x18\n" +
 	"\awaiting\x10\x00\x1a\v\x92\x82\x19\awaiting\x12\x18\n" +
 	"\arunning\x10\x01\x1a\v\x92\x82\x19\arunning\x12\x18\n" +
@@ -417,25 +474,27 @@ func file_common_proto_rawDescGZIP() []byte {
 }
 
 var file_common_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_common_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_common_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_common_proto_goTypes = []any{
 	(WorkerStreamStatus)(0),               // 0: protorender.WorkerStreamStatus
 	(*CommonResponse)(nil),                // 1: protorender.CommonResponse
 	(*Stream)(nil),                        // 2: protorender.Stream
-	(*Stream_Processor)(nil),              // 3: protorender.Stream.Processor
-	(*timestamppb.Timestamp)(nil),         // 4: google.protobuf.Timestamp
-	(*descriptorpb.EnumValueOptions)(nil), // 5: google.protobuf.EnumValueOptions
+	(*Secret)(nil),                        // 3: protorender.Secret
+	(*Stream_Processor)(nil),              // 4: protorender.Stream.Processor
+	(*timestamppb.Timestamp)(nil),         // 5: google.protobuf.Timestamp
+	(*descriptorpb.EnumValueOptions)(nil), // 6: google.protobuf.EnumValueOptions
 }
 var file_common_proto_depIdxs = []int32{
-	4, // 0: protorender.Stream.created_at:type_name -> google.protobuf.Timestamp
-	4, // 1: protorender.Stream.updated_at:type_name -> google.protobuf.Timestamp
-	3, // 2: protorender.Stream.processors:type_name -> protorender.Stream.Processor
-	5, // 3: protorender.string_value:extendee -> google.protobuf.EnumValueOptions
-	4, // [4:4] is the sub-list for method output_type
-	4, // [4:4] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	3, // [3:4] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	5, // 0: protorender.Stream.created_at:type_name -> google.protobuf.Timestamp
+	5, // 1: protorender.Stream.updated_at:type_name -> google.protobuf.Timestamp
+	4, // 2: protorender.Stream.processors:type_name -> protorender.Stream.Processor
+	5, // 3: protorender.Secret.created_at:type_name -> google.protobuf.Timestamp
+	6, // 4: protorender.string_value:extendee -> google.protobuf.EnumValueOptions
+	5, // [5:5] is the sub-list for method output_type
+	5, // [5:5] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	4, // [4:5] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_common_proto_init() }
@@ -450,7 +509,7 @@ func file_common_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_proto_rawDesc), len(file_common_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   3,
+			NumMessages:   4,
 			NumExtensions: 1,
 			NumServices:   0,
 		},

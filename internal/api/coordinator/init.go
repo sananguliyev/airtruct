@@ -4,6 +4,7 @@ import (
 	pb "github.com/sananguliyev/airtruct/internal/protogen"
 
 	"github.com/sananguliyev/airtruct/internal/persistence"
+	"github.com/sananguliyev/airtruct/internal/vault"
 )
 
 type CoordinatorAPI struct {
@@ -12,6 +13,8 @@ type CoordinatorAPI struct {
 	workerRepo       persistence.WorkerRepository
 	streamRepo       persistence.StreamRepository
 	workerStreamRepo persistence.WorkerStreamRepository
+	secretRepo       persistence.SecretRepository
+	aesgcm           *vault.AESGCM
 }
 
 func NewCoordinatorAPI(
@@ -19,11 +22,15 @@ func NewCoordinatorAPI(
 	streamRepo persistence.StreamRepository,
 	workerRepo persistence.WorkerRepository,
 	workerStreamRepo persistence.WorkerStreamRepository,
+	secretRepo persistence.SecretRepository,
+	aesgcm *vault.AESGCM,
 ) *CoordinatorAPI {
 	return &CoordinatorAPI{
 		eventRepo:        eventRepo,
 		streamRepo:       streamRepo,
 		workerRepo:       workerRepo,
 		workerStreamRepo: workerStreamRepo,
+		secretRepo:       secretRepo,
+		aesgcm:           aesgcm,
 	}
 }

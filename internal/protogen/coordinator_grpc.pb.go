@@ -28,6 +28,8 @@ const (
 	Coordinator_GetStream_FullMethodName                = "/protorender.Coordinator/GetStream"
 	Coordinator_CreateStream_FullMethodName             = "/protorender.Coordinator/CreateStream"
 	Coordinator_UpdateStream_FullMethodName             = "/protorender.Coordinator/UpdateStream"
+	Coordinator_ListSecrets_FullMethodName              = "/protorender.Coordinator/ListSecrets"
+	Coordinator_CreateSecret_FullMethodName             = "/protorender.Coordinator/CreateSecret"
 	Coordinator_IngestEvents_FullMethodName             = "/protorender.Coordinator/IngestEvents"
 	Coordinator_IngestMetrics_FullMethodName            = "/protorender.Coordinator/IngestMetrics"
 )
@@ -47,6 +49,9 @@ type CoordinatorClient interface {
 	GetStream(ctx context.Context, in *GetStreamRequest, opts ...grpc.CallOption) (*StreamResponse, error)
 	CreateStream(ctx context.Context, in *Stream, opts ...grpc.CallOption) (*StreamResponse, error)
 	UpdateStream(ctx context.Context, in *Stream, opts ...grpc.CallOption) (*StreamResponse, error)
+	// Secret methods
+	ListSecrets(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListSecretsResponse, error)
+	CreateSecret(ctx context.Context, in *SecretRequest, opts ...grpc.CallOption) (*CommonResponse, error)
 	// Observability methods
 	IngestEvents(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Event, emptypb.Empty], error)
 	IngestMetrics(ctx context.Context, in *MetricsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -140,6 +145,26 @@ func (c *coordinatorClient) UpdateStream(ctx context.Context, in *Stream, opts .
 	return out, nil
 }
 
+func (c *coordinatorClient) ListSecrets(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListSecretsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListSecretsResponse)
+	err := c.cc.Invoke(ctx, Coordinator_ListSecrets_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *coordinatorClient) CreateSecret(ctx context.Context, in *SecretRequest, opts ...grpc.CallOption) (*CommonResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CommonResponse)
+	err := c.cc.Invoke(ctx, Coordinator_CreateSecret_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *coordinatorClient) IngestEvents(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Event, emptypb.Empty], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &Coordinator_ServiceDesc.Streams[0], Coordinator_IngestEvents_FullMethodName, cOpts...)
@@ -178,6 +203,9 @@ type CoordinatorServer interface {
 	GetStream(context.Context, *GetStreamRequest) (*StreamResponse, error)
 	CreateStream(context.Context, *Stream) (*StreamResponse, error)
 	UpdateStream(context.Context, *Stream) (*StreamResponse, error)
+	// Secret methods
+	ListSecrets(context.Context, *emptypb.Empty) (*ListSecretsResponse, error)
+	CreateSecret(context.Context, *SecretRequest) (*CommonResponse, error)
 	// Observability methods
 	IngestEvents(grpc.BidiStreamingServer[Event, emptypb.Empty]) error
 	IngestMetrics(context.Context, *MetricsRequest) (*emptypb.Empty, error)
@@ -214,6 +242,12 @@ func (UnimplementedCoordinatorServer) CreateStream(context.Context, *Stream) (*S
 }
 func (UnimplementedCoordinatorServer) UpdateStream(context.Context, *Stream) (*StreamResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateStream not implemented")
+}
+func (UnimplementedCoordinatorServer) ListSecrets(context.Context, *emptypb.Empty) (*ListSecretsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListSecrets not implemented")
+}
+func (UnimplementedCoordinatorServer) CreateSecret(context.Context, *SecretRequest) (*CommonResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateSecret not implemented")
 }
 func (UnimplementedCoordinatorServer) IngestEvents(grpc.BidiStreamingServer[Event, emptypb.Empty]) error {
 	return status.Errorf(codes.Unimplemented, "method IngestEvents not implemented")
@@ -386,6 +420,42 @@ func _Coordinator_UpdateStream_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Coordinator_ListSecrets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoordinatorServer).ListSecrets(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Coordinator_ListSecrets_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoordinatorServer).ListSecrets(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Coordinator_CreateSecret_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SecretRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoordinatorServer).CreateSecret(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Coordinator_CreateSecret_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoordinatorServer).CreateSecret(ctx, req.(*SecretRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Coordinator_IngestEvents_Handler(srv interface{}, stream grpc.ServerStream) error {
 	return srv.(CoordinatorServer).IngestEvents(&grpc.GenericServerStream[Event, emptypb.Empty]{ServerStream: stream})
 }
@@ -449,6 +519,14 @@ var Coordinator_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateStream",
 			Handler:    _Coordinator_UpdateStream_Handler,
+		},
+		{
+			MethodName: "ListSecrets",
+			Handler:    _Coordinator_ListSecrets_Handler,
+		},
+		{
+			MethodName: "CreateSecret",
+			Handler:    _Coordinator_CreateSecret_Handler,
 		},
 		{
 			MethodName: "IngestMetrics",

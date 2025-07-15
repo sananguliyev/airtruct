@@ -11,7 +11,9 @@
                 "ROLE": "coordinator",
                 "NODE_DISCOVERY_URI": "localhost:50000",
                 "GRPC_PORT": "50000",
-                "DATABASE_URI": "file:/Users/sananguliyev/Git/sananguliyev/airtruct/airtruct.sqlite?_foreign_keys=1&mode=rwc",
+                "SECRET_PROVIDER": "local",
+                "SECRET_KEY": "this_is_a_32_byte_key_for_AES!!!",
+                "DATABASE_URI": "file:${workspaceFolder}/airtruct.sqlite?_foreign_keys=1&mode=rwc",
             }
         },
         {
