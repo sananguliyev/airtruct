@@ -30,6 +30,8 @@ const (
 	Coordinator_UpdateStream_FullMethodName             = "/protorender.Coordinator/UpdateStream"
 	Coordinator_ListSecrets_FullMethodName              = "/protorender.Coordinator/ListSecrets"
 	Coordinator_CreateSecret_FullMethodName             = "/protorender.Coordinator/CreateSecret"
+	Coordinator_UpdateSecret_FullMethodName             = "/protorender.Coordinator/UpdateSecret"
+	Coordinator_GetSecret_FullMethodName                = "/protorender.Coordinator/GetSecret"
 	Coordinator_IngestEvents_FullMethodName             = "/protorender.Coordinator/IngestEvents"
 	Coordinator_IngestMetrics_FullMethodName            = "/protorender.Coordinator/IngestMetrics"
 )
@@ -52,6 +54,8 @@ type CoordinatorClient interface {
 	// Secret methods
 	ListSecrets(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListSecretsResponse, error)
 	CreateSecret(ctx context.Context, in *SecretRequest, opts ...grpc.CallOption) (*CommonResponse, error)
+	UpdateSecret(ctx context.Context, in *SecretRequest, opts ...grpc.CallOption) (*CommonResponse, error)
+	GetSecret(ctx context.Context, in *SecretRequest, opts ...grpc.CallOption) (*SecretResponse, error)
 	// Observability methods
 	IngestEvents(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Event, emptypb.Empty], error)
 	IngestMetrics(ctx context.Context, in *MetricsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -165,6 +169,26 @@ func (c *coordinatorClient) CreateSecret(ctx context.Context, in *SecretRequest,
 	return out, nil
 }
 
+func (c *coordinatorClient) UpdateSecret(ctx context.Context, in *SecretRequest, opts ...grpc.CallOption) (*CommonResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CommonResponse)
+	err := c.cc.Invoke(ctx, Coordinator_UpdateSecret_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *coordinatorClient) GetSecret(ctx context.Context, in *SecretRequest, opts ...grpc.CallOption) (*SecretResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SecretResponse)
+	err := c.cc.Invoke(ctx, Coordinator_GetSecret_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *coordinatorClient) IngestEvents(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Event, emptypb.Empty], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &Coordinator_ServiceDesc.Streams[0], Coordinator_IngestEvents_FullMethodName, cOpts...)
@@ -206,6 +230,8 @@ type CoordinatorServer interface {
 	// Secret methods
 	ListSecrets(context.Context, *emptypb.Empty) (*ListSecretsResponse, error)
 	CreateSecret(context.Context, *SecretRequest) (*CommonResponse, error)
+	UpdateSecret(context.Context, *SecretRequest) (*CommonResponse, error)
+	GetSecret(context.Context, *SecretRequest) (*SecretResponse, error)
 	// Observability methods
 	IngestEvents(grpc.BidiStreamingServer[Event, emptypb.Empty]) error
 	IngestMetrics(context.Context, *MetricsRequest) (*emptypb.Empty, error)
@@ -248,6 +274,12 @@ func (UnimplementedCoordinatorServer) ListSecrets(context.Context, *emptypb.Empt
 }
 func (UnimplementedCoordinatorServer) CreateSecret(context.Context, *SecretRequest) (*CommonResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateSecret not implemented")
+}
+func (UnimplementedCoordinatorServer) UpdateSecret(context.Context, *SecretRequest) (*CommonResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateSecret not implemented")
+}
+func (UnimplementedCoordinatorServer) GetSecret(context.Context, *SecretRequest) (*SecretResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSecret not implemented")
 }
 func (UnimplementedCoordinatorServer) IngestEvents(grpc.BidiStreamingServer[Event, emptypb.Empty]) error {
 	return status.Errorf(codes.Unimplemented, "method IngestEvents not implemented")
@@ -456,6 +488,42 @@ func _Coordinator_CreateSecret_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Coordinator_UpdateSecret_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SecretRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoordinatorServer).UpdateSecret(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Coordinator_UpdateSecret_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoordinatorServer).UpdateSecret(ctx, req.(*SecretRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Coordinator_GetSecret_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SecretRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoordinatorServer).GetSecret(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Coordinator_GetSecret_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoordinatorServer).GetSecret(ctx, req.(*SecretRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Coordinator_IngestEvents_Handler(srv interface{}, stream grpc.ServerStream) error {
 	return srv.(CoordinatorServer).IngestEvents(&grpc.GenericServerStream[Event, emptypb.Empty]{ServerStream: stream})
 }
@@ -527,6 +595,14 @@ var Coordinator_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateSecret",
 			Handler:    _Coordinator_CreateSecret_Handler,
+		},
+		{
+			MethodName: "UpdateSecret",
+			Handler:    _Coordinator_UpdateSecret_Handler,
+		},
+		{
+			MethodName: "GetSecret",
+			Handler:    _Coordinator_GetSecret_Handler,
 		},
 		{
 			MethodName: "IngestMetrics",

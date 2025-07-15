@@ -26,6 +26,8 @@
                 "ROLE": "worker",
                 "GRPC_PORT": "50001",
                 "DEBUG_MODE": "false",
+                "SECRET_PROVIDER": "local",
+                "SECRET_KEY": "this_is_a_32_byte_key_for_AES!!!",
                 "NODE_DISCOVERY_URI": "localhost:50000",
             }
         }

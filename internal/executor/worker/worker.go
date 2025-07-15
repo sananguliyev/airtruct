@@ -3,7 +3,10 @@ package worker
 import (
 	"context"
 
+	"google.golang.org/grpc"
+
 	"github.com/sananguliyev/airtruct/internal/persistence"
+	"github.com/sananguliyev/airtruct/internal/vault"
 )
 
 type WorkerExecutor interface {
@@ -24,10 +27,10 @@ type workerExecutor struct {
 	streamQueue           StreamQueue
 }
 
-func NewWorkerExecutor(discoveryUri string, grpcPort uint32) WorkerExecutor {
-	coordinatorConnection := NewCoordinatorConnection(discoveryUri, grpcPort)
+func NewWorkerExecutor(grpcConn *grpc.ClientConn, grpcPort uint32, vaultProvider vault.VaultProvider) WorkerExecutor {
+	coordinatorConnection := NewCoordinatorConnection(grpcConn, grpcPort)
 
-	streamManager := NewStreamManager(coordinatorConnection)
+	streamManager := NewStreamManager(coordinatorConnection, vaultProvider)
 
 	streamQueue := NewStreamQueue(streamManager)
 

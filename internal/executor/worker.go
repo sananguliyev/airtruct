@@ -5,6 +5,9 @@ import (
 
 	"github.com/sananguliyev/airtruct/internal/executor/worker"
 	"github.com/sananguliyev/airtruct/internal/persistence"
+	"github.com/sananguliyev/airtruct/internal/vault"
+
+	"google.golang.org/grpc"
 )
 
 type IngestResult = worker.IngestResult
@@ -25,9 +28,9 @@ type workerExecutor struct {
 	worker worker.WorkerExecutor
 }
 
-func NewWorkerExecutor(discoveryUri string, grpcPort uint32) WorkerExecutor {
+func NewWorkerExecutor(grpcConn *grpc.ClientConn, grpcPort uint32, vaultProvider vault.VaultProvider) WorkerExecutor {
 	return &workerExecutor{
-		worker: worker.NewWorkerExecutor(discoveryUri, grpcPort),
+		worker: worker.NewWorkerExecutor(grpcConn, grpcPort, vaultProvider),
 	}
 }
 

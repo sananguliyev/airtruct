@@ -97,6 +97,11 @@ message ListSecretsResponse {
   repeated Secret data = 1;
 }
 
+message SecretResponse {
+  Secret data = 1;
+  CommonResponse meta = 2;
+}
+
 service Coordinator {
   // Worker stream methods
   rpc UpdateWorkerStreamStatus(WorkerStreamStatusRequest) returns (CommonResponse) {}
@@ -144,6 +149,17 @@ service Coordinator {
     option (google.api.http) = {
       post: "/v0/secrets",
       body: "*"
+    };
+  }
+  rpc UpdateSecret(SecretRequest) returns (CommonResponse) {
+    option (google.api.http) = {
+      put: "/v0/secrets/{key}",
+      body: "*"
+    };
+  }
+  rpc GetSecret(SecretRequest) returns (SecretResponse) {
+    option (google.api.http) = {
+      get: "/v0/secrets/{key}",
     };
   }
 

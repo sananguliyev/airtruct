@@ -2,6 +2,9 @@ package main
 
 import (
 	"github.com/rs/zerolog/log"
+	_ "github.com/warpstreamlabs/bento/public/components/all"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/sananguliyev/airtruct/internal/api"
 	"github.com/sananguliyev/airtruct/internal/api/coordinator"
@@ -10,7 +13,6 @@ import (
 	"github.com/sananguliyev/airtruct/internal/executor"
 	"github.com/sananguliyev/airtruct/internal/persistence"
 	"github.com/sananguliyev/airtruct/internal/vault"
-	_ "github.com/warpstreamlabs/bento/public/components/all"
 )
 
 func InitializeCoordinatorCommand(httpPort, grpcPort uint32) *cli.CoordinatorCLI {
@@ -34,7 +36,15 @@ func InitializeCoordinatorCommand(httpPort, grpcPort uint32) *cli.CoordinatorCLI
 }
 
 func InitializeWorkerCommand(discoveryUri string, grpcPort uint32) *cli.WorkerCLI {
-	workerExecutor := executor.NewWorkerExecutor(discoveryUri, grpcPort)
+	secretConfig := config.NewSecretConfig()
+
+	grpcConn, err := grpc.NewClient(discoveryUri, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to create grpc client")
+	}
+
+	vaultProvider := vault.NewLocalProvider(secretConfig, grpcConn)
+	workerExecutor := executor.NewWorkerExecutor(grpcConn, grpcPort, vaultProvider)
 	workerAPI := api.NewWorkerAPI(workerExecutor)
 	workerCLI := cli.NewWorkerCLI(workerAPI, workerExecutor, grpcPort)
 	return workerCLI

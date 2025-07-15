@@ -449,6 +449,8 @@ func (m *Secret) validate(all bool) error {
 
 	// no validation rules for Key
 
+	// no validation rules for EncryptedValue
+
 	if all {
 		switch v := interface{}(m.GetCreatedAt()).(type) {
 		case interface{ ValidateAll() error }:

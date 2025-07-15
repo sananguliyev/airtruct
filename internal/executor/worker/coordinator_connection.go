@@ -9,7 +9,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
-	"google.golang.org/grpc/credentials/insecure"
 
 	pb "github.com/sananguliyev/airtruct/internal/protogen"
 )
@@ -24,22 +23,17 @@ type CoordinatorConnection interface {
 
 type coordinatorConnection struct {
 	mu                sync.Mutex
-	clientConn        *grpc.ClientConn
+	grpcConn          *grpc.ClientConn
 	coordinatorClient pb.CoordinatorClient
 	grpcPort          uint32
 	joined            bool
 }
 
-func NewCoordinatorConnection(discoveryUri string, grpcPort uint32) CoordinatorConnection {
-	grpcConn, err := grpc.NewClient(discoveryUri, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to create grpc client")
-	}
-
+func NewCoordinatorConnection(grpcConn *grpc.ClientConn, grpcPort uint32) CoordinatorConnection {
 	coordinatorGRPCClient := pb.NewCoordinatorClient(grpcConn)
 
 	connection := &coordinatorConnection{
-		clientConn:        grpcConn,
+		grpcConn:          grpcConn,
 		coordinatorClient: coordinatorGRPCClient,
 		grpcPort:          grpcPort,
 		joined:            false,
@@ -55,7 +49,7 @@ func (c *coordinatorConnection) monitorConnection() {
 	defer ticker.Stop()
 
 	for range ticker.C {
-		state := c.clientConn.GetState()
+		state := c.grpcConn.GetState()
 		if state == connectivity.TransientFailure || state == connectivity.Shutdown {
 			log.Warn().Str("state", state.String()).Msg("gRPC connection is down")
 			c.mu.Lock()

@@ -280,11 +280,12 @@ func (x *Stream) GetIsHttpServer() bool {
 }
 
 type Secret struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=created_at,proto3" json:"created_at,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Key            string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	EncryptedValue string                 `protobuf:"bytes,2,opt,name=encrypted_value,proto3" json:"encrypted_value,omitempty"`
+	CreatedAt      *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=created_at,proto3" json:"created_at,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *Secret) Reset() {
@@ -320,6 +321,13 @@ func (*Secret) Descriptor() ([]byte, []int) {
 func (x *Secret) GetKey() string {
 	if x != nil {
 		return x.Key
+	}
+	return ""
+}
+
+func (x *Secret) GetEncryptedValue() string {
+	if x != nil {
+		return x.EncryptedValue
 	}
 	return ""
 }
@@ -446,11 +454,12 @@ const file_common_proto_rawDesc = "" +
 	"\x06config\x18\x03 \x01(\tR\x06configB\f\n" +
 	"\n" +
 	"_parent_idB\r\n" +
-	"\v_updated_at\"V\n" +
+	"\v_updated_at\"\x80\x01\n" +
 	"\x06Secret\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12:\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12(\n" +
+	"\x0fencrypted_value\x18\x02 \x01(\tR\x0fencrypted_value\x12:\n" +
 	"\n" +
-	"created_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"created_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"created_at*\x98\x01\n" +
 	"\x12WorkerStreamStatus\x12\x18\n" +
 	"\awaiting\x10\x00\x1a\v\x92\x82\x19\awaiting\x12\x18\n" +

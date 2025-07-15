@@ -15,6 +15,7 @@ import (
 
 	"github.com/sananguliyev/airtruct/internal/persistence"
 	pb "github.com/sananguliyev/airtruct/internal/protogen"
+	"github.com/sananguliyev/airtruct/internal/vault"
 )
 
 type IngestResult struct {
@@ -45,12 +46,14 @@ type streamManager struct {
 	mu                    sync.RWMutex
 	streams               map[int64]*ServiceStream
 	coordinatorConnection CoordinatorConnection
+	vaultProvider         vault.VaultProvider
 }
 
-func NewStreamManager(coordinatorConnection CoordinatorConnection) StreamManager {
+func NewStreamManager(coordinatorConnection CoordinatorConnection, vaultProvider vault.VaultProvider) StreamManager {
 	return &streamManager{
 		streams:               make(map[int64]*ServiceStream),
 		coordinatorConnection: coordinatorConnection,
+		vaultProvider:         vaultProvider,
 	}
 }
 
@@ -66,6 +69,16 @@ func (m *streamManager) AddStream(workerStreamID int64, config string) error {
 	streamBuilder := service.NewStreamBuilder()
 	streamMux := http.NewServeMux()
 	streamBuilder.SetHTTPMux(streamMux)
+
+	streamBuilder.SetEnvVarLookupFunc(func(key string) (string, bool) {
+		secret, err := m.vaultProvider.GetSecret(key)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to get secret")
+			return "", false
+		}
+
+		return secret, true
+	})
 
 	if err := streamBuilder.SetYAML(config); err != nil {
 		log.Error().Err(err).Msg("Failed to set stream YAML")

@@ -58,3 +58,19 @@ func (c *CoordinatorAPI) ListSecrets(_ context.Context, _ *emptypb.Empty) (*pb.L
 
 	return result, nil
 }
+
+func (c *CoordinatorAPI) GetSecret(_ context.Context, in *pb.SecretRequest) (*pb.SecretResponse, error) {
+	secret, err := c.secretRepo.GetByKey(in.GetKey())
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get secret")
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &pb.SecretResponse{
+		Data: &pb.Secret{
+			Key:            secret.Key,
+			EncryptedValue: secret.EncryptedValue,
+			CreatedAt:      timestamppb.New(secret.CreatedAt),
+		},
+	}, nil
+}
