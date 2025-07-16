@@ -22,9 +22,9 @@ jobs:
           - build_group: "darwin-arm64"
             runner: macos-latest
           - build_group: "windows-amd64"
-            runner: windows-latest
+            runner: ubuntu-latest
           - build_group: "windows-arm64"
-            runner: windows-latest
+            runner: ubuntu-latest
     steps:
     - name: Check Out Repo
       uses: actions/checkout@v4
@@ -35,16 +35,10 @@ jobs:
         go-version: 1.24.x
         check-latest: true
 
-    - name: Setup MSYS2 (Windows only)
-      if: matrix.runner == 'windows-latest'
-      uses: msys2/setup-msys2@v2
-      with:
-        msystem: MINGW64
-        update: true
-        install: >-
-          mingw-w64-x86_64-gcc
-          mingw-w64-x86_64-zeromq
-          mingw-w64-x86_64-pkg-config
+    - name: Setup Docker for Windows builds
+      if: startsWith(matrix.build_group, 'windows-')
+      run: |
+        echo "Using Docker for Windows cross-compilation"
 
     - name: Install platform dependencies (Linux)
       if: matrix.runner == 'ubuntu-latest'
@@ -102,20 +96,24 @@ jobs:
         esac
 
     - name: Build binary (Windows)
-      if: matrix.runner == 'windows-latest'
-      shell: pwsh
+      if: startsWith(matrix.build_group, 'windows-')
+      shell: bash
       run: |
-        New-Item -ItemType Directory -Force -Path "dist"
-        $env:CGO_ENABLED = "1"
-        $env:PATH = "C:\msys64\mingw64\bin;C:\msys64\usr\bin;" + $env:PATH
-        
-        go build `
-          -ldflags="-s -w -X main.Version=${{ github.ref_name }} -X main.DateBuilt=$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ'))" `
-          -o "dist\airtruct.exe" `
-          .\cmd\airtruct
+        mkdir -p dist
+        docker run --rm \
+          -v "$(pwd):/workspace" \
+          -w /workspace \
+          -e CGO_ENABLED=1 \
+          -e GOOS=windows \
+          -e GOARCH=${{ matrix.build_group == 'windows-amd64' && 'amd64' || 'arm64' }} \
+          x1unix/go-mingw:1.24 \
+          go build \
+            -ldflags="-s -w -X main.Version=${{ github.ref_name }} -X main.DateBuilt=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            -o "dist/airtruct.exe" \
+            ./cmd/airtruct
 
     - name: Build binary (Unix)
-      if: matrix.runner != 'windows-latest'
+      if: ${{ !startsWith(matrix.build_group, 'windows-') }}
       shell: bash
       run: |
         mkdir -p dist
@@ -127,24 +125,23 @@ jobs:
           ./cmd/airtruct
 
     - name: Create archive (Windows)
-      if: matrix.runner == 'windows-latest'
-      shell: pwsh
+      if: startsWith(matrix.build_group, 'windows-')
+      shell: bash
       run: |
-        Set-Location dist
-        $ARCHIVE_NAME = "airtruct_${{ github.ref_name }}_$env:GOOS_$env:GOARCH"
+        cd dist
+        ARCHIVE_NAME="airtruct_${{ github.ref_name }}_${GOOS}_${GOARCH}"
         
         # Copy README and LICENSE to current directory
-        Copy-Item ..\README.md .
-        Copy-Item ..\LICENSE .
+        cp ../README.md ../LICENSE ./
         
         # Create zip archive
-        Compress-Archive -Path airtruct.exe, README.md, LICENSE -DestinationPath "$ARCHIVE_NAME.zip"
+        zip "${ARCHIVE_NAME}.zip" airtruct.exe README.md LICENSE
         
         # Clean up copied files
-        Remove-Item README.md, LICENSE
+        rm -f README.md LICENSE
 
     - name: Create archive (Unix)
-      if: matrix.runner != 'windows-latest'
+      if: ${{ !startsWith(matrix.build_group, 'windows-') }}
       shell: bash
       run: |
         cd dist
