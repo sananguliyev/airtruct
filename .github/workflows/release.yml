@@ -7,21 +7,24 @@ on:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
-        build_group:
-          - "linux-amd64"
-          - "linux-arm64"  
-          - "linux-arm"
-          - "darwin-amd64"
-          - "darwin-arm64"
-          - "windows-amd64"
-          - "windows-arm64"
-          - "freebsd-amd64"
-          - "freebsd-arm64"
-          - "openbsd-amd64"
-          - "openbsd-arm64"
+        include:
+          - build_group: "linux-amd64"
+            runner: ubuntu-latest
+          - build_group: "linux-arm64"
+            runner: ubuntu-latest
+          - build_group: "linux-arm"
+            runner: ubuntu-latest
+          - build_group: "darwin-amd64"
+            runner: macos-latest
+          - build_group: "darwin-arm64"
+            runner: macos-latest
+          - build_group: "windows-amd64"
+            runner: windows-latest
+          - build_group: "windows-arm64"
+            runner: windows-latest
     steps:
     - name: Check Out Repo
       uses: actions/checkout@v4
@@ -32,17 +35,29 @@ jobs:
         go-version: 1.24.x
         check-latest: true
 
-    - name: Install cross-compilation tools
+    - name: Install platform dependencies
+      shell: bash
       run: |
-        if [ "${{ matrix.build_group }}" = "linux-arm" ]; then
+        if [ "${{ matrix.runner }}" = "ubuntu-latest" ]; then
+          # Install ZMQ for Linux
           sudo apt-get update
-          sudo apt-get install -y gcc-arm-linux-gnueabihf
-        elif [ "${{ matrix.build_group }}" = "linux-arm64" ]; then
-          sudo apt-get update
-          sudo apt-get install -y gcc-aarch64-linux-gnu
+          sudo apt-get install -y libzmq3-dev
+          # Install cross-compilation tools for ARM builds
+          if [ "${{ matrix.build_group }}" = "linux-arm" ]; then
+            sudo apt-get install -y gcc-arm-linux-gnueabihf
+          elif [ "${{ matrix.build_group }}" = "linux-arm64" ]; then
+            sudo apt-get install -y gcc-aarch64-linux-gnu
+          fi
+        elif [ "${{ matrix.runner }}" = "macos-latest" ]; then
+          # Install ZMQ for macOS
+          brew install zeromq
+        elif [ "${{ matrix.runner }}" = "windows-latest" ]; then
+          # Install ZMQ for Windows using vcpkg
+          vcpkg install zeromq:x64-windows
         fi
 
     - name: Set build environment
+      shell: bash
       run: |
         case "${{ matrix.build_group }}" in
           "linux-amd64")
@@ -71,30 +86,19 @@ jobs:
           "windows-amd64")
             echo "GOOS=windows" >> $GITHUB_ENV
             echo "GOARCH=amd64" >> $GITHUB_ENV
+            echo "CGO_CFLAGS=-I$VCPKG_ROOT/installed/x64-windows/include" >> $GITHUB_ENV
+            echo "CGO_LDFLAGS=-L$VCPKG_ROOT/installed/x64-windows/lib" >> $GITHUB_ENV
             ;;
           "windows-arm64")
             echo "GOOS=windows" >> $GITHUB_ENV
             echo "GOARCH=arm64" >> $GITHUB_ENV
-            ;;
-          "freebsd-amd64")
-            echo "GOOS=freebsd" >> $GITHUB_ENV
-            echo "GOARCH=amd64" >> $GITHUB_ENV
-            ;;
-          "freebsd-arm64")
-            echo "GOOS=freebsd" >> $GITHUB_ENV
-            echo "GOARCH=arm64" >> $GITHUB_ENV
-            ;;
-          "openbsd-amd64")
-            echo "GOOS=openbsd" >> $GITHUB_ENV
-            echo "GOARCH=amd64" >> $GITHUB_ENV
-            ;;
-          "openbsd-arm64")
-            echo "GOOS=openbsd" >> $GITHUB_ENV
-            echo "GOARCH=arm64" >> $GITHUB_ENV
+            echo "CGO_CFLAGS=-I$VCPKG_ROOT/installed/x64-windows/include" >> $GITHUB_ENV
+            echo "CGO_LDFLAGS=-L$VCPKG_ROOT/installed/x64-windows/lib" >> $GITHUB_ENV
             ;;
         esac
 
     - name: Build binary
+      shell: bash
       run: |
         mkdir -p dist
         BINARY_NAME="airtruct"
@@ -108,6 +112,7 @@ jobs:
           ./cmd/airtruct
 
     - name: Create archive
+      shell: bash
       run: |
         cd dist
         ARCHIVE_NAME="airtruct_${{ github.ref_name }}_${GOOS}_${GOARCH}"
