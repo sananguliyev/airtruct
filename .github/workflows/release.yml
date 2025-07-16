@@ -32,15 +32,6 @@ jobs:
         go-version: 1.24.x
         check-latest: true
 
-    - name: Build UI assets
-      run: |
-        cd ui
-        npm install -g pnpm
-        pnpm install
-        pnpm run build
-        cd ..
-        go run github.com/rakyll/statik -src=ui/dist -dest=internal/.
-
     - name: Set build environment
       run: |
         case "${{ matrix.build_group }}" in
@@ -112,11 +103,17 @@ jobs:
           ARCHIVE_NAME="${ARCHIVE_NAME}v${GOARM}"
         fi
         
+        # Copy README and LICENSE to current directory
+        cp ../README.md ../LICENSE ./
+        
         if [ "$GOOS" = "windows" ]; then
-          zip -r "${ARCHIVE_NAME}.zip" airtruct.exe ../README.md ../LICENSE
+          zip "${ARCHIVE_NAME}.zip" airtruct.exe README.md LICENSE
         else
-          tar -czf "${ARCHIVE_NAME}.tar.gz" airtruct -C .. README.md LICENSE
+          tar -czf "${ARCHIVE_NAME}.tar.gz" airtruct README.md LICENSE
         fi
+        
+        # Clean up copied files
+        rm -f README.md LICENSE
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
@@ -139,12 +136,19 @@ jobs:
       with:
         path: artifacts/
 
+    - name: Prepare release assets
+      run: |
+        mkdir -p release-assets
+        find artifacts/ -type f \( -name "*.tar.gz" -o -name "*.zip" \) -exec cp {} release-assets/ \;
+        echo "Found artifacts:"
+        ls -la release-assets/
+
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
       with:
-        files: artifacts/**/*
+        files: release-assets/*
         tag_name: ${{ github.ref_name }}
-        name: Release ${{ github.ref_name }}
+        name: ${{ github.ref_name }}
         draft: false
         prerelease: false
       env:
