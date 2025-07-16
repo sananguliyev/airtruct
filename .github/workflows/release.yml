@@ -52,8 +52,16 @@ jobs:
           # Install ZMQ for macOS
           brew install zeromq
         elif [ "${{ matrix.runner }}" = "windows-latest" ]; then
-          # Install ZMQ for Windows using vcpkg
-          vcpkg install zeromq:x64-windows
+          if [ "${{ matrix.build_group }}" = "windows-amd64" ]; then
+            C:/msys64/usr/bin/pacman.exe -S --noconfirm mingw-w64-x86_64-zeromq
+            echo "PKG_CONFIG_PATH=C:/msys64/mingw64/lib/pkgconfig" >> $GITHUB_ENV
+            echo "PATH=C:/msys64/mingw64/bin:$PATH" >> $GITHUB_ENV
+          elif [ "${{ matrix.build_group }}" = "windows-arm64" ]; then
+            # For ARM64, we'll use the x86_64 version as cross-compilation base
+            C:/msys64/usr/bin/pacman.exe -S --noconfirm mingw-w64-x86_64-zeromq
+            echo "PKG_CONFIG_PATH=C:/msys64/mingw64/lib/pkgconfig" >> $GITHUB_ENV
+            echo "PATH=C:/msys64/mingw64/bin:$PATH" >> $GITHUB_ENV
+          fi
         fi
 
     - name: Set build environment
@@ -86,14 +94,12 @@ jobs:
           "windows-amd64")
             echo "GOOS=windows" >> $GITHUB_ENV
             echo "GOARCH=amd64" >> $GITHUB_ENV
-            echo "CGO_CFLAGS=-I$VCPKG_ROOT/installed/x64-windows/include" >> $GITHUB_ENV
-            echo "CGO_LDFLAGS=-L$VCPKG_ROOT/installed/x64-windows/lib" >> $GITHUB_ENV
+            echo "CC=C:/msys64/mingw64/bin/gcc.exe" >> $GITHUB_ENV
             ;;
           "windows-arm64")
             echo "GOOS=windows" >> $GITHUB_ENV
             echo "GOARCH=arm64" >> $GITHUB_ENV
-            echo "CGO_CFLAGS=-I$VCPKG_ROOT/installed/x64-windows/include" >> $GITHUB_ENV
-            echo "CGO_LDFLAGS=-L$VCPKG_ROOT/installed/x64-windows/lib" >> $GITHUB_ENV
+            echo "CC=C:/msys64/mingw64/bin/gcc.exe" >> $GITHUB_ENV
             ;;
         esac
 
