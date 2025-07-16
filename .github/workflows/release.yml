@@ -32,6 +32,16 @@ jobs:
         go-version: 1.24.x
         check-latest: true
 
+    - name: Install cross-compilation tools
+      run: |
+        if [ "${{ matrix.build_group }}" = "linux-arm" ]; then
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-linux-gnueabihf
+        elif [ "${{ matrix.build_group }}" = "linux-arm64" ]; then
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+        fi
+
     - name: Set build environment
       run: |
         case "${{ matrix.build_group }}" in
@@ -42,11 +52,13 @@ jobs:
           "linux-arm64")
             echo "GOOS=linux" >> $GITHUB_ENV
             echo "GOARCH=arm64" >> $GITHUB_ENV
+            echo "CC=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
             ;;
           "linux-arm")
             echo "GOOS=linux" >> $GITHUB_ENV
             echo "GOARCH=arm" >> $GITHUB_ENV
             echo "GOARM=7" >> $GITHUB_ENV
+            echo "CC=arm-linux-gnueabihf-gcc" >> $GITHUB_ENV
             ;;
           "darwin-amd64")
             echo "GOOS=darwin" >> $GITHUB_ENV
