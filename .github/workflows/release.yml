@@ -98,19 +98,32 @@ jobs:
     - name: Create archive
       run: |
         cd dist
+        echo "=== Current directory contents before archive creation ==="
+        ls -la
+        
         ARCHIVE_NAME="airtruct_${{ github.ref_name }}_${GOOS}_${GOARCH}"
         if [ -n "$GOARM" ]; then
           ARCHIVE_NAME="${ARCHIVE_NAME}v${GOARM}"
         fi
         
+        echo "Archive name will be: ${ARCHIVE_NAME}"
+        
         # Copy README and LICENSE to current directory
         cp ../README.md ../LICENSE ./
         
+        echo "=== Contents after copying README and LICENSE ==="
+        ls -la
+        
         if [ "$GOOS" = "windows" ]; then
+          echo "Creating ZIP archive..."
           zip "${ARCHIVE_NAME}.zip" airtruct.exe README.md LICENSE
         else
+          echo "Creating TAR.GZ archive..."
           tar -czf "${ARCHIVE_NAME}.tar.gz" airtruct README.md LICENSE
         fi
+        
+        echo "=== Final directory contents ==="
+        ls -la
         
         # Clean up copied files
         rm -f README.md LICENSE
@@ -119,8 +132,18 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: airtruct-${{ matrix.build_group }}
-        path: dist/*.tar.gz dist/*.zip
+        path: |
+          dist/*.tar.gz
+          dist/*.zip
         retention-days: 1
+        if-no-files-found: warn
+
+    - name: Debug upload files
+      run: |
+        echo "=== Files matching upload pattern ==="
+        find dist/ -name "*.tar.gz" -o -name "*.zip" | head -10
+        echo "=== All files in dist/ ==="
+        ls -la dist/
 
   create-release:
     needs: release
@@ -154,46 +177,46 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  docker:
-    runs-on: ubuntu-latest
-    permissions:
-      packages: write
-      contents: read
-    steps:
+  # docker:
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     packages: write
+  #     contents: read
+  #   steps:
 
-    - name: Check Out Repo
-      uses: actions/checkout@v4
+  #   - name: Check Out Repo
+  #     uses: actions/checkout@v4
 
-    - name: Log in to GitHub Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+  #   - name: Log in to GitHub Container Registry
+  #     uses: docker/login-action@v3
+  #     with:
+  #       registry: ghcr.io
+  #       username: ${{ github.actor }}
+  #       password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Install Buildx
-      id: buildx
-      uses: docker/setup-buildx-action@v3
+  #   - name: Install Buildx
+  #     id: buildx
+  #     uses: docker/setup-buildx-action@v3
 
-    - name: Docker meta
-      id: docker_meta
-      uses: docker/metadata-action@v5
-      with:
-        images: |
-          ghcr.io/${{ github.repository_owner }}/airtruct
-        tags: |
-          type=semver,pattern={{version}}
-          type=semver,pattern={{major}}.{{minor}}
-          type=semver,pattern={{major}}
+  #   - name: Docker meta
+  #     id: docker_meta
+  #     uses: docker/metadata-action@v5
+  #     with:
+  #       images: |
+  #         ghcr.io/${{ github.repository_owner }}/airtruct
+  #       tags: |
+  #         type=semver,pattern={{version}}
+  #         type=semver,pattern={{major}}.{{minor}}
+  #         type=semver,pattern={{major}}
 
-    - name: Build and push
-      uses: docker/build-push-action@v6
-      with:
-        context: ./
-        file: Dockerfile
-        builder: ${{ steps.buildx.outputs.name }}
-        platforms: linux/amd64,linux/arm64
-        push: true
-        tags: ${{ steps.docker_meta.outputs.tags }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+  #   - name: Build and push
+  #     uses: docker/build-push-action@v6
+  #     with:
+  #       context: ./
+  #       file: Dockerfile
+  #       builder: ${{ steps.buildx.outputs.name }}
+  #       platforms: linux/amd64,linux/arm64
+  #       push: true
+  #       tags: ${{ steps.docker_meta.outputs.tags }}
+  #       cache-from: type=gha
+  #       cache-to: type=gha,mode=max
