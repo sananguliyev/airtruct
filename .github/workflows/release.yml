@@ -46,22 +46,23 @@ jobs:
           mingw-w64-x86_64-zeromq
           mingw-w64-x86_64-pkg-config
 
-    - name: Install platform dependencies
+    - name: Install platform dependencies (Linux)
+      if: matrix.runner == 'ubuntu-latest'
       shell: bash
       run: |
-        if [ "${{ matrix.runner }}" = "ubuntu-latest" ]; then
-          sudo apt-get update
-          sudo apt-get install -y libzmq3-dev
-          if [ "${{ matrix.build_group }}" = "linux-arm" ]; then
-            sudo apt-get install -y gcc-arm-linux-gnueabihf
-          elif [ "${{ matrix.build_group }}" = "linux-arm64" ]; then
-            sudo apt-get install -y gcc-aarch64-linux-gnu
-          fi
-        elif [ "${{ matrix.runner }}" = "macos-latest" ]; then
-          brew install zeromq
-        elif [ "${{ matrix.runner }}" = "windows-latest" ]; then
-          echo "ZMQ dependencies installed via setup-msys2 action"
+        sudo apt-get update
+        sudo apt-get install -y libzmq3-dev
+        if [ "${{ matrix.build_group }}" = "linux-arm" ]; then
+          sudo apt-get install -y gcc-arm-linux-gnueabihf
+        elif [ "${{ matrix.build_group }}" = "linux-arm64" ]; then
+          sudo apt-get install -y gcc-aarch64-linux-gnu
         fi
+
+    - name: Install platform dependencies (macOS)
+      if: matrix.runner == 'macos-latest'
+      shell: bash
+      run: |
+        brew install zeromq
 
     - name: Set build environment
       shell: bash
@@ -102,15 +103,16 @@ jobs:
 
     - name: Build binary (Windows)
       if: matrix.runner == 'windows-latest'
-      shell: msys2 {0}
+      shell: pwsh
       run: |
-        mkdir -p dist
-        BINARY_NAME="airtruct.exe"
+        New-Item -ItemType Directory -Force -Path "dist"
+        $env:CGO_ENABLED = "1"
+        $env:PATH = "C:\msys64\mingw64\bin;C:\msys64\usr\bin;" + $env:PATH
         
-        CGO_ENABLED=1 go build \
-          -ldflags="-s -w -X main.Version=${{ github.ref_name }} -X main.DateBuilt=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-          -o "dist/${BINARY_NAME}" \
-          ./cmd/airtruct
+        go build `
+          -ldflags="-s -w -X main.Version=${{ github.ref_name }} -X main.DateBuilt=$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ'))" `
+          -o "dist\airtruct.exe" `
+          .\cmd\airtruct
 
     - name: Build binary (Unix)
       if: matrix.runner != 'windows-latest'
@@ -126,18 +128,20 @@ jobs:
 
     - name: Create archive (Windows)
       if: matrix.runner == 'windows-latest'
-      shell: msys2 {0}
+      shell: pwsh
       run: |
-        cd dist
-        ARCHIVE_NAME="airtruct_${{ github.ref_name }}_${GOOS}_${GOARCH}"
+        Set-Location dist
+        $ARCHIVE_NAME = "airtruct_${{ github.ref_name }}_$env:GOOS_$env:GOARCH"
         
         # Copy README and LICENSE to current directory
-        cp ../README.md ../LICENSE ./
+        Copy-Item ..\README.md .
+        Copy-Item ..\LICENSE .
         
-        zip "${ARCHIVE_NAME}.zip" airtruct.exe README.md LICENSE
+        # Create zip archive
+        Compress-Archive -Path airtruct.exe, README.md, LICENSE -DestinationPath "$ARCHIVE_NAME.zip"
         
         # Clean up copied files
-        rm -f README.md LICENSE
+        Remove-Item README.md, LICENSE
 
     - name: Create archive (Unix)
       if: matrix.runner != 'windows-latest'
