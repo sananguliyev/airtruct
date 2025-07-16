@@ -16,7 +16,7 @@ COPY . .
 
 RUN mkdir build
 
-RUN CGO_ENABLED=1 go build -o build ./cmd/...
+RUN CGO_ENABLED=1 go build -ldflags="-s -w -X main.Version=docker -X main.DateBuilt=$(date -u +%Y-%m-%dT%H:%M:%SZ)" -o build ./cmd/...
 
 FROM alpine:3.21@sha256:a8560b36e8b8210634f77d9f7f9efd7ffa463e380b75e2e74aff4511df3ef88c
 
