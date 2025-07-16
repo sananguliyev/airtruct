@@ -108,6 +108,7 @@ jobs:
           -e GOARCH=${{ matrix.build_group == 'windows-amd64' && 'amd64' || 'arm64' }} \
           x1unix/go-mingw:1.24 \
           go build \
+            -buildvcs=false \
             -ldflags="-s -w -X main.Version=${{ github.ref_name }} -X main.DateBuilt=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             -o "dist/airtruct.exe" \
             ./cmd/airtruct
