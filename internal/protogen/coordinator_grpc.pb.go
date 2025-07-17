@@ -32,6 +32,7 @@ const (
 	Coordinator_CreateSecret_FullMethodName             = "/protorender.Coordinator/CreateSecret"
 	Coordinator_UpdateSecret_FullMethodName             = "/protorender.Coordinator/UpdateSecret"
 	Coordinator_GetSecret_FullMethodName                = "/protorender.Coordinator/GetSecret"
+	Coordinator_DeleteSecret_FullMethodName             = "/protorender.Coordinator/DeleteSecret"
 	Coordinator_IngestEvents_FullMethodName             = "/protorender.Coordinator/IngestEvents"
 	Coordinator_IngestMetrics_FullMethodName            = "/protorender.Coordinator/IngestMetrics"
 )
@@ -56,6 +57,7 @@ type CoordinatorClient interface {
 	CreateSecret(ctx context.Context, in *SecretRequest, opts ...grpc.CallOption) (*CommonResponse, error)
 	UpdateSecret(ctx context.Context, in *SecretRequest, opts ...grpc.CallOption) (*CommonResponse, error)
 	GetSecret(ctx context.Context, in *SecretRequest, opts ...grpc.CallOption) (*SecretResponse, error)
+	DeleteSecret(ctx context.Context, in *SecretRequest, opts ...grpc.CallOption) (*CommonResponse, error)
 	// Observability methods
 	IngestEvents(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Event, emptypb.Empty], error)
 	IngestMetrics(ctx context.Context, in *MetricsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -189,6 +191,16 @@ func (c *coordinatorClient) GetSecret(ctx context.Context, in *SecretRequest, op
 	return out, nil
 }
 
+func (c *coordinatorClient) DeleteSecret(ctx context.Context, in *SecretRequest, opts ...grpc.CallOption) (*CommonResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CommonResponse)
+	err := c.cc.Invoke(ctx, Coordinator_DeleteSecret_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *coordinatorClient) IngestEvents(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Event, emptypb.Empty], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &Coordinator_ServiceDesc.Streams[0], Coordinator_IngestEvents_FullMethodName, cOpts...)
@@ -232,6 +244,7 @@ type CoordinatorServer interface {
 	CreateSecret(context.Context, *SecretRequest) (*CommonResponse, error)
 	UpdateSecret(context.Context, *SecretRequest) (*CommonResponse, error)
 	GetSecret(context.Context, *SecretRequest) (*SecretResponse, error)
+	DeleteSecret(context.Context, *SecretRequest) (*CommonResponse, error)
 	// Observability methods
 	IngestEvents(grpc.BidiStreamingServer[Event, emptypb.Empty]) error
 	IngestMetrics(context.Context, *MetricsRequest) (*emptypb.Empty, error)
@@ -280,6 +293,9 @@ func (UnimplementedCoordinatorServer) UpdateSecret(context.Context, *SecretReque
 }
 func (UnimplementedCoordinatorServer) GetSecret(context.Context, *SecretRequest) (*SecretResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSecret not implemented")
+}
+func (UnimplementedCoordinatorServer) DeleteSecret(context.Context, *SecretRequest) (*CommonResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteSecret not implemented")
 }
 func (UnimplementedCoordinatorServer) IngestEvents(grpc.BidiStreamingServer[Event, emptypb.Empty]) error {
 	return status.Errorf(codes.Unimplemented, "method IngestEvents not implemented")
@@ -524,6 +540,24 @@ func _Coordinator_GetSecret_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Coordinator_DeleteSecret_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SecretRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoordinatorServer).DeleteSecret(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Coordinator_DeleteSecret_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoordinatorServer).DeleteSecret(ctx, req.(*SecretRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Coordinator_IngestEvents_Handler(srv interface{}, stream grpc.ServerStream) error {
 	return srv.(CoordinatorServer).IngestEvents(&grpc.GenericServerStream[Event, emptypb.Empty]{ServerStream: stream})
 }
@@ -603,6 +637,10 @@ var Coordinator_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetSecret",
 			Handler:    _Coordinator_GetSecret_Handler,
+		},
+		{
+			MethodName: "DeleteSecret",
+			Handler:    _Coordinator_DeleteSecret_Handler,
 		},
 		{
 			MethodName: "IngestMetrics",

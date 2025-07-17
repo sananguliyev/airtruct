@@ -16,6 +16,7 @@ type SecretRepository interface {
 	List() ([]Secret, error)
 	GetByKey(key string) (*Secret, error)
 	Create(secret *Secret) error
+	Delete(key string) error
 }
 
 type secretRepository struct {
@@ -52,4 +53,8 @@ func (r *secretRepository) GetByKey(key string) (*Secret, error) {
 
 func (r *secretRepository) Create(secret *Secret) error {
 	return r.db.Create(secret).Error
+}
+
+func (r *secretRepository) Delete(key string) error {
+	return r.db.Delete(&Secret{}, "key = ?", key).Error
 }

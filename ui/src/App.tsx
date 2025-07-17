@@ -14,6 +14,7 @@ import WorkersPage from './pages/workers/page.tsx';
 import ScannersPage from './pages/scanners/page.tsx';
 import BuffersPage from './pages/buffers/page.tsx';
 import CachesPage from './pages/caches/page.tsx';
+import SecretsPage from './pages/secrets/page.tsx';
 // Import edit pages
 import StreamEditPage from './pages/streams/[id]/edit/page.tsx';
 // Import new pages
@@ -51,6 +52,7 @@ function App() {
         <Route path="streams/new" element={<StreamNewPage />} />
         <Route path="streams/:id/edit" element={<StreamEditPage />} />
         <Route path="workers" element={<WorkersPage />} />
+        <Route path="secrets" element={<SecretsPage />} />
         <Route path="scanners" element={<ScannersPage />} />
         <Route path="buffers" element={<BuffersPage />} />
         <Route path="caches" element={<CachesPage />} />

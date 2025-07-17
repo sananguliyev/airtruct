@@ -59,7 +59,7 @@ function ToastContainer() {
   const { toasts, removeToast } = useToast();
 
   return (
-    <div className="fixed top-4 inset-x-0 z-50 flex flex-col items-center gap-2 pointer-events-none">
+    <div className="fixed top-4 inset-x-0 z-[9999] flex flex-col items-center gap-2 pointer-events-none">
       {toasts.map((toast) => (
         <ToastItem
           key={toast.id}

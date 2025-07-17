@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom"
-import { LayoutDashboard, Cpu, MemoryStick, Layers, ScanLine, Waypoints, Truck } from "lucide-react"
+import { LayoutDashboard, Cpu, MemoryStick, Layers, ScanLine, Waypoints, Truck, KeyRound } from "lucide-react"
 
 import { ThemeSwitcher } from "./theme-switcher"
 
@@ -33,6 +33,11 @@ const menuItems = [
   {
     section: "Other",
     items: [
+      {
+        name: "Secrets",
+        href: "/secrets",
+        icon: KeyRound,
+      },
       {
         name: "Caches",
         href: "/caches",

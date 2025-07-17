@@ -900,8 +900,7 @@ const file_coordinator_proto_rawDesc = "" +
 	"\x04data\x18\x01 \x03(\v2\x13.protorender.SecretR\x04data\"j\n" +
 	"\x0eSecretResponse\x12'\n" +
 	"\x04data\x18\x01 \x01(\v2\x13.protorender.SecretR\x04data\x12/\n" +
-	"\x04meta\x18\x02 \x01(\v2\x1b.protorender.CommonResponseR\x04meta2\xa0\n" +
-	"\n" +
+	"\x04meta\x18\x02 \x01(\v2\x1b.protorender.CommonResponseR\x04meta2\x84\v\n" +
 	"\vCoordinator\x12a\n" +
 	"\x18UpdateWorkerStreamStatus\x12&.protorender.WorkerStreamStatusRequest\x1a\x1b.protorender.CommonResponse\"\x00\x12S\n" +
 	"\x0eRegisterWorker\x12\".protorender.RegisterWorkerRequest\x1a\x1b.protorender.CommonResponse\"\x00\x12W\n" +
@@ -914,7 +913,8 @@ const file_coordinator_proto_rawDesc = "" +
 	"\vListSecrets\x12\x16.google.protobuf.Empty\x1a .protorender.ListSecretsResponse\"\x13\x82\xd3\xe4\x93\x02\r\x12\v/v0/secrets\x12_\n" +
 	"\fCreateSecret\x12\x1a.protorender.SecretRequest\x1a\x1b.protorender.CommonResponse\"\x16\x82\xd3\xe4\x93\x02\x10:\x01*\"\v/v0/secrets\x12e\n" +
 	"\fUpdateSecret\x12\x1a.protorender.SecretRequest\x1a\x1b.protorender.CommonResponse\"\x1c\x82\xd3\xe4\x93\x02\x16:\x01*\x1a\x11/v0/secrets/{key}\x12_\n" +
-	"\tGetSecret\x12\x1a.protorender.SecretRequest\x1a\x1b.protorender.SecretResponse\"\x19\x82\xd3\xe4\x93\x02\x13\x12\x11/v0/secrets/{key}\x12>\n" +
+	"\tGetSecret\x12\x1a.protorender.SecretRequest\x1a\x1b.protorender.SecretResponse\"\x19\x82\xd3\xe4\x93\x02\x13\x12\x11/v0/secrets/{key}\x12b\n" +
+	"\fDeleteSecret\x12\x1a.protorender.SecretRequest\x1a\x1b.protorender.CommonResponse\"\x19\x82\xd3\xe4\x93\x02\x13*\x11/v0/secrets/{key}\x12>\n" +
 	"\fIngestEvents\x12\x12.protorender.Event\x1a\x16.google.protobuf.Empty(\x010\x01\x12F\n" +
 	"\rIngestMetrics\x12\x1b.protorender.MetricsRequest\x1a\x16.google.protobuf.Empty\"\x00B4Z2github.com/sananguliyev/airtruct/internal/protogenb\x06proto3"
 
@@ -984,24 +984,26 @@ var file_coordinator_proto_depIdxs = []int32{
 	11, // 22: protorender.Coordinator.CreateSecret:input_type -> protorender.SecretRequest
 	11, // 23: protorender.Coordinator.UpdateSecret:input_type -> protorender.SecretRequest
 	11, // 24: protorender.Coordinator.GetSecret:input_type -> protorender.SecretRequest
-	9,  // 25: protorender.Coordinator.IngestEvents:input_type -> protorender.Event
-	10, // 26: protorender.Coordinator.IngestMetrics:input_type -> protorender.MetricsRequest
-	20, // 27: protorender.Coordinator.UpdateWorkerStreamStatus:output_type -> protorender.CommonResponse
-	20, // 28: protorender.Coordinator.RegisterWorker:output_type -> protorender.CommonResponse
-	20, // 29: protorender.Coordinator.DeregisterWorker:output_type -> protorender.CommonResponse
-	4,  // 30: protorender.Coordinator.ListWorkers:output_type -> protorender.ListWorkersResponse
-	6,  // 31: protorender.Coordinator.ListStreams:output_type -> protorender.ListStreamsResponse
-	8,  // 32: protorender.Coordinator.GetStream:output_type -> protorender.StreamResponse
-	8,  // 33: protorender.Coordinator.CreateStream:output_type -> protorender.StreamResponse
-	8,  // 34: protorender.Coordinator.UpdateStream:output_type -> protorender.StreamResponse
-	12, // 35: protorender.Coordinator.ListSecrets:output_type -> protorender.ListSecretsResponse
-	20, // 36: protorender.Coordinator.CreateSecret:output_type -> protorender.CommonResponse
-	20, // 37: protorender.Coordinator.UpdateSecret:output_type -> protorender.CommonResponse
-	13, // 38: protorender.Coordinator.GetSecret:output_type -> protorender.SecretResponse
-	24, // 39: protorender.Coordinator.IngestEvents:output_type -> google.protobuf.Empty
-	24, // 40: protorender.Coordinator.IngestMetrics:output_type -> google.protobuf.Empty
-	27, // [27:41] is the sub-list for method output_type
-	13, // [13:27] is the sub-list for method input_type
+	11, // 25: protorender.Coordinator.DeleteSecret:input_type -> protorender.SecretRequest
+	9,  // 26: protorender.Coordinator.IngestEvents:input_type -> protorender.Event
+	10, // 27: protorender.Coordinator.IngestMetrics:input_type -> protorender.MetricsRequest
+	20, // 28: protorender.Coordinator.UpdateWorkerStreamStatus:output_type -> protorender.CommonResponse
+	20, // 29: protorender.Coordinator.RegisterWorker:output_type -> protorender.CommonResponse
+	20, // 30: protorender.Coordinator.DeregisterWorker:output_type -> protorender.CommonResponse
+	4,  // 31: protorender.Coordinator.ListWorkers:output_type -> protorender.ListWorkersResponse
+	6,  // 32: protorender.Coordinator.ListStreams:output_type -> protorender.ListStreamsResponse
+	8,  // 33: protorender.Coordinator.GetStream:output_type -> protorender.StreamResponse
+	8,  // 34: protorender.Coordinator.CreateStream:output_type -> protorender.StreamResponse
+	8,  // 35: protorender.Coordinator.UpdateStream:output_type -> protorender.StreamResponse
+	12, // 36: protorender.Coordinator.ListSecrets:output_type -> protorender.ListSecretsResponse
+	20, // 37: protorender.Coordinator.CreateSecret:output_type -> protorender.CommonResponse
+	20, // 38: protorender.Coordinator.UpdateSecret:output_type -> protorender.CommonResponse
+	13, // 39: protorender.Coordinator.GetSecret:output_type -> protorender.SecretResponse
+	20, // 40: protorender.Coordinator.DeleteSecret:output_type -> protorender.CommonResponse
+	24, // 41: protorender.Coordinator.IngestEvents:output_type -> google.protobuf.Empty
+	24, // 42: protorender.Coordinator.IngestMetrics:output_type -> google.protobuf.Empty
+	28, // [28:43] is the sub-list for method output_type
+	13, // [13:28] is the sub-list for method input_type
 	13, // [13:13] is the sub-list for extension type_name
 	13, // [13:13] is the sub-list for extension extendee
 	0,  // [0:13] is the sub-list for field type_name

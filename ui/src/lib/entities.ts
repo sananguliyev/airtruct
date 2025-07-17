@@ -7,6 +7,11 @@ export type Worker = {
   createdAt: string;
 };
 
+export type Secret = {
+  key: string;
+  createdAt: string;
+};
+
 export type Stream = {
   id: string;
   parentID?: string;

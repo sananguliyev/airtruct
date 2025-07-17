@@ -23,14 +23,16 @@ interface DataTableProps<T> {
   onEdit?: (item: T) => void;
   onDelete?: (item: T) => void;
   additionalActions?: (item: T) => React.ReactNode;
+  getRowId?: (item: T) => string | number;
 }
 
-export function DataTable<T extends { id: string | number }>({
+export function DataTable<T>({
   data,
   columns,
   onEdit,
   onDelete,
   additionalActions,
+  getRowId = (item: T) => (item as any).id,
 }: DataTableProps<T>) {
   const showActionsColumn = onEdit || onDelete || additionalActions;
 
@@ -58,44 +60,47 @@ export function DataTable<T extends { id: string | number }>({
               </TableCell>
             </TableRow>
           ) : (
-            data.map((row) => (
-              <TableRow key={row.id}>
-                {columns.map((column) => (
-                  <TableCell key={`${row.id}-${column.key as string}`}>
-                    {column.render
-                      ? column.render(row[column.key], row)
-                      : String(row[column.key] || "")}
-                  </TableCell>
-                ))}
-                {showActionsColumn && (
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      {onEdit && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onEdit(row)}
-                          title="Edit"
-                        >
-                          <PencilIcon className="h-4 w-4" />
-                        </Button>
-                      )}
-                      {additionalActions && additionalActions(row)}
-                      {onDelete && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onDelete(row)}
-                          title="Delete"
-                        >
-                          <Trash2Icon className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </TableCell>
-                )}
-              </TableRow>
-            ))
+            data.map((row) => {
+              const rowId = getRowId(row);
+              return (
+                <TableRow key={rowId}>
+                  {columns.map((column) => (
+                    <TableCell key={`${rowId}-${column.key as string}`}>
+                      {column.render
+                        ? column.render(row[column.key], row)
+                        : String(row[column.key] || "")}
+                    </TableCell>
+                  ))}
+                  {showActionsColumn && (
+                    <TableCell>
+                      <div className="flex space-x-2">
+                        {onEdit && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onEdit(row)}
+                            title="Edit"
+                          >
+                            <PencilIcon className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {additionalActions && additionalActions(row)}
+                        {onDelete && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onDelete(row)}
+                            title="Delete"
+                          >
+                            <Trash2Icon className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  )}
+                </TableRow>
+              );
+            })
           )}
         </TableBody>
       </Table>

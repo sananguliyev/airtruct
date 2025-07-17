@@ -162,6 +162,11 @@ service Coordinator {
       get: "/v0/secrets/{key}",
     };
   }
+  rpc DeleteSecret(SecretRequest) returns (CommonResponse) {
+    option (google.api.http) = {
+      delete: "/v0/secrets/{key}",
+    };
+  }
 
   // Observability methods
   rpc IngestEvents(stream Event) returns (stream google.protobuf.Empty);

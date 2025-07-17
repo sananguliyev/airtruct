@@ -74,3 +74,12 @@ func (c *CoordinatorAPI) GetSecret(_ context.Context, in *pb.SecretRequest) (*pb
 		},
 	}, nil
 }
+
+func (c *CoordinatorAPI) DeleteSecret(_ context.Context, in *pb.SecretRequest) (*pb.CommonResponse, error) {
+	if err := c.secretRepo.Delete(in.GetKey()); err != nil {
+		log.Error().Err(err).Msg("Failed to delete secret")
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &pb.CommonResponse{Message: "Secret has been deleted successfully"}, nil
+}
