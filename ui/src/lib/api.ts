@@ -251,25 +251,26 @@ export async function deleteStream(id: string): Promise<void> {
 export async function fetchSecrets(): Promise<Secret[]> {
   try {
     const response = await fetch(`${API_BASE_URL}/secrets`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
     const data = await response.json();
-
-    if (!data.data || !Array.isArray(data.data)) {
-      throw new Error("Invalid API response format");
+    
+    if (!response.ok) {
+      throw new Error(data.message || `HTTP error! status: ${response.status}`);
     }
 
-    return data.data.map((secret: any, index: number) => {
-      if (!secret || typeof secret.key === 'undefined') {
-        throw new Error(`Invalid secret data at index ${index}`);
-      }
+    if (data.data && Array.isArray(data.data)) {
+      return data.data.map((secret: any, index: number) => {
+        if (!secret || typeof secret.key === 'undefined') {
+          throw new Error(`Invalid secret data at index ${index}`);
+        }
 
-      return {
-        key: secret.key,
-        createdAt: secret.created_at ? new Date(secret.created_at).toLocaleString() : 'Unknown',
-      };
-    });
+        return {
+          key: secret.key,
+          createdAt: secret.created_at ? new Date(secret.created_at).toLocaleString() : 'Unknown',
+        };
+      });
+    } else {
+      return [];
+    }
   } catch (error) {
     console.error("Error fetching secrets:", error);
     throw error;
@@ -291,18 +292,16 @@ export async function createSecret(secretData: {
         value: secretData.value,
       }),
     });
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+    
     const data = await response.json();
-
-    if (!data.data || typeof data.data.key === 'undefined') {
-      throw new Error("Invalid create secret response format");
+    
+    if (!response.ok) {
+      throw new Error(data.message || `HTTP error! status: ${response.status}`);
     }
 
     return {
-      key: data.data.key,
-      createdAt: data.data.created_at ? new Date(data.data.created_at).toLocaleString() : 'Unknown',
+      key: secretData.key,
+      createdAt: new Date().toLocaleString(),
     };
   } catch (error) {
     console.error("Error creating secret:", error);
@@ -315,9 +314,13 @@ export async function deleteSecret(key: string): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/secrets/${key}`, {
       method: "DELETE",
     });
+    
+    const data = await response.json();
+    
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(data.message || `HTTP error! status: ${response.status}`);
     }
+    
   } catch (error) {
     console.error("Error deleting secret:", error);
     throw error;

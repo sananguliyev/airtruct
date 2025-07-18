@@ -1,6 +1,7 @@
 package persistence
 
 import (
+	"errors"
 	"time"
 
 	"gorm.io/gorm"
@@ -15,7 +16,7 @@ type Secret struct {
 type SecretRepository interface {
 	List() ([]Secret, error)
 	GetByKey(key string) (*Secret, error)
-	Create(secret *Secret) error
+	Create(secret *Secret) (bool, error)
 	Delete(key string) error
 }
 
@@ -51,8 +52,9 @@ func (r *secretRepository) GetByKey(key string) (*Secret, error) {
 	return &secret, nil
 }
 
-func (r *secretRepository) Create(secret *Secret) error {
-	return r.db.Create(secret).Error
+func (r *secretRepository) Create(secret *Secret) (bool, error) {
+	err := r.db.Create(secret).Error
+	return errors.Is(err, gorm.ErrDuplicatedKey), err
 }
 
 func (r *secretRepository) Delete(key string) error {

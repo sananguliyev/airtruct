@@ -30,7 +30,10 @@ func (c *CoordinatorAPI) CreateSecret(_ context.Context, in *pb.SecretRequest) (
 		EncryptedValue: encryptedValue,
 	}
 
-	if err := c.secretRepo.Create(secret); err != nil {
+	keyExists, err := c.secretRepo.Create(secret)
+	if keyExists && err != nil {
+		return nil, status.Error(codes.AlreadyExists, "Secret with this key already exists")
+	} else if err != nil {
 		log.Error().Err(err).Msg("Failed to create secret")
 		return nil, status.Error(codes.Internal, err.Error())
 	}

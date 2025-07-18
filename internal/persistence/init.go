@@ -13,7 +13,7 @@ func NewGormDB(config *configstruct.DatabaseConfig) *gorm.DB {
 	var err error
 
 	if config.Driver == configstruct.DatabaseTypeSQLite {
-		db, err = gorm.Open(sqlite.Open(config.URI), &gorm.Config{})
+		db, err = gorm.Open(sqlite.Open(config.URI), &gorm.Config{TranslateError: true})
 	} else {
 		log.Fatal().Msg("Unsupported database driver")
 		return nil
