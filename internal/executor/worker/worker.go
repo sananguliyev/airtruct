@@ -25,6 +25,7 @@ type workerExecutor struct {
 	coordinatorConnection CoordinatorConnection
 	streamManager         StreamManager
 	streamQueue           StreamQueue
+	telemetryManager      TelemetryManager
 }
 
 func NewWorkerExecutor(grpcConn *grpc.ClientConn, grpcPort uint32, vaultProvider vault.VaultProvider) WorkerExecutor {
@@ -34,10 +35,13 @@ func NewWorkerExecutor(grpcConn *grpc.ClientConn, grpcPort uint32, vaultProvider
 
 	streamQueue := NewStreamQueue(streamManager)
 
+	telemetryManager := NewTelemetryManager(coordinatorConnection, streamManager)
+
 	return &workerExecutor{
 		coordinatorConnection: coordinatorConnection,
 		streamManager:         streamManager,
 		streamQueue:           streamQueue,
+		telemetryManager:      telemetryManager,
 	}
 }
 
@@ -62,9 +66,11 @@ func (e *workerExecutor) DeleteWorkerStream(ctx context.Context, workerStreamID 
 }
 
 func (e *workerExecutor) ShipLogs(ctx context.Context) {
+	e.telemetryManager.ShipLogs(ctx)
 }
 
 func (e *workerExecutor) ShipMetrics(ctx context.Context) {
+	e.telemetryManager.ShipMetrics(ctx)
 }
 
 func (e *workerExecutor) ConsumeStreamQueue(ctx context.Context) {
