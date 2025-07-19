@@ -19,26 +19,7 @@ Airtruct is a modern, open-source data pipeline tool designed to be a powerful a
 
 ## Why Airtruct?
 
-_Comparison with Other ETL Tools_
-
-| Feature                    | Airtruct                      | Airbyte                      | Fivetran                |
-| :------------------------- | :---------------------------- | :--------------------------- | :---------------------- |
-| License                    | 🆓 Apache 2.0                 | 🆓 OSS + Cloud (Mixed)       | 🔒 Proprietary SaaS     |
-| Built-in Transform/Enrich  | ✅ Native (Bloblang DSL)      | ⚡ Requires dbt integration  | ⚡ SQL-only             |
-| Custom Components          | ✅ Any language (Subprocess)  | ⚠️ Limited SDK (Python/Java) | ❌ Not Supported        |
-| HTTP Input Source          | ✅ Native support             | ❌ Not available             | ❌ Not available        |
-| Docker Dependency          | ✅ None (standalone)          | ⚠️ Required (Hard)           | ☁️ Managed Service Only |
-| Connector Extensibility    | ✅ Easy (Go or Subprocess)    | ⚠️ Moderate (Connector SDK)  | ❌ Closed ecosystem     |
-| UI Stream Builder          | ✅ Full DAG-style UI          | ⚡ Basic UI                  | ⚡ Form-based setup     |
-| Monitoring & Observability | ✅ Metrics, tracing, and logs | ⚡ Logs only                 | ⚡ Logs & basic metrics |
-| Scalability                | ✅ Lightweight and horizontal | ⚠️ Heavy (Docker/Postgres)   | ☁️ Cloud-optimized      |
-
----
-
-Airtruct provides a modern, lightweight, and open alternative to traditional ETL platforms.  
-Unlike container-heavy or closed systems, Airtruct focuses on flexibility, performance, and developer freedom — allowing users to build powerful pipelines with minimal operational overhead.
-
-Whether you need real-time webhook ingestion, easy custom processors in any language, or fine-grained observability — Airtruct is built to scale with you.
+Airtruct stands out from traditional ETL tools through its **completely free Apache 2.0 license** and **zero operational overhead**. Unlike Docker-heavy alternatives that require complex setups, Airtruct runs as a single lightweight binary with no dependencies. It features **native transformation capabilities** using the powerful Bloblang DSL, eliminating the need for separate tools like dbt, while supporting **custom processors in any programming language** through simple stdin/stdout communication. With built-in HTTP input support for webhooks, a full **DAG-style visual interface**, and comprehensive observability (metrics, tracing, and logs), Airtruct delivers enterprise-grade functionality without the enterprise complexity. Its horizontally scalable worker pool architecture ensures you can handle massive workloads while maintaining the simplicity that makes data engineering enjoyable again.
 
 ## Architecture
 
@@ -109,10 +90,14 @@ Now run the worker with same command but role `worker` (if you are running both 
 ```
 
 You're all set, just open the console http://localhost:8080 — happy building with AirTruct! 🎉
+
+## Example: Kafka to PostgreSQL Pipeline
+
+Want to see Airtruct in action? Check out our comprehensive [Kafka to PostgreSQL streaming example](examples/kafka-to-psql/) that demonstrates a complete end-to-end pipeline. This tutorial shows you how to stream events from Kafka through Avro schema registry processing directly into PostgreSQL, showcasing Airtruct's real-time processing capabilities and easy configuration.
   
 ## Documentation
 
-Comprehensive documentation is currently in progress.  
+Documentation is currently in progress.  
 Feel free to open [issues](https://github.com/sananguliyev/airtruct/issues) if you have specific questions!
 
 ## Contributing
