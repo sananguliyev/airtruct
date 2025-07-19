@@ -1,7 +1,7 @@
-version: "2"
+version: '3.8'
 services:
   redpanda:
-    image: redpandadata/redpanda:v23.2.17
+    image: docker.redpanda.com/redpandadata/redpanda:v24.3.9
     command:
       - redpanda start
       - --smp 1
@@ -12,13 +12,13 @@ services:
       - --pandaproxy-addr 0.0.0.0:8082
       - --advertise-pandaproxy-addr localhost:8082
     ports:
-      - 18081:8081
-      - 8082:8082
-      - 9092:9092
-      - 29092:29092
+      - "8081:8081"
+      - "8082:8082"
+      - "9092:9092"
+      - "29092:29092"
 
   console:
-    image: docker.redpanda.com/redpandadata/console:v2.3.8
+    image: docker.redpanda.com/redpandadata/console:v2.8.5
     restart: on-failure
     entrypoint: /bin/sh
     command: -c "echo \"$$CONSOLE_CONFIG_FILE\" > /tmp/config.yml; /app/console"
@@ -30,18 +30,13 @@ services:
           schemaRegistry:
             enabled: true
             urls: ["http://redpanda:8081"]
-        connect:
-          enabled: true
-          clusters:
-            - name: datagen
-              url: http://connect:8083
     ports:
       - "18080:8080"
     depends_on:
       - redpanda
 
   postgres:
-    image: postgres:17-alpine
+    image: postgres:17.2-alpine
     container_name: postgres
     environment:
       POSTGRES_DB: mydb
