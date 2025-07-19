@@ -72,6 +72,15 @@ export function InlineYamlEditor({
   const flatFieldSchema = flatFieldKey ? actualSchema[flatFieldKey] : null;
 
   useEffect(() => {
+    // Initialize internal state for flat processor lists
+    if (isFlat && flatFieldSchema?.type === "processor_list") {
+      const currentValue = Array.isArray(getCurrentValue()) ? getCurrentValue() as any[] : [];
+      if (currentValue.length > 0 && internalProcessors.length === 0) {
+        setInternalProcessors(currentValue);
+      }
+      return;
+    }
+    
     if (isFlat) return;
 
     const initialStates: Record<string, FieldState> = {};
@@ -128,7 +137,7 @@ export function InlineYamlEditor({
       
       return prev;
     });
-  }, [actualSchema, value, isFlat]);
+  }, [actualSchema, value, isFlat, availableProcessors, availableInputs, availableOutputs, internalProcessors.length]);
 
   const yamlOutput = useMemo(() => {
     if (isFlat) return value || '';
@@ -507,8 +516,11 @@ export function InlineYamlEditor({
       if (typeof newValue === 'string') {
         onChange(newValue);
       } else if (flatFieldSchema.type === "processor_list") {
+        // Store the raw processor array (including incomplete ones) for getCurrentValue
+        const currentProcessors = Array.isArray(newValue) ? newValue : [];
+        
         try {
-          const processorsForYaml = newValue
+          const processorsForYaml = currentProcessors
             .filter(proc => {
               if (!proc.componentId || !proc.component || !proc.configYaml || !proc.configYaml.trim()) {
                 return false;
@@ -590,8 +602,12 @@ export function InlineYamlEditor({
           ) : flatFieldSchema.type === "processor_list" ? (
             <Suspense fallback={<div className="text-xs text-gray-400">Loading...</div>}>
               <LazyProcessorListEditor 
-                value={Array.isArray(getCurrentValue()) ? getCurrentValue() as any[] : []} 
-                updateValue={handleFlatValueChange as (value: any[]) => void}
+                value={internalProcessors.length > 0 ? internalProcessors : (Array.isArray(getCurrentValue()) ? getCurrentValue() as any[] : [])} 
+                updateValue={(newValue: any[]) => {
+                  setInternalProcessors(newValue);
+                  isInternalUpdateRef.current = true;
+                  handleFlatValueChange(newValue);
+                }}
                 availableProcessors={availableProcessors}
                 previewMode={previewMode}
               />

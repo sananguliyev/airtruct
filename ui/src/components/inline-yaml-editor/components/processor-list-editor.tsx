@@ -64,9 +64,10 @@ export function ProcessorListEditor({
             onClick={addProcessor}
             size="sm"
             variant="ghost"
-            className="h-5 w-5 p-0 bg-gray-700 hover:bg-gray-600"
+            className="h-6 text-sm bg-gray-700 hover:bg-gray-600"
           >
-            <Plus className="h-3 w-3" />
+            <Plus className="h-3 w-3 mr-1" />
+            Add Processor
           </Button>
         )}
       </div>

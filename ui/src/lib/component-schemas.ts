@@ -640,6 +640,166 @@ export const componentSchemas = {
         },
       },
     },
+    schema_registry_decode: {
+      title: "Schema Registry Decode",
+      description: "Automatically decodes and validates messages with schemas from a Confluent Schema Registry service.",
+      properties: {
+        url: {
+          type: "input",
+          title: "URL",
+          description: "The base URL of the schema registry service.",
+          required: true,
+        },
+        avro_raw_json: {
+          type: "bool",
+          title: "Avro Raw JSON",
+          description: "Whether Avro messages should be decoded into normal JSON rather than Avro JSON.",
+          default: false,
+        },
+        avro_nested_schemas: {
+          type: "bool",
+          title: "Avro Nested Schemas",
+          description: "Whether Avro Schemas are nested. If true bento will resolve schema references.",
+          default: false,
+        },
+        oauth: {
+          type: "object",
+          title: "OAuth",
+          description: "Allows you to specify open authentication via OAuth version 1.",
+          properties: {
+            enabled: {
+              type: "bool",
+              title: "Enabled",
+              description: "Whether to use OAuth version 1 in requests.",
+              default: false,
+            },
+            consumer_key: {
+              type: "input",
+              title: "Consumer Key",
+              description: "A value used to identify the client to the service provider.",
+              default: "",
+            },
+            consumer_secret: {
+              type: "input",
+              title: "Consumer Secret",
+              description: "A secret used to establish ownership of the consumer key.",
+              default: "",
+            },
+            access_token: {
+              type: "input",
+              title: "Access Token",
+              description: "A value used to gain access to the protected resources on behalf of the user.",
+              default: "",
+            },
+            access_token_secret: {
+              type: "input",
+              title: "Access Token Secret",
+              description: "A secret provided in order to establish ownership of a given access token.",
+              default: "",
+            },
+          },
+        },
+        basic_auth: {
+          type: "object",
+          title: "Basic Auth",
+          description: "Allows you to specify basic authentication.",
+          properties: {
+            enabled: {
+              type: "bool",
+              title: "Enabled",
+              description: "Whether to use basic authentication in requests.",
+              default: false,
+            },
+            username: {
+              type: "input",
+              title: "Username",
+              description: "A username to authenticate as.",
+              default: "",
+            },
+            password: {
+              type: "input",
+              title: "Password",
+              description: "A password to authenticate with.",
+              default: "",
+            },
+          },
+        },
+        jwt: {
+          type: "object",
+          title: "JWT",
+          description: "Allows you to specify JWT authentication.",
+          properties: {
+            enabled: {
+              type: "bool",
+              title: "Enabled",
+              description: "Whether to use JWT authentication in requests.",
+              default: false,
+            },
+            private_key_file: {
+              type: "input",
+              title: "Private Key File",
+              description: "A file with the PEM encoded via PKCS1 or PKCS8 as private key.",
+              default: "",
+            },
+            signing_method: {
+              type: "input",
+              title: "Signing Method",
+              description: "A method used to sign the token such as RS256, RS384, RS512 or EdDSA.",
+              default: "",
+            },
+            claims: {
+              type: "key_value",
+              title: "Claims",
+              description: "A value used to identify the claims that issued the JWT.",
+              default: {},
+            },
+            headers: {
+              type: "key_value",
+              title: "Headers",
+              description: "Add optional key/value headers to the JWT.",
+              default: {},
+            },
+          },
+        },
+        tls: {
+          type: "object",
+          title: "TLS",
+          description: "Custom TLS settings can be used to override system defaults.",
+          properties: {
+            skip_cert_verify: {
+              type: "bool",
+              title: "Skip Certificate Verification",
+              description: "Whether to skip server side certificate verification.",
+              default: false,
+            },
+            enable_renegotiation: {
+              type: "bool",
+              title: "Enable Renegotiation",
+              description: "Whether to allow the remote server to repeatedly request renegotiation.",
+              default: false,
+            },
+            root_cas: {
+              type: "input",
+              title: "Root CAs",
+              description: "An optional root certificate authority to use. This is a string, representing a certificate chain from the parent trusted root certificate, to possible intermediate signing certificates, to the host certificate.",
+              default: "",
+            },
+            root_cas_file: {
+              type: "input",
+              title: "Root CAs File",
+              description: "An optional path of a root certificate authority file to use. This is a file, often with a .pem extension, containing a certificate chain from the parent trusted root certificate, to possible intermediate signing certificates, to the host certificate.",
+              default: "",
+            },
+            client_certs: {
+              type: "array",
+              title: "Client Certificates",
+              description: "A list of client certificates to use. For each certificate either the fields cert and key, or cert_file and key_file should be specified, but not both.",
+              default: [],
+            },
+          },
+        },
+      },
+    },
   },
   output: {
     http_client: {
@@ -1318,12 +1478,93 @@ export const componentSchemas = {
         },
       },
     },
+    sql_insert: {
+      title: "SQL Insert",
+      description: "Inserts a row into an SQL database for each message.",
+      properties: {
+        driver: {
+          type: "select",
+          title: "Driver",
+          description: "A database driver to use.",
+          options: ["mysql", "postgres", "clickhouse", "mssql", "sqlite", "oracle", "snowflake", "trino", "gocosmos", "spanner"],
+          required: true,
+        },
+        dsn: {
+          type: "input",
+          title: "DSN",
+          description: "A Data Source Name to identify the target database.",
+          required: true,
+        },
+        table: {
+          type: "input",
+          title: "Table",
+          description: "The table to insert into.",
+          required: true,
+        },
+        columns: {
+          type: "array",
+          title: "Columns",
+          description: "A list of columns to insert.",
+          required: true,
+          default: [],
+        },
+        args_mapping: {
+          type: "code",
+          title: "Args Mapping",
+          description: "A Bloblang mapping which should evaluate to an array of values matching in size to the number of columns specified.",
+          required: true,
+        },
+        max_in_flight: {
+          type: "number",
+          title: "Max In Flight",
+          description: "The maximum number of inserts to run in parallel.",
+          default: 64,
+        },
+        batching: {
+          type: "object",
+          title: "Batching",
+          description: "Allows you to configure a batching policy.",
+          properties: {
+            count: {
+              type: "number",
+              title: "Count",
+              description: "A number of messages at which the batch should be flushed. If 0 disables count based batching.",
+              default: 0,
+            },
+            byte_size: {
+              type: "number",
+              title: "Byte Size",
+              description: "An amount of bytes at which the batch should be flushed. If 0 disables size based batching.",
+              default: 0,
+            },
+            period: {
+              type: "input",
+              title: "Period",
+              description: "A period in which an incomplete batch should be flushed regardless of its size.",
+              default: "",
+            },
+            jitter: {
+              type: "number",
+              title: "Jitter",
+              description: "A non-negative factor that adds random delay to batch flush intervals.",
+              default: 0,
+            },
+            check: {
+              type: "input",
+              title: "Check",
+              description: "A Bloblang query that should return a boolean value indicating whether a message should end a batch.",
+              default: "",
+            },
+          },
+        },
+      },
+    },
   },
 };
 
 // Component lists for each type
 export const componentLists = {
   input: ["generate", "http_client", "http_server", "kafka", "broker"],
-  pipeline: ["mapping", "json_schema", "catch", "switch"],
-  output: ["http_client", "kafka", "sync_response", "switch", "broker"],
+  pipeline: ["mapping", "json_schema", "catch", "switch", "schema_registry_decode"],
+  output: ["http_client", "kafka", "sync_response", "switch", "broker", "sql_insert"],
 };
