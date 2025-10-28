@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTheme } from "next-themes";
 import { FieldSchema } from "../types";
 import { TextInputField } from "./text-input-field";
 import { LazyCodeEditorField, LazyArrayEditor } from "./lazy-components";
@@ -22,19 +23,19 @@ interface NestedPropertyInputProps {
   previewMode?: boolean;
 }
 
-export function NestedPropertyInput({ 
-  propKey, 
-  propSchema, 
-  propValue, 
-  updateValue, 
-  previewMode = false 
+export function NestedPropertyInput({
+  propKey,
+  propSchema,
+  propValue,
+  updateValue,
+  previewMode = false,
 }: NestedPropertyInputProps) {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+
   const inputStyle = {
-    fontFamily: 'monospace',
-    fontSize: '11px',
-    color: '#22c55e',
-    backgroundColor: '#2a2a2a',
-    border: '1px solid #404040',
+    fontFamily: "monospace",
+    fontSize: "11px",
   };
 
   switch (propSchema.type) {
@@ -54,7 +55,8 @@ export function NestedPropertyInput({
           type="number"
           value={propValue || 0}
           onChange={(e) => updateValue(Number(e.target.value))}
-          className="h-5 text-xs p-1"
+          className={`h-5 text-xs p-1 bg-background border-border text-foreground 
+            font-mono ${isDark ? "text-green-400" : "text-green-600"}`}
           style={inputStyle}
           disabled={previewMode}
         />
@@ -69,16 +71,26 @@ export function NestedPropertyInput({
             className="scale-50"
             disabled={previewMode}
           />
-          <span style={{ ...inputStyle, marginLeft: '4px' }}>
-            {propValue ? 'true' : 'false'}
+          <span
+            className={`ml-1 font-mono text-xs ${isDark ? "text-green-400" : "text-green-600"}`}
+          >
+            {propValue ? "true" : "false"}
           </span>
         </div>
       );
 
     case "select":
       return (
-        <Select value={propValue || ""} onValueChange={updateValue} disabled={previewMode}>
-          <SelectTrigger className="h-5 text-xs w-auto min-w-[80px]" style={inputStyle}>
+        <Select
+          value={propValue || ""}
+          onValueChange={updateValue}
+          disabled={previewMode}
+        >
+          <SelectTrigger
+            className={`h-5 text-xs w-auto min-w-[80px] bg-background border-border text-foreground 
+            font-mono ${isDark ? "text-green-400" : "text-green-600"}`}
+            style={inputStyle}
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -93,21 +105,35 @@ export function NestedPropertyInput({
 
     case "array":
       return (
-        <Suspense fallback={<div className="text-xs text-gray-400">Loading...</div>}>
-          <LazyArrayEditor value={propValue || []} updateValue={updateValue} previewMode={previewMode} />
+        <Suspense
+          fallback={<div className="text-xs text-gray-400">Loading...</div>}
+        >
+          <LazyArrayEditor
+            value={propValue || []}
+            updateValue={updateValue}
+            previewMode={previewMode}
+          />
         </Suspense>
       );
 
     case "key_value":
-      return <KeyValueEditor value={propValue || {}} updateValue={updateValue} previewMode={previewMode} />;
+      return (
+        <KeyValueEditor
+          value={propValue || {}}
+          updateValue={updateValue}
+          previewMode={previewMode}
+        />
+      );
 
     case "code":
       return (
-        <Suspense fallback={<div className="text-xs text-gray-400">Loading...</div>}>
-          <LazyCodeEditorField 
-            value={propValue || ""} 
-            onChange={updateValue} 
-            previewMode={previewMode} 
+        <Suspense
+          fallback={<div className="text-xs text-gray-400">Loading...</div>}
+        >
+          <LazyCodeEditorField
+            value={propValue || ""}
+            onChange={updateValue}
+            previewMode={previewMode}
           />
         </Suspense>
       );
@@ -122,4 +148,4 @@ export function NestedPropertyInput({
         />
       );
   }
-} 
+}

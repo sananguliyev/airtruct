@@ -8,6 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Trash2 } from "lucide-react";
+import { useTheme } from "next-themes";
 import { ProcessorComponentSchema } from "../types";
 import { TextInputField } from "./text-input-field";
 import { LazyCodeEditorField } from "./lazy-components";
@@ -25,36 +26,37 @@ interface NestedProcessorProps {
   previewMode?: boolean;
 }
 
-export function NestedProcessor({ 
-  processor, 
-  index, 
-  onUpdate, 
-  onRemove, 
+export function NestedProcessor({
+  processor,
+  index,
+  onUpdate,
+  onRemove,
   availableProcessors,
   availableInputs = [],
   availableOutputs = [],
-  previewMode = false 
+  previewMode = false,
 }: NestedProcessorProps) {
-  const selectedProcessorSchema = processor.componentId 
-    ? availableProcessors.find(p => p.id === processor.componentId)?.schema 
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+
+  const selectedProcessorSchema = processor.componentId
+    ? availableProcessors.find((p) => p.id === processor.componentId)?.schema
     : null;
 
   const isProcessorFlat = selectedProcessorSchema?.flat === true;
-  const processorFlatFieldKey = isProcessorFlat && selectedProcessorSchema?.properties 
-    ? Object.keys(selectedProcessorSchema.properties)[0] 
-    : null;
-  const processorFlatFieldSchema = processorFlatFieldKey && selectedProcessorSchema?.properties
-    ? selectedProcessorSchema.properties[processorFlatFieldKey]
-    : null;
+  const processorFlatFieldKey =
+    isProcessorFlat && selectedProcessorSchema?.properties
+      ? Object.keys(selectedProcessorSchema.properties)[0]
+      : null;
+  const processorFlatFieldSchema =
+    processorFlatFieldKey && selectedProcessorSchema?.properties
+      ? selectedProcessorSchema.properties[processorFlatFieldKey]
+      : null;
 
   return (
-    <div className="border border-gray-600 rounded p-3 space-y-3">
+    <div className="border border-border rounded p-3 space-y-3">
       <div className="flex items-center justify-between">
-        <span style={{ 
-          fontFamily: 'monospace',
-          fontSize: '13px',
-          color: '#e5e7eb'
-        }}>
+        <span className="font-mono text-xs text-foreground">
           Processor {index + 1}:
         </span>
         {!previewMode && (
@@ -68,29 +70,20 @@ export function NestedProcessor({
           </Button>
         )}
       </div>
-      
+
       <div className="space-y-2">
         <div className="flex items-center space-x-2">
-          <span style={{ 
-            fontFamily: 'monospace',
-            fontSize: '13px',
-            color: '#e5e7eb'
-          }}>
-            component:
-          </span>
-          <Select 
-            value={processor.componentId || ""} 
-            onValueChange={(value) => onUpdate(index, 'componentId', value)}
+          <span className="font-mono text-xs text-foreground">component:</span>
+          <Select
+            value={processor.componentId || ""}
+            onValueChange={(value) => onUpdate(index, "componentId", value)}
             disabled={previewMode}
           >
-            <SelectTrigger 
-              className="h-6 text-sm w-auto min-w-[120px] focus-visible:ring-1 focus-visible:ring-green-500"
+            <SelectTrigger
+              className={`h-6 text-sm w-auto min-w-[120px] bg-background border-border text-foreground 
+                focus-visible:ring-1 focus-visible:ring-ring font-mono ${isDark ? "text-green-400" : "text-green-600"}`}
               style={{
-                fontFamily: 'monospace',
-                fontSize: '13px',
-                color: '#22c55e',
-                backgroundColor: '#2a2a2a',
-                border: '1px solid #404040',
+                fontSize: "13px",
               }}
             >
               <SelectValue placeholder="Select processor" />
@@ -98,7 +91,9 @@ export function NestedProcessor({
             <SelectContent>
               {availableProcessors.map((proc) => (
                 <SelectItem key={proc.id} value={proc.id}>
-                  {proc.name === proc.component ? proc.component : `${proc.name} (${proc.component})`}
+                  {proc.name === proc.component
+                    ? proc.component
+                    : `${proc.name} (${proc.component})`}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -106,38 +101,38 @@ export function NestedProcessor({
         </div>
 
         {processor.componentId && selectedProcessorSchema && (
-          <div className="ml-4 border-l-2 border-gray-600 pl-3">
-            <span style={{ 
-              fontFamily: 'monospace',
-              fontSize: '13px',
-              color: '#e5e7eb',
-              display: 'block',
-              marginBottom: '8px'
-            }}>
+          <div className="ml-4 border-l-2 border-border pl-3">
+            <span className="font-mono text-xs text-foreground block mb-2">
               config:
             </span>
-            
-            {isProcessorFlat && processorFlatFieldKey && processorFlatFieldSchema ? (
+
+            {isProcessorFlat &&
+            processorFlatFieldKey &&
+            processorFlatFieldSchema ? (
               <div className="space-y-2">
-                <span style={{ 
-                  fontFamily: 'monospace',
-                  fontSize: '11px',
-                  color: '#6b7280'
-                }}>
+                <span className="font-mono text-xs text-muted-foreground">
                   {processorFlatFieldSchema.title || processorFlatFieldKey}
                 </span>
                 {processorFlatFieldSchema.type === "code" ? (
-                  <Suspense fallback={<div className="text-xs text-gray-400">Loading...</div>}>
-                    <LazyCodeEditorField 
-                      value={processor.configYaml || ""} 
-                      onChange={(yamlValue: string) => onUpdate(index, 'configYaml', yamlValue)} 
+                  <Suspense
+                    fallback={
+                      <div className="text-xs text-gray-400">Loading...</div>
+                    }
+                  >
+                    <LazyCodeEditorField
+                      value={processor.configYaml || ""}
+                      onChange={(yamlValue: string) =>
+                        onUpdate(index, "configYaml", yamlValue)
+                      }
                       previewMode={previewMode}
                     />
                   </Suspense>
                 ) : (
                   <TextInputField
                     value={processor.configYaml || ""}
-                    onChange={(yamlValue) => onUpdate(index, 'configYaml', yamlValue)}
+                    onChange={(yamlValue) =>
+                      onUpdate(index, "configYaml", yamlValue)
+                    }
                     previewMode={previewMode}
                     placeholder={processorFlatFieldSchema.description}
                   />
@@ -147,7 +142,9 @@ export function NestedProcessor({
               <InlineYamlEditor
                 schema={selectedProcessorSchema}
                 value={processor.configYaml || ""}
-                onChange={(yamlValue: string) => onUpdate(index, 'configYaml', yamlValue)}
+                onChange={(yamlValue: string) =>
+                  onUpdate(index, "configYaml", yamlValue)
+                }
                 availableProcessors={availableProcessors}
                 availableInputs={availableInputs}
                 availableOutputs={availableOutputs}
@@ -159,4 +156,4 @@ export function NestedProcessor({
       </div>
     </div>
   );
-} 
+}

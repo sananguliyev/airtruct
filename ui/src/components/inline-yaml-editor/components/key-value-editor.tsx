@@ -2,6 +2,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2 } from "lucide-react";
+import { useTheme } from "next-themes";
 import { EditorProps } from "../types";
 
 interface KeyValueEditorProps extends EditorProps {
@@ -9,8 +10,14 @@ interface KeyValueEditorProps extends EditorProps {
   updateValue: (value: Record<string, any>) => void;
 }
 
-export function KeyValueEditor({ value, updateValue, previewMode = false }: KeyValueEditorProps) {
+export function KeyValueEditor({
+  value,
+  updateValue,
+  previewMode = false,
+}: KeyValueEditorProps) {
   const pairs = Object.entries(value);
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
 
   const addPair = () => {
     updateValue({ ...value, "": "" });
@@ -66,27 +73,21 @@ export function KeyValueEditor({ value, updateValue, previewMode = false }: KeyV
             value={key}
             onChange={(e) => updatePairKey(key, e.target.value)}
             placeholder="key"
-            className="h-5 text-xs p-1 flex-1 max-w-[80px]"
+            className={`h-5 text-xs p-1 flex-1 max-w-[80px] bg-background border-border text-foreground 
+              font-mono ${isDark ? "text-green-400" : "text-green-600"}`}
             style={{
-              fontFamily: 'monospace',
-              fontSize: '11px',
-              backgroundColor: '#2a2a2a',
-              border: '1px solid #404040',
-              color: '#22c55e',
+              fontSize: "11px",
             }}
           />
-          <span className="text-gray-400 text-xs">:</span>
+          <span className="text-muted-foreground text-xs">:</span>
           <Input
             value={val}
             onChange={(e) => updatePairValue(key, e.target.value)}
             placeholder="value"
-            className="h-5 text-xs p-1 flex-1 max-w-[100px]"
+            className={`h-5 text-xs p-1 flex-1 max-w-[100px] bg-background border-border text-foreground 
+              font-mono ${isDark ? "text-green-400" : "text-green-600"}`}
             style={{
-              fontFamily: 'monospace',
-              fontSize: '11px',
-              backgroundColor: '#2a2a2a',
-              border: '1px solid #404040',
-              color: '#22c55e',
+              fontSize: "11px",
             }}
           />
           {!previewMode && (
@@ -116,4 +117,4 @@ export function KeyValueEditor({ value, updateValue, previewMode = false }: KeyV
       )}
     </div>
   );
-} 
+}

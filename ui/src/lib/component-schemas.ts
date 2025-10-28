@@ -513,8 +513,9 @@ export const componentSchemas = {
             status: {
               type: "input",
               title: "HTTP Status code",
-              description: "Specify the status code to return with synchronous responses",
-              default: "200"
+              description:
+                "Specify the status code to return with synchronous responses",
+              default: "200",
             },
             headers: {
               type: "key_value",
@@ -522,18 +523,20 @@ export const componentSchemas = {
               description: "A map of headers to add to the response.",
               default: {},
             },
-          }
+          },
         },
       },
     },
     broker: {
       title: "Broker",
-      description: "Allows you to combine multiple inputs into a single stream using a range of input brokers.",
+      description:
+        "Allows you to combine multiple inputs into a single stream using a range of input brokers.",
       properties: {
         copies: {
           type: "number",
           title: "Copies",
-          description: "The number of copies of each configured input to spawn.",
+          description:
+            "The number of copies of each configured input to spawn.",
           default: 1,
         },
         inputs: {
@@ -551,40 +554,132 @@ export const componentSchemas = {
             count: {
               type: "number",
               title: "Count",
-              description: "A number of messages at which the batch should be flushed. If 0 disables count based batching.",
+              description:
+                "A number of messages at which the batch should be flushed. If 0 disables count based batching.",
               default: 0,
             },
             byte_size: {
               type: "number",
               title: "Byte Size",
-              description: "An amount of bytes at which the batch should be flushed. If 0 disables size based batching.",
+              description:
+                "An amount of bytes at which the batch should be flushed. If 0 disables size based batching.",
               default: 0,
             },
             period: {
               type: "input",
               title: "Period",
-              description: "A period in which an incomplete batch should be flushed regardless of its size.",
+              description:
+                "A period in which an incomplete batch should be flushed regardless of its size.",
               default: "",
             },
             jitter: {
               type: "number",
               title: "Jitter",
-              description: "A non-negative factor that adds random delay to batch flush intervals.",
+              description:
+                "A non-negative factor that adds random delay to batch flush intervals.",
               default: 0,
             },
             check: {
               type: "input",
               title: "Check",
-              description: "A Bloblang query that should return a boolean value indicating whether a message should end a batch.",
+              description:
+                "A Bloblang query that should return a boolean value indicating whether a message should end a batch.",
               default: "",
             },
             processors: {
               type: "processor_list",
               title: "Processors",
-              description: "A list of processors to apply to a batch as it is flushed.",
+              description:
+                "A list of processors to apply to a batch as it is flushed.",
               default: [],
             },
           },
+        },
+      },
+    },
+    mysql_replication: {
+      title: "MySQL (MariaDB) Replication",
+      properties: {
+        host: {
+          type: "input",
+          title: "Host",
+          description: "MySQL server hostname or IP address.",
+          required: true,
+        },
+        port: {
+          type: "number",
+          title: "Port",
+          description: "MySQL server port.",
+          default: 3306,
+        },
+        user: {
+          type: "input",
+          title: "User",
+          description: "MySQL username for connection.",
+          required: true,
+        },
+        password: {
+          type: "input",
+          title: "Password",
+          description: "MySQL password for connection.",
+          default: "",
+          required: true,
+        },
+        server_id: {
+          type: "number",
+          title: "Server ID",
+          description:
+            "Unique server ID for this binlog consumer. Must be different from the MySQL server ID and other consumers.",
+          default: 1000,
+        },
+        position_file: {
+          type: "input",
+          title: "Position File",
+          description:
+            "File path to store/read position information for resuming. Will be created if it doesn't exist.",
+          default: "./mysql_binlog.pos",
+        },
+        include_tables: {
+          type: "array",
+          title: "Include Tables",
+          description:
+            "List of tables to monitor in format 'schema_name.table_name'. If empty, all tables are monitored.",
+          default: [],
+        },
+        exclude_tables: {
+          type: "array",
+          title: "Exclude Tables",
+          description:
+            "List of tables to exclude in format 'schema_name.table_name'.",
+          default: [],
+        },
+        use_schema_cache: {
+          type: "bool",
+          title: "Use Schema Cache",
+          description:
+            "Enable schema caching to get column names without requiring --binlog-row-metadata=FULL. This queries INFORMATION_SCHEMA to map column positions to names.",
+          default: false,
+        },
+        schema_cache_ttl: {
+          type: "input",
+          title: "Schema Cache TTL",
+          description:
+            "TTL for schema cache entries (e.g., '5m', '1h'). Schema is refreshed when cache expires.",
+          default: "5m",
+        },
+        position_mode: {
+          type: "select",
+          title: "Position Mode",
+          description: "Position tracking mode: 'gtid' (default) or 'file'.",
+          options: ["gtid", "file"],
+          default: "gtid",
+        },
+        flavor: {
+          type: "select",
+          title: "Flavor",
+          description: "Database flavor: 'mysql' (default) or 'mariadb'.",
+          options: ["mysql", "mariadb"],
+          default: "mysql",
         },
       },
     },
@@ -615,13 +710,15 @@ export const componentSchemas = {
     },
     catch: {
       title: "Catch",
-      description: "Applies a list of child processors only when a previous processing step has failed.",
+      description:
+        "Applies a list of child processors only when a previous processing step has failed.",
       flat: true,
       properties: {
         processors: {
           type: "processor_list",
           title: "Processors",
-          description: "A list of processors to apply when a message fails processing.",
+          description:
+            "A list of processors to apply when a message fails processing.",
           default: [],
         },
       },
@@ -634,7 +731,8 @@ export const componentSchemas = {
         switch: {
           type: "processor_cases",
           title: "Cases",
-          description: "A list of switch cases with conditions and processors to execute.",
+          description:
+            "A list of switch cases with conditions and processors to execute.",
           required: true,
           default: [],
         },
@@ -642,7 +740,8 @@ export const componentSchemas = {
     },
     schema_registry_decode: {
       title: "Schema Registry Decode",
-      description: "Automatically decodes and validates messages with schemas from a Confluent Schema Registry service.",
+      description:
+        "Automatically decodes and validates messages with schemas from a Confluent Schema Registry service.",
       properties: {
         url: {
           type: "input",
@@ -653,19 +752,22 @@ export const componentSchemas = {
         avro_raw_json: {
           type: "bool",
           title: "Avro Raw JSON",
-          description: "Whether Avro messages should be decoded into normal JSON rather than Avro JSON.",
+          description:
+            "Whether Avro messages should be decoded into normal JSON rather than Avro JSON.",
           default: false,
         },
         avro_nested_schemas: {
           type: "bool",
           title: "Avro Nested Schemas",
-          description: "Whether Avro Schemas are nested. If true bento will resolve schema references.",
+          description:
+            "Whether Avro Schemas are nested. If true bento will resolve schema references.",
           default: false,
         },
         oauth: {
           type: "object",
           title: "OAuth",
-          description: "Allows you to specify open authentication via OAuth version 1.",
+          description:
+            "Allows you to specify open authentication via OAuth version 1.",
           properties: {
             enabled: {
               type: "bool",
@@ -676,25 +778,29 @@ export const componentSchemas = {
             consumer_key: {
               type: "input",
               title: "Consumer Key",
-              description: "A value used to identify the client to the service provider.",
+              description:
+                "A value used to identify the client to the service provider.",
               default: "",
             },
             consumer_secret: {
               type: "input",
               title: "Consumer Secret",
-              description: "A secret used to establish ownership of the consumer key.",
+              description:
+                "A secret used to establish ownership of the consumer key.",
               default: "",
             },
             access_token: {
               type: "input",
               title: "Access Token",
-              description: "A value used to gain access to the protected resources on behalf of the user.",
+              description:
+                "A value used to gain access to the protected resources on behalf of the user.",
               default: "",
             },
             access_token_secret: {
               type: "input",
               title: "Access Token Secret",
-              description: "A secret provided in order to establish ownership of a given access token.",
+              description:
+                "A secret provided in order to establish ownership of a given access token.",
               default: "",
             },
           },
@@ -738,19 +844,22 @@ export const componentSchemas = {
             private_key_file: {
               type: "input",
               title: "Private Key File",
-              description: "A file with the PEM encoded via PKCS1 or PKCS8 as private key.",
+              description:
+                "A file with the PEM encoded via PKCS1 or PKCS8 as private key.",
               default: "",
             },
             signing_method: {
               type: "input",
               title: "Signing Method",
-              description: "A method used to sign the token such as RS256, RS384, RS512 or EdDSA.",
+              description:
+                "A method used to sign the token such as RS256, RS384, RS512 or EdDSA.",
               default: "",
             },
             claims: {
               type: "key_value",
               title: "Claims",
-              description: "A value used to identify the claims that issued the JWT.",
+              description:
+                "A value used to identify the claims that issued the JWT.",
               default: {},
             },
             headers: {
@@ -764,36 +873,42 @@ export const componentSchemas = {
         tls: {
           type: "object",
           title: "TLS",
-          description: "Custom TLS settings can be used to override system defaults.",
+          description:
+            "Custom TLS settings can be used to override system defaults.",
           properties: {
             skip_cert_verify: {
               type: "bool",
               title: "Skip Certificate Verification",
-              description: "Whether to skip server side certificate verification.",
+              description:
+                "Whether to skip server side certificate verification.",
               default: false,
             },
             enable_renegotiation: {
               type: "bool",
               title: "Enable Renegotiation",
-              description: "Whether to allow the remote server to repeatedly request renegotiation.",
+              description:
+                "Whether to allow the remote server to repeatedly request renegotiation.",
               default: false,
             },
             root_cas: {
               type: "input",
               title: "Root CAs",
-              description: "An optional root certificate authority to use. This is a string, representing a certificate chain from the parent trusted root certificate, to possible intermediate signing certificates, to the host certificate.",
+              description:
+                "An optional root certificate authority to use. This is a string, representing a certificate chain from the parent trusted root certificate, to possible intermediate signing certificates, to the host certificate.",
               default: "",
             },
             root_cas_file: {
               type: "input",
               title: "Root CAs File",
-              description: "An optional path of a root certificate authority file to use. This is a file, often with a .pem extension, containing a certificate chain from the parent trusted root certificate, to possible intermediate signing certificates, to the host certificate.",
+              description:
+                "An optional path of a root certificate authority file to use. This is a file, often with a .pem extension, containing a certificate chain from the parent trusted root certificate, to possible intermediate signing certificates, to the host certificate.",
               default: "",
             },
             client_certs: {
               type: "array",
               title: "Client Certificates",
-              description: "A list of client certificates to use. For each certificate either the fields cert and key, or cert_file and key_file should be specified, but not both.",
+              description:
+                "A list of client certificates to use. For each certificate either the fields cert and key, or cert_file and key_file should be specified, but not both.",
               default: [],
             },
           },
@@ -1116,7 +1231,8 @@ export const componentSchemas = {
         propagate_response: {
           type: "bool",
           title: "Propagate Response",
-          description: "Whether to propagate the response from the HTTP request",
+          description:
+            "Whether to propagate the response from the HTTP request",
           default: false,
         },
         max_in_flight: {
@@ -1188,7 +1304,8 @@ export const componentSchemas = {
         key: {
           type: "input",
           title: "Key",
-          description: "An optional key to set for each message (interpolated).",
+          description:
+            "An optional key to set for each message (interpolated).",
           default: "",
         },
         client_id: {
@@ -1386,24 +1503,28 @@ export const componentSchemas = {
     },
     switch: {
       title: "Switch",
-      description: "Route messages to different outputs based on their contents.",
+      description:
+        "Route messages to different outputs based on their contents.",
       properties: {
         retry_until_success: {
           type: "bool",
           title: "Retry Until Success",
-          description: "If a selected output fails to send a message this field determines whether it is reattempted indefinitely.",
+          description:
+            "If a selected output fails to send a message this field determines whether it is reattempted indefinitely.",
           default: false,
         },
         strict_mode: {
           type: "bool",
           title: "Strict Mode",
-          description: "Whether an error should be reported if no condition is met. If set to true, an error is propagated back to the input level.",
+          description:
+            "Whether an error should be reported if no condition is met. If set to true, an error is propagated back to the input level.",
           default: false,
         },
         cases: {
           type: "output_cases",
           title: "Cases",
-          description: "A list of switch cases, outlining outputs that can be routed to.",
+          description:
+            "A list of switch cases, outlining outputs that can be routed to.",
           required: true,
           default: [],
         },
@@ -1411,19 +1532,28 @@ export const componentSchemas = {
     },
     broker: {
       title: "Broker",
-      description: "Route messages to multiple child outputs using a range of brokering patterns.",
+      description:
+        "Route messages to multiple child outputs using a range of brokering patterns.",
       properties: {
         copies: {
           type: "number",
           title: "Copies",
-          description: "The number of copies of each configured output to spawn.",
+          description:
+            "The number of copies of each configured output to spawn.",
           default: 1,
         },
         pattern: {
           type: "select",
           title: "Pattern",
           description: "The brokering pattern to use.",
-          options: ["fan_out", "fan_out_fail_fast", "fan_out_sequential", "fan_out_sequential_fail_fast", "round_robin", "greedy"],
+          options: [
+            "fan_out",
+            "fan_out_fail_fast",
+            "fan_out_sequential",
+            "fan_out_sequential_fail_fast",
+            "round_robin",
+            "greedy",
+          ],
           default: "fan_out",
         },
         outputs: {
@@ -1441,37 +1571,43 @@ export const componentSchemas = {
             count: {
               type: "number",
               title: "Count",
-              description: "A number of messages at which the batch should be flushed. If 0 disables count based batching.",
+              description:
+                "A number of messages at which the batch should be flushed. If 0 disables count based batching.",
               default: 0,
             },
             byte_size: {
               type: "number",
               title: "Byte Size",
-              description: "An amount of bytes at which the batch should be flushed. If 0 disables size based batching.",
+              description:
+                "An amount of bytes at which the batch should be flushed. If 0 disables size based batching.",
               default: 0,
             },
             period: {
               type: "input",
               title: "Period",
-              description: "A period in which an incomplete batch should be flushed regardless of its size.",
+              description:
+                "A period in which an incomplete batch should be flushed regardless of its size.",
               default: "",
             },
             jitter: {
               type: "number",
               title: "Jitter",
-              description: "A non-negative factor that adds random delay to batch flush intervals.",
+              description:
+                "A non-negative factor that adds random delay to batch flush intervals.",
               default: 0,
             },
             check: {
               type: "input",
               title: "Check",
-              description: "A Bloblang query that should return a boolean value indicating whether a message should end a batch.",
+              description:
+                "A Bloblang query that should return a boolean value indicating whether a message should end a batch.",
               default: "",
             },
             processors: {
               type: "processor_list",
               title: "Processors",
-              description: "A list of processors to apply to a batch as it is flushed.",
+              description:
+                "A list of processors to apply to a batch as it is flushed.",
               default: [],
             },
           },
@@ -1486,7 +1622,18 @@ export const componentSchemas = {
           type: "select",
           title: "Driver",
           description: "A database driver to use.",
-          options: ["mysql", "postgres", "clickhouse", "mssql", "sqlite", "oracle", "snowflake", "trino", "gocosmos", "spanner"],
+          options: [
+            "mysql",
+            "postgres",
+            "clickhouse",
+            "mssql",
+            "sqlite",
+            "oracle",
+            "snowflake",
+            "trino",
+            "gocosmos",
+            "spanner",
+          ],
           required: true,
         },
         dsn: {
@@ -1511,7 +1658,8 @@ export const componentSchemas = {
         args_mapping: {
           type: "code",
           title: "Args Mapping",
-          description: "A Bloblang mapping which should evaluate to an array of values matching in size to the number of columns specified.",
+          description:
+            "A Bloblang mapping which should evaluate to an array of values matching in size to the number of columns specified.",
           required: true,
         },
         max_in_flight: {
@@ -1528,31 +1676,36 @@ export const componentSchemas = {
             count: {
               type: "number",
               title: "Count",
-              description: "A number of messages at which the batch should be flushed. If 0 disables count based batching.",
+              description:
+                "A number of messages at which the batch should be flushed. If 0 disables count based batching.",
               default: 0,
             },
             byte_size: {
               type: "number",
               title: "Byte Size",
-              description: "An amount of bytes at which the batch should be flushed. If 0 disables size based batching.",
+              description:
+                "An amount of bytes at which the batch should be flushed. If 0 disables size based batching.",
               default: 0,
             },
             period: {
               type: "input",
               title: "Period",
-              description: "A period in which an incomplete batch should be flushed regardless of its size.",
+              description:
+                "A period in which an incomplete batch should be flushed regardless of its size.",
               default: "",
             },
             jitter: {
               type: "number",
               title: "Jitter",
-              description: "A non-negative factor that adds random delay to batch flush intervals.",
+              description:
+                "A non-negative factor that adds random delay to batch flush intervals.",
               default: 0,
             },
             check: {
               type: "input",
               title: "Check",
-              description: "A Bloblang query that should return a boolean value indicating whether a message should end a batch.",
+              description:
+                "A Bloblang query that should return a boolean value indicating whether a message should end a batch.",
               default: "",
             },
           },
@@ -1564,7 +1717,27 @@ export const componentSchemas = {
 
 // Component lists for each type
 export const componentLists = {
-  input: ["generate", "http_client", "http_server", "kafka", "broker"],
-  pipeline: ["mapping", "json_schema", "catch", "switch", "schema_registry_decode"],
-  output: ["http_client", "kafka", "sync_response", "switch", "broker", "sql_insert"],
+  input: [
+    "generate",
+    "http_client",
+    "http_server",
+    "kafka",
+    "broker",
+    "mysql_replication",
+  ],
+  pipeline: [
+    "mapping",
+    "json_schema",
+    "catch",
+    "switch",
+    "schema_registry_decode",
+  ],
+  output: [
+    "http_client",
+    "kafka",
+    "sync_response",
+    "switch",
+    "broker",
+    "sql_insert",
+  ],
 };

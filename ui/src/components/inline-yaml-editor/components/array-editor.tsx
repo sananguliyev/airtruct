@@ -2,6 +2,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2 } from "lucide-react";
+import { useTheme } from "next-themes";
 import { EditorProps } from "../types";
 
 interface ArrayEditorProps extends EditorProps {
@@ -9,7 +10,14 @@ interface ArrayEditorProps extends EditorProps {
   updateValue: (value: any[]) => void;
 }
 
-export function ArrayEditor({ value, updateValue, previewMode = false }: ArrayEditorProps) {
+export function ArrayEditor({
+  value,
+  updateValue,
+  previewMode = false,
+}: ArrayEditorProps) {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+
   const addItem = () => {
     updateValue([...value, ""]);
   };
@@ -47,18 +55,15 @@ export function ArrayEditor({ value, updateValue, previewMode = false }: ArrayEd
     <div className="space-y-1">
       {value.map((item, index) => (
         <div key={index} className="flex items-center space-x-2 ml-4">
-          <span className="text-gray-400 text-xs">-</span>
+          <span className="text-muted-foreground text-xs">-</span>
           <Input
             value={item}
             onChange={(e) => updateItem(index, e.target.value)}
             placeholder={`item ${index + 1}`}
-            className="h-5 text-xs p-1 flex-1 max-w-[150px]"
+            className={`h-5 text-xs p-1 flex-1 max-w-[150px] bg-background border-border text-foreground 
+              font-mono ${isDark ? "text-green-400" : "text-green-600"}`}
             style={{
-              fontFamily: 'monospace',
-              fontSize: '11px',
-              backgroundColor: '#2a2a2a',
-              border: '1px solid #404040',
-              color: '#22c55e',
+              fontSize: "11px",
             }}
           />
           {!previewMode && (
@@ -88,4 +93,4 @@ export function ArrayEditor({ value, updateValue, previewMode = false }: ArrayEd
       )}
     </div>
   );
-} 
+}
