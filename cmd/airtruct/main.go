@@ -5,6 +5,8 @@ import (
 	"os"
 	"os/signal"
 
+	_ "github.com/sananguliyev/airtruct/internal/components/all"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
