@@ -1,4 +1,5 @@
-import { Stream, Worker, Secret } from "./entities";
+import { Stream, Worker, Secret, Cache } from "./entities";
+import * as yaml from "js-yaml";
 
 // Placeholder API functions - adapt based on original logic and backend
 const API_BASE_URL = "http://localhost:8080/api/v0";
@@ -48,11 +49,12 @@ export async function fetchStreams(): Promise<Stream[]> {
       output_label: stream.output_label,
       output_component: stream.output_component,
       output_config: stream.output_config || "",
-      processors: stream.processors?.map((processor: any) => ({
-        label: processor.label,
-        component: processor.component,
-        config: processor.config || "",
-      })) || [],
+      processors:
+        stream.processors?.map((processor: any) => ({
+          label: processor.label,
+          component: processor.component,
+          config: processor.config || "",
+        })) || [],
       createdAt: new Date(stream.created_at).toLocaleString(),
       is_http_server: stream.is_http_server || false,
     }));
@@ -81,11 +83,12 @@ export async function fetchStream(id: string): Promise<Stream> {
       output_label: data.data.output_label,
       output_component: data.data.output_component,
       output_config: data.data.output_config || "",
-      processors: data.data.processors?.map((processor: any) => ({
-        label: processor.label,
-        component: processor.component,
-        config: processor.config || "",
-      })) || [],
+      processors:
+        data.data.processors?.map((processor: any) => ({
+          label: processor.label,
+          component: processor.component,
+          config: processor.config || "",
+        })) || [],
       createdAt: new Date(data.data.created_at).toLocaleString(),
       is_http_server: data.data.is_http_server || false,
     };
@@ -95,23 +98,21 @@ export async function fetchStream(id: string): Promise<Stream> {
   }
 }
 
-export async function createStream(
-  stream: {
-    name: string;
-    status: string;
-    input_component: string;
-    input_label: string;
-    input_config: string;
-    output_component: string;
-    output_label: string;
-    output_config: string;
-    processors: Array<{
-      label: string;
-      component: string;
-      config: string;
-    }>;
-  }
-): Promise<Stream> {
+export async function createStream(stream: {
+  name: string;
+  status: string;
+  input_component: string;
+  input_label: string;
+  input_config: string;
+  output_component: string;
+  output_label: string;
+  output_config: string;
+  processors: Array<{
+    label: string;
+    component: string;
+    config: string;
+  }>;
+}): Promise<Stream> {
   try {
     const response = await fetch(`${API_BASE_URL}/streams`, {
       method: "POST",
@@ -150,11 +151,12 @@ export async function createStream(
       output_label: data.data.output_label,
       output_component: data.data.output_component,
       output_config: data.data.output_config,
-      processors: data.data.processors?.map((processor: any) => ({
-        label: processor.label,
-        component: processor.component,
-        config: processor.config || "",
-      })) || [],
+      processors:
+        data.data.processors?.map((processor: any) => ({
+          label: processor.label,
+          component: processor.component,
+          config: processor.config || "",
+        })) || [],
       createdAt: new Date(data.data.created_at).toLocaleString(),
       is_http_server: data.data.is_http_server || false,
     };
@@ -180,7 +182,7 @@ export async function updateStream(
       component: string;
       config: string;
     }>;
-  }
+  },
 ): Promise<Stream> {
   try {
     const response = await fetch(`${API_BASE_URL}/streams/${id}`, {
@@ -220,11 +222,12 @@ export async function updateStream(
       output_label: data.data.output_label,
       output_component: data.data.output_component,
       output_config: data.data.output_config,
-      processors: data.data.processors?.map((processor: any) => ({
-        label: processor.label,
-        component: processor.component,
-        config: processor.config,
-      })) || [],
+      processors:
+        data.data.processors?.map((processor: any) => ({
+          label: processor.label,
+          component: processor.component,
+          config: processor.config,
+        })) || [],
       createdAt: new Date(data.data.created_at).toLocaleString(),
       is_http_server: data.data.is_http_server || false,
     };
@@ -252,20 +255,22 @@ export async function fetchSecrets(): Promise<Secret[]> {
   try {
     const response = await fetch(`${API_BASE_URL}/secrets`);
     const data = await response.json();
-    
+
     if (!response.ok) {
       throw new Error(data.message || `HTTP error! status: ${response.status}`);
     }
 
     if (data.data && Array.isArray(data.data)) {
       return data.data.map((secret: any, index: number) => {
-        if (!secret || typeof secret.key === 'undefined') {
+        if (!secret || typeof secret.key === "undefined") {
           throw new Error(`Invalid secret data at index ${index}`);
         }
 
         return {
           key: secret.key,
-          createdAt: secret.created_at ? new Date(secret.created_at).toLocaleString() : 'Unknown',
+          createdAt: secret.created_at
+            ? new Date(secret.created_at).toLocaleString()
+            : "Unknown",
         };
       });
     } else {
@@ -292,9 +297,9 @@ export async function createSecret(secretData: {
         value: secretData.value,
       }),
     });
-    
+
     const data = await response.json();
-    
+
     if (!response.ok) {
       throw new Error(data.message || `HTTP error! status: ${response.status}`);
     }
@@ -314,15 +319,156 @@ export async function deleteSecret(key: string): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/secrets/${key}`, {
       method: "DELETE",
     });
-    
+
     const data = await response.json();
-    
+
     if (!response.ok) {
       throw new Error(data.message || `HTTP error! status: ${response.status}`);
     }
-    
   } catch (error) {
     console.error("Error deleting secret:", error);
+    throw error;
+  }
+}
+
+export async function fetchCaches(): Promise<Cache[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/caches`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+
+    return data?.data.map((cache: any) => ({
+      id: cache.id,
+      label: cache.label,
+      component: cache.component,
+      config: cache.config || "",
+      createdAt: new Date(cache.created_at).toLocaleString(),
+    }));
+  } catch (error) {
+    console.error("Error fetching caches:", error);
+    throw error;
+  }
+}
+
+export async function fetchCache(id: string): Promise<Cache> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/caches/${id}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+
+    return {
+      id: data.data.id,
+      label: data.data.label,
+      component: data.data.component,
+      config: data.data.config || "",
+      createdAt: new Date(data.data.created_at).toLocaleString(),
+    };
+  } catch (error) {
+    console.error("Error fetching cache:", error);
+    throw error;
+  }
+}
+
+export async function createCache(cacheData: {
+  label: string;
+  component: string;
+  config: any;
+}): Promise<Cache> {
+  try {
+    const configYaml = yaml.dump(cacheData.config);
+
+    const response = await fetch(`${API_BASE_URL}/caches`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        label: cacheData.label,
+        component: cacheData.component,
+        config: configYaml,
+      }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.message || `HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    return {
+      id: data.data.id,
+      label: data.data.label,
+      component: data.data.component,
+      config: data.data.config || "",
+      createdAt: new Date(data.data.created_at).toLocaleString(),
+    };
+  } catch (error) {
+    console.error("Error creating cache:", error);
+    throw error;
+  }
+}
+
+export async function updateCache(
+  id: string,
+  cacheData: {
+    label: string;
+    component: string;
+    config: any;
+  },
+): Promise<Cache> {
+  try {
+    const configYaml = yaml.dump(cacheData.config);
+
+    const response = await fetch(`${API_BASE_URL}/caches/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: parseInt(id),
+        label: cacheData.label,
+        component: cacheData.component,
+        config: configYaml,
+      }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.message || `HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    return {
+      id: data.data.id,
+      label: data.data.label,
+      component: data.data.component,
+      config: data.data.config || "",
+      createdAt: new Date(data.data.created_at).toLocaleString(),
+    };
+  } catch (error) {
+    console.error("Error updating cache:", error);
+    throw error;
+  }
+}
+
+export async function deleteCache(id: string): Promise<void> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/caches/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.message || `HTTP error! status: ${response.status}`);
+    }
+  } catch (error) {
+    console.error("Error deleting cache:", error);
     throw error;
   }
 }

@@ -85,3 +85,27 @@ message Secret {
   string encrypted_value = 2 [json_name = "encrypted_value"];
   google.protobuf.Timestamp created_at = 3 [ json_name = "created_at" ];
 }
+
+message Cache {
+  int64 id = 1 [json_name = "id"];
+  optional int64 parent_id = 2 [ json_name = "parent_id" ];
+  string label = 3 [
+    json_name = "label",
+    (validate.rules).string = {
+      min_len: 1,
+      max_len: 100,
+      pattern: "^[a-zA-Z0-9_-]+$"
+    }
+  ];
+  string component = 4 [
+    json_name = "component",
+    (validate.rules).string = {
+      min_len: 1,
+      max_len: 100
+    }
+  ];
+  string config = 5 [json_name = "config"];
+  bool is_current = 6 [ json_name = "is_current" ];
+  google.protobuf.Timestamp created_at = 7 [ json_name = "created_at" ];
+  optional google.protobuf.Timestamp updated_at = 8 [ json_name = "updated_at" ];
+}

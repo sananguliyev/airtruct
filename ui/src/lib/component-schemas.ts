@@ -1713,6 +1713,291 @@ export const componentSchemas = {
       },
     },
   },
+  cache: {
+    memory: {
+      title: "Memory",
+      properties: {
+        default_ttl: {
+          type: "string",
+          title: "Default TTL",
+          description:
+            "The default TTL of each item. After this period an item will be eligible for removal during the next compaction.",
+          default: "5m",
+        },
+        compaction_interval: {
+          type: "string",
+          title: "Compaction Interval",
+          description:
+            "The period of time to wait before each compaction, at which point expired items are removed. Set to empty string to disable compactions/expiry.",
+          default: "60s",
+        },
+        init_values: {
+          type: "object",
+          title: "Init Values",
+          description:
+            "A table of key/value pairs that should be present in the cache on initialization.",
+          default: "{}",
+        },
+        shards: {
+          type: "number",
+          title: "Shards",
+          description:
+            "A number of logical shards to spread keys across, increasing the shards can have a performance benefit.",
+          default: 1,
+        },
+      },
+    },
+    redis: {
+      title: "Redis",
+      properties: {
+        url: {
+          type: "string",
+          title: "URL",
+          description:
+            "The URL of the target Redis server. Database is optional and is supplied as the URL path.",
+          required: true,
+        },
+        kind: {
+          type: "string",
+          title: "Kind",
+          description:
+            "Specifies a simple, cluster-aware, or failover-aware redis client.",
+          options: ["simple", "cluster", "failover"],
+          default: "simple",
+        },
+        master: {
+          type: "string",
+          title: "Master",
+          description: "Name of the redis master when kind is failover",
+          default: "",
+        },
+        tls: {
+          type: "object",
+          title: "TLS",
+          description:
+            "Custom TLS settings can be used to override system defaults.",
+          properties: {
+            enabled: {
+              type: "boolean",
+              title: "Enabled",
+              description: "Whether custom TLS settings are enabled.",
+              default: false,
+            },
+            skip_cert_verify: {
+              type: "boolean",
+              title: "Skip Cert Verify",
+              description:
+                "Whether to skip server side certificate verification.",
+              default: false,
+            },
+            enable_renegotiation: {
+              type: "boolean",
+              title: "Enable Renegotiation",
+              description:
+                "Whether to allow the remote server to repeatedly request renegotiation.",
+              default: false,
+            },
+            root_cas: {
+              type: "string",
+              title: "Root CAs",
+              description: "An optional root certificate authority to use.",
+              default: "",
+            },
+            root_cas_file: {
+              type: "string",
+              title: "Root CAs File",
+              description:
+                "An optional path of a root certificate authority file to use.",
+              default: "",
+            },
+            client_certs: {
+              type: "array",
+              title: "Client Certs",
+              description: "A list of client certificates to use.",
+              default: "[]",
+            },
+          },
+        },
+        prefix: {
+          type: "string",
+          title: "Prefix",
+          description:
+            "An optional string to prefix item keys with in order to prevent collisions with similar services.",
+          default: "",
+        },
+        default_ttl: {
+          type: "string",
+          title: "Default TTL",
+          description:
+            "An optional default TTL to set for items, calculated from the moment the item is cached.",
+          default: "",
+        },
+        retries: {
+          type: "object",
+          title: "Retries",
+          description:
+            "Determine time intervals and cut offs for retry attempts.",
+          properties: {
+            initial_interval: {
+              type: "string",
+              title: "Initial Interval",
+              description: "The initial period to wait between retry attempts.",
+              default: "500ms",
+            },
+            max_interval: {
+              type: "string",
+              title: "Max Interval",
+              description: "The maximum period to wait between retry attempts.",
+              default: "1s",
+            },
+            max_elapsed_time: {
+              type: "string",
+              title: "Max Elapsed Time",
+              description:
+                "The maximum overall period of time to spend on retry attempts before the request is aborted.",
+              default: "5s",
+            },
+          },
+        },
+      },
+    },
+    memcached: {
+      title: "Memcached",
+      properties: {
+        addresses: {
+          type: "array",
+          title: "Addresses",
+          description: "A list of addresses of memcached servers to use.",
+          required: true,
+          default: "[]",
+        },
+        prefix: {
+          type: "string",
+          title: "Prefix",
+          description:
+            "An optional string to prefix item keys with in order to prevent collisions with similar services.",
+          default: "",
+        },
+        default_ttl: {
+          type: "string",
+          title: "Default TTL",
+          description:
+            "A default TTL to set for items, calculated from the moment the item is cached.",
+          default: "300s",
+        },
+        retries: {
+          type: "object",
+          title: "Retries",
+          description:
+            "Determine time intervals and cut offs for retry attempts.",
+          properties: {
+            initial_interval: {
+              type: "string",
+              title: "Initial Interval",
+              description: "The initial period to wait between retry attempts.",
+              default: "1s",
+            },
+            max_interval: {
+              type: "string",
+              title: "Max Interval",
+              description: "The maximum period to wait between retry attempts.",
+              default: "5s",
+            },
+            max_elapsed_time: {
+              type: "string",
+              title: "Max Elapsed Time",
+              description:
+                "The maximum overall period of time to spend on retry attempts before the request is aborted.",
+              default: "30s",
+            },
+          },
+        },
+      },
+    },
+    file: {
+      title: "File",
+      properties: {
+        directory: {
+          type: "string",
+          title: "Directory",
+          description: "The directory within which to store items as files.",
+          required: true,
+        },
+      },
+    },
+    lru: {
+      title: "LRU",
+      properties: {
+        cap: {
+          type: "number",
+          title: "Capacity",
+          description: "The maximum number of items to store in the cache.",
+          required: true,
+          default: 1024,
+        },
+        init_values: {
+          type: "object",
+          title: "Init Values",
+          description:
+            "A table of key/value pairs that should be present in the cache on initialization.",
+          default: "{}",
+        },
+      },
+    },
+    ttlru: {
+      title: "TTLRU",
+      properties: {
+        cap: {
+          type: "number",
+          title: "Capacity",
+          description: "The maximum number of items to store in the cache.",
+          required: true,
+          default: 1024,
+        },
+        default_ttl: {
+          type: "string",
+          title: "Default TTL",
+          description: "The default TTL of each item.",
+          default: "5m",
+        },
+        init_values: {
+          type: "object",
+          title: "Init Values",
+          description:
+            "A table of key/value pairs that should be present in the cache on initialization.",
+          default: "{}",
+        },
+      },
+    },
+    ristretto: {
+      title: "Ristretto",
+      properties: {
+        default_ttl: {
+          type: "string",
+          title: "Default TTL",
+          description: "The default TTL of each item.",
+          default: "5m",
+        },
+        max_cost: {
+          type: "number",
+          title: "Max Cost",
+          description: "The maximum size of the cache in bytes.",
+          default: 1073741824,
+        },
+        num_counters: {
+          type: "number",
+          title: "Num Counters",
+          description:
+            "The number of 4-bit access counters to keep for admission and eviction.",
+          default: 10000000,
+        },
+      },
+    },
+    noop: {
+      title: "Noop",
+      properties: {},
+    },
+  },
 };
 
 // Component lists for each type
@@ -1739,5 +2024,15 @@ export const componentLists = {
     "switch",
     "broker",
     "sql_insert",
+  ],
+  cache: [
+    "memory",
+    "redis",
+    "memcached",
+    "file",
+    "lru",
+    "ttlru",
+    "ristretto",
+    "noop",
   ],
 };

@@ -8,3 +8,4 @@ dist
 *.sqlite
 .test
 *.pos
+airtruct

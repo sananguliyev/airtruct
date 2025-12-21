@@ -45,3 +45,12 @@ export type StreamProcessor = {
   processorID: number;
   label: string;
 };
+
+export type Cache = {
+  id: string;
+  parentID?: string;
+  label: string;
+  component: string;
+  config: string;
+  createdAt: string;
+};

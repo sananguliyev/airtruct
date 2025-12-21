@@ -14,6 +14,7 @@ type CoordinatorAPI struct {
 	streamRepo       persistence.StreamRepository
 	workerStreamRepo persistence.WorkerStreamRepository
 	secretRepo       persistence.SecretRepository
+	cacheRepo        persistence.CacheRepository
 	aesgcm           *vault.AESGCM
 }
 
@@ -23,6 +24,7 @@ func NewCoordinatorAPI(
 	workerRepo persistence.WorkerRepository,
 	workerStreamRepo persistence.WorkerStreamRepository,
 	secretRepo persistence.SecretRepository,
+	cacheRepo persistence.CacheRepository,
 	aesgcm *vault.AESGCM,
 ) *CoordinatorAPI {
 	return &CoordinatorAPI{
@@ -31,6 +33,7 @@ func NewCoordinatorAPI(
 		workerRepo:       workerRepo,
 		workerStreamRepo: workerStreamRepo,
 		secretRepo:       secretRepo,
+		cacheRepo:        cacheRepo,
 		aesgcm:           aesgcm,
 	}
 }

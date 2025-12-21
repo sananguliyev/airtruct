@@ -102,6 +102,19 @@ message SecretResponse {
   CommonResponse meta = 2;
 }
 
+message ListCachesResponse {
+  repeated Cache data = 1;
+}
+
+message GetCacheRequest {
+  int64 id = 1 [(validate.rules).int64.gt = 0];
+}
+
+message CacheResponse {
+  Cache data = 1;
+  CommonResponse meta = 2;
+}
+
 service Coordinator {
   // Worker stream methods
   rpc UpdateWorkerStreamStatus(WorkerStreamStatusRequest) returns (CommonResponse) {}
@@ -165,6 +178,35 @@ service Coordinator {
   rpc DeleteSecret(SecretRequest) returns (CommonResponse) {
     option (google.api.http) = {
       delete: "/v0/secrets/{key}",
+    };
+  }
+
+  // Cache methods
+  rpc ListCaches(google.protobuf.Empty) returns (ListCachesResponse) {
+    option (google.api.http) = {
+      get: "/v0/caches",
+    };
+  }
+  rpc GetCache(GetCacheRequest) returns (CacheResponse) {
+    option (google.api.http) = {
+      get: "/v0/caches/{id}",
+    };
+  }
+  rpc CreateCache(Cache) returns (CacheResponse) {
+    option (google.api.http) = {
+      post: "/v0/caches",
+      body: "*"
+    };
+  }
+  rpc UpdateCache(Cache) returns (CacheResponse) {
+    option (google.api.http) = {
+      put: "/v0/caches/{id}",
+      body: "*"
+    };
+  }
+  rpc DeleteCache(GetCacheRequest) returns (CommonResponse) {
+    option (google.api.http) = {
+      delete: "/v0/caches/{id}",
     };
   }
 

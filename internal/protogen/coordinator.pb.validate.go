@@ -1807,6 +1807,411 @@ var _ interface {
 	ErrorName() string
 } = SecretResponseValidationError{}
 
+// Validate checks the field values on ListCachesResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListCachesResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListCachesResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListCachesResponseMultiError, or nil if none found.
+func (m *ListCachesResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListCachesResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListCachesResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListCachesResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListCachesResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ListCachesResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListCachesResponseMultiError is an error wrapping multiple validation errors
+// returned by ListCachesResponse.ValidateAll() if the designated constraints
+// aren't met.
+type ListCachesResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListCachesResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListCachesResponseMultiError) AllErrors() []error { return m }
+
+// ListCachesResponseValidationError is the validation error returned by
+// ListCachesResponse.Validate if the designated constraints aren't met.
+type ListCachesResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListCachesResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListCachesResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListCachesResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListCachesResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListCachesResponseValidationError) ErrorName() string {
+	return "ListCachesResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListCachesResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListCachesResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListCachesResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListCachesResponseValidationError{}
+
+// Validate checks the field values on GetCacheRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *GetCacheRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetCacheRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetCacheRequestMultiError, or nil if none found.
+func (m *GetCacheRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetCacheRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if m.GetId() <= 0 {
+		err := GetCacheRequestValidationError{
+			field:  "Id",
+			reason: "value must be greater than 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return GetCacheRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetCacheRequestMultiError is an error wrapping multiple validation errors
+// returned by GetCacheRequest.ValidateAll() if the designated constraints
+// aren't met.
+type GetCacheRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetCacheRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetCacheRequestMultiError) AllErrors() []error { return m }
+
+// GetCacheRequestValidationError is the validation error returned by
+// GetCacheRequest.Validate if the designated constraints aren't met.
+type GetCacheRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetCacheRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetCacheRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetCacheRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetCacheRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetCacheRequestValidationError) ErrorName() string { return "GetCacheRequestValidationError" }
+
+// Error satisfies the builtin error interface
+func (e GetCacheRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetCacheRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetCacheRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetCacheRequestValidationError{}
+
+// Validate checks the field values on CacheResponse with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *CacheResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CacheResponse with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in CacheResponseMultiError, or
+// nil if none found.
+func (m *CacheResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CacheResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CacheResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CacheResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CacheResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetMeta()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CacheResponseValidationError{
+					field:  "Meta",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CacheResponseValidationError{
+					field:  "Meta",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetMeta()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CacheResponseValidationError{
+				field:  "Meta",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return CacheResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// CacheResponseMultiError is an error wrapping multiple validation errors
+// returned by CacheResponse.ValidateAll() if the designated constraints
+// aren't met.
+type CacheResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CacheResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CacheResponseMultiError) AllErrors() []error { return m }
+
+// CacheResponseValidationError is the validation error returned by
+// CacheResponse.Validate if the designated constraints aren't met.
+type CacheResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CacheResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CacheResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CacheResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CacheResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CacheResponseValidationError) ErrorName() string { return "CacheResponseValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CacheResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCacheResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CacheResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CacheResponseValidationError{}
+
 // Validate checks the field values on ListWorkersResponse_Worker with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
