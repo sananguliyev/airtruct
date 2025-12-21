@@ -352,6 +352,7 @@ require (
 )
 
 require (
+	github.com/bold-commerce/go-shopify/v4 v4.7.0
 	github.com/go-mysql-org/go-mysql v1.13.0
 	github.com/rakyll/statik v0.1.7
 	github.com/rs/cors v1.11.1
@@ -369,6 +370,7 @@ require (
 	github.com/apache/arrow/go/v15 v15.0.2 // indirect
 	github.com/cncf/xds/go v0.0.0-20250121191232-2f005788dc42 // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.32.4 // indirect
+	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/pingcap/errors v0.11.5-0.20250318082626-8f80e5cb09ec // indirect
 	github.com/pingcap/log v1.1.1-0.20241212030209-7e3ff8601a2a // indirect
 	github.com/pingcap/tidb/pkg/parser v0.0.0-20250421232622-526b2c79173d // indirect

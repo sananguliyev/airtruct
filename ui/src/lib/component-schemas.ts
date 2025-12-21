@@ -683,6 +683,64 @@ export const componentSchemas = {
         },
       },
     },
+    shopify: {
+      title: "Shopify",
+      properties: {
+        shop_name: {
+          type: "input",
+          title: "Shop Name",
+          description: "Shopify store name (without .myshopify.com).",
+          required: true,
+        },
+        api_key: {
+          type: "input",
+          title: "API Key",
+          description: "Shopify API key for authentication (Private App).",
+          required: true,
+        },
+        api_password: {
+          type: "input",
+          title: "API Password",
+          description: "Shopify API password for authentication (Private App).",
+          required: true,
+        },
+        shop_resource: {
+          type: "select",
+          title: "Shop Resource",
+          description: "The Shopify resource type to fetch.",
+          options: [
+            "products",
+            "orders",
+            "customers",
+            "inventory_items",
+            "locations",
+          ],
+          default: "products",
+        },
+        limit: {
+          type: "number",
+          title: "Limit",
+          description:
+            "Maximum number of items to fetch per API request (max 250).",
+          default: 50,
+        },
+        api_version: {
+          type: "input",
+          title: "API Version",
+          description:
+            "Shopify API version to use (e.g., '2024-01'). If not specified, uses the default version.",
+          default: "",
+        },
+        cache_resource: {
+          type: "dynamic_select",
+          title: "Cache Resource",
+          description:
+            "Optional cache resource name for storing the last updated_at timestamp. When configured, resumes fetching from items updated after that timestamp.",
+          dataSource: "caches",
+          default: "",
+        },
+      },
+    },
   },
   pipeline: {
     mapping: {
@@ -2009,6 +2067,7 @@ export const componentLists = {
     "kafka",
     "broker",
     "mysql_replication",
+    "shopify",
   ],
   pipeline: [
     "mapping",

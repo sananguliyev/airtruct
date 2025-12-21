@@ -21,10 +21,11 @@ type coordinatorExecutor struct {
 func NewCoordinatorExecutor(
 	workerRepo persistence.WorkerRepository,
 	streamRepo persistence.StreamRepository,
+	streamCacheRepo persistence.StreamCacheRepository,
 	workerStreamRepo persistence.WorkerStreamRepository,
 ) CoordinatorExecutor {
 	return &coordinatorExecutor{
-		coordinator: coordinator.NewCoordinatorExecutor(workerRepo, streamRepo, workerStreamRepo),
+		coordinator: coordinator.NewCoordinatorExecutor(workerRepo, streamRepo, streamCacheRepo, workerStreamRepo),
 	}
 }
 

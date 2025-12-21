@@ -25,11 +25,12 @@ type coordinatorExecutor struct {
 func NewCoordinatorExecutor(
 	workerRepo persistence.WorkerRepository,
 	streamRepo persistence.StreamRepository,
+	streamCacheRepo persistence.StreamCacheRepository,
 	workerStreamRepo persistence.WorkerStreamRepository,
 ) CoordinatorExecutor {
 	clientManager := NewGRPCClientManager()
 	workerManager := NewWorkerManager(workerRepo, workerStreamRepo, clientManager)
-	configBuilder := NewConfigBuilder()
+	configBuilder := NewConfigBuilder(streamCacheRepo)
 	streamWorkerMap := NewStreamWorkerMap()
 
 	err := initializeStreamWorkerMapping(workerStreamRepo, streamWorkerMap)

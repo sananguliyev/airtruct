@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { useTheme } from "next-themes";
 import * as yaml from "js-yaml";
+import { fetchCaches, fetchSecrets } from "@/lib/api";
 
 import { InlineYamlEditorProps, FieldState, FieldSchema } from "./types";
 import { getDefaultValue } from "./utils/defaults";
@@ -41,6 +42,78 @@ import {
 } from "./components/lazy-components";
 import { Suspense } from "react";
 
+function DynamicSelectField({
+  fieldSchema,
+  value,
+  onChange,
+  isDark,
+  inputStyle,
+}: {
+  fieldSchema: FieldSchema;
+  value: string;
+  onChange: (value: string) => void;
+  isDark: boolean;
+  inputStyle: React.CSSProperties;
+}) {
+  const [options, setOptions] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchOptions = async () => {
+      setLoading(true);
+      try {
+        if (fieldSchema.dataSource === "caches") {
+          const caches = await fetchCaches();
+          setOptions(caches.map((cache) => cache.label));
+        } else if (fieldSchema.dataSource === "secrets") {
+          const secrets = await fetchSecrets();
+          setOptions(secrets.map((secret) => secret.key));
+        }
+      } catch (error) {
+        console.error("Failed to fetch options:", error);
+        setOptions([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOptions();
+  }, [fieldSchema.dataSource]);
+
+  if (loading) {
+    return (
+      <div className="text-xs text-muted-foreground font-mono">Loading...</div>
+    );
+  }
+
+  return (
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger
+        className={`h-6 text-sm w-auto min-w-[100px] bg-background border-border text-foreground
+          focus-visible:ring-1 focus-visible:ring-ring font-mono ${isDark ? "text-green-400" : "text-green-600"}`}
+        style={inputStyle}
+      >
+        <SelectValue
+          placeholder={options.length === 0 ? "No options" : "Select..."}
+        />
+      </SelectTrigger>
+      <SelectContent>
+        {options.length === 0 ? (
+          <div className="px-2 py-1.5 text-sm text-muted-foreground">
+            No {fieldSchema.dataSource} available
+          </div>
+        ) : (
+          options.map((option) => (
+            <SelectItem key={option} value={option}>
+              {option}
+            </SelectItem>
+          ))
+        )}
+      </SelectContent>
+    </Select>
+  );
+}
+
 export function InlineYamlEditor({
   schema,
   value,
@@ -51,7 +124,7 @@ export function InlineYamlEditor({
   previewMode = false,
 }: InlineYamlEditorProps) {
   const [fieldStates, setFieldStates] = useState<Record<string, FieldState>>(
-    {}
+    {},
   );
   const lastOutputRef = React.useRef<string>("");
   const { resolvedTheme } = useTheme();
@@ -112,25 +185,25 @@ export function InlineYamlEditor({
         if (fieldSchema.type === "output_cases") {
           initialValue = convertYamlToOutputCases(
             existingData[fieldKey],
-            availableOutputs
+            availableOutputs,
           );
           setInternalOutputCases(initialValue);
         } else if (fieldSchema.type === "output_list") {
           initialValue = convertYamlToOutputList(
             existingData[fieldKey],
-            availableOutputs
+            availableOutputs,
           );
           setInternalOutputs(initialValue);
         } else if (fieldSchema.type === "input_list") {
           initialValue = convertYamlToInputList(
             existingData[fieldKey],
-            availableInputs
+            availableInputs,
           );
           setInternalInputs(initialValue);
         } else if (fieldSchema.type === "processor_cases") {
           initialValue = convertYamlToProcessorCases(
             existingData[fieldKey],
-            availableProcessors
+            availableProcessors,
           );
           setInternalProcessorCases(initialValue);
         }
@@ -148,7 +221,7 @@ export function InlineYamlEditor({
           !prev[key] ||
           prev[key].enabled !== initialStates[key].enabled ||
           JSON.stringify(prev[key].value) !==
-            JSON.stringify(initialStates[key].value)
+            JSON.stringify(initialStates[key].value),
       );
 
       if (
@@ -184,7 +257,7 @@ export function InlineYamlEditor({
             internalOutputCases.length > 0 ? internalOutputCases : state.value;
           const validCases = convertOutputCasesToYaml(
             sourceValue,
-            availableOutputs
+            availableOutputs,
           );
           data[fieldKey] = validCases;
         } else if (fieldSchema?.type === "output_list") {
@@ -192,7 +265,7 @@ export function InlineYamlEditor({
             internalOutputs.length > 0 ? internalOutputs : state.value;
           const validOutputs = convertOutputListToYaml(
             sourceValue,
-            availableOutputs
+            availableOutputs,
           );
           data[fieldKey] = validOutputs;
         } else if (fieldSchema?.type === "input_list") {
@@ -200,7 +273,7 @@ export function InlineYamlEditor({
             internalInputs.length > 0 ? internalInputs : state.value;
           const validInputs = convertInputListToYaml(
             sourceValue,
-            availableInputs
+            availableInputs,
           );
           data[fieldKey] = validInputs;
         } else if (fieldSchema?.type === "processor_cases") {
@@ -210,7 +283,7 @@ export function InlineYamlEditor({
               : state.value;
           const validCases = convertProcessorCasesToYaml(
             sourceValue,
-            availableProcessors
+            availableProcessors,
           );
           data[fieldKey] = validCases;
         } else {
@@ -288,7 +361,7 @@ export function InlineYamlEditor({
   const renderValueInput = (
     fieldSchema: FieldSchema,
     state: FieldState,
-    handleValueChange: (value: any) => void
+    handleValueChange: (value: any) => void,
   ) => {
     const isDark = resolvedTheme === "dark";
 
@@ -297,8 +370,8 @@ export function InlineYamlEditor({
       fontSize: "13px",
     };
 
-    const inputClassName = `h-6 text-sm p-1 bg-background border-border text-foreground 
-      focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring 
+    const inputClassName = `h-6 text-sm p-1 bg-background border-border text-foreground
+      focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring
       font-mono text-xs ${isDark ? "text-green-400" : "text-green-600"}`;
 
     switch (fieldSchema.type) {
@@ -343,7 +416,7 @@ export function InlineYamlEditor({
         return (
           <Select value={state.value || ""} onValueChange={handleValueChange}>
             <SelectTrigger
-              className={`h-6 text-sm w-auto min-w-[100px] bg-background border-border text-foreground 
+              className={`h-6 text-sm w-auto min-w-[100px] bg-background border-border text-foreground
                 focus-visible:ring-1 focus-visible:ring-ring font-mono ${isDark ? "text-green-400" : "text-green-600"}`}
               style={inputStyle}
             >
@@ -357,6 +430,17 @@ export function InlineYamlEditor({
               ))}
             </SelectContent>
           </Select>
+        );
+
+      case "dynamic_select":
+        return (
+          <DynamicSelectField
+            fieldSchema={fieldSchema}
+            value={state.value || ""}
+            onChange={handleValueChange}
+            isDark={isDark}
+            inputStyle={inputStyle}
+          />
         );
 
       case "code":
@@ -549,7 +633,7 @@ export function InlineYamlEditor({
               const componentName = Object.keys(proc)[0];
               const config = proc[componentName];
               const processorSchema = availableProcessors.find(
-                (p) => p.component === componentName
+                (p) => p.component === componentName,
               );
 
               if (processorSchema?.schema?.flat) {
@@ -617,7 +701,7 @@ export function InlineYamlEditor({
               }
 
               const selectedProcessor = availableProcessors.find(
-                (p) => p.id === proc.componentId
+                (p) => p.id === proc.componentId,
               );
               if (selectedProcessor?.schema?.flat) {
                 return proc.configYaml.trim().length > 0;
@@ -636,7 +720,7 @@ export function InlineYamlEditor({
             })
             .map((proc) => {
               const selectedProcessor = availableProcessors.find(
-                (p) => p.id === proc.componentId
+                (p) => p.id === proc.componentId,
               );
 
               if (selectedProcessor?.schema?.flat) {
@@ -672,7 +756,7 @@ export function InlineYamlEditor({
         try {
           const validCases = convertProcessorCasesToYaml(
             newValue,
-            availableProcessors
+            availableProcessors,
           );
           const yamlOutput =
             validCases.length > 0
@@ -760,7 +844,7 @@ export function InlineYamlEditor({
     <div className="font-mono text-sm p-4 bg-background text-foreground rounded-md border border-border">
       <div className="space-y-1">
         {Object.entries(actualSchema).map(([fieldKey, fieldSchema]) =>
-          renderInlineField(fieldKey, fieldSchema)
+          renderInlineField(fieldKey, fieldSchema),
         )}
       </div>
     </div>

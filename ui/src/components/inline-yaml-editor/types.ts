@@ -1,10 +1,25 @@
 export interface FieldSchema {
-  type: "input" | "number" | "bool" | "select" | "code" | "key_value" | "array" | "object" | "processor_list" | "output_cases" | "output_list" | "input_list" | "processor_cases";
+  type:
+    | "input"
+    | "number"
+    | "bool"
+    | "select"
+    | "dynamic_select"
+    | "code"
+    | "key_value"
+    | "array"
+    | "object"
+    | "processor_list"
+    | "output_cases"
+    | "output_list"
+    | "input_list"
+    | "processor_cases";
   title: string;
   description?: string;
   required?: boolean;
   default?: any;
   options?: string[];
+  dataSource?: "caches" | "secrets";
   properties?: Record<string, FieldSchema>;
 }
 
@@ -45,4 +60,4 @@ export interface EditorProps {
   availableProcessors?: ProcessorComponentSchema[];
   availableInputs?: ProcessorComponentSchema[];
   availableOutputs?: ProcessorComponentSchema[];
-} 
+}

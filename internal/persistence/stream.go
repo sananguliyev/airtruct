@@ -40,6 +40,7 @@ type Stream struct {
 
 	ParentStream *Stream           `json:"parent_stream" gorm:"foreignKey:ParentID"`
 	Processors   []StreamProcessor `json:"processors" gorm:"foreignKey:StreamID;references:ID"`
+	Caches       []StreamCache     `json:"caches" gorm:"foreignKey:StreamID;references:ID"`
 }
 
 func (s *Stream) ToProto() *pb.Stream {
@@ -162,6 +163,7 @@ func (r *streamRepository) FindByID(id int64) (*Stream, error) {
 	}
 	err := r.db.
 		Preload("Processors").
+		Preload("Caches").
 		Preload("ParentStream").
 		First(stream).
 		Error
@@ -189,7 +191,8 @@ func (r *streamRepository) Delete(id int64) error {
 func (r *streamRepository) ListAllByStatuses(statuses ...StreamStatus) ([]Stream, error) {
 	var streams []Stream
 	db := r.db.
-		Preload("Processors")
+		Preload("Processors").
+		Preload("Caches")
 
 	if len(statuses) > 0 {
 		db = db.Where("is_current = true AND status IN ?", statuses)
@@ -206,6 +209,7 @@ func (r *streamRepository) ListAllActiveAndNonAssigned() ([]Stream, error) {
 
 	err := r.db.
 		Preload("Processors").
+		Preload("Caches").
 		Where("is_current = true AND status = ?", StreamStatusActive).
 		Where(
 			"NOT EXISTS (?)",

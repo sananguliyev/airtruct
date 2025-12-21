@@ -12,14 +12,27 @@ type ConfigBuilder interface {
 	BuildStreamConfig(stream persistence.Stream) (string, error)
 }
 
-type configBuilder struct{}
+type configBuilder struct {
+	streamCacheRepo persistence.StreamCacheRepository
+}
 
-func NewConfigBuilder() ConfigBuilder {
-	return &configBuilder{}
+func NewConfigBuilder(streamCacheRepo persistence.StreamCacheRepository) ConfigBuilder {
+	return &configBuilder{
+		streamCacheRepo: streamCacheRepo,
+	}
 }
 
 func (b *configBuilder) BuildStreamConfig(stream persistence.Stream) (string, error) {
 	configMap := make(map[string]any)
+
+	// Build cache_resources section if there are any
+	cacheResources, err := b.buildCacheResourcesConfig(stream.ID)
+	if err != nil {
+		return "", err
+	}
+	if len(cacheResources) > 0 {
+		configMap["cache_resources"] = cacheResources
+	}
 
 	input, err := b.buildInputConfig(stream)
 	if err != nil {
@@ -114,4 +127,32 @@ func (b *configBuilder) buildProcessorConfig(processor persistence.StreamProcess
 
 func (b *configBuilder) isSpecialProcessor(component string) bool {
 	return slices.Contains([]string{"catch", "switch"}, component)
+}
+
+func (b *configBuilder) buildCacheResourcesConfig(streamID int64) ([]map[string]any, error) {
+	streamCaches, err := b.streamCacheRepo.FindByStreamID(streamID)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(streamCaches) == 0 {
+		return nil, nil
+	}
+
+	cacheResources := make([]map[string]any, 0, len(streamCaches))
+	for _, streamCache := range streamCaches {
+		cacheResource := make(map[string]any)
+		cacheResource["label"] = streamCache.Cache.Label
+
+		// Parse the cache config
+		cacheConfig := make(map[string]any)
+		if err := yaml.Unmarshal(streamCache.Cache.Config, &cacheConfig); err != nil {
+			return nil, err
+		}
+
+		cacheResource[streamCache.Cache.Component] = cacheConfig
+		cacheResources = append(cacheResources, cacheResource)
+	}
+
+	return cacheResources, nil
 }

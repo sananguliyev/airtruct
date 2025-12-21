@@ -1,0 +1,24 @@
+[
+  {
+    "label": "Build All",
+    "command": "make",
+    "args": ["statik"],
+  },
+  {
+    "label": "Generate Proto",
+    "command": "make",
+    "args": ["protoc"],
+  },
+  {
+    "label": "UI Dev Server",
+    "command": "npm",
+    "args": ["run", "dev"],
+    "cwd": "ui",
+  },
+  {
+    "label": "UI Build",
+    "command": "npm",
+    "args": ["run", "build"],
+    "cwd": "ui",
+  },
+]

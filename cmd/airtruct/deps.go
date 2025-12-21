@@ -30,8 +30,9 @@ func InitializeCoordinatorCommand(httpPort, grpcPort uint32) *cli.CoordinatorCLI
 	workerStreamRepository := persistence.NewWorkerStreamRepository(db)
 	secretRepository := persistence.NewSecretRepository(db)
 	cacheRepository := persistence.NewCacheRepository(db)
-	coordinatorAPI := coordinator.NewCoordinatorAPI(eventRepository, streamRepository, workerRepository, workerStreamRepository, secretRepository, cacheRepository, aesgcm)
-	coordinatorExecutor := executor.NewCoordinatorExecutor(workerRepository, streamRepository, workerStreamRepository)
+	streamCacheRepository := persistence.NewStreamCacheRepository(db)
+	coordinatorAPI := coordinator.NewCoordinatorAPI(eventRepository, streamRepository, streamCacheRepository, workerRepository, workerStreamRepository, secretRepository, cacheRepository, aesgcm)
+	coordinatorExecutor := executor.NewCoordinatorExecutor(workerRepository, streamRepository, streamCacheRepository, workerStreamRepository)
 	coordinatorCLI := cli.NewCoordinatorCLI(coordinatorAPI, coordinatorExecutor, httpPort, grpcPort)
 	return coordinatorCLI
 }

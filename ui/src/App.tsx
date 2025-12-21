@@ -7,9 +7,8 @@ import { Helmet, HelmetProvider } from "react-helmet-async";
 
 import Layout from "./components/Layout";
 
-// Placeholder for pages - adjust imports when files are moved
 import HomePage from "./pages/HomePage.tsx";
-import StreamsPage from "./pages/streams/page.tsx"; // Assuming structure from Next.js App Router
+import StreamsPage from "./pages/streams/page.tsx";
 import WorkersPage from "./pages/workers/page.tsx";
 import ScannersPage from "./pages/scanners/page.tsx";
 import BuffersPage from "./pages/buffers/page.tsx";

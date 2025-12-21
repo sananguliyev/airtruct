@@ -1,0 +1,36 @@
+[
+  {
+    "label": "Coordinator",
+    "adapter": "Delve",
+    "request": "launch",
+    "mode": "debug",
+    "program": "${ZED_WORKTREE_ROOT}/cmd/airtruct",
+    "cwd": "${ZED_WORKTREE_ROOT}",
+    "args": ["coordinator", "--http-port", "8080", "--grpc-port", "50000"],
+    "env": {
+      "ROLE": "coordinator",
+      "NODE_DISCOVERY_URI": "localhost:50000",
+      "GRPC_PORT": "50000",
+      "SECRET_PROVIDER": "local",
+      "SECRET_KEY": "this_is_a_32_byte_key_for_AES!!!",
+      "DATABASE_URI": "file:${ZED_WORKTREE_ROOT}/airtruct.sqlite?_foreign_keys=1&mode=rwc"
+    }
+  },
+  {
+    "label": "Worker",
+    "adapter": "Delve",
+    "request": "launch",
+    "mode": "debug",
+    "program": "${ZED_WORKTREE_ROOT}/cmd/airtruct",
+    "cwd": "${ZED_WORKTREE_ROOT}",
+    "args": ["worker", "--discovery-uri", "localhost:50000", "--grpc-port", "50001"],
+    "env": {
+      "ROLE": "worker",
+      "GRPC_PORT": "50001",
+      "DEBUG_MODE": "false",
+      "SECRET_PROVIDER": "local",
+      "SECRET_KEY": "this_is_a_32_byte_key_for_AES!!!",
+      "NODE_DISCOVERY_URI": "localhost:50000"
+    }
+  }
+]

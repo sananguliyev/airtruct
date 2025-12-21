@@ -1,0 +1,471 @@
+package shopify
+
+import (
+	"context"
+	"fmt"
+	"sync"
+	"time"
+
+	goshopify "github.com/bold-commerce/go-shopify/v4"
+	"github.com/warpstreamlabs/bento/public/service"
+)
+
+func init() {
+	err := service.RegisterBatchInput(
+		"shopify", Config(),
+		func(conf *service.ParsedConfig, mgr *service.Resources) (service.BatchInput, error) {
+			return NewFromConfig(conf, mgr)
+		})
+	if err != nil {
+		panic(err)
+	}
+}
+
+type Input struct {
+	shopName     string
+	apiKey       string
+	apiPassword  string
+	shopResource string
+	limit        int
+	apiVersion   string
+
+	client    *goshopify.Client
+	connected bool
+	connMutex sync.RWMutex
+
+	// Pagination state
+	finished   bool
+	stateMutex sync.Mutex
+
+	// Cache for position tracking
+	cacheName     string
+	cacheKey      string
+	lastUpdatedAt *time.Time
+	latestAckAt   *time.Time
+
+	mgr    *service.Resources
+	logger *service.Logger
+}
+
+func NewFromConfig(conf *service.ParsedConfig, mgr *service.Resources) (*Input, error) {
+	shopName, err := conf.FieldString(sbfShopName)
+	if err != nil {
+		return nil, err
+	}
+
+	apiKey, err := conf.FieldString(sbfAPIKey)
+	if err != nil {
+		return nil, err
+	}
+
+	apiPassword, err := conf.FieldString(sbfAPIPassword)
+	if err != nil {
+		return nil, err
+	}
+
+	shopResource := "products"
+	if conf.Contains(sbfShopResource) {
+		shopResource, err = conf.FieldString(sbfShopResource)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	limit := 50
+	if conf.Contains(sbfLimit) {
+		limit, err = conf.FieldInt(sbfLimit)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if limit < 1 || limit > 250 {
+		return nil, fmt.Errorf("limit must be between 1 and 250, got %d", limit)
+	}
+
+	var apiVersion string
+	if conf.Contains(sbfAPIVersion) {
+		apiVersion, err = conf.FieldString(sbfAPIVersion)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var cacheName string
+	if conf.Contains(sbfCache) {
+		cacheName, err = conf.FieldString(sbfCache)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var cacheKey string
+	if cacheName != "" {
+		// Create a unique cache key for this shop and resource
+		cacheKey = fmt.Sprintf("shopify:%s:%s:last_updated_at", shopName, shopResource)
+	}
+
+	return &Input{
+		shopName:      shopName,
+		apiKey:        apiKey,
+		apiPassword:   apiPassword,
+		shopResource:  shopResource,
+		limit:         limit,
+		apiVersion:    apiVersion,
+		finished:      false,
+		cacheName:     cacheName,
+		cacheKey:      cacheKey,
+		lastUpdatedAt: nil,
+		latestAckAt:   nil,
+		mgr:           mgr,
+		logger:        mgr.Logger(),
+	}, nil
+}
+
+func (s *Input) Connect(ctx context.Context) error {
+	s.connMutex.Lock()
+	defer s.connMutex.Unlock()
+
+	if s.connected {
+		return nil
+	}
+
+	// Create Shopify app for Private App authentication
+	app := goshopify.App{
+		ApiKey:   s.apiKey,
+		Password: s.apiPassword,
+	}
+
+	// Create client options
+	var opts []goshopify.Option
+	if s.apiVersion != "" {
+		opts = append(opts, goshopify.WithVersion(s.apiVersion))
+	}
+	// Add retry support for rate limiting
+	opts = append(opts, goshopify.WithRetry(3))
+
+	// Create the client (empty string for token as we're using private app auth)
+	client, err := goshopify.NewClient(app, s.shopName, "", opts...)
+	if err != nil {
+		return fmt.Errorf("failed to create Shopify client: %w", err)
+	}
+
+	s.client = client
+	s.connected = true
+	s.logger.Infof("Connected to Shopify store: %s.myshopify.com", s.shopName)
+	s.logger.Infof("Resource type: %s", s.shopResource)
+
+	// Load position from cache if configured
+	if s.cacheName != "" {
+		s.logger.Infof("Using cache '%s' for position tracking", s.cacheName)
+		if err := s.loadPosition(ctx); err != nil {
+			s.logger.Warnf("Failed to load position from cache: %v", err)
+		}
+	}
+
+	return nil
+}
+
+func (s *Input) ReadBatch(ctx context.Context) (service.MessageBatch, service.AckFunc, error) {
+	s.connMutex.RLock()
+	connected := s.connected
+	s.connMutex.RUnlock()
+
+	if !connected {
+		return nil, nil, service.ErrNotConnected
+	}
+
+	s.stateMutex.Lock()
+	defer s.stateMutex.Unlock()
+
+	// If finished, no more data to fetch
+	if s.finished {
+		return nil, nil, service.ErrEndOfInput
+	}
+
+	// Fetch next batch from Shopify
+	items, err := s.fetchBatch(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Create a batch from all fetched items
+	batch := make(service.MessageBatch, len(items))
+	for i, item := range items {
+		msg := service.NewMessage(nil)
+		msg.SetStructured(map[string]any{
+			"resource": s.shopResource,
+			"data":     item,
+		})
+		batch[i] = msg
+	}
+
+	ackFunc := func(ctx context.Context, err error) error {
+		if err != nil {
+			s.logger.Errorf("Batch not acknowledged: %v", err)
+			// Don't save position on error - batch will be retried on next start
+			return nil
+		}
+
+		// Extract and save the last updated_at from the batch if cache is configured
+		if s.cacheName != "" && len(items) > 0 {
+			lastItem := items[len(items)-1]
+			if updatedAt := s.extractUpdatedAt(lastItem); updatedAt != nil {
+				s.latestAckAt = updatedAt
+				// Save position to cache
+				s.savePosition(context.Background(), *updatedAt)
+			}
+		}
+
+		return nil
+	}
+
+	return batch, ackFunc, nil
+}
+
+func (s *Input) fetchBatch(ctx context.Context) ([]any, error) {
+	s.logger.Debugf("Fetching next batch of %s from Shopify", s.shopResource)
+
+	var items []any
+	var err error
+
+	switch s.shopResource {
+	case "products":
+		items, err = s.fetchProductsPage(ctx)
+	case "orders":
+		items, err = s.fetchOrdersPage(ctx)
+	case "customers":
+		items, err = s.fetchCustomersPage(ctx)
+	case "inventory_items":
+		items, err = s.fetchInventoryItemsPage(ctx)
+	case "locations":
+		items, err = s.fetchLocationsPage(ctx)
+	default:
+		return nil, fmt.Errorf("unsupported resource type: %s", s.shopResource)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch %s: %w", s.shopResource, err)
+	}
+
+	s.logger.Infof("Fetched %d %s", len(items), s.shopResource)
+
+	// If we got fewer items than limit or no items, we've reached the end
+	if len(items) < s.limit {
+		s.finished = true
+	}
+
+	return items, nil
+}
+
+func (s *Input) fetchProductsPage(ctx context.Context) ([]any, error) {
+	options := &goshopify.ListOptions{
+		Limit: s.limit,
+	}
+	if s.lastUpdatedAt != nil {
+		options.UpdatedAtMin = *s.lastUpdatedAt
+	}
+
+	products, err := s.client.Product.List(ctx, options)
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]any, len(products))
+	for i, p := range products {
+		items[i] = p
+	}
+	return items, nil
+}
+
+func (s *Input) fetchOrdersPage(ctx context.Context) ([]any, error) {
+	options := &goshopify.OrderListOptions{
+		ListOptions: goshopify.ListOptions{
+			Limit: s.limit,
+		},
+	}
+	if s.lastUpdatedAt != nil {
+		options.ListOptions.UpdatedAtMin = *s.lastUpdatedAt
+	}
+
+	orders, err := s.client.Order.List(ctx, options)
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]any, len(orders))
+	for i, o := range orders {
+		items[i] = o
+	}
+	return items, nil
+}
+
+func (s *Input) fetchCustomersPage(ctx context.Context) ([]any, error) {
+	options := &goshopify.ListOptions{
+		Limit: s.limit,
+	}
+	if s.lastUpdatedAt != nil {
+		options.UpdatedAtMin = *s.lastUpdatedAt
+	}
+
+	customers, err := s.client.Customer.List(ctx, options)
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]any, len(customers))
+	for i, c := range customers {
+		items[i] = c
+	}
+	return items, nil
+}
+
+func (s *Input) fetchInventoryItemsPage(ctx context.Context) ([]any, error) {
+	options := &goshopify.ListOptions{
+		Limit: s.limit,
+	}
+	if s.lastUpdatedAt != nil {
+		options.UpdatedAtMin = *s.lastUpdatedAt
+	}
+
+	inventoryItems, err := s.client.InventoryItem.List(ctx, options)
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]any, len(inventoryItems))
+	for i, item := range inventoryItems {
+		items[i] = item
+	}
+	return items, nil
+}
+
+func (s *Input) fetchLocationsPage(ctx context.Context) ([]any, error) {
+	options := &goshopify.ListOptions{
+		Limit: s.limit,
+	}
+	if s.lastUpdatedAt != nil {
+		options.UpdatedAtMin = *s.lastUpdatedAt
+	}
+
+	locations, err := s.client.Location.List(ctx, options)
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]any, len(locations))
+	for i, l := range locations {
+		items[i] = l
+	}
+	return items, nil
+}
+
+func (s *Input) extractUpdatedAt(item any) *time.Time {
+	// Try to extract updated_at from common Shopify resource types
+	if m, ok := item.(map[string]any); ok {
+		if updatedAtStr, ok := m["updated_at"].(string); ok {
+			if t, err := time.Parse(time.RFC3339, updatedAtStr); err == nil {
+				return &t
+			}
+		}
+	}
+
+	// Use type assertion for typed objects
+	switch v := item.(type) {
+	case goshopify.Product:
+		if v.UpdatedAt != nil && !v.UpdatedAt.IsZero() {
+			return v.UpdatedAt
+		}
+	case goshopify.Order:
+		if v.UpdatedAt != nil && !v.UpdatedAt.IsZero() {
+			return v.UpdatedAt
+		}
+	case goshopify.Customer:
+		if v.UpdatedAt != nil && !v.UpdatedAt.IsZero() {
+			return v.UpdatedAt
+		}
+	case goshopify.InventoryItem:
+		if v.UpdatedAt != nil && !v.UpdatedAt.IsZero() {
+			return v.UpdatedAt
+		}
+	case goshopify.Location:
+		if !v.UpdatedAt.IsZero() {
+			updatedAt := v.UpdatedAt
+			return &updatedAt
+		}
+	}
+
+	return nil
+}
+
+func (s *Input) loadPosition(ctx context.Context) error {
+	if s.cacheName == "" {
+		return nil
+	}
+
+	var data []byte
+	var getErr error
+
+	err := s.mgr.AccessCache(ctx, s.cacheName, func(c service.Cache) {
+		data, getErr = c.Get(ctx, s.cacheKey)
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to access cache: %w", err)
+	}
+
+	if getErr != nil {
+		if getErr == service.ErrKeyNotFound {
+			s.logger.Debug("No previous position found in cache, starting from beginning")
+			return nil
+		}
+		return fmt.Errorf("failed to get position from cache: %w", getErr)
+	}
+
+	lastUpdatedAtStr := string(data)
+	if lastUpdatedAtStr == "" {
+		return fmt.Errorf("cached position is empty")
+	}
+
+	parsedTime, err := time.Parse(time.RFC3339, lastUpdatedAtStr)
+	if err != nil {
+		return fmt.Errorf("failed to parse cached timestamp: %w", err)
+	}
+
+	s.lastUpdatedAt = &parsedTime
+	s.latestAckAt = &parsedTime
+	s.logger.Infof("Resuming from last position: updated_at_min=%s", lastUpdatedAtStr)
+
+	return nil
+}
+
+func (s *Input) savePosition(ctx context.Context, updatedAt time.Time) {
+	if s.cacheName == "" {
+		return
+	}
+
+	updatedAtStr := updatedAt.Format(time.RFC3339)
+	data := []byte(updatedAtStr)
+
+	err := s.mgr.AccessCache(ctx, s.cacheName, func(c service.Cache) {
+		if err := c.Set(ctx, s.cacheKey, data, nil); err != nil {
+			s.logger.Errorf("Failed to save position to cache: %v", err)
+		} else {
+			s.logger.Debugf("Saved position to cache: %s", updatedAtStr)
+		}
+	})
+
+	if err != nil {
+		s.logger.Errorf("Failed to access cache: %v", err)
+	}
+}
+
+func (s *Input) Close(ctx context.Context) error {
+	s.connMutex.Lock()
+	defer s.connMutex.Unlock()
+
+	s.connected = false
+	s.logger.Info("Shopify input closed")
+
+	return nil
+}

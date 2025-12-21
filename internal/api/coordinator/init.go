@@ -12,6 +12,7 @@ type CoordinatorAPI struct {
 	eventRepo        persistence.EventRepository
 	workerRepo       persistence.WorkerRepository
 	streamRepo       persistence.StreamRepository
+	streamCacheRepo  persistence.StreamCacheRepository
 	workerStreamRepo persistence.WorkerStreamRepository
 	secretRepo       persistence.SecretRepository
 	cacheRepo        persistence.CacheRepository
@@ -21,6 +22,7 @@ type CoordinatorAPI struct {
 func NewCoordinatorAPI(
 	eventRepo persistence.EventRepository,
 	streamRepo persistence.StreamRepository,
+	streamCacheRepo persistence.StreamCacheRepository,
 	workerRepo persistence.WorkerRepository,
 	workerStreamRepo persistence.WorkerStreamRepository,
 	secretRepo persistence.SecretRepository,
@@ -30,6 +32,7 @@ func NewCoordinatorAPI(
 	return &CoordinatorAPI{
 		eventRepo:        eventRepo,
 		streamRepo:       streamRepo,
+		streamCacheRepo:  streamCacheRepo,
 		workerRepo:       workerRepo,
 		workerStreamRepo: workerStreamRepo,
 		secretRepo:       secretRepo,
