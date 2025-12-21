@@ -598,7 +598,7 @@ export const componentSchemas = {
       },
     },
     mysql_replication: {
-      title: "MySQL (MariaDB) Replication",
+      title: "MySQL (MariaDB) Replication (Experimental)",
       properties: {
         host: {
           type: "input",
