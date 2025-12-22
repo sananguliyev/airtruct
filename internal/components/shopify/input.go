@@ -215,13 +215,12 @@ func (s *Input) ReadBatch(ctx context.Context) (service.MessageBatch, service.Ac
 			return nil
 		}
 
-		// Extract and save the last updated_at from the batch if cache is configured
 		if s.cacheName != "" && len(items) > 0 {
 			lastItem := items[len(items)-1]
 			if updatedAt := s.extractUpdatedAt(lastItem); updatedAt != nil {
 				s.latestAckAt = updatedAt
-				// Save position to cache
-				s.savePosition(context.Background(), *updatedAt)
+				adjustedTime := updatedAt.Add(1 * time.Nanosecond)
+				s.savePosition(context.Background(), adjustedTime)
 			}
 		}
 
@@ -438,6 +437,16 @@ func (s *Input) extractUpdatedAt(item any) *time.Time {
 	return nil
 }
 
+func (s *Input) Close(ctx context.Context) error {
+	s.connMutex.Lock()
+	defer s.connMutex.Unlock()
+
+	s.connected = false
+	s.logger.Info("Shopify input closed")
+
+	return nil
+}
+
 func (s *Input) loadPosition(ctx context.Context) error {
 	if s.cacheName == "" {
 		return nil
@@ -498,14 +507,4 @@ func (s *Input) savePosition(ctx context.Context, updatedAt time.Time) {
 	if err != nil {
 		s.logger.Errorf("Failed to access cache: %v", err)
 	}
-}
-
-func (s *Input) Close(ctx context.Context) error {
-	s.connMutex.Lock()
-	defer s.connMutex.Unlock()
-
-	s.connected = false
-	s.logger.Info("Shopify input closed")
-
-	return nil
 }
