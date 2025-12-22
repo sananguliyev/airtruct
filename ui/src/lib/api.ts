@@ -1,4 +1,4 @@
-import { Stream, Worker, Secret, Cache } from "./entities";
+import { Stream, Worker, Secret, Cache, RateLimit } from "./entities";
 import * as yaml from "js-yaml";
 
 // Placeholder API functions - adapt based on original logic and backend
@@ -469,6 +469,148 @@ export async function deleteCache(id: string): Promise<void> {
     }
   } catch (error) {
     console.error("Error deleting cache:", error);
+    throw error;
+  }
+}
+
+export async function fetchRateLimits(): Promise<RateLimit[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/rate_limits`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+
+    return data?.data.map((rateLimit: any) => ({
+      id: rateLimit.id,
+      label: rateLimit.label,
+      component: rateLimit.component,
+      config: rateLimit.config || "",
+      createdAt: new Date(rateLimit.created_at).toLocaleString(),
+    }));
+  } catch (error) {
+    console.error("Error fetching rate limits:", error);
+    throw error;
+  }
+}
+
+export async function fetchRateLimit(id: string): Promise<RateLimit> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/rate_limits/${id}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+
+    return {
+      id: data.data.id,
+      label: data.data.label,
+      component: data.data.component,
+      config: data.data.config || "",
+      createdAt: new Date(data.data.created_at).toLocaleString(),
+    };
+  } catch (error) {
+    console.error("Error fetching rate limit:", error);
+    throw error;
+  }
+}
+
+export async function createRateLimit(rateLimitData: {
+  label: string;
+  component: string;
+  config: any;
+}): Promise<RateLimit> {
+  try {
+    const configYaml = yaml.dump(rateLimitData.config);
+
+    const response = await fetch(`${API_BASE_URL}/rate_limits`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        label: rateLimitData.label,
+        component: rateLimitData.component,
+        config: configYaml,
+      }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.message || `HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    return {
+      id: data.data.id,
+      label: data.data.label,
+      component: data.data.component,
+      config: data.data.config || "",
+      createdAt: new Date(data.data.created_at).toLocaleString(),
+    };
+  } catch (error) {
+    console.error("Error creating rate limit:", error);
+    throw error;
+  }
+}
+
+export async function updateRateLimit(
+  id: string,
+  rateLimitData: {
+    label: string;
+    component: string;
+    config: any;
+  },
+): Promise<RateLimit> {
+  try {
+    const configYaml = yaml.dump(rateLimitData.config);
+
+    const response = await fetch(`${API_BASE_URL}/rate_limits/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: parseInt(id),
+        label: rateLimitData.label,
+        component: rateLimitData.component,
+        config: configYaml,
+      }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.message || `HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    return {
+      id: data.data.id,
+      label: data.data.label,
+      component: data.data.component,
+      config: data.data.config || "",
+      createdAt: new Date(data.data.created_at).toLocaleString(),
+    };
+  } catch (error) {
+    console.error("Error updating rate limit:", error);
+    throw error;
+  }
+}
+
+export async function deleteRateLimit(id: string): Promise<void> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/rate_limits/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.message || `HTTP error! status: ${response.status}`);
+    }
+  } catch (error) {
+    console.error("Error deleting rate limit:", error);
     throw error;
   }
 }

@@ -13,12 +13,14 @@ type ConfigBuilder interface {
 }
 
 type configBuilder struct {
-	streamCacheRepo persistence.StreamCacheRepository
+	streamCacheRepo     persistence.StreamCacheRepository
+	streamRateLimitRepo persistence.StreamRateLimitRepository
 }
 
-func NewConfigBuilder(streamCacheRepo persistence.StreamCacheRepository) ConfigBuilder {
+func NewConfigBuilder(streamCacheRepo persistence.StreamCacheRepository, streamRateLimitRepo persistence.StreamRateLimitRepository) ConfigBuilder {
 	return &configBuilder{
-		streamCacheRepo: streamCacheRepo,
+		streamCacheRepo:     streamCacheRepo,
+		streamRateLimitRepo: streamRateLimitRepo,
 	}
 }
 
@@ -32,6 +34,15 @@ func (b *configBuilder) BuildStreamConfig(stream persistence.Stream) (string, er
 	}
 	if len(cacheResources) > 0 {
 		configMap["cache_resources"] = cacheResources
+	}
+
+	// Build rate_limit_resources section if there are any
+	rateLimitResources, err := b.buildRateLimitResourcesConfig(stream.ID)
+	if err != nil {
+		return "", err
+	}
+	if len(rateLimitResources) > 0 {
+		configMap["rate_limit_resources"] = rateLimitResources
 	}
 
 	input, err := b.buildInputConfig(stream)
@@ -155,4 +166,31 @@ func (b *configBuilder) buildCacheResourcesConfig(streamID int64) ([]map[string]
 	}
 
 	return cacheResources, nil
+}
+
+func (b *configBuilder) buildRateLimitResourcesConfig(streamID int64) ([]map[string]any, error) {
+	streamRateLimits, err := b.streamRateLimitRepo.FindByStreamID(streamID)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(streamRateLimits) == 0 {
+		return nil, nil
+	}
+
+	rateLimitResources := make([]map[string]any, 0, len(streamRateLimits))
+	for _, streamRateLimit := range streamRateLimits {
+		rateLimitResource := make(map[string]any)
+		rateLimitResource["label"] = streamRateLimit.RateLimit.Label
+
+		rateLimitConfig := make(map[string]any)
+		if err := yaml.Unmarshal(streamRateLimit.RateLimit.Config, &rateLimitConfig); err != nil {
+			return nil, err
+		}
+
+		rateLimitResource[streamRateLimit.RateLimit.Component] = rateLimitConfig
+		rateLimitResources = append(rateLimitResources, rateLimitResource)
+	}
+
+	return rateLimitResources, nil
 }

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select";
 import { useTheme } from "next-themes";
 import * as yaml from "js-yaml";
-import { fetchCaches, fetchSecrets } from "@/lib/api";
+import { fetchCaches, fetchSecrets, fetchRateLimits } from "@/lib/api";
 
 import { InlineYamlEditorProps, FieldState, FieldSchema } from "./types";
 import { getDefaultValue } from "./utils/defaults";
@@ -68,6 +68,9 @@ function DynamicSelectField({
         } else if (fieldSchema.dataSource === "secrets") {
           const secrets = await fetchSecrets();
           setOptions(secrets.map((secret) => secret.key));
+        } else if (fieldSchema.dataSource === "rate_limits") {
+          const rateLimits = await fetchRateLimits();
+          setOptions(rateLimits.map((rateLimit) => rateLimit.label));
         }
       } catch (error) {
         console.error("Failed to fetch options:", error);

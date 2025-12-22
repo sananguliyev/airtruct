@@ -54,3 +54,12 @@ export type Cache = {
   config: string;
   createdAt: string;
 };
+
+export type RateLimit = {
+  id: string;
+  parentID?: string;
+  label: string;
+  component: string;
+  config: string;
+  createdAt: string;
+};

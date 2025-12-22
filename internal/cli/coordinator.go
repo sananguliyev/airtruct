@@ -27,11 +27,12 @@ import (
 type CoordinatorCLI struct {
 	api                *coordinator.CoordinatorAPI
 	executor           executor.CoordinatorExecutor
+	rateLimiterEngine  interface{ Cleanup(time.Duration) error }
 	httpPort, grpcPort uint32
 }
 
-func NewCoordinatorCLI(api *coordinator.CoordinatorAPI, executor executor.CoordinatorExecutor, httpPort, grpcPort uint32) *CoordinatorCLI {
-	return &CoordinatorCLI{api, executor, httpPort, grpcPort}
+func NewCoordinatorCLI(api *coordinator.CoordinatorAPI, executor executor.CoordinatorExecutor, rateLimiterEngine interface{ Cleanup(time.Duration) error }, httpPort, grpcPort uint32) *CoordinatorCLI {
+	return &CoordinatorCLI{api, executor, rateLimiterEngine, httpPort, grpcPort}
 }
 
 func (c *CoordinatorCLI) Run(ctx context.Context) {
@@ -65,6 +66,26 @@ func (c *CoordinatorCLI) Run(ctx context.Context) {
 				err := c.executor.CheckWorkerStreams(ctx)
 				if err != nil {
 					log.Error().Err(err).Msg("Failed to perform worker stream health check")
+				}
+			}
+		}
+	})
+
+	cleanupTicker := time.NewTicker(1 * time.Hour)
+	defer cleanupTicker.Stop()
+
+	g.Go(func() error {
+		for {
+			select {
+			case <-ctx.Done():
+				log.Info().Msg("Stopping rate limit state cleanup routine...")
+				return ctx.Err()
+			case <-cleanupTicker.C:
+				err := c.rateLimiterEngine.Cleanup(24 * time.Hour)
+				if err != nil {
+					log.Error().Err(err).Msg("Failed to cleanup old rate limit states")
+				} else {
+					log.Debug().Msg("Rate limit state cleanup completed")
 				}
 			}
 		}

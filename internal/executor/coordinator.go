@@ -22,10 +22,11 @@ func NewCoordinatorExecutor(
 	workerRepo persistence.WorkerRepository,
 	streamRepo persistence.StreamRepository,
 	streamCacheRepo persistence.StreamCacheRepository,
+	streamRateLimitRepo persistence.StreamRateLimitRepository,
 	workerStreamRepo persistence.WorkerStreamRepository,
 ) CoordinatorExecutor {
 	return &coordinatorExecutor{
-		coordinator: coordinator.NewCoordinatorExecutor(workerRepo, streamRepo, streamCacheRepo, workerStreamRepo),
+		coordinator: coordinator.NewCoordinatorExecutor(workerRepo, streamRepo, streamCacheRepo, streamRateLimitRepo, workerStreamRepo),
 	}
 }
 
