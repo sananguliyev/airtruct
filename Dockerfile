@@ -1,13 +1,5 @@
 # syntax=docker/dockerfile:1
 
-FROM golang:1.24 AS deps
-
-WORKDIR /app
-
-COPY go.mod go.sum ./
-RUN --mount=type=cache,target=/go/pkg/mod \
-    go mod download
-
 FROM golang:1.24 AS build
 
 ENV CGO_ENABLED=1
@@ -19,7 +11,10 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update && apt-get install -y --no-install-recommends libzmq3-dev
 
-COPY --from=deps /go/pkg /go/pkg
+COPY go.mod go.sum ./
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
+
 COPY . .
 
 RUN mkdir build
