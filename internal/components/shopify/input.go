@@ -24,12 +24,12 @@ func init() {
 }
 
 type Input struct {
-	shopName     string
-	apiKey       string
-	apiPassword  string
-	shopResource string
-	limit        int
-	apiVersion   string
+	shopName       string
+	apiKey         string
+	apiAccessToken string
+	shopResource   string
+	limit          int
+	apiVersion     string
 
 	client    *goshopify.Client
 	connected bool
@@ -60,7 +60,7 @@ func NewFromConfig(conf *service.ParsedConfig, mgr *service.Resources) (*Input, 
 		return nil, err
 	}
 
-	apiPassword, err := conf.FieldString(sbfAPIPassword)
+	apiAccessToken, err := conf.FieldString(sbfAPIAccessToken)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func NewFromConfig(conf *service.ParsedConfig, mgr *service.Resources) (*Input, 
 	return &Input{
 		shopName:       shopName,
 		apiKey:         apiKey,
-		apiPassword:    apiPassword,
+		apiAccessToken: apiAccessToken,
 		shopResource:   shopResource,
 		limit:          limit,
 		apiVersion:     apiVersion,
@@ -142,7 +142,7 @@ func (s *Input) Connect(ctx context.Context) error {
 
 	app := goshopify.App{
 		ApiKey:   s.apiKey,
-		Password: s.apiPassword,
+		Password: s.apiAccessToken,
 	}
 
 	var opts []goshopify.Option

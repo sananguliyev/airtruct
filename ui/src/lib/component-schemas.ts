@@ -698,10 +698,11 @@ export const componentSchemas = {
           description: "Shopify API key for authentication (Private App).",
           required: true,
         },
-        api_password: {
+        api_access_token: {
           type: "input",
-          title: "API Password",
-          description: "Shopify API password for authentication (Private App).",
+          title: "API Access Token",
+          description:
+            "Shopify API Access Token for authentication (Private App).",
           required: true,
         },
         shop_resource: {

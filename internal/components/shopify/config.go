@@ -3,14 +3,14 @@ package shopify
 import "github.com/warpstreamlabs/bento/public/service"
 
 const (
-	sbfShopName     = "shop_name"
-	sbfAPIKey       = "api_key"
-	sbfAPIPassword  = "api_password"
-	sbfShopResource = "shop_resource"
-	sbfLimit        = "limit"
-	sbfAPIVersion   = "api_version"
-	sbfCache        = "cache_resource"
-	sbfRateLimit    = "rate_limit"
+	sbfShopName       = "shop_name"
+	sbfAPIKey         = "api_key"
+	sbfAPIAccessToken = "api_access_token"
+	sbfShopResource   = "shop_resource"
+	sbfLimit          = "limit"
+	sbfAPIVersion     = "api_version"
+	sbfCache          = "cache_resource"
+	sbfRateLimit      = "rate_limit"
 )
 
 func Config() *service.ConfigSpec {
@@ -24,7 +24,7 @@ This input connects to Shopify and retrieves all data from your store using the 
 The component requires authentication credentials for a Private App:
 - shop_name: Your Shopify store name (e.g., 'mystore' for mystore.myshopify.com)
 - api_key: Your Shopify API key
-- api_password: Your Shopify API password
+- api_access_token: Your Shopify API Access Token
 
 The component fetches all items of the specified resource type using pagination. It will iterate
 through all pages until all data is retrieved, then close with ErrEndOfInput.
@@ -49,8 +49,8 @@ Each message contains the raw resource data from the Shopify API.`).
 			Description("Shopify store name (without .myshopify.com).")).
 		Field(service.NewStringField(sbfAPIKey).
 			Description("Shopify API key for authentication (Private App).")).
-		Field(service.NewStringField(sbfAPIPassword).
-			Description("Shopify API password for authentication (Private App).").
+		Field(service.NewStringField(sbfAPIAccessToken).
+			Description("Shopify API Access Token for authentication (Private App).").
 			Secret()).
 		Field(service.NewStringField(sbfShopResource).
 			Description("The Shopify resource type to fetch (e.g., products, orders, customers, inventory_items, locations).").
@@ -82,7 +82,7 @@ input:
   shopify:
     shop_name: mystore
     api_key: your_api_key_here
-    api_password: your_api_password_here
+    api_access_token: your_access_token_here
     shop_resource: products
     limit: 50
     rate_limit: internal
@@ -95,7 +95,7 @@ input:
   shopify:
     shop_name: mystore
     api_key: your_api_key_here
-    api_password: your_api_password_here
+    api_access_token: your_access_token_here
     shop_resource: products
     limit: 50
 `,
@@ -114,7 +114,7 @@ input:
           - shopify:
               shop_name: ${SHOPIFY_SHOP_NAME}
               api_key: ${SHOPIFY_API_KEY}
-              api_password: ${SHOPIFY_API_PASSWORD}
+              api_access_token: ${SHOPIFY_ACCESS_TOKEN}
               shop_resource: orders
               limit: 100
 `,
@@ -126,7 +126,7 @@ input:
   shopify:
     shop_name: mystore
     api_key: ${SHOPIFY_API_KEY}
-    api_password: ${SHOPIFY_API_PASSWORD}
+    api_access_token: ${SHOPIFY_ACCESS_TOKEN}
     shop_resource: customers
     limit: 250
     api_version: "2024-01"
@@ -144,7 +144,7 @@ input:
   shopify:
     shop_name: ${SHOPIFY_SHOP_NAME}
     api_key: ${SHOPIFY_API_KEY}
-    api_password: ${SHOPIFY_API_PASSWORD}
+    api_access_token: ${SHOPIFY_ACCESS_TOKEN}
     shop_resource: products
     limit: 100
     cache_resource: shopify_position
