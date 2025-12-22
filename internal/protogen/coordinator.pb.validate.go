@@ -2212,6 +2212,415 @@ var _ interface {
 	ErrorName() string
 } = CacheResponseValidationError{}
 
+// Validate checks the field values on ListRateLimitsResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListRateLimitsResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListRateLimitsResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListRateLimitsResponseMultiError, or nil if none found.
+func (m *ListRateLimitsResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListRateLimitsResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListRateLimitsResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListRateLimitsResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListRateLimitsResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ListRateLimitsResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListRateLimitsResponseMultiError is an error wrapping multiple validation
+// errors returned by ListRateLimitsResponse.ValidateAll() if the designated
+// constraints aren't met.
+type ListRateLimitsResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListRateLimitsResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListRateLimitsResponseMultiError) AllErrors() []error { return m }
+
+// ListRateLimitsResponseValidationError is the validation error returned by
+// ListRateLimitsResponse.Validate if the designated constraints aren't met.
+type ListRateLimitsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListRateLimitsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListRateLimitsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListRateLimitsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListRateLimitsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListRateLimitsResponseValidationError) ErrorName() string {
+	return "ListRateLimitsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListRateLimitsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListRateLimitsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListRateLimitsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListRateLimitsResponseValidationError{}
+
+// Validate checks the field values on GetRateLimitRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetRateLimitRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetRateLimitRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetRateLimitRequestMultiError, or nil if none found.
+func (m *GetRateLimitRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetRateLimitRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if m.GetId() <= 0 {
+		err := GetRateLimitRequestValidationError{
+			field:  "Id",
+			reason: "value must be greater than 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return GetRateLimitRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetRateLimitRequestMultiError is an error wrapping multiple validation
+// errors returned by GetRateLimitRequest.ValidateAll() if the designated
+// constraints aren't met.
+type GetRateLimitRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetRateLimitRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetRateLimitRequestMultiError) AllErrors() []error { return m }
+
+// GetRateLimitRequestValidationError is the validation error returned by
+// GetRateLimitRequest.Validate if the designated constraints aren't met.
+type GetRateLimitRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetRateLimitRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetRateLimitRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetRateLimitRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetRateLimitRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetRateLimitRequestValidationError) ErrorName() string {
+	return "GetRateLimitRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetRateLimitRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetRateLimitRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetRateLimitRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetRateLimitRequestValidationError{}
+
+// Validate checks the field values on RateLimitResponse with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *RateLimitResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on RateLimitResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// RateLimitResponseMultiError, or nil if none found.
+func (m *RateLimitResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *RateLimitResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, RateLimitResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, RateLimitResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return RateLimitResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetMeta()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, RateLimitResponseValidationError{
+					field:  "Meta",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, RateLimitResponseValidationError{
+					field:  "Meta",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetMeta()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return RateLimitResponseValidationError{
+				field:  "Meta",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return RateLimitResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// RateLimitResponseMultiError is an error wrapping multiple validation errors
+// returned by RateLimitResponse.ValidateAll() if the designated constraints
+// aren't met.
+type RateLimitResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m RateLimitResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m RateLimitResponseMultiError) AllErrors() []error { return m }
+
+// RateLimitResponseValidationError is the validation error returned by
+// RateLimitResponse.Validate if the designated constraints aren't met.
+type RateLimitResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RateLimitResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RateLimitResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RateLimitResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RateLimitResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RateLimitResponseValidationError) ErrorName() string {
+	return "RateLimitResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e RateLimitResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRateLimitResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RateLimitResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RateLimitResponseValidationError{}
+
 // Validate checks the field values on ListWorkersResponse_Worker with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.

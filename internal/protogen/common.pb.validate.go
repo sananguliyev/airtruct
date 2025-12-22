@@ -762,6 +762,450 @@ var _ interface {
 
 var _Cache_Label_Pattern = regexp.MustCompile("^[a-zA-Z0-9_-]+$")
 
+// Validate checks the field values on RateLimit with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *RateLimit) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on RateLimit with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in RateLimitMultiError, or nil
+// if none found.
+func (m *RateLimit) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *RateLimit) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Id
+
+	if l := utf8.RuneCountInString(m.GetLabel()); l < 1 || l > 100 {
+		err := RateLimitValidationError{
+			field:  "Label",
+			reason: "value length must be between 1 and 100 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_RateLimit_Label_Pattern.MatchString(m.GetLabel()) {
+		err := RateLimitValidationError{
+			field:  "Label",
+			reason: "value does not match regex pattern \"^[a-zA-Z0-9_-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetComponent()); l < 1 || l > 100 {
+		err := RateLimitValidationError{
+			field:  "Component",
+			reason: "value length must be between 1 and 100 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Config
+
+	// no validation rules for IsCurrent
+
+	if all {
+		switch v := interface{}(m.GetCreatedAt()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, RateLimitValidationError{
+					field:  "CreatedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, RateLimitValidationError{
+					field:  "CreatedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCreatedAt()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return RateLimitValidationError{
+				field:  "CreatedAt",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if m.ParentId != nil {
+		// no validation rules for ParentId
+	}
+
+	if m.UpdatedAt != nil {
+
+		if all {
+			switch v := interface{}(m.GetUpdatedAt()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, RateLimitValidationError{
+						field:  "UpdatedAt",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, RateLimitValidationError{
+						field:  "UpdatedAt",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetUpdatedAt()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return RateLimitValidationError{
+					field:  "UpdatedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return RateLimitMultiError(errors)
+	}
+
+	return nil
+}
+
+// RateLimitMultiError is an error wrapping multiple validation errors returned
+// by RateLimit.ValidateAll() if the designated constraints aren't met.
+type RateLimitMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m RateLimitMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m RateLimitMultiError) AllErrors() []error { return m }
+
+// RateLimitValidationError is the validation error returned by
+// RateLimit.Validate if the designated constraints aren't met.
+type RateLimitValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RateLimitValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RateLimitValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RateLimitValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RateLimitValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RateLimitValidationError) ErrorName() string { return "RateLimitValidationError" }
+
+// Error satisfies the builtin error interface
+func (e RateLimitValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRateLimit.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RateLimitValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RateLimitValidationError{}
+
+var _RateLimit_Label_Pattern = regexp.MustCompile("^[a-zA-Z0-9_-]+$")
+
+// Validate checks the field values on RateLimitCheckRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *RateLimitCheckRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on RateLimitCheckRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// RateLimitCheckRequestMultiError, or nil if none found.
+func (m *RateLimitCheckRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *RateLimitCheckRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetLabel()); l < 1 || l > 100 {
+		err := RateLimitCheckRequestValidationError{
+			field:  "Label",
+			reason: "value length must be between 1 and 100 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetKey()); l < 1 || l > 255 {
+		err := RateLimitCheckRequestValidationError{
+			field:  "Key",
+			reason: "value length must be between 1 and 255 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Cost
+
+	if len(errors) > 0 {
+		return RateLimitCheckRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// RateLimitCheckRequestMultiError is an error wrapping multiple validation
+// errors returned by RateLimitCheckRequest.ValidateAll() if the designated
+// constraints aren't met.
+type RateLimitCheckRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m RateLimitCheckRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m RateLimitCheckRequestMultiError) AllErrors() []error { return m }
+
+// RateLimitCheckRequestValidationError is the validation error returned by
+// RateLimitCheckRequest.Validate if the designated constraints aren't met.
+type RateLimitCheckRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RateLimitCheckRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RateLimitCheckRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RateLimitCheckRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RateLimitCheckRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RateLimitCheckRequestValidationError) ErrorName() string {
+	return "RateLimitCheckRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e RateLimitCheckRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRateLimitCheckRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RateLimitCheckRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RateLimitCheckRequestValidationError{}
+
+// Validate checks the field values on RateLimitCheckResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *RateLimitCheckResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on RateLimitCheckResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// RateLimitCheckResponseMultiError, or nil if none found.
+func (m *RateLimitCheckResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *RateLimitCheckResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Allowed
+
+	// no validation rules for RetryAfterMs
+
+	// no validation rules for Remaining
+
+	// no validation rules for Limit
+
+	// no validation rules for ResetAt
+
+	if len(errors) > 0 {
+		return RateLimitCheckResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// RateLimitCheckResponseMultiError is an error wrapping multiple validation
+// errors returned by RateLimitCheckResponse.ValidateAll() if the designated
+// constraints aren't met.
+type RateLimitCheckResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m RateLimitCheckResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m RateLimitCheckResponseMultiError) AllErrors() []error { return m }
+
+// RateLimitCheckResponseValidationError is the validation error returned by
+// RateLimitCheckResponse.Validate if the designated constraints aren't met.
+type RateLimitCheckResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RateLimitCheckResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RateLimitCheckResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RateLimitCheckResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RateLimitCheckResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RateLimitCheckResponseValidationError) ErrorName() string {
+	return "RateLimitCheckResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e RateLimitCheckResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRateLimitCheckResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RateLimitCheckResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RateLimitCheckResponseValidationError{}
+
 // Validate checks the field values on Stream_Processor with the rules defined
 // in the proto definition for this message. If any rules are violated, the
 // first error encountered is returned, or nil if there are no violations.

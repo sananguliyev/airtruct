@@ -16,6 +16,9 @@ import CachesPage from "./pages/caches/page.tsx";
 import SecretsPage from "./pages/secrets/page.tsx";
 import CacheNewPage from "./pages/caches/new/page.tsx";
 import CacheEditPage from "./pages/caches/[id]/edit/page.tsx";
+import RateLimitsPage from "./pages/rate-limits/page.tsx";
+import RateLimitNewPage from "./pages/rate-limits/new/page.tsx";
+import RateLimitEditPage from "./pages/rate-limits/[id]/edit/page.tsx";
 import StreamEditPage from "./pages/streams/[id]/edit/page.tsx";
 import StreamNewPage from "./pages/streams/new/page.tsx";
 
@@ -60,6 +63,9 @@ function App() {
         <Route path="caches" element={<CachesPage />} />
         <Route path="caches/new" element={<CacheNewPage />} />
         <Route path="caches/:id/edit" element={<CacheEditPage />} />
+        <Route path="rate-limits" element={<RateLimitsPage />} />
+        <Route path="rate-limits/new" element={<RateLimitNewPage />} />
+        <Route path="rate-limits/:id/edit" element={<RateLimitEditPage />} />
       </Route>
     </Routes>
   );

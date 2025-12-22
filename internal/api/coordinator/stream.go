@@ -29,6 +29,23 @@ func extractCacheResourceName(configYAML string) (string, error) {
 	return "", nil
 }
 
+func extractRateLimitResourceName(configYAML string) (string, error) {
+	if configYAML == "" {
+		return "", nil
+	}
+
+	var config map[string]any
+	if err := yaml.Unmarshal([]byte(configYAML), &config); err != nil {
+		return "", err
+	}
+
+	if rateLimitResource, ok := config["rate_limit"].(string); ok && rateLimitResource != "" {
+		return rateLimitResource, nil
+	}
+
+	return "", nil
+}
+
 func (c *CoordinatorAPI) CreateStream(_ context.Context, in *pb.Stream) (*pb.StreamResponse, error) {
 	if err := in.Validate(); err != nil {
 		log.Debug().Err(err).Msg("Invalid request")
@@ -84,6 +101,41 @@ func (c *CoordinatorAPI) CreateStream(_ context.Context, in *pb.Stream) (*pb.Str
 
 		if err := c.streamCacheRepo.Create(streamCache); err != nil {
 			log.Error().Err(err).Str("cache_label", cacheName).Msg("Failed to store stream cache")
+		}
+	}
+
+	// Extract and store rate limit resources
+	rateLimitNames := make(map[string]bool)
+
+	// Check input config
+	if rateLimitName, err := extractRateLimitResourceName(in.GetInputConfig()); err == nil && rateLimitName != "" {
+		rateLimitNames[rateLimitName] = true
+	}
+
+	// Check output config
+	if rateLimitName, err := extractRateLimitResourceName(in.GetOutputConfig()); err == nil && rateLimitName != "" {
+		rateLimitNames[rateLimitName] = true
+	}
+
+	// Store rate limit references
+	for rateLimitName := range rateLimitNames {
+		rateLimit, err := c.rateLimitRepo.FindByLabel(rateLimitName)
+		if err != nil {
+			log.Warn().Err(err).Str("rate_limit_label", rateLimitName).Msg("Failed to find rate limit")
+			continue
+		}
+		if rateLimit == nil {
+			log.Warn().Str("rate_limit_label", rateLimitName).Msg("Rate limit not found")
+			continue
+		}
+
+		streamRateLimit := persistence.StreamRateLimit{
+			StreamID:    stream.ID,
+			RateLimitID: rateLimit.ID,
+		}
+
+		if err := c.streamRateLimitRepo.Create(streamRateLimit); err != nil {
+			log.Error().Err(err).Str("rate_limit_label", rateLimitName).Msg("Failed to store stream rate limit")
 		}
 	}
 
@@ -211,6 +263,46 @@ func (c *CoordinatorAPI) UpdateStream(_ context.Context, in *pb.Stream) (*pb.Str
 
 		if err := c.streamCacheRepo.Create(streamCache); err != nil {
 			log.Error().Err(err).Str("cache_label", cacheName).Msg("Failed to store stream cache")
+		}
+	}
+
+	// Delete existing rate limit associations
+	if err := c.streamRateLimitRepo.DeleteByStreamID(newStream.ID); err != nil {
+		log.Error().Err(err).Msg("Failed to delete existing stream rate limits")
+	}
+
+	// Extract and store rate limit resources
+	rateLimitNames := make(map[string]bool)
+
+	// Check input config
+	if rateLimitName, err := extractRateLimitResourceName(in.GetInputConfig()); err == nil && rateLimitName != "" {
+		rateLimitNames[rateLimitName] = true
+	}
+
+	// Check output config
+	if rateLimitName, err := extractRateLimitResourceName(in.GetOutputConfig()); err == nil && rateLimitName != "" {
+		rateLimitNames[rateLimitName] = true
+	}
+
+	// Store rate limit references
+	for rateLimitName := range rateLimitNames {
+		rateLimit, err := c.rateLimitRepo.FindByLabel(rateLimitName)
+		if err != nil {
+			log.Warn().Err(err).Str("rate_limit_label", rateLimitName).Msg("Failed to find rate limit")
+			continue
+		}
+		if rateLimit == nil {
+			log.Warn().Str("rate_limit_label", rateLimitName).Msg("Rate limit not found")
+			continue
+		}
+
+		streamRateLimit := persistence.StreamRateLimit{
+			StreamID:    newStream.ID,
+			RateLimitID: rateLimit.ID,
+		}
+
+		if err := c.streamRateLimitRepo.Create(streamRateLimit); err != nil {
+			log.Error().Err(err).Str("rate_limit_label", rateLimitName).Msg("Failed to store stream rate limit")
 		}
 	}
 

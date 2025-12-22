@@ -38,6 +38,12 @@ const (
 	Coordinator_CreateCache_FullMethodName              = "/protorender.Coordinator/CreateCache"
 	Coordinator_UpdateCache_FullMethodName              = "/protorender.Coordinator/UpdateCache"
 	Coordinator_DeleteCache_FullMethodName              = "/protorender.Coordinator/DeleteCache"
+	Coordinator_ListRateLimits_FullMethodName           = "/protorender.Coordinator/ListRateLimits"
+	Coordinator_GetRateLimit_FullMethodName             = "/protorender.Coordinator/GetRateLimit"
+	Coordinator_CreateRateLimit_FullMethodName          = "/protorender.Coordinator/CreateRateLimit"
+	Coordinator_UpdateRateLimit_FullMethodName          = "/protorender.Coordinator/UpdateRateLimit"
+	Coordinator_DeleteRateLimit_FullMethodName          = "/protorender.Coordinator/DeleteRateLimit"
+	Coordinator_CheckRateLimit_FullMethodName           = "/protorender.Coordinator/CheckRateLimit"
 	Coordinator_IngestEvents_FullMethodName             = "/protorender.Coordinator/IngestEvents"
 	Coordinator_IngestMetrics_FullMethodName            = "/protorender.Coordinator/IngestMetrics"
 )
@@ -69,6 +75,13 @@ type CoordinatorClient interface {
 	CreateCache(ctx context.Context, in *Cache, opts ...grpc.CallOption) (*CacheResponse, error)
 	UpdateCache(ctx context.Context, in *Cache, opts ...grpc.CallOption) (*CacheResponse, error)
 	DeleteCache(ctx context.Context, in *GetCacheRequest, opts ...grpc.CallOption) (*CommonResponse, error)
+	// Rate limit methods
+	ListRateLimits(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListRateLimitsResponse, error)
+	GetRateLimit(ctx context.Context, in *GetRateLimitRequest, opts ...grpc.CallOption) (*RateLimitResponse, error)
+	CreateRateLimit(ctx context.Context, in *RateLimit, opts ...grpc.CallOption) (*RateLimitResponse, error)
+	UpdateRateLimit(ctx context.Context, in *RateLimit, opts ...grpc.CallOption) (*RateLimitResponse, error)
+	DeleteRateLimit(ctx context.Context, in *GetRateLimitRequest, opts ...grpc.CallOption) (*CommonResponse, error)
+	CheckRateLimit(ctx context.Context, in *RateLimitCheckRequest, opts ...grpc.CallOption) (*RateLimitCheckResponse, error)
 	// Observability methods
 	IngestEvents(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Event, emptypb.Empty], error)
 	IngestMetrics(ctx context.Context, in *MetricsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -262,6 +275,66 @@ func (c *coordinatorClient) DeleteCache(ctx context.Context, in *GetCacheRequest
 	return out, nil
 }
 
+func (c *coordinatorClient) ListRateLimits(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListRateLimitsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListRateLimitsResponse)
+	err := c.cc.Invoke(ctx, Coordinator_ListRateLimits_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *coordinatorClient) GetRateLimit(ctx context.Context, in *GetRateLimitRequest, opts ...grpc.CallOption) (*RateLimitResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RateLimitResponse)
+	err := c.cc.Invoke(ctx, Coordinator_GetRateLimit_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *coordinatorClient) CreateRateLimit(ctx context.Context, in *RateLimit, opts ...grpc.CallOption) (*RateLimitResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RateLimitResponse)
+	err := c.cc.Invoke(ctx, Coordinator_CreateRateLimit_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *coordinatorClient) UpdateRateLimit(ctx context.Context, in *RateLimit, opts ...grpc.CallOption) (*RateLimitResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RateLimitResponse)
+	err := c.cc.Invoke(ctx, Coordinator_UpdateRateLimit_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *coordinatorClient) DeleteRateLimit(ctx context.Context, in *GetRateLimitRequest, opts ...grpc.CallOption) (*CommonResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CommonResponse)
+	err := c.cc.Invoke(ctx, Coordinator_DeleteRateLimit_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *coordinatorClient) CheckRateLimit(ctx context.Context, in *RateLimitCheckRequest, opts ...grpc.CallOption) (*RateLimitCheckResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RateLimitCheckResponse)
+	err := c.cc.Invoke(ctx, Coordinator_CheckRateLimit_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *coordinatorClient) IngestEvents(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Event, emptypb.Empty], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &Coordinator_ServiceDesc.Streams[0], Coordinator_IngestEvents_FullMethodName, cOpts...)
@@ -312,6 +385,13 @@ type CoordinatorServer interface {
 	CreateCache(context.Context, *Cache) (*CacheResponse, error)
 	UpdateCache(context.Context, *Cache) (*CacheResponse, error)
 	DeleteCache(context.Context, *GetCacheRequest) (*CommonResponse, error)
+	// Rate limit methods
+	ListRateLimits(context.Context, *emptypb.Empty) (*ListRateLimitsResponse, error)
+	GetRateLimit(context.Context, *GetRateLimitRequest) (*RateLimitResponse, error)
+	CreateRateLimit(context.Context, *RateLimit) (*RateLimitResponse, error)
+	UpdateRateLimit(context.Context, *RateLimit) (*RateLimitResponse, error)
+	DeleteRateLimit(context.Context, *GetRateLimitRequest) (*CommonResponse, error)
+	CheckRateLimit(context.Context, *RateLimitCheckRequest) (*RateLimitCheckResponse, error)
 	// Observability methods
 	IngestEvents(grpc.BidiStreamingServer[Event, emptypb.Empty]) error
 	IngestMetrics(context.Context, *MetricsRequest) (*emptypb.Empty, error)
@@ -378,6 +458,24 @@ func (UnimplementedCoordinatorServer) UpdateCache(context.Context, *Cache) (*Cac
 }
 func (UnimplementedCoordinatorServer) DeleteCache(context.Context, *GetCacheRequest) (*CommonResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteCache not implemented")
+}
+func (UnimplementedCoordinatorServer) ListRateLimits(context.Context, *emptypb.Empty) (*ListRateLimitsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListRateLimits not implemented")
+}
+func (UnimplementedCoordinatorServer) GetRateLimit(context.Context, *GetRateLimitRequest) (*RateLimitResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetRateLimit not implemented")
+}
+func (UnimplementedCoordinatorServer) CreateRateLimit(context.Context, *RateLimit) (*RateLimitResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateRateLimit not implemented")
+}
+func (UnimplementedCoordinatorServer) UpdateRateLimit(context.Context, *RateLimit) (*RateLimitResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateRateLimit not implemented")
+}
+func (UnimplementedCoordinatorServer) DeleteRateLimit(context.Context, *GetRateLimitRequest) (*CommonResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteRateLimit not implemented")
+}
+func (UnimplementedCoordinatorServer) CheckRateLimit(context.Context, *RateLimitCheckRequest) (*RateLimitCheckResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CheckRateLimit not implemented")
 }
 func (UnimplementedCoordinatorServer) IngestEvents(grpc.BidiStreamingServer[Event, emptypb.Empty]) error {
 	return status.Error(codes.Unimplemented, "method IngestEvents not implemented")
@@ -730,6 +828,114 @@ func _Coordinator_DeleteCache_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Coordinator_ListRateLimits_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoordinatorServer).ListRateLimits(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Coordinator_ListRateLimits_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoordinatorServer).ListRateLimits(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Coordinator_GetRateLimit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRateLimitRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoordinatorServer).GetRateLimit(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Coordinator_GetRateLimit_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoordinatorServer).GetRateLimit(ctx, req.(*GetRateLimitRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Coordinator_CreateRateLimit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RateLimit)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoordinatorServer).CreateRateLimit(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Coordinator_CreateRateLimit_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoordinatorServer).CreateRateLimit(ctx, req.(*RateLimit))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Coordinator_UpdateRateLimit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RateLimit)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoordinatorServer).UpdateRateLimit(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Coordinator_UpdateRateLimit_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoordinatorServer).UpdateRateLimit(ctx, req.(*RateLimit))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Coordinator_DeleteRateLimit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRateLimitRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoordinatorServer).DeleteRateLimit(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Coordinator_DeleteRateLimit_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoordinatorServer).DeleteRateLimit(ctx, req.(*GetRateLimitRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Coordinator_CheckRateLimit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RateLimitCheckRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoordinatorServer).CheckRateLimit(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Coordinator_CheckRateLimit_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoordinatorServer).CheckRateLimit(ctx, req.(*RateLimitCheckRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Coordinator_IngestEvents_Handler(srv interface{}, stream grpc.ServerStream) error {
 	return srv.(CoordinatorServer).IngestEvents(&grpc.GenericServerStream[Event, emptypb.Empty]{ServerStream: stream})
 }
@@ -833,6 +1039,30 @@ var Coordinator_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteCache",
 			Handler:    _Coordinator_DeleteCache_Handler,
+		},
+		{
+			MethodName: "ListRateLimits",
+			Handler:    _Coordinator_ListRateLimits_Handler,
+		},
+		{
+			MethodName: "GetRateLimit",
+			Handler:    _Coordinator_GetRateLimit_Handler,
+		},
+		{
+			MethodName: "CreateRateLimit",
+			Handler:    _Coordinator_CreateRateLimit_Handler,
+		},
+		{
+			MethodName: "UpdateRateLimit",
+			Handler:    _Coordinator_UpdateRateLimit_Handler,
+		},
+		{
+			MethodName: "DeleteRateLimit",
+			Handler:    _Coordinator_DeleteRateLimit_Handler,
+		},
+		{
+			MethodName: "CheckRateLimit",
+			Handler:    _Coordinator_CheckRateLimit_Handler,
 		},
 		{
 			MethodName: "IngestMetrics",

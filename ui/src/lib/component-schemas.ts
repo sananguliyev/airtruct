@@ -739,6 +739,14 @@ export const componentSchemas = {
           dataSource: "caches",
           default: "",
         },
+        rate_limit: {
+          type: "dynamic_select",
+          title: "Rate Limit",
+          description:
+            "Rate limit resource to use for Shopify API requests. Uses shop name as the rate limit key.",
+          dataSource: "rate_limits",
+          default: "",
+        },
       },
     },
   },
@@ -2056,6 +2064,50 @@ export const componentSchemas = {
       properties: {},
     },
   },
+  rate_limit: {
+    coordinator: {
+      title: "Coordinator",
+      properties: {
+        count: {
+          type: "number",
+          title: "Count",
+          description: "Number of requests allowed per interval.",
+          required: true,
+          default: 10,
+          min: 1,
+        },
+        interval: {
+          type: "select",
+          title: "Interval",
+          description: "Time interval for rate limiting.",
+          options: [
+            "1s",
+            "5s",
+            "10s",
+            "30s",
+            "1m",
+            "5m",
+            "10m",
+            "30m",
+            "1h",
+            "2h",
+            "6h",
+            "12h",
+            "24h",
+          ],
+          default: "1s",
+          required: true,
+        },
+        burst: {
+          type: "number",
+          title: "Burst",
+          description: "Additional burst capacity for handling traffic spikes.",
+          default: 0,
+          min: 0,
+        },
+      },
+    },
+  },
 };
 
 // Component lists for each type
@@ -2094,4 +2146,5 @@ export const componentLists = {
     "ristretto",
     "noop",
   ],
+  rate_limit: ["coordinator"],
 };

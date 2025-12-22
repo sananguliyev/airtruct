@@ -12,6 +12,7 @@ import (
 	"github.com/sananguliyev/airtruct/internal/config"
 	"github.com/sananguliyev/airtruct/internal/executor"
 	"github.com/sananguliyev/airtruct/internal/persistence"
+	"github.com/sananguliyev/airtruct/internal/ratelimiter"
 	"github.com/sananguliyev/airtruct/internal/vault"
 )
 
@@ -31,9 +32,13 @@ func InitializeCoordinatorCommand(httpPort, grpcPort uint32) *cli.CoordinatorCLI
 	secretRepository := persistence.NewSecretRepository(db)
 	cacheRepository := persistence.NewCacheRepository(db)
 	streamCacheRepository := persistence.NewStreamCacheRepository(db)
-	coordinatorAPI := coordinator.NewCoordinatorAPI(eventRepository, streamRepository, streamCacheRepository, workerRepository, workerStreamRepository, secretRepository, cacheRepository, aesgcm)
-	coordinatorExecutor := executor.NewCoordinatorExecutor(workerRepository, streamRepository, streamCacheRepository, workerStreamRepository)
-	coordinatorCLI := cli.NewCoordinatorCLI(coordinatorAPI, coordinatorExecutor, httpPort, grpcPort)
+	rateLimitRepository := persistence.NewRateLimitRepository(db)
+	rateLimitStateRepository := persistence.NewRateLimitStateRepository(db)
+	streamRateLimitRepository := persistence.NewStreamRateLimitRepository(db)
+	rateLimiterEngine := ratelimiter.NewEngine(rateLimitRepository, rateLimitStateRepository)
+	coordinatorAPI := coordinator.NewCoordinatorAPI(eventRepository, streamRepository, streamCacheRepository, streamRateLimitRepository, workerRepository, workerStreamRepository, secretRepository, cacheRepository, rateLimitRepository, rateLimiterEngine, aesgcm)
+	coordinatorExecutor := executor.NewCoordinatorExecutor(workerRepository, streamRepository, streamCacheRepository, streamRateLimitRepository, workerStreamRepository)
+	coordinatorCLI := cli.NewCoordinatorCLI(coordinatorAPI, coordinatorExecutor, rateLimiterEngine, httpPort, grpcPort)
 	return coordinatorCLI
 }
 

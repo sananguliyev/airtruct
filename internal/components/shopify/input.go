@@ -10,6 +10,8 @@ import (
 	"github.com/warpstreamlabs/bento/public/service"
 )
 
+const rateLimitKeyContextKey = "rate_limit_key"
+
 func init() {
 	err := service.RegisterBatchInput(
 		"shopify", Config(),
@@ -33,11 +35,11 @@ type Input struct {
 	connected bool
 	connMutex sync.RWMutex
 
-	// Pagination state
+	rateLimitLabel string
+
 	finished   bool
 	stateMutex sync.Mutex
 
-	// Cache for position tracking
 	cacheName     string
 	cacheKey      string
 	lastUpdatedAt *time.Time
@@ -101,24 +103,32 @@ func NewFromConfig(conf *service.ParsedConfig, mgr *service.Resources) (*Input, 
 
 	var cacheKey string
 	if cacheName != "" {
-		// Create a unique cache key for this shop and resource
 		cacheKey = fmt.Sprintf("shopify:%s:%s:last_updated_at", shopName, shopResource)
 	}
 
+	var rateLimitLabel string
+	if conf.Contains(sbfRateLimit) {
+		rateLimitLabel, err = conf.FieldString(sbfRateLimit)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return &Input{
-		shopName:      shopName,
-		apiKey:        apiKey,
-		apiPassword:   apiPassword,
-		shopResource:  shopResource,
-		limit:         limit,
-		apiVersion:    apiVersion,
-		finished:      false,
-		cacheName:     cacheName,
-		cacheKey:      cacheKey,
-		lastUpdatedAt: nil,
-		latestAckAt:   nil,
-		mgr:           mgr,
-		logger:        mgr.Logger(),
+		shopName:       shopName,
+		apiKey:         apiKey,
+		apiPassword:    apiPassword,
+		shopResource:   shopResource,
+		limit:          limit,
+		apiVersion:     apiVersion,
+		rateLimitLabel: rateLimitLabel,
+		finished:       false,
+		cacheName:      cacheName,
+		cacheKey:       cacheKey,
+		lastUpdatedAt:  nil,
+		latestAckAt:    nil,
+		mgr:            mgr,
+		logger:         mgr.Logger(),
 	}, nil
 }
 
@@ -130,21 +140,17 @@ func (s *Input) Connect(ctx context.Context) error {
 		return nil
 	}
 
-	// Create Shopify app for Private App authentication
 	app := goshopify.App{
 		ApiKey:   s.apiKey,
 		Password: s.apiPassword,
 	}
 
-	// Create client options
 	var opts []goshopify.Option
 	if s.apiVersion != "" {
 		opts = append(opts, goshopify.WithVersion(s.apiVersion))
 	}
-	// Add retry support for rate limiting
 	opts = append(opts, goshopify.WithRetry(3))
 
-	// Create the client (empty string for token as we're using private app auth)
 	client, err := goshopify.NewClient(app, s.shopName, "", opts...)
 	if err != nil {
 		return fmt.Errorf("failed to create Shopify client: %w", err)
@@ -154,8 +160,10 @@ func (s *Input) Connect(ctx context.Context) error {
 	s.connected = true
 	s.logger.Infof("Connected to Shopify store: %s.myshopify.com", s.shopName)
 	s.logger.Infof("Resource type: %s", s.shopResource)
+	if s.rateLimitLabel != "" {
+		s.logger.Infof("Using rate limit: %s with key: %s", s.rateLimitLabel, s.shopName)
+	}
 
-	// Load position from cache if configured
 	if s.cacheName != "" {
 		s.logger.Infof("Using cache '%s' for position tracking", s.cacheName)
 		if err := s.loadPosition(ctx); err != nil {
@@ -207,13 +215,12 @@ func (s *Input) ReadBatch(ctx context.Context) (service.MessageBatch, service.Ac
 			return nil
 		}
 
-		// Extract and save the last updated_at from the batch if cache is configured
 		if s.cacheName != "" && len(items) > 0 {
 			lastItem := items[len(items)-1]
 			if updatedAt := s.extractUpdatedAt(lastItem); updatedAt != nil {
 				s.latestAckAt = updatedAt
-				// Save position to cache
-				s.savePosition(context.Background(), *updatedAt)
+				adjustedTime := updatedAt.Add(1 * time.Nanosecond)
+				s.savePosition(context.Background(), adjustedTime)
 			}
 		}
 
@@ -225,6 +232,12 @@ func (s *Input) ReadBatch(ctx context.Context) (service.MessageBatch, service.Ac
 
 func (s *Input) fetchBatch(ctx context.Context) ([]any, error) {
 	s.logger.Debugf("Fetching next batch of %s from Shopify", s.shopResource)
+
+	if s.rateLimitLabel != "" {
+		if err := s.checkRateLimit(ctx); err != nil {
+			return nil, fmt.Errorf("rate limit check failed: %w", err)
+		}
+	}
 
 	var items []any
 	var err error
@@ -250,12 +263,38 @@ func (s *Input) fetchBatch(ctx context.Context) ([]any, error) {
 
 	s.logger.Infof("Fetched %d %s", len(items), s.shopResource)
 
-	// If we got fewer items than limit or no items, we've reached the end
 	if len(items) < s.limit {
 		s.finished = true
 	}
 
 	return items, nil
+}
+
+func (s *Input) checkRateLimit(ctx context.Context) error {
+	var waitDuration time.Duration
+	var accessErr error
+
+	keyCtx := context.WithValue(ctx, rateLimitKeyContextKey, s.shopName)
+
+	err := s.mgr.AccessRateLimit(ctx, s.rateLimitLabel, func(rl service.RateLimit) {
+		waitDuration, accessErr = rl.Access(keyCtx)
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to access rate limit: %w", err)
+	}
+
+	if accessErr != nil {
+		return fmt.Errorf("rate limit access error: %w", accessErr)
+	}
+
+	if waitDuration > 0 {
+		s.logger.Warnf("Rate limit exceeded, waiting %v before retry", waitDuration)
+		time.Sleep(waitDuration)
+		return s.checkRateLimit(ctx)
+	}
+
+	return nil
 }
 
 func (s *Input) fetchProductsPage(ctx context.Context) ([]any, error) {
@@ -398,6 +437,16 @@ func (s *Input) extractUpdatedAt(item any) *time.Time {
 	return nil
 }
 
+func (s *Input) Close(ctx context.Context) error {
+	s.connMutex.Lock()
+	defer s.connMutex.Unlock()
+
+	s.connected = false
+	s.logger.Info("Shopify input closed")
+
+	return nil
+}
+
 func (s *Input) loadPosition(ctx context.Context) error {
 	if s.cacheName == "" {
 		return nil
@@ -458,14 +507,4 @@ func (s *Input) savePosition(ctx context.Context, updatedAt time.Time) {
 	if err != nil {
 		s.logger.Errorf("Failed to access cache: %v", err)
 	}
-}
-
-func (s *Input) Close(ctx context.Context) error {
-	s.connMutex.Lock()
-	defer s.connMutex.Unlock()
-
-	s.connected = false
-	s.logger.Info("Shopify input closed")
-
-	return nil
 }

@@ -1,13 +1,28 @@
-import { Link, useLocation } from "react-router-dom"
-import { LayoutDashboard, Cpu, MemoryStick, Layers, ScanLine, Waypoints, Truck, KeyRound } from "lucide-react"
+import { Link, useLocation } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Cpu,
+  MemoryStick,
+  Layers,
+  ScanLine,
+  Waypoints,
+  Truck,
+  KeyRound,
+  Gauge,
+} from "lucide-react";
 
-import { ThemeSwitcher } from "./theme-switcher"
+import { ThemeSwitcher } from "./theme-switcher";
 
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { useEffect, useState } from "react"
-import { QuickCreate } from "./quick-create"
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useEffect, useState } from "react";
+import { QuickCreate } from "./quick-create";
 
 const menuItems = [
   {
@@ -44,6 +59,11 @@ const menuItems = [
         icon: MemoryStick,
       },
       {
+        name: "Rate Limits",
+        href: "/rate-limits",
+        icon: Gauge,
+      },
+      {
         name: "Buffers",
         href: "/buffers",
         icon: Layers,
@@ -55,31 +75,33 @@ const menuItems = [
       },
     ],
   },
-]
+];
 
 export function Sidebar() {
-  const location = useLocation()
-  const pathname = location.pathname
-  const [isCollapsed, setIsCollapsed] = useState(false)
+  const location = useLocation();
+  const pathname = location.pathname;
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   useEffect(() => {
     const handleSidebarToggle = () => {
-      setIsCollapsed(document.documentElement.classList.contains("sidebar-collapsed"))
-    }
+      setIsCollapsed(
+        document.documentElement.classList.contains("sidebar-collapsed"),
+      );
+    };
 
     // Create a MutationObserver to watch for class changes on documentElement
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
         if (mutation.attributeName === "class") {
-          handleSidebarToggle()
+          handleSidebarToggle();
         }
-      })
-    })
+      });
+    });
 
-    observer.observe(document.documentElement, { attributes: true })
+    observer.observe(document.documentElement, { attributes: true });
 
-    return () => observer.disconnect()
-  }, [])
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <aside
@@ -111,13 +133,17 @@ export function Sidebar() {
           {menuItems.map((section, sectionIndex) => (
             <div key={section.section} className="mb-6">
               {!isCollapsed ? (
-                <h2 className="text-xs font-semibold text-muted-foreground mb-2 px-2">{section.section}</h2>
+                <h2 className="text-xs font-semibold text-muted-foreground mb-2 px-2">
+                  {section.section}
+                </h2>
               ) : sectionIndex > 0 ? (
                 <div className="h-px bg-gray-200 dark:bg-gray-800 my-4 mx-2"></div>
               ) : null}
               <div className="space-y-1">
                 {section.items.map((item) => {
-                  const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
+                  const isActive =
+                    pathname === item.href ||
+                    (item.href !== "/" && pathname.startsWith(item.href));
 
                   const menuButton = (
                     <Button
@@ -136,15 +162,21 @@ export function Sidebar() {
                         to={item.href}
                         className={cn(
                           "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50",
-                          isActive && "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-50",
-                          isCollapsed && "justify-center"
+                          isActive &&
+                            "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-50",
+                          isCollapsed && "justify-center",
                         )}
                       >
-                        <item.icon className={cn("h-4 w-4", isCollapsed ? "mx-auto" : "mr-2")} />
+                        <item.icon
+                          className={cn(
+                            "h-4 w-4",
+                            isCollapsed ? "mx-auto" : "mr-2",
+                          )}
+                        />
                         {!isCollapsed && <span>{item.name}</span>}
                       </Link>
                     </Button>
-                  )
+                  );
 
                   return isCollapsed ? (
                     <Tooltip key={item.href}>
@@ -153,7 +185,7 @@ export function Sidebar() {
                     </Tooltip>
                   ) : (
                     menuButton
-                  )
+                  );
                 })}
               </div>
             </div>
@@ -162,12 +194,13 @@ export function Sidebar() {
       </TooltipProvider>
 
       <div className="absolute bottom-0 left-0 right-0 border-t border-gray-200 dark:border-gray-800 p-4 flex items-center justify-between bg-gray-50 dark:bg-gray-900 rounded-b-xl">
-        {!isCollapsed && <span className="text-sm text-muted-foreground">Theme</span>}
+        {!isCollapsed && (
+          <span className="text-sm text-muted-foreground">Theme</span>
+        )}
         <div className={cn("flex justify-center", isCollapsed && "w-full")}>
           <ThemeSwitcher />
         </div>
       </div>
     </aside>
-  )
+  );
 }
-

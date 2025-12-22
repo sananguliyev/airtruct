@@ -10,6 +10,7 @@ const (
 	sbfLimit        = "limit"
 	sbfAPIVersion   = "api_version"
 	sbfCache        = "cache_resource"
+	sbfRateLimit    = "rate_limit"
 )
 
 func Config() *service.ConfigSpec {
@@ -63,7 +64,30 @@ Each message contains the raw resource data from the Shopify API.`).
 		Field(service.NewStringField(sbfCache).
 			Description("Optional cache resource name for storing the last updated_at timestamp. When configured, resumes fetching from items updated after that timestamp, ensuring both new and updated entities are captured.").
 			Optional()).
+		Field(service.NewStringField(sbfRateLimit).
+			Description("Rate limit resource to use for Shopify API requests. Uses shop name as the rate limit key.").
+			Optional()).
 		Version("1.0.0").
+		Example("Fetch all products from Shopify with rate limiting",
+			`Fetch all products with coordinator-based rate limiting`,
+			`
+rate_limit_resources:
+  - label: internal
+    coordinator:
+      count: 2
+      interval: "1s"
+      burst: 5
+
+input:
+  shopify:
+    shop_name: mystore
+    api_key: your_api_key_here
+    api_password: your_api_password_here
+    shop_resource: products
+    limit: 50
+    rate_limit: internal
+`,
+		).
 		Example("Fetch all products from Shopify",
 			`Fetch all products with pagination`,
 			`
