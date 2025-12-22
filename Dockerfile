@@ -1,9 +1,12 @@
+# syntax=docker/dockerfile:1
+
 FROM golang:1.24 AS deps
 
 WORKDIR /app
 
 COPY go.mod go.sum ./
-RUN go mod download
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
 
 FROM golang:1.24 AS build
 
@@ -12,18 +15,24 @@ ENV GOOS=linux
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends libzmq3-dev
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends libzmq3-dev
 
 COPY --from=deps /go/pkg /go/pkg
 COPY . .
 
 RUN mkdir build
 
-RUN go build -ldflags="-s -w -X main.Version=docker -X main.DateBuilt=$(date -u +%Y-%m-%dT%H:%M:%SZ)" -o build ./cmd/...
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    go build -ldflags="-s -w -X main.Version=docker -X main.DateBuilt=$(date -u +%Y-%m-%dT%H:%M:%SZ)" -o build ./cmd/...
 
-FROM debian:latest AS runtime
+FROM debian:bookworm-slim AS runtime
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
     libzmq3-dev \
     ca-certificates \
     tzdata \
