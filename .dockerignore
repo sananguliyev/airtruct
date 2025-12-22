@@ -1,87 +1,71 @@
-# Git
 .git/
 .gitignore
 .github/
 
-# Build artifacts
 dist/
 target/
 build/
 
-# Development files
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# OS files
 .DS_Store
 Thumbs.db
 
-# Test files
 *_test.go
 test/
 tests/
 
-# Documentation
 *.md
 docs/
 
 # Examples
 examples/
 
-# UI development files
-ui/node_modules/
-ui/dist/
-ui/.next/
-ui/.nuxt/
-ui/.output/
-ui/.vercel/
+ui/
 
-# Logs
 *.log
 logs/
 
-# Temporary files
 tmp/
 temp/
 
-# Local env files
 .env
 .env.local
 .env.*.local
 
-# IDE
 .vscode/
 .idea/
+.zed/
 
-# Runtime data
 pids
 *.pid
 *.seed
 *.pid.lock
 
-# Coverage directory used by tools like istanbul
+airtruct
+airtruct.exe
+__debug*
+
+*.sqlite
+*.db
+
 coverage/
 
-# Dependency directories
 node_modules/
 
-# Optional npm cache directory
 .npm
 
-# Optional eslint cache
 .eslintcache
 
-# Yarn Integrity file
 .yarn-integrity
 
-# parcel-bundler cache
 .cache
 .parcel-cache
 
-# OS generated files
 .DS_Store
 .DS_Store?
 ._*
