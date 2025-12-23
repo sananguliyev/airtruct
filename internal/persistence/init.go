@@ -4,6 +4,7 @@ import (
 	configstruct "github.com/sananguliyev/airtruct/internal/config"
 
 	"github.com/rs/zerolog/log"
+	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -12,9 +13,12 @@ func NewGormDB(config *configstruct.DatabaseConfig) *gorm.DB {
 	var db *gorm.DB
 	var err error
 
-	if config.Driver == configstruct.DatabaseTypeSQLite {
+	switch config.Driver {
+	case configstruct.DatabaseTypeSQLite:
 		db, err = gorm.Open(sqlite.Open(config.URI), &gorm.Config{TranslateError: true})
-	} else {
+	case configstruct.DatabaseTypePostgres:
+		db, err = gorm.Open(postgres.Open(config.URI), &gorm.Config{TranslateError: true})
+	default:
 		log.Fatal().Msg("Unsupported database driver")
 		return nil
 	}

@@ -71,11 +71,32 @@ chmod +x [airtruct-binary-path]
 ```
 - **On Windows**: just run the .exe file directly.
 
-### ⚙️ 2. Set up SQLite or other full database URI
-If you want to quickly start with SQLite as your database, set the DATABASE_URI environment variable before running the coordinator otherwise Airtruct will store data in memory and you will lose the data after process stopped:
+### ⚙️ 2. Set up Database
+Airtruct supports SQLite and PostgreSQL. Set the `DATABASE_DRIVER` and `DATABASE_URI` environment variables before running the coordinator, otherwise Airtruct will store data in memory and you will lose the data after the process stops.
+
+#### SQLite (default)
 ```bash
+export DATABASE_DRIVER="sqlite"
 export DATABASE_URI="file:./airtruct.sqlite?_foreign_keys=1&mode=rwc"
 ```
+
+#### PostgreSQL
+
+Airtruct supports both URL and DSN formats for PostgreSQL connections:
+
+**URL Format (recommended):**
+```bash
+export DATABASE_DRIVER="postgres"
+export DATABASE_URI="postgres://airtruct:yourpassword@localhost:5432/airtruct?sslmode=disable"
+```
+
+**DSN Format (alternative):**
+```bash
+export DATABASE_DRIVER="postgres"
+export DATABASE_URI="host=localhost user=airtruct password=yourpassword dbname=airtruct port=5432 sslmode=disable"
+```
+
+**Note:** For production PostgreSQL deployments, use `sslmode=require` or `sslmode=verify-full` and secure credentials.
 
 ### 🚀 3. Run coordinator & worker
 Start the AirTruct coordinator by specifying the role and gRPC port:
@@ -90,6 +111,30 @@ Now run the worker with same command but role `worker` (if you are running both 
 ```
 
 You're all set, just open the console http://localhost:8080 — happy building with AirTruct! 🎉
+
+### 🐳 Docker Compose (Alternative)
+
+Instead of running binaries manually, you can use Docker Compose to run Airtruct with either SQLite or PostgreSQL:
+
+#### Using SQLite (default)
+```bash
+docker-compose up
+```
+
+#### Using PostgreSQL
+Edit `docker-compose.yml` and:
+1. Uncomment the `postgres` service section
+2. Uncomment the PostgreSQL environment variables in the `coordinator` service
+3. Comment out the SQLite environment variables
+4. Uncomment the `depends_on` section for the coordinator
+5. Uncomment the `postgres_data` volume at the bottom
+
+Then run:
+```bash
+docker-compose up
+```
+
+The coordinator will be available at http://localhost:8080
 
 ## Example: Kafka to PostgreSQL Pipeline
 

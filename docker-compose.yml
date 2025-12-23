@@ -1,6 +1,26 @@
 version: "3.8"
 
 services:
+  # PostgreSQL Database (optional - uncomment to use instead of SQLite)
+  # postgres:
+  #   image: postgres:16-alpine
+  #   container_name: airtruct-postgres
+  #   environment:
+  #     - POSTGRES_USER=airtruct
+  #     - POSTGRES_PASSWORD=airtruct
+  #     - POSTGRES_DB=airtruct
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   networks:
+  #     - airtruct
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U airtruct"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
   coordinator:
     build:
       context: .
@@ -9,25 +29,30 @@ services:
     environment:
       - COORDINATOR=true
       - NODE_DISCOVERY_URI=localhost:50000
-      - DATABASE_URI=file:/airtruct.sqlite?_foreign_keys=1&mode=rwc
       - NODE_GRPC_PORT=50000
+      # SQLite configuration (default)
+      - DATABASE_DRIVER=sqlite
+      - DATABASE_URI=file:/airtruct.sqlite?_foreign_keys=1&mode=rwc
+      # PostgreSQL configuration (uncomment to use, and comment SQLite above)
+      # - DATABASE_DRIVER=postgres
+      # - DATABASE_URI=postgres://airtruct:airtruct@postgres:5432/airtruct?sslmode=disable
     volumes:
       - ./airtruct.sqlite:/airtruct.sqlite
     networks:
       - airtruct
+    # Uncomment below when using PostgreSQL
+    # depends_on:
+    #   postgres:
+    #     condition: service_healthy
     command:
       - /airtruct
       - run
 
   worker:
-    # hostname: worker
     deploy:
       replicas: 2
     build:
       context: .
-    # ports:
-    #   - "8081:8080"
-    #   - "4195:4195"
     environment:
       - COORDINATOR=false
       - NODE_DISCOVERY_URI=localhost:50000
@@ -38,14 +63,9 @@ services:
       - /airtruct
       - run
 
-  # ui:
-  #   build:
-  #     context: ./ui
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "3000:3000"
-  #   networks:
-  #     - airtruct
+volumes:
+  postgres_data:
+    driver: local
 
 networks:
   airtruct:

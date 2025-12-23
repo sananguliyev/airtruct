@@ -6,7 +6,8 @@ import (
 )
 
 const (
-	DatabaseTypeSQLite = "sqlite"
+	DatabaseTypeSQLite   = "sqlite"
+	DatabaseTypePostgres = "postgres"
 )
 
 type DatabaseConfig struct {
