@@ -1729,6 +1729,13 @@ export const componentSchemas = {
             "A Bloblang mapping which should evaluate to an array of values matching in size to the number of columns specified.",
           required: true,
         },
+        suffix: {
+          type: "code",
+          title: "Suffix",
+          description:
+            "An optional suffix to add to the insert query. For example: ON CONFLICT (name) DO NOTHING for PostgreSQL.",
+          default: "",
+        },
         max_in_flight: {
           type: "number",
           title: "Max In Flight",
