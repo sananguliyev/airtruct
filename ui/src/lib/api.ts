@@ -251,6 +251,69 @@ export async function deleteStream(id: string): Promise<void> {
   }
 }
 
+export async function updateStreamStatus(
+  id: string,
+  status: string,
+): Promise<Stream> {
+  try {
+    // First fetch the current stream
+    const stream = await fetchStream(id);
+
+    // Update the stream with new status
+    const response = await fetch(`${API_BASE_URL}/streams/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: stream.name,
+        status: status,
+        input_component: stream.input_component,
+        input_label: stream.input_label,
+        input_config: stream.input_config,
+        output_component: stream.output_component,
+        output_label: stream.output_label,
+        output_config: stream.output_config,
+        processors: stream.processors.map((p) => ({
+          label: p.label,
+          component: p.component,
+          config: p.config,
+        })),
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    return {
+      id: data.data.id,
+      parentID: data.data.parent_id || data.data.id,
+      name: data.data.name,
+      status: data.data.status,
+      input_label: data.data.input_label,
+      input_component: data.data.input_component,
+      input_config: data.data.input_config,
+      output_label: data.data.output_label,
+      output_component: data.data.output_component,
+      output_config: data.data.output_config,
+      processors:
+        data.data.processors?.map((p: any) => ({
+          label: p.label,
+          component: p.component,
+          config: p.config,
+        })) || [],
+      createdAt: new Date(data.data.created_at).toLocaleString(),
+      is_http_server: data.data.input_component === "http_server",
+    };
+  } catch (error) {
+    console.error("Error updating stream status:", error);
+    throw error;
+  }
+}
+
 export async function fetchSecrets(): Promise<Secret[]> {
   try {
     const response = await fetch(`${API_BASE_URL}/secrets`);

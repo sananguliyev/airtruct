@@ -1,7 +1,7 @@
 import React, { useEffect, useState, lazy, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/data-table";
-import { Plus, Eye } from "lucide-react";
+import { Plus, Eye, Play, Pause, RotateCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/toast";
 import {
@@ -12,11 +12,10 @@ import {
 } from "@/components/ui/dialog";
 import { Stream } from "@/lib/entities";
 import { columns } from "@/components/stream-columns";
-import { fetchStreams } from "@/lib/api";
+import { fetchStreams, updateStreamStatus } from "@/lib/api";
 
-// Replace next/dynamic with React.lazy
 const StreamPreview = lazy(
-  () => import("@/components/stream-builder/stream-preview")
+  () => import("@/components/stream-builder/stream-preview"),
 );
 
 export default function StreamsPage() {
@@ -48,6 +47,32 @@ export default function StreamsPage() {
 
   const handlePreview = (stream: Stream) => {
     setPreviewStream(stream);
+  };
+
+  const handleStatusUpdate = async (stream: Stream, newStatus: string) => {
+    try {
+      await updateStreamStatus(stream.id, newStatus);
+
+      setStreams(
+        streams.map((s) =>
+          s.id === stream.id ? { ...s, status: newStatus } : s,
+        ),
+      );
+
+      addToast({
+        id: "stream-status-updated",
+        title: "Status Updated",
+        description: `${stream.name} status has been updated to ${newStatus}.`,
+        variant: "success",
+      });
+    } catch (error) {
+      addToast({
+        id: "stream-status-error",
+        title: "Error",
+        description: "Failed to update stream status.",
+        variant: "error",
+      });
+    }
   };
 
   useEffect(() => {
@@ -88,14 +113,47 @@ export default function StreamsPage() {
           onEdit={handleRowClick}
           onDelete={handleDelete}
           additionalActions={(stream) => (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handlePreview(stream)}
-              title="Preview"
-            >
-              <Eye className="h-4 w-4" />
-            </Button>
+            <>
+              {/* Quick action buttons based on status */}
+              {stream.status === "active" && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleStatusUpdate(stream, "paused")}
+                  title="Pause Stream"
+                >
+                  <Pause className="h-4 w-4" />
+                </Button>
+              )}
+              {stream.status === "paused" && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleStatusUpdate(stream, "active")}
+                  title="Resume Stream"
+                >
+                  <Play className="h-4 w-4" />
+                </Button>
+              )}
+              {stream.status === "completed" && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleStatusUpdate(stream, "active")}
+                  title="Restart Stream"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handlePreview(stream)}
+                title="Preview"
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+            </>
           )}
         />
       )}
@@ -111,7 +169,13 @@ export default function StreamsPage() {
           </DialogHeader>
           <div className="flex-1 min-h-0 overflow-y-auto">
             {/* Wrap lazy component in Suspense */}
-            <Suspense fallback={<div className="flex items-center justify-center h-32">Loading Preview...</div>}>
+            <Suspense
+              fallback={
+                <div className="flex items-center justify-center h-32">
+                  Loading Preview...
+                </div>
+              }
+            >
               {previewStream && <StreamPreview stream={previewStream} />}
             </Suspense>
           </div>
