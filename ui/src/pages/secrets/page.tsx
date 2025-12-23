@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,6 +36,7 @@ const RelativeTime = ({ dateString }: { dateString: string }) => {
 
 export default function SecretsPage() {
   const { addToast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [secrets, setSecrets] = useState<Secret[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -79,7 +81,8 @@ export default function SecretsPage() {
       addToast({
         id: "secret-delete-error",
         title: "Error Deleting Secret",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
+        description:
+          error instanceof Error ? error.message : "An unknown error occurred",
         variant: "error",
       });
     } finally {
@@ -95,7 +98,7 @@ export default function SecretsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.key.trim() || !formData.value.trim()) {
       addToast({
         id: "validation-error",
@@ -112,12 +115,12 @@ export default function SecretsPage() {
         key: formData.key.trim(),
         value: formData.value.trim(),
       });
-      
+
       setSecrets([...secrets, newSecret]);
       setFormData({ key: "", value: "" });
       setShowValue(false);
       setIsModalOpen(false);
-      
+
       setTimeout(() => {
         addToast({
           id: "secret-created",
@@ -130,7 +133,8 @@ export default function SecretsPage() {
       addToast({
         id: "secret-creation-error",
         title: "Error Creating Secret",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
+        description:
+          error instanceof Error ? error.message : "An unknown error occurred",
         variant: "error",
       });
     } finally {
@@ -153,20 +157,25 @@ export default function SecretsPage() {
   };
 
   const columns = [
-    { 
-      key: "key" as keyof Secret, 
+    {
+      key: "key" as keyof Secret,
       title: "Key",
       render: (value: string) => (
         <div className="flex items-center gap-2">
           <KeyRound className="h-4 w-4 text-muted-foreground" />
-          <span className="font-medium">{value || 'Unknown'}</span>
+          <span className="font-medium">{value || "Unknown"}</span>
         </div>
-      )
+      ),
     },
-    { 
-      key: "createdAt" as keyof Secret, 
+    {
+      key: "createdAt" as keyof Secret,
       title: "Created",
-      render: (value: string) => value && value !== 'Unknown' ? <RelativeTime dateString={value} /> : 'Unknown'
+      render: (value: string) =>
+        value && value !== "Unknown" ? (
+          <RelativeTime dateString={value} />
+        ) : (
+          "Unknown"
+        ),
     },
   ];
 
@@ -186,6 +195,14 @@ export default function SecretsPage() {
     };
     loadSecrets();
   }, []);
+
+  // Auto-open create dialog if ?create=true query parameter is present
+  useEffect(() => {
+    if (searchParams.get("create") === "true") {
+      setIsModalOpen(true);
+      setSearchParams({}, { replace: true }); // Clear the query param
+    }
+  }, [searchParams, setSearchParams]);
 
   return (
     <div className="p-6">
@@ -207,7 +224,11 @@ export default function SecretsPage() {
             <DialogHeader>
               <DialogTitle>Add New Secret</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-4"
+              autoComplete="off"
+            >
               <div className="space-y-2">
                 <Label htmlFor="key">Key</Label>
                 <div className="relative">
@@ -218,7 +239,9 @@ export default function SecretsPage() {
                     type="text"
                     placeholder="Enter secret key (e.g., API_KEY, DATABASE_URL)"
                     value={formData.key}
-                    onChange={(e) => setFormData({ ...formData, key: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, key: e.target.value })
+                    }
                     className="pl-10"
                     autoComplete="off"
                     required
@@ -236,7 +259,9 @@ export default function SecretsPage() {
                     type={showValue ? "text" : "password"}
                     placeholder="Enter secret value"
                     value={formData.value}
-                    onChange={(e) => setFormData({ ...formData, value: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, value: e.target.value })
+                    }
                     className="pl-10 pr-10"
                     autoComplete="new-password"
                     required
@@ -299,17 +324,24 @@ export default function SecretsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Secret</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete the secret "{secretToDelete?.key}"?
-              <br /><br />
-              <strong>Warning:</strong> Please ensure that no streams are using this secret, 
-              otherwise streams that depend on this secret might not work as expected.
-              <br /><br />
+              Are you sure you want to delete the secret "{secretToDelete?.key}
+              "?
+              <br />
+              <br />
+              <strong>Warning:</strong> Please ensure that no streams are using
+              this secret, otherwise streams that depend on this secret might
+              not work as expected.
+              <br />
+              <br />
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={cancelDelete}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700 text-white">
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -317,4 +349,4 @@ export default function SecretsPage() {
       </AlertDialog>
     </div>
   );
-} 
+}
