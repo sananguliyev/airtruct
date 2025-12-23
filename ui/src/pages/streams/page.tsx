@@ -51,13 +51,9 @@ export default function StreamsPage() {
 
   const handleStatusUpdate = async (stream: Stream, newStatus: string) => {
     try {
-      await updateStreamStatus(stream.id, newStatus);
+      const updatedStream = await updateStreamStatus(stream.id, newStatus);
 
-      setStreams(
-        streams.map((s) =>
-          s.id === stream.id ? { ...s, status: newStatus } : s,
-        ),
-      );
+      setStreams(streams.map((s) => (s.id === stream.id ? updatedStream : s)));
 
       addToast({
         id: "stream-status-updated",

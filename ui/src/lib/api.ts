@@ -256,10 +256,8 @@ export async function updateStreamStatus(
   status: string,
 ): Promise<Stream> {
   try {
-    // First fetch the current stream
     const stream = await fetchStream(id);
 
-    // Update the stream with new status
     const response = await fetch(`${API_BASE_URL}/streams/${id}`, {
       method: "PUT",
       headers: {

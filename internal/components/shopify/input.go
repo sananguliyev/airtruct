@@ -2,6 +2,7 @@ package shopify
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
@@ -213,9 +214,16 @@ func (s *Input) ReadBatch(ctx context.Context) (service.MessageBatch, service.Ac
 	batch := make(service.MessageBatch, len(items))
 	for i, item := range items {
 		msg := service.NewMessage(nil)
+
+		// Convert struct to map[string]any for field access on mapping
+		itemMap, err := structToMap(item)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to convert item to map: %w", err)
+		}
+
 		msg.SetStructured(map[string]any{
 			"resource": s.shopResource,
-			"data":     item,
+			"data":     itemMap,
 		})
 		batch[i] = msg
 	}
@@ -252,6 +260,18 @@ func (s *Input) ReadBatch(ctx context.Context) (service.MessageBatch, service.Ac
 	}
 
 	return batch, ackFunc, nil
+}
+
+func structToMap(v any) (map[string]any, error) {
+	data, err := json.Marshal(v)
+	if err != nil {
+		return nil, err
+	}
+	var result map[string]any
+	if err := json.Unmarshal(data, &result); err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 func (s *Input) fetchBatch(ctx context.Context) ([]any, error) {
