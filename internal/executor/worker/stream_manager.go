@@ -6,9 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"net/http/httptest"
 	"sync"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/warpstreamlabs/bento/public/service"
@@ -133,6 +135,12 @@ func (m *streamManager) DeleteStream(workerStreamID int64) error {
 		return fmt.Errorf("stream with ID %d not found", workerStreamID)
 	}
 
+	if stream.Stream != nil {
+		if err := stream.Stream.StopWithin(5 * time.Second); err != nil {
+			log.Warn().Err(err).Int64("worker_stream_id", workerStreamID).Msg("Failed to stop stream gracefully, forcing shutdown")
+		}
+	}
+
 	if stream.Cancel != nil {
 		stream.Cancel()
 	}
@@ -197,9 +205,7 @@ func (m *streamManager) GetAllStreams() map[int64]*ServiceStream {
 	defer m.mu.RUnlock()
 
 	streams := make(map[int64]*ServiceStream)
-	for id, stream := range m.streams {
-		streams[id] = stream
-	}
+	maps.Copy(streams, m.streams)
 
 	return streams
 }
@@ -251,7 +257,9 @@ func (m *streamManager) StartStream(ctx context.Context, workerStreamID int64) {
 
 			m.shipMetrics(ctx, workerStreamID, stream.TracingSummary)
 
-			m.DeleteStream(workerStreamID)
+			if err := m.DeleteStream(workerStreamID); err != nil {
+				log.Debug().Err(err).Int64("worker_stream_id", workerStreamID).Msg("Stream already deleted")
+			}
 
 			if err := m.coordinatorConnection.UpdateWorkerStreamStatus(ctx, workerStreamID, pb.WorkerStreamStatus(pb.WorkerStreamStatus_value[string(streamStatus)])); err != nil {
 				log.Warn().

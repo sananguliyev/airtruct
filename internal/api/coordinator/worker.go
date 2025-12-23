@@ -32,7 +32,9 @@ func (c *CoordinatorAPI) RegisterWorker(ctx context.Context, in *pb.RegisterWork
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	if ip := net.ParseIP(tcpAddr.IP.String()); ip != nil {
+	// Extract just the IP address (without ephemeral port)
+	clientAddr = tcpAddr.IP.String()
+	if ip := net.ParseIP(clientAddr); ip != nil {
 		if ip.IsLoopback() {
 			clientAddr = "127.0.0.1"
 		}

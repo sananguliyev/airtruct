@@ -16,7 +16,11 @@ func init() {
 	err := service.RegisterBatchInput(
 		"shopify", Config(),
 		func(conf *service.ParsedConfig, mgr *service.Resources) (service.BatchInput, error) {
-			return NewFromConfig(conf, mgr)
+			input, err := NewFromConfig(conf, mgr)
+			if err != nil {
+				return nil, err
+			}
+			return service.AutoRetryNacksBatched(input), nil
 		})
 	if err != nil {
 		panic(err)
@@ -37,8 +41,9 @@ type Input struct {
 
 	rateLimitLabel string
 
-	finished   bool
-	stateMutex sync.Mutex
+	finished     bool
+	pendingBatch []any
+	stateMutex   sync.Mutex
 
 	cacheName     string
 	cacheKey      string
@@ -191,13 +196,20 @@ func (s *Input) ReadBatch(ctx context.Context) (service.MessageBatch, service.Ac
 		return nil, nil, service.ErrEndOfInput
 	}
 
-	// Fetch next batch from Shopify
-	items, err := s.fetchBatch(ctx)
-	if err != nil {
-		return nil, nil, err
+	var items []any
+
+	if s.pendingBatch != nil {
+		s.logger.Debugf("Returning pending batch with %d items", len(s.pendingBatch))
+		items = s.pendingBatch
+	} else {
+		var err error
+		items, err = s.fetchBatch(ctx)
+		if err != nil {
+			return nil, nil, err
+		}
+		s.pendingBatch = items
 	}
 
-	// Create a batch from all fetched items
 	batch := make(service.MessageBatch, len(items))
 	for i, item := range items {
 		msg := service.NewMessage(nil)
@@ -211,9 +223,14 @@ func (s *Input) ReadBatch(ctx context.Context) (service.MessageBatch, service.Ac
 	ackFunc := func(ctx context.Context, err error) error {
 		if err != nil {
 			s.logger.Errorf("Batch not acknowledged: %v", err)
-			// Don't save position on error - batch will be retried on next start
-			return nil
+			// Keep pending batch and return error for AutoRetryNacksBatched to retry with backoff
+			return err
 		}
+
+		// Clear pending batch on successful acknowledgment
+		s.stateMutex.Lock()
+		s.pendingBatch = nil
+		s.stateMutex.Unlock()
 
 		if s.cacheName != "" && len(items) > 0 {
 			lastItem := items[len(items)-1]
@@ -222,6 +239,13 @@ func (s *Input) ReadBatch(ctx context.Context) (service.MessageBatch, service.Ac
 				adjustedTime := updatedAt.Add(1 * time.Nanosecond)
 				s.savePosition(context.Background(), adjustedTime)
 			}
+		}
+
+		// Mark as finished only after successful acknowledgment
+		if len(items) < s.limit {
+			s.stateMutex.Lock()
+			s.finished = true
+			s.stateMutex.Unlock()
 		}
 
 		return nil
@@ -262,10 +286,6 @@ func (s *Input) fetchBatch(ctx context.Context) ([]any, error) {
 	}
 
 	s.logger.Infof("Fetched %d %s", len(items), s.shopResource)
-
-	if len(items) < s.limit {
-		s.finished = true
-	}
 
 	return items, nil
 }
