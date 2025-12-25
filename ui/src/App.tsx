@@ -4,9 +4,12 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ToastProvider } from "@/components/toast";
 import { Helmet, HelmetProvider } from "react-helmet-async";
+import { AuthProvider } from "@/lib/auth";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 import Layout from "./components/Layout";
 
+import LoginPage from "./pages/login/page.tsxe.tsx";
 import HomePage from "./pages/HomePage.tsx";
 import StreamsPage from "./pages/streams/page.tsx";
 import WorkersPage from "./pages/workers/page.tsx";
@@ -50,24 +53,34 @@ const AppLayout: React.FC = () => {
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<AppLayout />}>
-        <Route index element={<HomePage />} />
-        <Route path="streams" element={<StreamsPage />} />
-        <Route path="streams/new" element={<StreamNewPage />} />
-        <Route path="streams/:id/edit" element={<StreamEditPage />} />
-        <Route path="workers" element={<WorkersPage />} />
-        <Route path="secrets" element={<SecretsPage />} />
-        <Route path="scanners" element={<ScannersPage />} />
-        <Route path="buffers" element={<BuffersPage />} />
-        <Route path="caches" element={<CachesPage />} />
-        <Route path="caches/new" element={<CacheNewPage />} />
-        <Route path="caches/:id/edit" element={<CacheEditPage />} />
-        <Route path="rate-limits" element={<RateLimitsPage />} />
-        <Route path="rate-limits/new" element={<RateLimitNewPage />} />
-        <Route path="rate-limits/:id/edit" element={<RateLimitEditPage />} />
-      </Route>
-    </Routes>
+    <AuthProvider>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<HomePage />} />
+          <Route path="streams" element={<StreamsPage />} />
+          <Route path="streams/new" element={<StreamNewPage />} />
+          <Route path="streams/:id/edit" element={<StreamEditPage />} />
+          <Route path="workers" element={<WorkersPage />} />
+          <Route path="secrets" element={<SecretsPage />} />
+          <Route path="scanners" element={<ScannersPage />} />
+          <Route path="buffers" element={<BuffersPage />} />
+          <Route path="caches" element={<CachesPage />} />
+          <Route path="caches/new" element={<CacheNewPage />} />
+          <Route path="caches/:id/edit" element={<CacheEditPage />} />
+          <Route path="rate-limits" element={<RateLimitsPage />} />
+          <Route path="rate-limits/new" element={<RateLimitNewPage />} />
+          <Route path="rate-limits/:id/edit" element={<RateLimitEditPage />} />
+        </Route>
+      </Routes>
+    </AuthProvider>
   );
 }
 

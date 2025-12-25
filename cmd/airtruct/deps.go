@@ -8,6 +8,7 @@ import (
 
 	"github.com/sananguliyev/airtruct/internal/api"
 	"github.com/sananguliyev/airtruct/internal/api/coordinator"
+	"github.com/sananguliyev/airtruct/internal/auth"
 	"github.com/sananguliyev/airtruct/internal/cli"
 	"github.com/sananguliyev/airtruct/internal/config"
 	"github.com/sananguliyev/airtruct/internal/executor"
@@ -20,6 +21,12 @@ func InitializeCoordinatorCommand(httpPort, grpcPort uint32) *cli.CoordinatorCLI
 	databaseConfig := config.NewDatabaseConfig()
 	db := persistence.NewGormDB(databaseConfig)
 	secretConfig := config.NewSecretConfig()
+	authConfig := config.NewAuthConfig()
+	authManager, err := auth.NewManager(authConfig)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to create auth manager")
+		return nil
+	}
 	aesgcm, err := vault.NewAESGCM([]byte(secretConfig.Key))
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to create AESGCM")
@@ -38,7 +45,7 @@ func InitializeCoordinatorCommand(httpPort, grpcPort uint32) *cli.CoordinatorCLI
 	rateLimiterEngine := ratelimiter.NewEngine(rateLimitRepository, rateLimitStateRepository)
 	coordinatorAPI := coordinator.NewCoordinatorAPI(eventRepository, streamRepository, streamCacheRepository, streamRateLimitRepository, workerRepository, workerStreamRepository, secretRepository, cacheRepository, rateLimitRepository, rateLimiterEngine, aesgcm)
 	coordinatorExecutor := executor.NewCoordinatorExecutor(workerRepository, streamRepository, streamCacheRepository, streamRateLimitRepository, workerStreamRepository)
-	coordinatorCLI := cli.NewCoordinatorCLI(coordinatorAPI, coordinatorExecutor, rateLimiterEngine, httpPort, grpcPort)
+	coordinatorCLI := cli.NewCoordinatorCLI(coordinatorAPI, coordinatorExecutor, rateLimiterEngine, authManager, httpPort, grpcPort)
 	return coordinatorCLI
 }
 
