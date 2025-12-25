@@ -1,3 +1,13 @@
+.PHONY: check-env protoc ui-deps statik build run-coordinator run-worker run-ui docker-up docker-down docker-logs docker-restart docker-build
+
+check-env:
+	@if [ ! -f .env ]; then \
+		echo "Error: .env file not found!"; \
+		echo "Please copy .env.example to .env and configure your settings:"; \
+		echo "  cp .env.example .env"; \
+		exit 1; \
+	fi
+
 protoc:
 	protoc --proto_path=proto \
        --go_out=internal/protogen --go_opt=paths=source_relative \
@@ -11,18 +21,34 @@ ui-deps:
 
 statik:
 	pnpm --prefix ui build
-	statik -src=ui/dist -dest=internal/.
+	statik -src=ui/dist -dest=internal/statik -f -m
 
 build:
 	make statik
-	go build -o dist/ ./cmd/...
+	go build -o dist/airtruct ./cmd/airtruct
 
-run-coordinator:
-	export DATABASE_URI="file:./airtruct.sqlite?_foreign_keys=1&mode=rwc" && \
-	./dist/airtruct -gp 50000
+run-coordinator: check-env
+	set -a && . ./.env && set +a && \
+	./dist/airtruct -role coordinator -grpc-port $${GRPC_PORT} -http-port $${HTTP_PORT}
 
-run-worker:
-	./dist/airtruct -gp 50001 -role worker
+run-worker: check-env
+	set -a && . ./.env && set +a && \
+	./dist/airtruct -role worker -grpc-port $${WORKER_GRPC_PORT} -discovery-uri $${DISCOVERY_URI}
 
 run-ui:
 	pnpm --prefix ui run dev
+
+docker-up: check-env
+	docker-compose up -d
+
+docker-down:
+	docker-compose down
+
+docker-logs:
+	docker-compose logs -f
+
+docker-restart:
+	docker-compose restart
+
+docker-build:
+	docker-compose build

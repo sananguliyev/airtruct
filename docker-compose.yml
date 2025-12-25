@@ -1,49 +1,17 @@
-version: "3.8"
-
 services:
-  # PostgreSQL Database (optional - uncomment to use instead of SQLite)
-  # postgres:
-  #   image: postgres:16-alpine
-  #   container_name: airtruct-postgres
-  #   environment:
-  #     - POSTGRES_USER=airtruct
-  #     - POSTGRES_PASSWORD=airtruct
-  #     - POSTGRES_DB=airtruct
-  #   ports:
-  #     - "5432:5432"
-  #   volumes:
-  #     - postgres_data:/var/lib/postgresql/data
-  #   networks:
-  #     - airtruct
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "pg_isready -U airtruct"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
-
   coordinator:
     build:
       context: .
+      dockerfile: .container/Dockerfile
+    env_file: .env
     ports:
-      - "8080:8080"
-    environment:
-      - COORDINATOR=true
-      - NODE_DISCOVERY_URI=localhost:50000
-      - NODE_GRPC_PORT=50000
-      # SQLite configuration (default)
-      - DATABASE_DRIVER=sqlite
-      - DATABASE_URI=file:/airtruct.sqlite?_foreign_keys=1&mode=rwc
-      # PostgreSQL configuration (uncomment to use, and comment SQLite above)
-      # - DATABASE_DRIVER=postgres
-      # - DATABASE_URI=postgres://airtruct:airtruct@postgres:5432/airtruct?sslmode=disable
+      - "${HTTP_PORT}:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./airtruct.sqlite:/airtruct.sqlite
     networks:
       - airtruct
-    # Uncomment below when using PostgreSQL
-    # depends_on:
-    #   postgres:
-    #     condition: service_healthy
     command:
       - /airtruct
       - run
@@ -53,18 +21,55 @@ services:
       replicas: 2
     build:
       context: .
+      dockerfile: .container/Dockerfile
+    env_file: .env
     environment:
-      - COORDINATOR=false
-      - NODE_DISCOVERY_URI=localhost:50000
-      - NODE_GRPC_PORT=50001
+      - ROLE=worker
+      - GRPC_PORT=${WORKER_GRPC_PORT}
     networks:
       - airtruct
     command:
       - /airtruct
       - run
+  postgres:
+    image: postgres:16-alpine
+    container_name: airtruct-postgres
+    env_file: .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - airtruct
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    profiles:
+      - postgres
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0
+    container_name: airtruct-keycloak
+    env_file: .env
+    ports:
+      - "8090:8080"
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+      - ./.container/keycloak/airtruct-realm.json:/opt/keycloak/data/import/airtruct-realm.json
+    networks:
+      - airtruct
+    command:
+      - start-dev
+      - --import-realm
+    profiles:
+      - keycloak
 
 volumes:
   postgres_data:
+    driver: local
+  keycloak_data:
     driver: local
 
 networks:

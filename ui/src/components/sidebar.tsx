@@ -11,8 +11,6 @@ import {
   Gauge,
 } from "lucide-react";
 
-import { ThemeSwitcher } from "./theme-switcher";
-
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -192,15 +190,6 @@ export function Sidebar() {
           ))}
         </div>
       </TooltipProvider>
-
-      <div className="absolute bottom-0 left-0 right-0 border-t border-gray-200 dark:border-gray-800 p-4 flex items-center justify-between bg-gray-50 dark:bg-gray-900 rounded-b-xl">
-        {!isCollapsed && (
-          <span className="text-sm text-muted-foreground">Theme</span>
-        )}
-        <div className={cn("flex justify-center", isCollapsed && "w-full")}>
-          <ThemeSwitcher />
-        </div>
-      </div>
     </aside>
   );
 }

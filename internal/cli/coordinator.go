@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/sananguliyev/airtruct/internal/api/coordinator"
+	"github.com/sananguliyev/airtruct/internal/auth"
 	"github.com/sananguliyev/airtruct/internal/executor"
 	pb "github.com/sananguliyev/airtruct/internal/protogen"
 	_ "github.com/sananguliyev/airtruct/internal/statik"
@@ -28,11 +29,12 @@ type CoordinatorCLI struct {
 	api                *coordinator.CoordinatorAPI
 	executor           executor.CoordinatorExecutor
 	rateLimiterEngine  interface{ Cleanup(time.Duration) error }
+	authManager        *auth.Manager
 	httpPort, grpcPort uint32
 }
 
-func NewCoordinatorCLI(api *coordinator.CoordinatorAPI, executor executor.CoordinatorExecutor, rateLimiterEngine interface{ Cleanup(time.Duration) error }, httpPort, grpcPort uint32) *CoordinatorCLI {
-	return &CoordinatorCLI{api, executor, rateLimiterEngine, httpPort, grpcPort}
+func NewCoordinatorCLI(api *coordinator.CoordinatorAPI, executor executor.CoordinatorExecutor, rateLimiterEngine interface{ Cleanup(time.Duration) error }, authManager *auth.Manager, httpPort, grpcPort uint32) *CoordinatorCLI {
+	return &CoordinatorCLI{api, executor, rateLimiterEngine, authManager, httpPort, grpcPort}
 }
 
 func (c *CoordinatorCLI) Run(ctx context.Context) {
@@ -143,7 +145,11 @@ func (c *CoordinatorCLI) Run(ctx context.Context) {
 		log.Fatal().Err(err).Msg("failed to create statik FS")
 	}
 	mainMux := http.NewServeMux()
-	mainMux.Handle("/api/", http.StripPrefix("/api", mux))
+
+	c.authManager.SetupAuthRoutes(mainMux)
+
+	protectedAPI := c.authManager.Middleware(mux)
+	mainMux.Handle("/api/", http.StripPrefix("/api", protectedAPI))
 	mainMux.HandleFunc("/ingest/", func(w http.ResponseWriter, r *http.Request) {
 		statusCode, response, err := c.executor.ForwardRequestToWorker(r.Context(), r)
 		if err != nil {

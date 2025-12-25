@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Sidebar } from "@/components/sidebar";
-import { Search, MenuIcon, Github } from "lucide-react";
+import { Search, MenuIcon, Github, LogOut } from "lucide-react";
 import { CommandPalette } from "@/components/command-palette";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/lib/auth";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 import {
   Tooltip,
   TooltipContent,
@@ -19,6 +21,7 @@ export default function ClientLayout({
 }>) {
   const [commandPaletteOpen, setCommandPaletteOpen] = React.useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { authType, logout } = useAuth();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -30,7 +33,7 @@ export default function ClientLayout({
 
     const handleSidebarToggle = () => {
       setIsCollapsed(
-        document.documentElement.classList.contains("sidebar-collapsed")
+        document.documentElement.classList.contains("sidebar-collapsed"),
       );
     };
 
@@ -94,8 +97,9 @@ export default function ClientLayout({
             </div>
           </div>
 
-          <div className="flex items-center">
+          <div className="flex items-center space-x-2">
             <TooltipProvider>
+              <ThemeSwitcher />
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button variant="ghost" size="icon" asChild>
@@ -113,6 +117,18 @@ export default function ClientLayout({
                   <p>View GitHub Repository</p>
                 </TooltipContent>
               </Tooltip>
+              {authType !== "none" && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" onClick={logout}>
+                      <LogOut className="h-5 w-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Logout</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
             </TooltipProvider>
           </div>
         </header>
