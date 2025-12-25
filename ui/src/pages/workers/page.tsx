@@ -12,6 +12,7 @@ import {
 import { Worker } from "@/lib/entities";
 import { DataTable } from "@/components/data-table";
 import { fetchWorkers } from "@/lib/api";
+import { useRelativeTime } from "@/lib/utils";
 
 export default function WorkersPage() {
   const [workers, setWorkers] = useState<Worker[]>([] as Worker[]);
@@ -58,7 +59,14 @@ export default function WorkersPage() {
     },
     {
       key: "lastHeartbeat" as keyof Worker,
-      title: "Last Heartbeat",
+      title: "Last heartbeat",
+      render: (value: string) => {
+        const RelativeTime = () => {
+          const time = useRelativeTime(value);
+          return <>{time}</>;
+        };
+        return <RelativeTime />;
+      },
     },
   ];
 
@@ -96,10 +104,7 @@ export default function WorkersPage() {
           <CardTitle>Active Workers</CardTitle>
         </CardHeader>
         <CardContent>
-          <DataTable
-            data={workers}
-            columns={columns}
-          />
+          <DataTable data={workers} columns={columns} />
         </CardContent>
       </Card>
     </div>
