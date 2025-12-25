@@ -15,11 +15,22 @@ function getAuthHeaders(): HeadersInit {
   return headers;
 }
 
+async function handleResponse(response: Response): Promise<Response> {
+  if (response.status === 401) {
+    localStorage.removeItem("airtruct_token");
+    window.location.href = "/login?error=session_expired";
+    throw new Error("Unauthorized - redirecting to login");
+  }
+  return response;
+}
+
 export async function fetchWorkers(): Promise<Worker[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/workers/all`, {
-      headers: getAuthHeaders(),
-    });
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/workers/all`, {
+        headers: getAuthHeaders(),
+      }),
+    );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -45,9 +56,11 @@ export async function fetchWorkers(): Promise<Worker[]> {
 
 export async function fetchStreams(): Promise<Stream[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/streams?status=all`, {
-      headers: getAuthHeaders(),
-    });
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/streams?status=all`, {
+        headers: getAuthHeaders(),
+      }),
+    );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -81,9 +94,11 @@ export async function fetchStreams(): Promise<Stream[]> {
 
 export async function fetchStream(id: string): Promise<Stream> {
   try {
-    const response = await fetch(`${API_BASE_URL}/streams/${id}`, {
-      headers: getAuthHeaders(),
-    });
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/streams/${id}`, {
+        headers: getAuthHeaders(),
+      }),
+    );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -131,25 +146,27 @@ export async function createStream(stream: {
   }>;
 }): Promise<Stream> {
   try {
-    const response = await fetch(`${API_BASE_URL}/streams`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-      body: JSON.stringify({
-        name: stream.name,
-        status: stream.status,
-        input_component: stream.input_component,
-        input_label: stream.input_label,
-        input_config: stream.input_config,
-        output_component: stream.output_component,
-        output_label: stream.output_label,
-        output_config: stream.output_config,
-        processors: stream.processors.map((processor) => ({
-          label: processor.label,
-          component: processor.component,
-          config: processor.config,
-        })),
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/streams`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          name: stream.name,
+          status: stream.status,
+          input_component: stream.input_component,
+          input_label: stream.input_label,
+          input_config: stream.input_config,
+          output_component: stream.output_component,
+          output_label: stream.output_label,
+          output_config: stream.output_config,
+          processors: stream.processors.map((processor) => ({
+            label: processor.label,
+            component: processor.component,
+            config: processor.config,
+          })),
+        }),
       }),
-    });
+    );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -200,25 +217,27 @@ export async function updateStream(
   },
 ): Promise<Stream> {
   try {
-    const response = await fetch(`${API_BASE_URL}/streams/${id}`, {
-      method: "PUT",
-      headers: getAuthHeaders(),
-      body: JSON.stringify({
-        name: stream.name,
-        status: stream.status,
-        input_component: stream.input_component,
-        input_label: stream.input_label,
-        input_config: stream.input_config,
-        output_component: stream.output_component,
-        output_label: stream.output_label,
-        output_config: stream.output_config,
-        processors: stream.processors.map((processor) => ({
-          label: processor.label,
-          component: processor.component,
-          config: processor.config,
-        })),
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/streams/${id}`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          name: stream.name,
+          status: stream.status,
+          input_component: stream.input_component,
+          input_label: stream.input_label,
+          input_config: stream.input_config,
+          output_component: stream.output_component,
+          output_label: stream.output_label,
+          output_config: stream.output_config,
+          processors: stream.processors.map((processor) => ({
+            label: processor.label,
+            component: processor.component,
+            config: processor.config,
+          })),
+        }),
       }),
-    });
+    );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -252,10 +271,12 @@ export async function updateStream(
 
 export async function deleteStream(id: string): Promise<void> {
   try {
-    const response = await fetch(`${API_BASE_URL}/streams/${id}`, {
-      method: "DELETE",
-      headers: getAuthHeaders(),
-    });
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/streams/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      }),
+    );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -272,25 +293,27 @@ export async function updateStreamStatus(
   try {
     const stream = await fetchStream(id);
 
-    const response = await fetch(`${API_BASE_URL}/streams/${id}`, {
-      method: "PUT",
-      headers: getAuthHeaders(),
-      body: JSON.stringify({
-        name: stream.name,
-        status: status,
-        input_component: stream.input_component,
-        input_label: stream.input_label,
-        input_config: stream.input_config,
-        output_component: stream.output_component,
-        output_label: stream.output_label,
-        output_config: stream.output_config,
-        processors: stream.processors.map((p) => ({
-          label: p.label,
-          component: p.component,
-          config: p.config,
-        })),
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/streams/${id}`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          name: stream.name,
+          status: status,
+          input_component: stream.input_component,
+          input_label: stream.input_label,
+          input_config: stream.input_config,
+          output_component: stream.output_component,
+          output_label: stream.output_label,
+          output_config: stream.output_config,
+          processors: stream.processors.map((p) => ({
+            label: p.label,
+            component: p.component,
+            config: p.config,
+          })),
+        }),
       }),
-    });
+    );
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -326,9 +349,11 @@ export async function updateStreamStatus(
 
 export async function fetchSecrets(): Promise<Secret[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/secrets`, {
-      headers: getAuthHeaders(),
-    });
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/secrets`, {
+        headers: getAuthHeaders(),
+      }),
+    );
     const data = await response.json();
 
     if (!response.ok) {
@@ -362,14 +387,16 @@ export async function createSecret(secretData: {
   value: string;
 }): Promise<Secret> {
   try {
-    const response = await fetch(`${API_BASE_URL}/secrets`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-      body: JSON.stringify({
-        key: secretData.key,
-        value: secretData.value,
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/secrets`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          key: secretData.key,
+          value: secretData.value,
+        }),
       }),
-    });
+    );
 
     const data = await response.json();
 
@@ -389,10 +416,12 @@ export async function createSecret(secretData: {
 
 export async function deleteSecret(key: string): Promise<void> {
   try {
-    const response = await fetch(`${API_BASE_URL}/secrets/${key}`, {
-      method: "DELETE",
-      headers: getAuthHeaders(),
-    });
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/secrets/${key}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      }),
+    );
 
     const data = await response.json();
 
@@ -407,9 +436,11 @@ export async function deleteSecret(key: string): Promise<void> {
 
 export async function fetchCaches(): Promise<Cache[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/caches`, {
-      headers: getAuthHeaders(),
-    });
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/caches`, {
+        headers: getAuthHeaders(),
+      }),
+    );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -430,9 +461,11 @@ export async function fetchCaches(): Promise<Cache[]> {
 
 export async function fetchCache(id: string): Promise<Cache> {
   try {
-    const response = await fetch(`${API_BASE_URL}/caches/${id}`, {
-      headers: getAuthHeaders(),
-    });
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/caches/${id}`, {
+        headers: getAuthHeaders(),
+      }),
+    );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -459,15 +492,17 @@ export async function createCache(cacheData: {
   try {
     const configYaml = yaml.dump(cacheData.config);
 
-    const response = await fetch(`${API_BASE_URL}/caches`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-      body: JSON.stringify({
-        label: cacheData.label,
-        component: cacheData.component,
-        config: configYaml,
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/caches`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          label: cacheData.label,
+          component: cacheData.component,
+          config: configYaml,
+        }),
       }),
-    });
+    );
 
     if (!response.ok) {
       const data = await response.json();
@@ -500,16 +535,18 @@ export async function updateCache(
   try {
     const configYaml = yaml.dump(cacheData.config);
 
-    const response = await fetch(`${API_BASE_URL}/caches/${id}`, {
-      method: "PUT",
-      headers: getAuthHeaders(),
-      body: JSON.stringify({
-        id: parseInt(id),
-        label: cacheData.label,
-        component: cacheData.component,
-        config: configYaml,
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/caches/${id}`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          id: parseInt(id),
+          label: cacheData.label,
+          component: cacheData.component,
+          config: configYaml,
+        }),
       }),
-    });
+    );
 
     if (!response.ok) {
       const data = await response.json();
@@ -533,10 +570,12 @@ export async function updateCache(
 
 export async function deleteCache(id: string): Promise<void> {
   try {
-    const response = await fetch(`${API_BASE_URL}/caches/${id}`, {
-      method: "DELETE",
-      headers: getAuthHeaders(),
-    });
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/caches/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      }),
+    );
 
     if (!response.ok) {
       const data = await response.json();
@@ -550,9 +589,11 @@ export async function deleteCache(id: string): Promise<void> {
 
 export async function fetchRateLimits(): Promise<RateLimit[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/rate_limits`, {
-      headers: getAuthHeaders(),
-    });
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/rate-limits`, {
+        headers: getAuthHeaders(),
+      }),
+    );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -573,9 +614,11 @@ export async function fetchRateLimits(): Promise<RateLimit[]> {
 
 export async function fetchRateLimit(id: string): Promise<RateLimit> {
   try {
-    const response = await fetch(`${API_BASE_URL}/rate_limits/${id}`, {
-      headers: getAuthHeaders(),
-    });
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/rate-limits/${id}`, {
+        headers: getAuthHeaders(),
+      }),
+    );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -602,15 +645,17 @@ export async function createRateLimit(rateLimitData: {
   try {
     const configYaml = yaml.dump(rateLimitData.config);
 
-    const response = await fetch(`${API_BASE_URL}/rate_limits`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-      body: JSON.stringify({
-        label: rateLimitData.label,
-        component: rateLimitData.component,
-        config: configYaml,
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/rate-limits`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          label: rateLimitData.label,
+          component: rateLimitData.component,
+          config: configYaml,
+        }),
       }),
-    });
+    );
 
     if (!response.ok) {
       const data = await response.json();
@@ -643,16 +688,18 @@ export async function updateRateLimit(
   try {
     const configYaml = yaml.dump(rateLimitData.config);
 
-    const response = await fetch(`${API_BASE_URL}/rate_limits/${id}`, {
-      method: "PUT",
-      headers: getAuthHeaders(),
-      body: JSON.stringify({
-        id: parseInt(id),
-        label: rateLimitData.label,
-        component: rateLimitData.component,
-        config: configYaml,
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/rate-limits/${id}`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          id: parseInt(id),
+          label: rateLimitData.label,
+          component: rateLimitData.component,
+          config: configYaml,
+        }),
       }),
-    });
+    );
 
     if (!response.ok) {
       const data = await response.json();
@@ -676,10 +723,12 @@ export async function updateRateLimit(
 
 export async function deleteRateLimit(id: string): Promise<void> {
   try {
-    const response = await fetch(`${API_BASE_URL}/rate_limits/${id}`, {
-      method: "DELETE",
-      headers: getAuthHeaders(),
-    });
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/rate-limits/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      }),
+    );
 
     if (!response.ok) {
       const data = await response.json();

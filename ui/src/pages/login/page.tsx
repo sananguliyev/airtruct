@@ -36,6 +36,7 @@ export default function LoginPage() {
           "Failed to retrieve user information. Please check your configuration.",
         access_denied:
           "Access denied. You are not authorized to access this application.",
+        session_expired: "Your session has expired. Please sign in again.",
       };
       const errorMessage =
         errorMessages[errorParam] || "Authentication failed. Please try again.";
