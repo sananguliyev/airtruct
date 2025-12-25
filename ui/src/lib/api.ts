@@ -2,7 +2,7 @@ import { Stream, Worker, Secret, Cache, RateLimit } from "./entities";
 import * as yaml from "js-yaml";
 
 // Placeholder API functions - adapt based on original logic and backend
-const API_BASE_URL = "http://localhost:8080/api/v0";
+const API_BASE_URL = "/api/v0";
 
 function getAuthHeaders(): HeadersInit {
   const token = localStorage.getItem("airtruct_token");

@@ -21,7 +21,7 @@ ui-deps:
 
 statik:
 	pnpm --prefix ui build
-	statik -src=ui/dist -dest=internal/statik -f -m
+	statik -src=ui/dist -dest=internal/ -f -m
 
 build:
 	make statik
