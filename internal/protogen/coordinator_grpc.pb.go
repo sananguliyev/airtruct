@@ -23,6 +23,7 @@ const (
 	Coordinator_UpdateWorkerStreamStatus_FullMethodName = "/protorender.Coordinator/UpdateWorkerStreamStatus"
 	Coordinator_RegisterWorker_FullMethodName           = "/protorender.Coordinator/RegisterWorker"
 	Coordinator_DeregisterWorker_FullMethodName         = "/protorender.Coordinator/DeregisterWorker"
+	Coordinator_Heartbeat_FullMethodName                = "/protorender.Coordinator/Heartbeat"
 	Coordinator_ListWorkers_FullMethodName              = "/protorender.Coordinator/ListWorkers"
 	Coordinator_ListStreams_FullMethodName              = "/protorender.Coordinator/ListStreams"
 	Coordinator_GetStream_FullMethodName                = "/protorender.Coordinator/GetStream"
@@ -57,6 +58,7 @@ type CoordinatorClient interface {
 	// Worker methods
 	RegisterWorker(ctx context.Context, in *RegisterWorkerRequest, opts ...grpc.CallOption) (*CommonResponse, error)
 	DeregisterWorker(ctx context.Context, in *DeregisterWorkerRequest, opts ...grpc.CallOption) (*CommonResponse, error)
+	Heartbeat(ctx context.Context, in *HeartbeatRequest, opts ...grpc.CallOption) (*CommonResponse, error)
 	ListWorkers(ctx context.Context, in *ListWorkersRequest, opts ...grpc.CallOption) (*ListWorkersResponse, error)
 	// Stream methods
 	ListStreams(ctx context.Context, in *ListStreamsRequest, opts ...grpc.CallOption) (*ListStreamsResponse, error)
@@ -119,6 +121,16 @@ func (c *coordinatorClient) DeregisterWorker(ctx context.Context, in *Deregister
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CommonResponse)
 	err := c.cc.Invoke(ctx, Coordinator_DeregisterWorker_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *coordinatorClient) Heartbeat(ctx context.Context, in *HeartbeatRequest, opts ...grpc.CallOption) (*CommonResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CommonResponse)
+	err := c.cc.Invoke(ctx, Coordinator_Heartbeat_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -367,6 +379,7 @@ type CoordinatorServer interface {
 	// Worker methods
 	RegisterWorker(context.Context, *RegisterWorkerRequest) (*CommonResponse, error)
 	DeregisterWorker(context.Context, *DeregisterWorkerRequest) (*CommonResponse, error)
+	Heartbeat(context.Context, *HeartbeatRequest) (*CommonResponse, error)
 	ListWorkers(context.Context, *ListWorkersRequest) (*ListWorkersResponse, error)
 	// Stream methods
 	ListStreams(context.Context, *ListStreamsRequest) (*ListStreamsResponse, error)
@@ -413,6 +426,9 @@ func (UnimplementedCoordinatorServer) RegisterWorker(context.Context, *RegisterW
 }
 func (UnimplementedCoordinatorServer) DeregisterWorker(context.Context, *DeregisterWorkerRequest) (*CommonResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeregisterWorker not implemented")
+}
+func (UnimplementedCoordinatorServer) Heartbeat(context.Context, *HeartbeatRequest) (*CommonResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method Heartbeat not implemented")
 }
 func (UnimplementedCoordinatorServer) ListWorkers(context.Context, *ListWorkersRequest) (*ListWorkersResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListWorkers not implemented")
@@ -554,6 +570,24 @@ func _Coordinator_DeregisterWorker_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CoordinatorServer).DeregisterWorker(ctx, req.(*DeregisterWorkerRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Coordinator_Heartbeat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(HeartbeatRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoordinatorServer).Heartbeat(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Coordinator_Heartbeat_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoordinatorServer).Heartbeat(ctx, req.(*HeartbeatRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -979,6 +1013,10 @@ var Coordinator_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeregisterWorker",
 			Handler:    _Coordinator_DeregisterWorker_Handler,
+		},
+		{
+			MethodName: "Heartbeat",
+			Handler:    _Coordinator_Heartbeat_Handler,
 		},
 		{
 			MethodName: "ListWorkers",

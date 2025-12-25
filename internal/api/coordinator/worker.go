@@ -15,30 +15,39 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func (c *CoordinatorAPI) RegisterWorker(ctx context.Context, in *pb.RegisterWorkerRequest) (*pb.CommonResponse, error) {
-	var workerEntity *persistence.Worker
-	var err error
-
+func extractClientIP(ctx context.Context) (string, error) {
 	p, ok := peer.FromContext(ctx)
 	if !ok {
-		return nil, status.Error(codes.Unauthenticated, "no peer found")
+		return "", fmt.Errorf("no peer found")
 	}
 
 	clientAddr := p.Addr.String()
-	log.Debug().Str("client_addr", clientAddr).Msg("Client joining to coordinator")
 	tcpAddr, err := net.ResolveTCPAddr("tcp", clientAddr)
 	if err != nil {
 		log.Error().Err(err).Str("client_addr", clientAddr).Msg("failed to resolve tcp address")
-		return nil, status.Error(codes.Internal, err.Error())
+		return "", fmt.Errorf("failed to resolve tcp address: %w", err)
 	}
 
-	// Extract just the IP address (without ephemeral port)
 	clientAddr = tcpAddr.IP.String()
 	if ip := net.ParseIP(clientAddr); ip != nil {
 		if ip.IsLoopback() {
 			clientAddr = "127.0.0.1"
 		}
 	}
+
+	return clientAddr, nil
+}
+
+func (c *CoordinatorAPI) RegisterWorker(ctx context.Context, in *pb.RegisterWorkerRequest) (*pb.CommonResponse, error) {
+	var workerEntity *persistence.Worker
+	var err error
+
+	clientAddr, err := extractClientIP(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	log.Debug().Str("client_addr", clientAddr).Msg("Client joining to coordinator")
 
 	workerEntity, err = c.workerRepo.FindByID(in.GetId())
 	if err != nil {
@@ -83,6 +92,39 @@ func (c *CoordinatorAPI) DeregisterWorker(_ context.Context, in *pb.DeregisterWo
 	}
 
 	return &pb.CommonResponse{Message: "Worker deregistered successfully"}, nil
+}
+
+func (c *CoordinatorAPI) Heartbeat(ctx context.Context, in *pb.HeartbeatRequest) (*pb.CommonResponse, error) {
+	clientAddr, err := extractClientIP(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	log.Debug().Str("client_addr", clientAddr).Msg("Client heartbeat from coordinator")
+
+	workerEntity, err := c.workerRepo.FindByID(in.GetId())
+	if err != nil {
+		log.Error().Err(err).Str("worker_id", in.GetId()).Msg("Failed to find worker for heartbeat")
+		return nil, status.Error(codes.Internal, "failed to find worker")
+	}
+
+	if workerEntity == nil {
+		log.Warn().Str("worker_id", in.GetId()).Msg("Worker not found for heartbeat")
+		return nil, status.Error(codes.NotFound, "worker not found")
+	}
+
+	workerEntity.Address = fmt.Sprintf("%s:%d", clientAddr, in.GetPort())
+	workerEntity.Status = persistence.WorkerStatusActive
+	if err = c.workerRepo.AddOrActivate(workerEntity); err != nil {
+		log.Error().Err(err).Str("worker_id", in.GetId()).Msg("Failed to update worker heartbeat")
+		return nil, status.Error(codes.Internal, "failed to update worker heartbeat")
+	}
+
+	log.Debug().Str("worker_id", in.GetId()).Str("address", workerEntity.Address).Msg("Worker heartbeat received")
+
+	return &pb.CommonResponse{
+		Message: "Heartbeat acknowledged",
+	}, nil
 }
 
 func (c *CoordinatorAPI) ListWorkers(_ context.Context, in *pb.ListWorkersRequest) (*pb.ListWorkersResponse, error) {

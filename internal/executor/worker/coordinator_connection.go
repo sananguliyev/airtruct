@@ -16,6 +16,7 @@ import (
 type CoordinatorConnection interface {
 	JoinToCoordinator(ctx context.Context) error
 	LeaveCoordinator(ctx context.Context) error
+	SendHeartbeat(ctx context.Context) error
 	GetClient() pb.CoordinatorClient
 	UpdateWorkerStreamStatus(ctx context.Context, workerStreamID int64, status pb.WorkerStreamStatus) error
 	IngestMetrics(ctx context.Context, workerStreamID int64, inputEvents, processorErrors, outputEvents uint64) error
@@ -106,6 +107,36 @@ func (c *coordinatorConnection) LeaveCoordinator(ctx context.Context) error {
 	c.mu.Unlock()
 
 	log.Info().Str("worker_id", hostname).Str("coordinator_response", resp.Message).Msg("Left coordinator")
+	return nil
+}
+
+func (c *coordinatorConnection) SendHeartbeat(ctx context.Context) error {
+	hostname, err := os.Hostname()
+	if err != nil {
+		return err
+	}
+
+	c.mu.Lock()
+	if !c.joined {
+		log.Debug().Str("worker_id", hostname).Msg("Worker not joined, skipping heartbeat")
+		c.mu.Unlock()
+		return nil
+	}
+	c.mu.Unlock()
+
+	resp, err := c.coordinatorClient.Heartbeat(ctx, &pb.HeartbeatRequest{
+		Id:   hostname,
+		Port: c.grpcPort,
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to send heartbeat to coordinator")
+		c.mu.Lock()
+		c.joined = false
+		c.mu.Unlock()
+		return err
+	}
+
+	log.Debug().Str("worker_id", hostname).Str("coordinator_response", resp.Message).Msg("Heartbeat sent")
 	return nil
 }
 

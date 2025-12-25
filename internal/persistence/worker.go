@@ -93,7 +93,7 @@ func (r *workerRepository) AddOrActivate(worker *Worker) error {
 	worker.LastHeartbeat = time.Now()
 	return r.db.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"status", "address"}),
+		DoUpdates: clause.AssignmentColumns([]string{"status", "address", "last_heartbeat"}),
 	}).Create(worker).Error
 }
 
