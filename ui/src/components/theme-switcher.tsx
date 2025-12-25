@@ -1,29 +1,36 @@
-"use client"
+"use client";
 
-import { useTheme } from "next-themes"
-import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Moon, Sun, Monitor } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useTheme } from "next-themes";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Moon, Sun, Monitor } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export function ThemeSwitcher() {
-  const { resolvedTheme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
   // Ensure component is mounted to avoid hydration mismatch
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, []);
 
   if (!mounted) {
-    return null
+    return null;
   }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="icon">
-          {resolvedTheme === "dark" ? (
+          {theme === "system" ? (
+            <Monitor className="h-[1.2rem] w-[1.2rem]" />
+          ) : theme === "dark" ? (
             <Moon className="h-[1.2rem] w-[1.2rem]" />
           ) : (
             <Sun className="h-[1.2rem] w-[1.2rem]" />
@@ -46,6 +53,5 @@ export function ThemeSwitcher() {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }
-

@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"sync"
@@ -131,50 +132,40 @@ func (h *OAuth2Handler) HandleCallback(w http.ResponseWriter, r *http.Request) {
 	state := r.URL.Query().Get("state")
 	if !h.validateState(state) {
 		log.Error().Msg("Invalid OAuth2 state parameter")
-		http.Error(w, "Invalid state parameter", http.StatusBadRequest)
+		http.Redirect(w, r, "/login?error=invalid_state", http.StatusTemporaryRedirect)
 		return
 	}
 
 	code := r.URL.Query().Get("code")
 	if code == "" {
 		log.Error().Msg("Missing OAuth2 authorization code")
-		http.Error(w, "Missing authorization code", http.StatusBadRequest)
+		http.Redirect(w, r, "/login?error=missing_code", http.StatusTemporaryRedirect)
 		return
 	}
 
 	token, err := h.config.Exchange(context.Background(), code)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to exchange OAuth2 code for token")
-		http.Error(w, "Failed to exchange code for token", http.StatusInternalServerError)
+		http.Redirect(w, r, "/login?error=token_exchange_failed", http.StatusTemporaryRedirect)
 		return
 	}
 
 	userInfo, err := h.fetchUserInfo(token)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to fetch user info")
-		http.Error(w, "Failed to fetch user info", http.StatusInternalServerError)
+		http.Redirect(w, r, "/login?error=user_info_failed", http.StatusTemporaryRedirect)
 		return
 	}
 
 	if !h.isUserAllowed(userInfo.Email) {
 		log.Warn().Str("email", userInfo.Email).Msg("User not allowed to access")
-		http.Error(w, "Access denied", http.StatusForbidden)
+		http.Redirect(w, r, "/login?error=access_denied", http.StatusTemporaryRedirect)
 		return
 	}
 
 	sessionID := h.createSession(userInfo.Email, token)
 
-	http.SetCookie(w, &http.Cookie{
-		Name:     h.cookieName,
-		Value:    sessionID,
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   r.TLS != nil,
-		SameSite: http.SameSiteLaxMode,
-		MaxAge:   86400,
-	})
-
-	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+	http.Redirect(w, r, fmt.Sprintf("/?token=%s", sessionID), http.StatusTemporaryRedirect)
 }
 
 func (h *OAuth2Handler) HandleLogout(w http.ResponseWriter, r *http.Request) {
@@ -199,6 +190,12 @@ func (h *OAuth2Handler) HandleLogout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *OAuth2Handler) fetchUserInfo(token *oauth2.Token) (*UserInfo, error) {
+	log.Debug().
+		Str("url", h.userInfoURL).
+		Bool("token_valid", token.Valid()).
+		Str("token_type", token.TokenType).
+		Msg("Fetching user info from OAuth2 provider")
+
 	client := h.config.Client(context.Background(), token)
 	resp, err := client.Get(h.userInfoURL)
 	if err != nil {
@@ -207,6 +204,14 @@ func (h *OAuth2Handler) fetchUserInfo(token *oauth2.Token) (*UserInfo, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		log.Error().
+			Int("status", resp.StatusCode).
+			Str("url", h.userInfoURL).
+			Str("response_body", string(bodyBytes)).
+			Str("content_type", resp.Header.Get("Content-Type")).
+			Bool("token_valid", token.Valid()).
+			Msg("User info request failed - check OAuth2 provider configuration and token")
 		return nil, fmt.Errorf("user info request failed with status: %d", resp.StatusCode)
 	}
 

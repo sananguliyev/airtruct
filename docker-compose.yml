@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   # PostgreSQL Database (optional - uncomment to use instead of SQLite)
   # postgres:
@@ -21,21 +19,62 @@ services:
   #     timeout: 5s
   #     retries: 5
 
+  # Keycloak for OAuth2 (optional - uncomment to test OAuth2)
+  # keycloak:
+  #   image: quay.io/keycloak/keycloak:23.0
+  #   container_name: airtruct-keycloak
+  #   environment:
+  #     - KEYCLOAK_ADMIN=admin
+  #     - KEYCLOAK_ADMIN_PASSWORD=admin
+  #     - KC_DB=dev-file
+  #     - KC_HOSTNAME=localhost
+  #     - KC_HOSTNAME_PORT=8090
+  #     - KC_HOSTNAME_STRICT=false
+  #     - KC_HTTP_ENABLED=true
+  #   ports:
+  #     - "8090:8080"
+  #   volumes:
+  #     - keycloak_data:/opt/keycloak/data
+  #     - ./.container/keycloak/airtruct-realm.json:/opt/keycloak/data/import/airtruct-realm.json
+  #   networks:
+  #     - airtruct
+  #   command:
+  #     - start-dev
+  #     - --import-realm
+
   coordinator:
     build:
       context: .
+      dockerfile: .container/Dockerfile
     ports:
       - "8080:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
-      - COORDINATOR=true
-      - NODE_DISCOVERY_URI=localhost:50000
-      - NODE_GRPC_PORT=50000
+      - ROLE=coordinator
+      - DISCOVERY_URI=coordinator:50000
+      - GRPC_PORT=50000
+      - SECRET_KEY=this_is_a_32_byte_key_for_AES!!!
       # SQLite configuration (default)
       - DATABASE_DRIVER=sqlite
       - DATABASE_URI=file:/airtruct.sqlite?_foreign_keys=1&mode=rwc
       # PostgreSQL configuration (uncomment to use, and comment SQLite above)
       # - DATABASE_DRIVER=postgres
       # - DATABASE_URI=postgres://airtruct:airtruct@postgres:5432/airtruct?sslmode=disable
+      # Basic Auth configuration (uncomment to enable)
+      # - AUTH_TYPE=basic
+      # - AUTH_BASIC_USERNAME=airtruct
+      # - AUTH_BASIC_PASSWORD=password
+      # OAuth2/Keycloak configuration (uncomment to enable, requires keycloak service above)
+      # - AUTH_TYPE=oauth2
+      # - AUTH_OAUTH2_CLIENT_ID=airtruct
+      # - AUTH_OAUTH2_CLIENT_SECRET=airtruct-secret-change-in-production
+      # - AUTH_OAUTH2_AUTHORIZATION_URL=http://localhost:8090/realms/airtruct/protocol/openid-connect/auth
+      # - AUTH_OAUTH2_TOKEN_URL=http://keycloak:8080/realms/airtruct/protocol/openid-connect/token
+      # - AUTH_OAUTH2_REDIRECT_URL=http://localhost:8080/auth/callback
+      # - AUTH_OAUTH2_SCOPES=openid,email,profile
+      # - AUTH_OAUTH2_USER_INFO_URL=http://keycloak:8080/realms/airtruct/protocol/openid-connect/userinfo
+      # - AUTH_OAUTH2_SESSION_SECRET=change-this-to-random-32-char-secret
     volumes:
       - ./airtruct.sqlite:/airtruct.sqlite
     networks:
@@ -44,6 +83,10 @@ services:
     # depends_on:
     #   postgres:
     #     condition: service_healthy
+    # Uncomment below when using Keycloak
+    # depends_on:
+    #   keycloak:
+    #     condition: service_started
     command:
       - /airtruct
       - run
@@ -53,10 +96,13 @@ services:
       replicas: 2
     build:
       context: .
+      dockerfile: .container/Dockerfile
     environment:
-      - COORDINATOR=false
-      - NODE_DISCOVERY_URI=localhost:50000
-      - NODE_GRPC_PORT=50001
+      - ROLE=worker
+      - DISCOVERY_URI=coordinator:50000
+      - GRPC_PORT=50001
+      - DEBUG_MODE=true
+      - SECRET_KEY=this_is_a_32_byte_key_for_AES!!!
     networks:
       - airtruct
     command:
@@ -65,6 +111,8 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
+  keycloak_data:
     driver: local
 
 networks:

@@ -47,19 +47,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else {
           const savedToken = localStorage.getItem("airtruct_token");
           if (savedToken) {
-            const apiResponse = await fetch("/api/v0/workers/all", {
-              headers: {
-                Authorization: `Bearer ${savedToken}`,
-              },
-            });
-            if (apiResponse.ok) {
-              setIsAuthenticated(true);
-              setToken(savedToken);
-            } else {
-              localStorage.removeItem("airtruct_token");
-              setIsAuthenticated(false);
-              setToken(null);
-            }
+            setToken(savedToken);
+            setIsAuthenticated(true);
           } else {
             setIsAuthenticated(false);
           }

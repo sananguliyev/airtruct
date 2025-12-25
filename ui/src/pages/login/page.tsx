@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import {
   Card,
@@ -11,14 +11,37 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 
 export default function LoginPage() {
   const { authType, login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const errorParam = urlParams.get("error");
+
+    if (errorParam) {
+      const errorMessages: Record<string, string> = {
+        invalid_state: "Invalid authentication state. Please try again.",
+        missing_code: "Authentication code is missing. Please try again.",
+        token_exchange_failed:
+          "Failed to authenticate with the provider. Please try again.",
+        user_info_failed:
+          "Failed to retrieve user information. Please check your configuration.",
+        access_denied:
+          "Access denied. You are not authorized to access this application.",
+      };
+      const errorMessage =
+        errorMessages[errorParam] || "Authentication failed. Please try again.";
+      setError(errorMessage);
+    }
+  }, []);
 
   const handleBasicAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,6 +82,9 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+      <div className="absolute top-4 right-4">
+        <ThemeSwitcher />
+      </div>
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">
@@ -69,6 +95,11 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {error && (
+            <div className="mb-4 p-3 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+              {error}
+            </div>
+          )}
           {authType === "basic" && (
             <form onSubmit={handleBasicAuthSubmit} className="space-y-4">
               <div className="space-y-2">
@@ -95,11 +126,6 @@ export default function LoginPage() {
                   disabled={isLoading}
                 />
               </div>
-              {error && (
-                <div className="text-sm text-red-600 dark:text-red-400">
-                  {error}
-                </div>
-              )}
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Signing in..." : "Sign in"}
               </Button>
@@ -113,14 +139,19 @@ export default function LoginPage() {
                 className="w-full"
                 disabled={isLoading}
               >
-                {isLoading ? "Redirecting..." : "Sign in with OAuth2"}
+                {isLoading ? "Redirecting..." : "Sign in"}
               </Button>
             </div>
           )}
 
           {authType === "none" && (
-            <div className="text-center text-sm text-slate-600 dark:text-slate-400">
-              Authentication is not configured
+            <div className="space-y-4">
+              <div className="text-center text-sm text-slate-600 dark:text-slate-400">
+                Authentication is not configured
+              </div>
+              <Button onClick={() => navigate("/")} className="w-full">
+                Continue to Dashboard
+              </Button>
             </div>
           )}
         </CardContent>

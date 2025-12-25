@@ -4,6 +4,7 @@ import { Search, MenuIcon, Github, LogOut } from "lucide-react";
 import { CommandPalette } from "@/components/command-palette";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 import {
   Tooltip,
   TooltipContent,
@@ -98,6 +99,7 @@ export default function ClientLayout({
 
           <div className="flex items-center space-x-2">
             <TooltipProvider>
+              <ThemeSwitcher />
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button variant="ghost" size="icon" asChild>
