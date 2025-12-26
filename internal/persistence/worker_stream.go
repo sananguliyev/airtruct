@@ -17,6 +17,10 @@ const (
 	WorkerStreamStatusFailed    WorkerStreamStatus = "failed"
 )
 
+const (
+	StreamLeaseInterval = 20 * time.Second
+)
+
 type WorkerStream struct {
 	ID              int64              `json:"id" gorm:"primaryKey"`
 	WorkerID        string             `json:"worker_id" gorm:"not null"`
@@ -25,6 +29,7 @@ type WorkerStream struct {
 	ProcessorErrors uint64             `json:"processor_errors" gorm:"not null" default:"0"`
 	OutputEvents    uint64             `json:"output_events" gorm:"not null" default:"0"`
 	Status          WorkerStreamStatus `json:"status" gorm:"not null"`
+	LeaseExpiresAt  time.Time          `json:"lease_expires_at"`
 	CreatedAt       time.Time          `json:"created_at" gorm:"not null"`
 	UpdatedAt       time.Time          `json:"updated_at"`
 
@@ -35,8 +40,11 @@ type WorkerStream struct {
 type WorkerStreamRepository interface {
 	Queue(workerID string, streamID int64) (WorkerStream, error)
 	FindByID(id int64) (*WorkerStream, error)
+	FindByWorkerIDAndStreamID(workerID string, streamID int64) (*WorkerStream, error)
 	UpdateStatus(id int64, status WorkerStreamStatus) error
 	UpdateMetrics(id int64, inputEvents, processorErrors, outputEvents uint64) error
+	UpdateLeaseExpiry(id int64, expiresAt time.Time) error
+	FindRunningWithExpiredLeases() ([]WorkerStream, error)
 	StopAllRunningAndWaitingByWorkerID(workerID string) error
 	ListAllByWorkerID(workerID string) ([]WorkerStream, error)
 	ListAllByStreamID(streamID int64) ([]WorkerStream, error)
@@ -53,11 +61,12 @@ func NewWorkerStreamRepository(db *gorm.DB) WorkerStreamRepository {
 
 func (r *workerStreamRepository) Queue(workerID string, streamID int64) (WorkerStream, error) {
 	workerStream := WorkerStream{
-		WorkerID:  workerID,
-		StreamID:  streamID,
-		Status:    WorkerStreamStatusWaiting,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		WorkerID:       workerID,
+		StreamID:       streamID,
+		Status:         WorkerStreamStatusWaiting,
+		LeaseExpiresAt: time.Now().Add(StreamLeaseInterval),
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
 	}
 
 	err := r.db.Create(&workerStream).Error
@@ -111,6 +120,42 @@ func (r *workerStreamRepository) StopAllRunningAndWaitingByWorkerID(workerID str
 		Where("status IN ?", []WorkerStreamStatus{WorkerStreamStatusRunning, WorkerStreamStatusWaiting}).
 		Updates(map[string]any{"status": WorkerStreamStatusStopped, "updated_at": time.Now()}).
 		Error
+}
+
+func (r *workerStreamRepository) FindByWorkerIDAndStreamID(workerID string, streamID int64) (*WorkerStream, error) {
+	var workerStream WorkerStream
+	err := r.db.
+		Where("worker_id = ? AND stream_id = ?", workerID, streamID).
+		First(&workerStream).
+		Error
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	} else if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	return &workerStream, nil
+}
+
+func (r *workerStreamRepository) UpdateLeaseExpiry(id int64, expiresAt time.Time) error {
+	return r.db.
+		Model(&WorkerStream{}).
+		Where("id = ?", id).
+		Update("lease_expires_at", expiresAt).
+		Error
+}
+
+func (r *workerStreamRepository) FindRunningWithExpiredLeases() ([]WorkerStream, error) {
+	var streams []WorkerStream
+	err := r.db.
+		Where("status = ?", WorkerStreamStatusRunning).
+		Where("lease_expires_at != ?", time.Time{}).
+		Where("lease_expires_at < ?", time.Now()).
+		Find(&streams).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return streams, nil
 }
 
 func (r *workerStreamRepository) ListAllByWorkerID(workerID string) ([]WorkerStream, error) {

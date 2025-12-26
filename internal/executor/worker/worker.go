@@ -12,6 +12,7 @@ import (
 type WorkerExecutor interface {
 	JoinToCoordinator(context.Context) error
 	LeaveCoordinator(context.Context) error
+	SendHeartbeat(context.Context) error
 	AddStreamToQueue(ctx context.Context, workerStreamID int64, config string) error
 	FetchWorkerStreamStatus(ctx context.Context, workerStreamID int64) (*persistence.WorkerStreamStatus, error)
 	DeleteWorkerStream(ctx context.Context, workerStreamID int64) error
@@ -33,6 +34,8 @@ func NewWorkerExecutor(grpcConn *grpc.ClientConn, grpcPort uint32, vaultProvider
 
 	streamManager := NewStreamManager(coordinatorConnection, vaultProvider)
 
+	coordinatorConnection.SetStreamManager(streamManager)
+
 	streamQueue := NewStreamQueue(streamManager)
 
 	telemetryManager := NewTelemetryManager(coordinatorConnection, streamManager)
@@ -51,6 +54,10 @@ func (e *workerExecutor) JoinToCoordinator(ctx context.Context) error {
 
 func (e *workerExecutor) LeaveCoordinator(ctx context.Context) error {
 	return e.coordinatorConnection.LeaveCoordinator(ctx)
+}
+
+func (e *workerExecutor) SendHeartbeat(ctx context.Context) error {
+	return e.coordinatorConnection.SendHeartbeat(ctx)
 }
 
 func (e *workerExecutor) AddStreamToQueue(ctx context.Context, workerStreamID int64, config string) error {

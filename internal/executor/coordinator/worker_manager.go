@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
-	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/sananguliyev/airtruct/internal/persistence"
 	pb "github.com/sananguliyev/airtruct/internal/protogen"
@@ -42,14 +41,7 @@ func (m *workerManager) GetHealthyWorkers(ctx context.Context) ([]persistence.Wo
 		return nil, err
 	}
 
-	var healthyWorkers []persistence.Worker
-	for _, worker := range workers {
-		if m.isWorkerHealthy(ctx, &worker) {
-			healthyWorkers = append(healthyWorkers, worker)
-		}
-	}
-
-	return healthyWorkers, nil
+	return workers, nil
 }
 
 func (m *workerManager) DeactivateWorker(workerID string) error {
@@ -74,22 +66,4 @@ func (m *workerManager) DeactivateWorker(workerID string) error {
 
 func (m *workerManager) GetWorkerClient(worker *persistence.Worker) (pb.WorkerClient, error) {
 	return m.clientManager.GetClient(worker)
-}
-
-func (m *workerManager) isWorkerHealthy(ctx context.Context, worker *persistence.Worker) bool {
-	workerGRPCClient, err := m.clientManager.GetClient(worker)
-	if err != nil {
-		log.Error().Err(err).Str("worker_id", worker.ID).Msg("Failed to create grpc connection to worker")
-		m.DeactivateWorker(worker.ID)
-		return false
-	}
-
-	if _, err = workerGRPCClient.HealthCheck(ctx, &emptypb.Empty{}); err != nil {
-		log.Error().Err(err).Str("worker_id", worker.ID).Msg("Failed to perform health check")
-		m.DeactivateWorker(worker.ID)
-		return false
-	}
-
-	log.Debug().Str("worker_id", worker.ID).Msg("Worker is healthy")
-	return true
 }

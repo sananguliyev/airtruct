@@ -15,6 +15,10 @@ const (
 	WorkerStatusInactive = "inactive"
 )
 
+const (
+	WorkerHeartbeatTimeout = 30 * time.Second
+)
+
 type Worker struct {
 	ID            string       `gorm:"primaryKey" json:"id"`
 	Address       string       `json:"address"`
@@ -28,6 +32,7 @@ type WorkerRepository interface {
 	FindAllByStatuses(...WorkerStatus) ([]Worker, error)
 	FindAllActiveWithRunningStreamCount() ([]Worker, error)
 	FindByID(id string) (*Worker, error)
+	FindActiveWithStaleHeartbeat() ([]Worker, error)
 	AddOrActivate(worker *Worker) error
 	Deactivate(id string) error
 }
@@ -93,7 +98,7 @@ func (r *workerRepository) AddOrActivate(worker *Worker) error {
 	worker.LastHeartbeat = time.Now()
 	return r.db.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"status", "address"}),
+		DoUpdates: clause.AssignmentColumns([]string{"status", "address", "last_heartbeat"}),
 	}).Create(worker).Error
 }
 
@@ -102,4 +107,17 @@ func (r *workerRepository) Deactivate(id string) error {
 		Model(&Worker{}).
 		Where("id = ?", id).
 		Update("status", WorkerStatusInactive).Error
+}
+
+func (r *workerRepository) FindActiveWithStaleHeartbeat() ([]Worker, error) {
+	var workers []Worker
+	err := r.db.
+		Where("status = ?", WorkerStatusActive).
+		Where("last_heartbeat < ?", time.Now().Add(-WorkerHeartbeatTimeout)).
+		Find(&workers).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return workers, nil
 }

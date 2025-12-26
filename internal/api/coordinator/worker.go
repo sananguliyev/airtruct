@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net"
 
+	"time"
+
 	"github.com/sananguliyev/airtruct/internal/persistence"
 	pb "github.com/sananguliyev/airtruct/internal/protogen"
 
@@ -15,30 +17,39 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func (c *CoordinatorAPI) RegisterWorker(ctx context.Context, in *pb.RegisterWorkerRequest) (*pb.CommonResponse, error) {
-	var workerEntity *persistence.Worker
-	var err error
-
+func extractClientIP(ctx context.Context) (string, error) {
 	p, ok := peer.FromContext(ctx)
 	if !ok {
-		return nil, status.Error(codes.Unauthenticated, "no peer found")
+		return "", fmt.Errorf("no peer found")
 	}
 
 	clientAddr := p.Addr.String()
-	log.Debug().Str("client_addr", clientAddr).Msg("Client joining to coordinator")
 	tcpAddr, err := net.ResolveTCPAddr("tcp", clientAddr)
 	if err != nil {
 		log.Error().Err(err).Str("client_addr", clientAddr).Msg("failed to resolve tcp address")
-		return nil, status.Error(codes.Internal, err.Error())
+		return "", fmt.Errorf("failed to resolve tcp address: %w", err)
 	}
 
-	// Extract just the IP address (without ephemeral port)
 	clientAddr = tcpAddr.IP.String()
 	if ip := net.ParseIP(clientAddr); ip != nil {
 		if ip.IsLoopback() {
 			clientAddr = "127.0.0.1"
 		}
 	}
+
+	return clientAddr, nil
+}
+
+func (c *CoordinatorAPI) RegisterWorker(ctx context.Context, in *pb.RegisterWorkerRequest) (*pb.CommonResponse, error) {
+	var workerEntity *persistence.Worker
+	var err error
+
+	clientAddr, err := extractClientIP(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	log.Debug().Str("client_addr", clientAddr).Msg("Client joining to coordinator")
 
 	workerEntity, err = c.workerRepo.FindByID(in.GetId())
 	if err != nil {
@@ -83,6 +94,94 @@ func (c *CoordinatorAPI) DeregisterWorker(_ context.Context, in *pb.DeregisterWo
 	}
 
 	return &pb.CommonResponse{Message: "Worker deregistered successfully"}, nil
+}
+
+func (c *CoordinatorAPI) Heartbeat(ctx context.Context, in *pb.HeartbeatRequest) (*pb.HeartbeatResponse, error) {
+	clientAddr, err := extractClientIP(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	log.Debug().Str("client_addr", clientAddr).Msg("Client heartbeat from coordinator")
+
+	workerEntity, err := c.workerRepo.FindByID(in.GetId())
+	if err != nil {
+		log.Error().Err(err).Str("worker_id", in.GetId()).Msg("Failed to find worker for heartbeat")
+		return nil, status.Error(codes.Internal, "failed to find worker")
+	}
+
+	if workerEntity == nil {
+		log.Warn().Str("worker_id", in.GetId()).Msg("Worker not found for heartbeat")
+		return nil, status.Error(codes.NotFound, "worker not found")
+	}
+
+	workerEntity.Address = fmt.Sprintf("%s:%d", clientAddr, in.GetPort())
+	workerEntity.Status = persistence.WorkerStatusActive
+	if err = c.workerRepo.AddOrActivate(workerEntity); err != nil {
+		log.Error().Err(err).Str("worker_id", in.GetId()).Msg("Failed to update worker heartbeat")
+		return nil, status.Error(codes.Internal, "failed to update worker heartbeat")
+	}
+
+	response := &pb.HeartbeatResponse{
+		Message:                     "Heartbeat acknowledged",
+		RenewedLeaseWorkerStreamIds: []int64{},
+		ExpiredLeaseWorkerStreamIds: []int64{},
+	}
+
+	for _, workerStreamID := range in.GetRunningWorkerStreamIds() {
+		workerStream, err := c.workerStreamRepo.FindByID(workerStreamID)
+
+		if err != nil {
+			log.Error().Err(err).Str("worker_id", in.GetId()).Int64("worker_stream_id", workerStreamID).Msg("Failed to find worker stream")
+			response.ExpiredLeaseWorkerStreamIds = append(response.ExpiredLeaseWorkerStreamIds, workerStreamID)
+			continue
+		}
+
+		if workerStream == nil {
+			log.Warn().Str("worker_id", in.GetId()).Int64("worker_stream_id", workerStreamID).Msg("Worker stream not found")
+			response.ExpiredLeaseWorkerStreamIds = append(response.ExpiredLeaseWorkerStreamIds, workerStreamID)
+			continue
+		}
+
+		if workerStream.WorkerID != in.GetId() {
+			log.Warn().Str("worker_id", in.GetId()).Int64("worker_stream_id", workerStreamID).Str("actual_worker", workerStream.WorkerID).Msg("Worker stream belongs to different worker")
+			response.ExpiredLeaseWorkerStreamIds = append(response.ExpiredLeaseWorkerStreamIds, workerStreamID)
+			continue
+		}
+
+		if workerStream.Status != persistence.WorkerStreamStatusRunning {
+			log.Warn().Str("worker_id", in.GetId()).Int64("worker_stream_id", workerStreamID).Str("status", string(workerStream.Status)).Msg("Stream should not be running")
+			response.ExpiredLeaseWorkerStreamIds = append(response.ExpiredLeaseWorkerStreamIds, workerStreamID)
+			continue
+		}
+
+		newExpiry := time.Now().Add(persistence.StreamLeaseInterval)
+
+		if workerStream.LeaseExpiresAt.IsZero() {
+			log.Info().
+				Str("worker_id", in.GetId()).
+				Int64("worker_stream_id", workerStreamID).
+				Int64("stream_id", workerStream.StreamID).
+				Msg("Initializing lease for existing stream")
+		}
+
+		err = c.workerStreamRepo.UpdateLeaseExpiry(workerStream.ID, newExpiry)
+		if err != nil {
+			log.Error().Err(err).Int64("worker_stream_id", workerStream.ID).Msg("Failed to update lease expiry")
+			continue
+		}
+
+		response.RenewedLeaseWorkerStreamIds = append(response.RenewedLeaseWorkerStreamIds, workerStreamID)
+	}
+
+	log.Debug().
+		Str("worker_id", in.GetId()).
+		Str("address", workerEntity.Address).
+		Int("renewed", len(response.RenewedLeaseWorkerStreamIds)).
+		Int("expired", len(response.ExpiredLeaseWorkerStreamIds)).
+		Msg("Worker heartbeat received")
+
+	return response, nil
 }
 
 func (c *CoordinatorAPI) ListWorkers(_ context.Context, in *pb.ListWorkersRequest) (*pb.ListWorkersResponse, error) {

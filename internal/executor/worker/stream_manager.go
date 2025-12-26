@@ -40,6 +40,8 @@ type StreamManager interface {
 	DeleteStream(workerStreamID int64) error
 	IngestData(workerStreamID int64, method, path, contentType string, payload []byte) (*IngestResult, error)
 	GetAllStreams() map[int64]*ServiceStream
+	GetRunningStreamIDs() []int64
+	StopStream(workerStreamID int64) error
 	StopAllStreams()
 	StartStream(ctx context.Context, workerStreamID int64)
 }
@@ -208,6 +210,39 @@ func (m *streamManager) GetAllStreams() map[int64]*ServiceStream {
 	maps.Copy(streams, m.streams)
 
 	return streams
+}
+
+func (m *streamManager) GetRunningStreamIDs() []int64 {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	streamIDs := make([]int64, 0, len(m.streams))
+	for workerStreamID := range m.streams {
+		streamIDs = append(streamIDs, workerStreamID)
+	}
+
+	return streamIDs
+}
+
+func (m *streamManager) StopStream(workerStreamID int64) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	stream, exists := m.streams[workerStreamID]
+	if !exists {
+		log.Debug().Int64("worker_stream_id", workerStreamID).Msg("Stream not found, already stopped")
+		return nil
+	}
+
+	log.Info().Int64("worker_stream_id", workerStreamID).Msg("Stopping stream")
+	if stream.Cancel != nil {
+		stream.Cancel()
+	}
+
+	delete(m.streams, workerStreamID)
+	log.Info().Int64("worker_stream_id", workerStreamID).Msg("Stream stopped")
+
+	return nil
 }
 
 func (m *streamManager) StopAllStreams() {

@@ -58,16 +58,37 @@ func (c *CoordinatorCLI) Run(ctx context.Context) {
 		}
 	})
 
+	leaseTicker := time.NewTicker(5 * time.Second)
+	defer leaseTicker.Stop()
+
 	g.Go(func() error {
 		for {
 			select {
 			case <-ctx.Done():
-				log.Info().Msg("Stopping worker stream health check routine...")
+				log.Info().Msg("Stopping stream lease expiration checker routine...")
 				return ctx.Err()
-			case <-ticker.C:
-				err := c.executor.CheckWorkerStreams(ctx)
+			case <-leaseTicker.C:
+				err := c.executor.CheckStreamLeases(ctx)
 				if err != nil {
-					log.Error().Err(err).Msg("Failed to perform worker stream health check")
+					log.Error().Err(err).Msg("Failed to check stream leases")
+				}
+			}
+		}
+	})
+
+	heartbeatTicker := time.NewTicker(10 * time.Second)
+	defer heartbeatTicker.Stop()
+
+	g.Go(func() error {
+		for {
+			select {
+			case <-ctx.Done():
+				log.Info().Msg("Stopping worker heartbeat timeout checker routine...")
+				return ctx.Err()
+			case <-heartbeatTicker.C:
+				err := c.executor.CheckWorkerHeartbeats(ctx)
+				if err != nil {
+					log.Error().Err(err).Msg("Failed to check worker heartbeats")
 				}
 			}
 		}

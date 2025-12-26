@@ -60,19 +60,25 @@ func (c *WorkerCLI) Run(ctx context.Context) {
 	})
 
 	g.Go(func() error {
+		if err := c.executor.JoinToCoordinator(ctx); err != nil {
+			log.Error().Err(err).Msg("Failed to register with coordinator")
+		}
+
 		for {
 			select {
 			case <-ctx.Done():
-				log.Info().Msg("Stopping worker registration/metrics routine...")
+				log.Info().Msg("Stopping worker heartbeat/metrics routine...")
 				if err := c.executor.LeaveCoordinator(context.Background()); err != nil {
 					log.Error().Err(err).Msg("Failed to leave coordinator during shutdown")
 				}
-				log.Info().Msg("Worker registration/metrics routine stopped.")
+				log.Info().Msg("Worker heartbeat/metrics routine stopped.")
 				return ctx.Err()
 			case <-ticker.C:
-				if err := c.executor.JoinToCoordinator(ctx); err != nil {
-					log.Error().Err(err).Msg("Periodic registration on coordinator failed")
-					continue
+				if err := c.executor.SendHeartbeat(ctx); err != nil {
+					log.Error().Err(err).Msg("Failed to send heartbeat to coordinator")
+					if err := c.executor.JoinToCoordinator(ctx); err != nil {
+						log.Error().Err(err).Msg("Failed to re-register with coordinator")
+					}
 				}
 				c.executor.ShipMetrics(ctx)
 			}
