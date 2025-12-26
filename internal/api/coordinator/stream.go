@@ -231,6 +231,23 @@ func (c *CoordinatorAPI) UpdateStream(_ context.Context, in *pb.Stream) (*pb.Str
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	if newStream.Status == persistence.StreamStatusPaused || newStream.Status == persistence.StreamStatusFailed {
+		workerStreams, err := c.workerStreamRepo.ListAllByStreamID(stream.ID)
+		if err != nil {
+			log.Error().Err(err).Int64("stream_id", stream.ID).Msg("Failed to list worker streams for stopping")
+		} else {
+			for _, ws := range workerStreams {
+				if ws.Status == persistence.WorkerStreamStatusRunning || ws.Status == persistence.WorkerStreamStatusWaiting {
+					if err := c.workerStreamRepo.UpdateStatus(ws.ID, persistence.WorkerStreamStatusStopped); err != nil {
+						log.Error().Err(err).Int64("worker_stream_id", ws.ID).Msg("Failed to stop worker stream")
+					} else {
+						log.Info().Int64("stream_id", stream.ID).Int64("worker_stream_id", ws.ID).Str("worker_id", ws.WorkerID).Msg("Stopped worker stream due to stream status change")
+					}
+				}
+			}
+		}
+	}
+
 	// Extract and store cache resources
 	cacheNames := make(map[string]bool)
 

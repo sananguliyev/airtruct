@@ -176,7 +176,6 @@ func (r *workerStreamRepository) ListAllByStreamID(streamID int64) ([]WorkerStre
 	err := r.db.
 		Preload("Worker").
 		Preload("Stream").
-		Preload("Output").
 		Where("stream_id = ?", streamID).
 		Find(&workerStreams).
 		Error
