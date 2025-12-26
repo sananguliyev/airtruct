@@ -17,7 +17,7 @@ type CoordinatorConnection interface {
 	JoinToCoordinator(ctx context.Context) error
 	LeaveCoordinator(ctx context.Context) error
 	SendHeartbeat(ctx context.Context) error
-	SetStreamManager(streamManager interface{})
+	SetStreamManager(streamManager any)
 	GetClient() pb.CoordinatorClient
 	UpdateWorkerStreamStatus(ctx context.Context, workerStreamID int64, status pb.WorkerStreamStatus) error
 	IngestMetrics(ctx context.Context, workerStreamID int64, inputEvents, processorErrors, outputEvents uint64) error
@@ -117,7 +117,7 @@ func (c *coordinatorConnection) LeaveCoordinator(ctx context.Context) error {
 	return nil
 }
 
-func (c *coordinatorConnection) SetStreamManager(streamManager interface{}) {
+func (c *coordinatorConnection) SetStreamManager(streamManager any) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if sm, ok := streamManager.(streamManagerInterface); ok {

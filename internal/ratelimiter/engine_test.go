@@ -28,7 +28,7 @@ func setupTestDB(t *testing.T) *gorm.DB {
 func createTestRateLimit(t *testing.T, db *gorm.DB, label string, count int64, interval string, burst int64) {
 	repo := persistence.NewRateLimitRepository(db)
 
-	config := map[string]interface{}{
+	config := map[string]any{
 		"coordinator_address": "localhost:50000",
 		"count":               count,
 		"interval":            interval,
