@@ -15,6 +15,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/warpstreamlabs/bento/public/service"
 
+	"github.com/sananguliyev/airtruct/internal/logger"
 	"github.com/sananguliyev/airtruct/internal/persistence"
 	pb "github.com/sananguliyev/airtruct/internal/protogen"
 	"github.com/sananguliyev/airtruct/internal/vault"
@@ -73,6 +74,12 @@ func (m *streamManager) AddStream(workerStreamID int64, config string) error {
 	streamBuilder := service.NewStreamBuilder()
 	streamMux := http.NewServeMux()
 	streamBuilder.SetHTTPMux(streamMux)
+
+	slogLogger := logger.NewSlogLogger("INFO", map[string]any{
+		"@service":         "airtruct",
+		"worker_stream_id": workerStreamID,
+	})
+	streamBuilder.SetLogger(slogLogger)
 
 	streamBuilder.SetEnvVarLookupFunc(func(key string) (string, bool) {
 		secret, err := m.vaultProvider.GetSecret(key)
