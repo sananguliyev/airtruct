@@ -242,6 +242,13 @@ func (m *streamManager) StopStream(workerStreamID int64) error {
 	}
 
 	log.Info().Int64("worker_stream_id", workerStreamID).Msg("Stopping stream")
+
+	if stream.Stream != nil {
+		if err := stream.Stream.StopWithin(5 * time.Second); err != nil {
+			log.Warn().Err(err).Int64("worker_stream_id", workerStreamID).Msg("Failed to stop stream gracefully, forcing shutdown")
+		}
+	}
+
 	if stream.Cancel != nil {
 		stream.Cancel()
 	}
