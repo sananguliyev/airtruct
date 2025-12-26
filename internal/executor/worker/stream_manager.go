@@ -76,7 +76,7 @@ func (m *streamManager) AddStream(workerStreamID int64, config string) error {
 	streamBuilder.SetHTTPMux(streamMux)
 
 	slogLogger := logger.NewSlogLogger("INFO", map[string]any{
-		"@service":         "bento",
+		"@service":         "airtruct",
 		"worker_stream_id": workerStreamID,
 	})
 	streamBuilder.SetLogger(slogLogger)

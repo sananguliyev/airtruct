@@ -378,11 +378,11 @@ func TestParseLogfmt(t *testing.T) {
 		},
 		{
 			name:  "multiple fields",
-			input: `level=info msg="Connected to store" @service=bento label=shopify`,
+			input: `level=info msg="Connected to store" @service=airtruct label=shopify`,
 			expected: map[string]string{
 				"level":    "info",
 				"msg":      "Connected to store",
-				"@service": "bento",
+				"@service": "airtruct",
 				"label":    "shopify",
 			},
 		},
@@ -421,7 +421,7 @@ func TestBentoLogWriter(t *testing.T) {
 	zerologger := zerolog.New(&buf).With().Timestamp().Logger()
 	writer := NewBentoLogWriter(zerologger)
 
-	bentoLog := `level=info msg="Connected to Shopify store" @service=bento label=shopify_products`
+	bentoLog := `level=info msg="Connected to Shopify store" @service=airtruct label=shopify_products`
 
 	_, err := writer.Write([]byte(bentoLog))
 	if err != nil {
@@ -441,8 +441,8 @@ func TestBentoLogWriter(t *testing.T) {
 		t.Errorf("Expected message 'Connected to Shopify store', got '%v'", logData["message"])
 	}
 
-	if logData["@service"] != "bento" {
-		t.Errorf("Expected @service 'bento', got '%v'", logData["@service"])
+	if logData["@service"] != "airtruct" {
+		t.Errorf("Expected @service 'airtruct', got '%v'", logData["@service"])
 	}
 
 	if logData["label"] != "shopify_products" {
@@ -507,7 +507,7 @@ func TestNewSlogLogger(t *testing.T) {
 	var buf bytes.Buffer
 
 	slogLogger := NewSlogLogger("INFO", map[string]any{
-		"@service":  "bento",
+		"@service":  "airturct",
 		"stream_id": 123,
 	})
 

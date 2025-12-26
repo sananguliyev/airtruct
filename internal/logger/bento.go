@@ -147,7 +147,7 @@ func parseLogfmt(line string) map[string]string {
 }
 
 func CreateBentoContextLogger(baseLogger zerolog.Logger, componentName string, fields map[string]any) zerolog.Logger {
-	ctx := baseLogger.With().Str("@service", "bento").Str("component", componentName)
+	ctx := baseLogger.With().Str("@service", "airtruct").Str("component", componentName)
 
 	for key, value := range fields {
 		ctx = ctx.Interface(key, value)
