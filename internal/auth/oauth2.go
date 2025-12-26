@@ -22,19 +22,10 @@ type OAuth2Handler struct {
 	userInfoURL    string
 	allowedUsers   map[string]bool
 	allowedDomains map[string]bool
-	sessionSecret  string
+	jwtManager     *JWTManager
 	cookieName     string
-	sessions       map[string]*Session
-	sessionsMux    sync.RWMutex
 	stateStore     map[string]time.Time
 	stateStoreMux  sync.RWMutex
-}
-
-type Session struct {
-	UserEmail string
-	Token     *oauth2.Token
-	CreatedAt time.Time
-	ExpiresAt time.Time
 }
 
 type UserInfo struct {
@@ -44,7 +35,7 @@ type UserInfo struct {
 	Picture       string `json:"picture"`
 }
 
-func NewOAuth2Handler(cfg *config.AuthConfig) *OAuth2Handler {
+func NewOAuth2Handler(cfg *config.AuthConfig, secretKey string) *OAuth2Handler {
 	oauth2Config := &oauth2.Config{
 		ClientID:     cfg.OAuth2ClientID,
 		ClientSecret: cfg.OAuth2ClientSecret,
@@ -71,13 +62,11 @@ func NewOAuth2Handler(cfg *config.AuthConfig) *OAuth2Handler {
 		userInfoURL:    cfg.OAuth2UserInfoURL,
 		allowedUsers:   allowedUsers,
 		allowedDomains: allowedDomains,
-		sessionSecret:  cfg.OAuth2SessionSecret,
+		jwtManager:     NewJWTManager(secretKey, 24*time.Hour),
 		cookieName:     cfg.OAuth2SessionCookieName,
-		sessions:       make(map[string]*Session),
 		stateStore:     make(map[string]time.Time),
 	}
 
-	go handler.cleanupExpiredSessions()
 	go handler.cleanupExpiredStates()
 
 	return handler
@@ -85,31 +74,27 @@ func NewOAuth2Handler(cfg *config.AuthConfig) *OAuth2Handler {
 
 func (h *OAuth2Handler) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Check Authorization header first
 		authHeader := r.Header.Get("Authorization")
 		if strings.HasPrefix(authHeader, "Bearer ") {
 			token := authHeader[7:]
-			h.sessionsMux.RLock()
-			session, exists := h.sessions[token]
-			h.sessionsMux.RUnlock()
-
-			if exists && time.Now().Before(session.ExpiresAt) {
+			claims, err := h.jwtManager.ValidateToken(token)
+			if err == nil && claims.AuthType == "oauth2" {
 				next.ServeHTTP(w, r)
 				return
 			}
 		}
 
+		// Check cookie
 		cookie, err := r.Cookie(h.cookieName)
 		if err != nil {
 			h.redirectToLogin(w, r)
 			return
 		}
 
-		sessionID := cookie.Value
-		h.sessionsMux.RLock()
-		session, exists := h.sessions[sessionID]
-		h.sessionsMux.RUnlock()
-
-		if !exists || time.Now().After(session.ExpiresAt) {
+		token := cookie.Value
+		claims, err := h.jwtManager.ValidateToken(token)
+		if err != nil || claims.AuthType != "oauth2" {
 			h.redirectToLogin(w, r)
 			return
 		}
@@ -163,20 +148,18 @@ func (h *OAuth2Handler) HandleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sessionID := h.createSession(userInfo.Email, token)
+	jwtToken, err := h.createJWTToken(userInfo.Email)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to create JWT token")
+		http.Redirect(w, r, "/login?error=token_generation_failed", http.StatusTemporaryRedirect)
+		return
+	}
 
-	http.Redirect(w, r, fmt.Sprintf("/?token=%s", sessionID), http.StatusTemporaryRedirect)
+	http.Redirect(w, r, fmt.Sprintf("/?token=%s", jwtToken), http.StatusTemporaryRedirect)
 }
 
 func (h *OAuth2Handler) HandleLogout(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie(h.cookieName)
-	if err == nil {
-		sessionID := cookie.Value
-		h.sessionsMux.Lock()
-		delete(h.sessions, sessionID)
-		h.sessionsMux.Unlock()
-	}
-
+	// JWT is stateless, so we just clear the cookie
 	http.SetCookie(w, &http.Cookie{
 		Name:     h.cookieName,
 		Value:    "",
@@ -245,30 +228,17 @@ func (h *OAuth2Handler) isUserAllowed(email string) bool {
 	return false
 }
 
-func (h *OAuth2Handler) createSession(email string, token *oauth2.Token) string {
-	sessionID := h.generateSessionID()
-	session := &Session{
-		UserEmail: email,
-		Token:     token,
-		CreatedAt: time.Now(),
-		ExpiresAt: time.Now().Add(24 * time.Hour),
+func (h *OAuth2Handler) createJWTToken(email string) (string, error) {
+	token, err := h.jwtManager.GenerateToken(email, email, "oauth2")
+	if err != nil {
+		return "", fmt.Errorf("failed to generate JWT token: %w", err)
 	}
 
-	h.sessionsMux.Lock()
-	h.sessions[sessionID] = session
-	h.sessionsMux.Unlock()
-
-	log.Info().Str("email", email).Str("sessionID", sessionID).Msg("Created new session")
-	return sessionID
+	log.Info().Str("email", email).Msg("Created JWT token for OAuth2 user")
+	return token, nil
 }
 
 func (h *OAuth2Handler) generateState() string {
-	b := make([]byte, 32)
-	rand.Read(b)
-	return base64.URLEncoding.EncodeToString(b)
-}
-
-func (h *OAuth2Handler) generateSessionID() string {
 	b := make([]byte, 32)
 	rand.Read(b)
 	return base64.URLEncoding.EncodeToString(b)
@@ -296,23 +266,6 @@ func (h *OAuth2Handler) redirectToLogin(w http.ResponseWriter, r *http.Request) 
 	http.Redirect(w, r, "/auth/login", http.StatusTemporaryRedirect)
 }
 
-func (h *OAuth2Handler) cleanupExpiredSessions() {
-	ticker := time.NewTicker(1 * time.Hour)
-	defer ticker.Stop()
-
-	for range ticker.C {
-		h.sessionsMux.Lock()
-		now := time.Now()
-		for id, session := range h.sessions {
-			if now.After(session.ExpiresAt) {
-				delete(h.sessions, id)
-				log.Debug().Str("sessionID", id).Msg("Cleaned up expired session")
-			}
-		}
-		h.sessionsMux.Unlock()
-	}
-}
-
 func (h *OAuth2Handler) cleanupExpiredStates() {
 	ticker := time.NewTicker(15 * time.Minute)
 	defer ticker.Stop()
@@ -329,14 +282,10 @@ func (h *OAuth2Handler) cleanupExpiredStates() {
 	}
 }
 
-func (h *OAuth2Handler) isValidSession(sessionID string) bool {
-	h.sessionsMux.RLock()
-	defer h.sessionsMux.RUnlock()
-
-	session, exists := h.sessions[sessionID]
-	if !exists {
+func (h *OAuth2Handler) isValidSession(token string) bool {
+	claims, err := h.jwtManager.ValidateToken(token)
+	if err != nil {
 		return false
 	}
-
-	return time.Now().Before(session.ExpiresAt)
+	return claims.AuthType == "oauth2"
 }

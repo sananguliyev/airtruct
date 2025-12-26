@@ -29,7 +29,6 @@ type AuthConfig struct {
 	OAuth2UserInfoURL       string   `envconfig:"AUTH_OAUTH2_USER_INFO_URL"`
 	OAuth2AllowedUsers      []string `envconfig:"AUTH_OAUTH2_ALLOWED_USERS"`
 	OAuth2AllowedDomains    []string `envconfig:"AUTH_OAUTH2_ALLOWED_DOMAINS"`
-	OAuth2SessionSecret     string   `envconfig:"AUTH_OAUTH2_SESSION_SECRET"`
 	OAuth2SessionCookieName string   `envconfig:"AUTH_OAUTH2_SESSION_COOKIE_NAME" default:"airtruct_session"`
 }
 
@@ -65,9 +64,6 @@ func (c *AuthConfig) Validate() error {
 		}
 		if c.OAuth2RedirectURL == "" {
 			return fmt.Errorf("oauth2 requires AUTH_OAUTH2_REDIRECT_URL")
-		}
-		if c.OAuth2SessionSecret == "" {
-			return fmt.Errorf("oauth2 requires AUTH_OAUTH2_SESSION_SECRET")
 		}
 		return nil
 	default:

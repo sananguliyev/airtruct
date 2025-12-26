@@ -14,7 +14,7 @@ type Manager struct {
 	oauth2Handler *OAuth2Handler
 }
 
-func NewManager(cfg *config.AuthConfig) (*Manager, error) {
+func NewManager(cfg *config.AuthConfig, secretKey string) (*Manager, error) {
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
@@ -27,10 +27,10 @@ func NewManager(cfg *config.AuthConfig) (*Manager, error) {
 	case config.AuthTypeNone:
 		log.Info().Msg("Authentication disabled")
 	case config.AuthTypeBasic:
-		manager.basicHandler = NewBasicAuthHandler(cfg)
+		manager.basicHandler = NewBasicAuthHandler(cfg, secretKey)
 		log.Info().Msg("Basic authentication enabled")
 	case config.AuthTypeOAuth2:
-		manager.oauth2Handler = NewOAuth2Handler(cfg)
+		manager.oauth2Handler = NewOAuth2Handler(cfg, secretKey)
 		log.Info().Msg("OAuth2 authentication enabled")
 	}
 
