@@ -51,6 +51,7 @@ airtruct.exe
 __debug*
 
 *.sqlite
+*.sqlite3
 *.db
 
 coverage/
