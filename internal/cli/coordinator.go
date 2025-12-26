@@ -58,21 +58,6 @@ func (c *CoordinatorCLI) Run(ctx context.Context) {
 		}
 	})
 
-	g.Go(func() error {
-		for {
-			select {
-			case <-ctx.Done():
-				log.Info().Msg("Stopping worker stream health check routine...")
-				return ctx.Err()
-			case <-ticker.C:
-				err := c.executor.CheckWorkerStreams(ctx)
-				if err != nil {
-					log.Error().Err(err).Msg("Failed to perform worker stream health check")
-				}
-			}
-		}
-	})
-
 	leaseTicker := time.NewTicker(5 * time.Second)
 	defer leaseTicker.Stop()
 

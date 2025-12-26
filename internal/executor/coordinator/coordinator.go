@@ -12,14 +12,12 @@ import (
 
 type CoordinatorExecutor interface {
 	CheckWorkersAndAssignStreams(context.Context) error
-	CheckWorkerStreams(context.Context) error
 	CheckStreamLeases(context.Context) error
 	ForwardRequestToWorker(context.Context, *http.Request) (int32, []byte, error)
 }
 
 type coordinatorExecutor struct {
 	streamAssigner   StreamAssigner
-	streamMonitor    StreamMonitor
 	requestForwarder RequestForwarder
 	streamWorkerMap  StreamWorkerMap
 	workerStreamRepo persistence.WorkerStreamRepository
@@ -43,12 +41,10 @@ func NewCoordinatorExecutor(
 	}
 
 	streamAssigner := NewStreamAssigner(workerManager, streamRepo, workerStreamRepo, configBuilder, streamWorkerMap)
-	streamMonitor := NewStreamMonitor(workerManager, streamRepo, workerStreamRepo)
 	requestForwarder := NewRequestForwarder(workerManager, streamWorkerMap)
 
 	return &coordinatorExecutor{
 		streamAssigner:   streamAssigner,
-		streamMonitor:    streamMonitor,
 		requestForwarder: requestForwarder,
 		streamWorkerMap:  streamWorkerMap,
 		workerStreamRepo: workerStreamRepo,
@@ -57,10 +53,6 @@ func NewCoordinatorExecutor(
 
 func (e *coordinatorExecutor) CheckWorkersAndAssignStreams(ctx context.Context) error {
 	return e.streamAssigner.AssignStreams(ctx)
-}
-
-func (e *coordinatorExecutor) CheckWorkerStreams(ctx context.Context) error {
-	return e.streamMonitor.CheckWorkerStreams(ctx)
 }
 
 func (e *coordinatorExecutor) CheckStreamLeases(ctx context.Context) error {
