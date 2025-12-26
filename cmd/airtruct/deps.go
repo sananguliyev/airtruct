@@ -22,7 +22,7 @@ func InitializeCoordinatorCommand(httpPort, grpcPort uint32) *cli.CoordinatorCLI
 	db := persistence.NewGormDB(databaseConfig)
 	secretConfig := config.NewSecretConfig()
 	authConfig := config.NewAuthConfig()
-	authManager, err := auth.NewManager(authConfig)
+	authManager, err := auth.NewManager(authConfig, secretConfig.Key)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to create auth manager")
 		return nil

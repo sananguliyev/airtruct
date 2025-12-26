@@ -1,13 +1,10 @@
 package auth
 
 import (
-	"crypto/rand"
 	"crypto/subtle"
-	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -15,30 +12,19 @@ import (
 )
 
 type BasicAuthHandler struct {
-	username    string
-	password    string
-	sessions    map[string]*BasicSession
-	sessionsMux sync.RWMutex
-	cookieName  string
+	username   string
+	password   string
+	jwtManager *JWTManager
+	cookieName string
 }
 
-type BasicSession struct {
-	Username  string
-	CreatedAt time.Time
-	ExpiresAt time.Time
-}
-
-func NewBasicAuthHandler(cfg *config.AuthConfig) *BasicAuthHandler {
-	handler := &BasicAuthHandler{
+func NewBasicAuthHandler(cfg *config.AuthConfig, secretKey string) *BasicAuthHandler {
+	return &BasicAuthHandler{
 		username:   cfg.BasicUsername,
 		password:   cfg.BasicPassword,
-		sessions:   make(map[string]*BasicSession),
+		jwtManager: NewJWTManager(secretKey, 24*time.Hour),
 		cookieName: "airtruct_session",
 	}
-
-	go handler.cleanupExpiredSessions()
-
-	return handler
 }
 
 func (h *BasicAuthHandler) Middleware(next http.Handler) http.Handler {
@@ -46,11 +32,8 @@ func (h *BasicAuthHandler) Middleware(next http.Handler) http.Handler {
 		authHeader := r.Header.Get("Authorization")
 		if strings.HasPrefix(authHeader, "Bearer ") {
 			token := authHeader[7:]
-			h.sessionsMux.RLock()
-			session, exists := h.sessions[token]
-			h.sessionsMux.RUnlock()
-
-			if exists && time.Now().Before(session.ExpiresAt) {
+			claims, err := h.jwtManager.ValidateToken(token)
+			if err == nil && claims.AuthType == "basic" {
 				next.ServeHTTP(w, r)
 				return
 			}
@@ -86,7 +69,15 @@ func (h *BasicAuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token := h.createSession(loginReq.Username)
+	// Generate JWT token
+	token, err := h.jwtManager.GenerateToken(loginReq.Username, "", "basic")
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to generate JWT token")
+		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
+		return
+	}
+
+	log.Info().Str("username", loginReq.Username).Msg("User logged in with basic auth")
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
@@ -96,66 +87,17 @@ func (h *BasicAuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *BasicAuthHandler) HandleLogout(w http.ResponseWriter, r *http.Request) {
-	authHeader := r.Header.Get("Authorization")
-	if strings.HasPrefix(authHeader, "Bearer ") {
-		token := authHeader[7:]
-		h.sessionsMux.Lock()
-		delete(h.sessions, token)
-		h.sessionsMux.Unlock()
-	}
-
+	// JWT is stateless, so we just return success
+	// The client should discard the token
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
 }
 
-func (h *BasicAuthHandler) createSession(username string) string {
-	sessionID := h.generateSessionID()
-	session := &BasicSession{
-		Username:  username,
-		CreatedAt: time.Now(),
-		ExpiresAt: time.Now().Add(24 * time.Hour),
-	}
-
-	h.sessionsMux.Lock()
-	h.sessions[sessionID] = session
-	h.sessionsMux.Unlock()
-
-	log.Info().Str("username", username).Str("sessionID", sessionID).Msg("Created basic auth session")
-	return sessionID
-}
-
-func (h *BasicAuthHandler) generateSessionID() string {
-	b := make([]byte, 32)
-	rand.Read(b)
-	return base64.URLEncoding.EncodeToString(b)
-}
-
-func (h *BasicAuthHandler) cleanupExpiredSessions() {
-	ticker := time.NewTicker(1 * time.Hour)
-	defer ticker.Stop()
-
-	for range ticker.C {
-		h.sessionsMux.Lock()
-		now := time.Now()
-		for id, session := range h.sessions {
-			if now.After(session.ExpiresAt) {
-				delete(h.sessions, id)
-				log.Debug().Str("sessionID", id).Msg("Cleaned up expired basic auth session")
-			}
-		}
-		h.sessionsMux.Unlock()
-	}
-}
-
-func (h *BasicAuthHandler) isValidSession(sessionID string) bool {
-	h.sessionsMux.RLock()
-	defer h.sessionsMux.RUnlock()
-
-	session, exists := h.sessions[sessionID]
-	if !exists {
+func (h *BasicAuthHandler) isValidSession(token string) bool {
+	claims, err := h.jwtManager.ValidateToken(token)
+	if err != nil {
 		return false
 	}
-
-	return time.Now().Before(session.ExpiresAt)
+	return claims.AuthType == "basic"
 }
