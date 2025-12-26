@@ -58,7 +58,7 @@ type CoordinatorClient interface {
 	// Worker methods
 	RegisterWorker(ctx context.Context, in *RegisterWorkerRequest, opts ...grpc.CallOption) (*CommonResponse, error)
 	DeregisterWorker(ctx context.Context, in *DeregisterWorkerRequest, opts ...grpc.CallOption) (*CommonResponse, error)
-	Heartbeat(ctx context.Context, in *HeartbeatRequest, opts ...grpc.CallOption) (*CommonResponse, error)
+	Heartbeat(ctx context.Context, in *HeartbeatRequest, opts ...grpc.CallOption) (*HeartbeatResponse, error)
 	ListWorkers(ctx context.Context, in *ListWorkersRequest, opts ...grpc.CallOption) (*ListWorkersResponse, error)
 	// Stream methods
 	ListStreams(ctx context.Context, in *ListStreamsRequest, opts ...grpc.CallOption) (*ListStreamsResponse, error)
@@ -127,9 +127,9 @@ func (c *coordinatorClient) DeregisterWorker(ctx context.Context, in *Deregister
 	return out, nil
 }
 
-func (c *coordinatorClient) Heartbeat(ctx context.Context, in *HeartbeatRequest, opts ...grpc.CallOption) (*CommonResponse, error) {
+func (c *coordinatorClient) Heartbeat(ctx context.Context, in *HeartbeatRequest, opts ...grpc.CallOption) (*HeartbeatResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CommonResponse)
+	out := new(HeartbeatResponse)
 	err := c.cc.Invoke(ctx, Coordinator_Heartbeat_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -379,7 +379,7 @@ type CoordinatorServer interface {
 	// Worker methods
 	RegisterWorker(context.Context, *RegisterWorkerRequest) (*CommonResponse, error)
 	DeregisterWorker(context.Context, *DeregisterWorkerRequest) (*CommonResponse, error)
-	Heartbeat(context.Context, *HeartbeatRequest) (*CommonResponse, error)
+	Heartbeat(context.Context, *HeartbeatRequest) (*HeartbeatResponse, error)
 	ListWorkers(context.Context, *ListWorkersRequest) (*ListWorkersResponse, error)
 	// Stream methods
 	ListStreams(context.Context, *ListStreamsRequest) (*ListStreamsResponse, error)
@@ -427,7 +427,7 @@ func (UnimplementedCoordinatorServer) RegisterWorker(context.Context, *RegisterW
 func (UnimplementedCoordinatorServer) DeregisterWorker(context.Context, *DeregisterWorkerRequest) (*CommonResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeregisterWorker not implemented")
 }
-func (UnimplementedCoordinatorServer) Heartbeat(context.Context, *HeartbeatRequest) (*CommonResponse, error) {
+func (UnimplementedCoordinatorServer) Heartbeat(context.Context, *HeartbeatRequest) (*HeartbeatResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Heartbeat not implemented")
 }
 func (UnimplementedCoordinatorServer) ListWorkers(context.Context, *ListWorkersRequest) (*ListWorkersResponse, error) {

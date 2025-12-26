@@ -11,6 +11,7 @@ import (
 type CoordinatorExecutor interface {
 	CheckWorkersAndAssignStreams(context.Context) error
 	CheckWorkerStreams(context.Context) error
+	CheckStreamLeases(context.Context) error
 	ForwardRequestToWorker(context.Context, *http.Request) (int32, []byte, error)
 }
 
@@ -36,6 +37,10 @@ func (e *coordinatorExecutor) CheckWorkersAndAssignStreams(ctx context.Context) 
 
 func (e *coordinatorExecutor) CheckWorkerStreams(ctx context.Context) error {
 	return e.coordinator.CheckWorkerStreams(ctx)
+}
+
+func (e *coordinatorExecutor) CheckStreamLeases(ctx context.Context) error {
+	return e.coordinator.CheckStreamLeases(ctx)
 }
 
 func (e *coordinatorExecutor) ForwardRequestToWorker(ctx context.Context, r *http.Request) (int32, []byte, error) {

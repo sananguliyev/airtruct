@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net"
 
+	"time"
+
 	"github.com/sananguliyev/airtruct/internal/persistence"
 	pb "github.com/sananguliyev/airtruct/internal/protogen"
 
@@ -94,7 +96,7 @@ func (c *CoordinatorAPI) DeregisterWorker(_ context.Context, in *pb.DeregisterWo
 	return &pb.CommonResponse{Message: "Worker deregistered successfully"}, nil
 }
 
-func (c *CoordinatorAPI) Heartbeat(ctx context.Context, in *pb.HeartbeatRequest) (*pb.CommonResponse, error) {
+func (c *CoordinatorAPI) Heartbeat(ctx context.Context, in *pb.HeartbeatRequest) (*pb.HeartbeatResponse, error) {
 	clientAddr, err := extractClientIP(ctx)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -120,11 +122,60 @@ func (c *CoordinatorAPI) Heartbeat(ctx context.Context, in *pb.HeartbeatRequest)
 		return nil, status.Error(codes.Internal, "failed to update worker heartbeat")
 	}
 
-	log.Debug().Str("worker_id", in.GetId()).Str("address", workerEntity.Address).Msg("Worker heartbeat received")
+	response := &pb.HeartbeatResponse{
+		Message:               "Heartbeat acknowledged",
+		RenewedLeaseStreamIds: []int64{},
+		ExpiredLeaseStreamIds: []int64{},
+	}
 
-	return &pb.CommonResponse{
-		Message: "Heartbeat acknowledged",
-	}, nil
+	for _, streamID := range in.GetRunningStreamIds() {
+		workerStream, err := c.workerStreamRepo.FindByWorkerIDAndStreamID(in.GetId(), streamID)
+
+		if err != nil {
+			log.Error().Err(err).Str("worker_id", in.GetId()).Int64("stream_id", streamID).Msg("Failed to find worker stream")
+			response.ExpiredLeaseStreamIds = append(response.ExpiredLeaseStreamIds, streamID)
+			continue
+		}
+
+		if workerStream == nil {
+			log.Warn().Str("worker_id", in.GetId()).Int64("stream_id", streamID).Msg("Stream not assigned to this worker")
+			response.ExpiredLeaseStreamIds = append(response.ExpiredLeaseStreamIds, streamID)
+			continue
+		}
+
+		if workerStream.Status != persistence.WorkerStreamStatusRunning {
+			log.Warn().Str("worker_id", in.GetId()).Int64("stream_id", streamID).Str("status", string(workerStream.Status)).Msg("Stream should not be running")
+			response.ExpiredLeaseStreamIds = append(response.ExpiredLeaseStreamIds, streamID)
+			continue
+		}
+
+		newExpiry := time.Now().Add(persistence.StreamLeaseInterval)
+
+		if workerStream.LeaseExpiresAt.IsZero() {
+			log.Info().
+				Str("worker_id", in.GetId()).
+				Int64("stream_id", streamID).
+				Int64("worker_stream_id", workerStream.ID).
+				Msg("Initializing lease for existing stream")
+		}
+
+		err = c.workerStreamRepo.UpdateLeaseExpiry(workerStream.ID, newExpiry)
+		if err != nil {
+			log.Error().Err(err).Int64("worker_stream_id", workerStream.ID).Msg("Failed to update lease expiry")
+			continue
+		}
+
+		response.RenewedLeaseStreamIds = append(response.RenewedLeaseStreamIds, streamID)
+	}
+
+	log.Debug().
+		Str("worker_id", in.GetId()).
+		Str("address", workerEntity.Address).
+		Int("renewed", len(response.RenewedLeaseStreamIds)).
+		Int("expired", len(response.ExpiredLeaseStreamIds)).
+		Msg("Worker heartbeat received")
+
+	return response, nil
 }
 
 func (c *CoordinatorAPI) ListWorkers(_ context.Context, in *pb.ListWorkersRequest) (*pb.ListWorkersResponse, error) {

@@ -3,6 +3,7 @@ package coordinator
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/rs/zerolog/log"
 
@@ -12,6 +13,7 @@ import (
 type CoordinatorExecutor interface {
 	CheckWorkersAndAssignStreams(context.Context) error
 	CheckWorkerStreams(context.Context) error
+	CheckStreamLeases(context.Context) error
 	ForwardRequestToWorker(context.Context, *http.Request) (int32, []byte, error)
 }
 
@@ -20,6 +22,7 @@ type coordinatorExecutor struct {
 	streamMonitor    StreamMonitor
 	requestForwarder RequestForwarder
 	streamWorkerMap  StreamWorkerMap
+	workerStreamRepo persistence.WorkerStreamRepository
 }
 
 func NewCoordinatorExecutor(
@@ -48,6 +51,7 @@ func NewCoordinatorExecutor(
 		streamMonitor:    streamMonitor,
 		requestForwarder: requestForwarder,
 		streamWorkerMap:  streamWorkerMap,
+		workerStreamRepo: workerStreamRepo,
 	}
 }
 
@@ -57,6 +61,44 @@ func (e *coordinatorExecutor) CheckWorkersAndAssignStreams(ctx context.Context) 
 
 func (e *coordinatorExecutor) CheckWorkerStreams(ctx context.Context) error {
 	return e.streamMonitor.CheckWorkerStreams(ctx)
+}
+
+func (e *coordinatorExecutor) CheckStreamLeases(ctx context.Context) error {
+	expiredStreams, err := e.workerStreamRepo.FindRunningWithExpiredLeases()
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to fetch streams with expired leases")
+		return err
+	}
+
+	for _, workerStream := range expiredStreams {
+		timeSinceExpiry := time.Since(workerStream.LeaseExpiresAt)
+
+		log.Warn().
+			Str("worker_id", workerStream.WorkerID).
+			Int64("stream_id", workerStream.StreamID).
+			Int64("worker_stream_id", workerStream.ID).
+			Dur("time_since_expiry", timeSinceExpiry).
+			Msg("Stream lease expired - marking as stopped")
+
+		err := e.workerStreamRepo.UpdateStatus(
+			workerStream.ID,
+			persistence.WorkerStreamStatusStopped,
+		)
+		if err != nil {
+			log.Error().
+				Err(err).
+				Int64("worker_stream_id", workerStream.ID).
+				Msg("Failed to mark expired stream as stopped")
+			continue
+		}
+
+		log.Info().
+			Str("worker_id", workerStream.WorkerID).
+			Int64("stream_id", workerStream.StreamID).
+			Msg("Expired stream marked as stopped - available for reassignment")
+	}
+
+	return nil
 }
 
 func (e *coordinatorExecutor) ForwardRequestToWorker(ctx context.Context, r *http.Request) (int32, []byte, error) {

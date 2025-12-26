@@ -73,6 +73,24 @@ func (c *CoordinatorCLI) Run(ctx context.Context) {
 		}
 	})
 
+	leaseTicker := time.NewTicker(5 * time.Second)
+	defer leaseTicker.Stop()
+
+	g.Go(func() error {
+		for {
+			select {
+			case <-ctx.Done():
+				log.Info().Msg("Stopping stream lease expiration checker routine...")
+				return ctx.Err()
+			case <-leaseTicker.C:
+				err := c.executor.CheckStreamLeases(ctx)
+				if err != nil {
+					log.Error().Err(err).Msg("Failed to check stream leases")
+				}
+			}
+		}
+	})
+
 	cleanupTicker := time.NewTicker(1 * time.Hour)
 	defer cleanupTicker.Stop()
 

@@ -34,6 +34,8 @@ func NewWorkerExecutor(grpcConn *grpc.ClientConn, grpcPort uint32, vaultProvider
 
 	streamManager := NewStreamManager(coordinatorConnection, vaultProvider)
 
+	coordinatorConnection.SetStreamManager(streamManager)
+
 	streamQueue := NewStreamQueue(streamManager)
 
 	telemetryManager := NewTelemetryManager(coordinatorConnection, streamManager)

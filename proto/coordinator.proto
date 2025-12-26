@@ -23,6 +23,13 @@ message DeregisterWorkerRequest {
 message HeartbeatRequest {
   string id = 1;
   uint32 port = 2;
+  repeated int64 running_stream_ids = 3;
+}
+
+message HeartbeatResponse {
+  string message = 1;
+  repeated int64 renewed_lease_stream_ids = 2;
+  repeated int64 expired_lease_stream_ids = 3;
 }
 
 message WorkerStreamStatusRequest {
@@ -149,7 +156,7 @@ service Coordinator {
   // Worker methods
   rpc RegisterWorker(RegisterWorkerRequest) returns (CommonResponse) {}
   rpc DeregisterWorker(DeregisterWorkerRequest) returns (CommonResponse) {}
-  rpc Heartbeat(HeartbeatRequest) returns (CommonResponse) {}
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse) {}
   rpc ListWorkers(ListWorkersRequest) returns (ListWorkersResponse) {
     option (google.api.http) = {get: "/v0/workers/{status}"};
   }

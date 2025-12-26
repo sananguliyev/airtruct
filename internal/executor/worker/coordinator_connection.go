@@ -17,15 +17,22 @@ type CoordinatorConnection interface {
 	JoinToCoordinator(ctx context.Context) error
 	LeaveCoordinator(ctx context.Context) error
 	SendHeartbeat(ctx context.Context) error
+	SetStreamManager(streamManager interface{})
 	GetClient() pb.CoordinatorClient
 	UpdateWorkerStreamStatus(ctx context.Context, workerStreamID int64, status pb.WorkerStreamStatus) error
 	IngestMetrics(ctx context.Context, workerStreamID int64, inputEvents, processorErrors, outputEvents uint64) error
+}
+
+type streamManagerInterface interface {
+	GetRunningStreamIDs() []int64
+	StopStream(workerStreamID int64) error
 }
 
 type coordinatorConnection struct {
 	mu                sync.Mutex
 	grpcConn          *grpc.ClientConn
 	coordinatorClient pb.CoordinatorClient
+	streamManager     streamManagerInterface
 	grpcPort          uint32
 	joined            bool
 }
@@ -110,6 +117,14 @@ func (c *coordinatorConnection) LeaveCoordinator(ctx context.Context) error {
 	return nil
 }
 
+func (c *coordinatorConnection) SetStreamManager(streamManager interface{}) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if sm, ok := streamManager.(streamManagerInterface); ok {
+		c.streamManager = sm
+	}
+}
+
 func (c *coordinatorConnection) SendHeartbeat(ctx context.Context) error {
 	hostname, err := os.Hostname()
 	if err != nil {
@@ -122,11 +137,17 @@ func (c *coordinatorConnection) SendHeartbeat(ctx context.Context) error {
 		c.mu.Unlock()
 		return nil
 	}
+
+	var runningStreamIDs []int64
+	if c.streamManager != nil {
+		runningStreamIDs = c.streamManager.GetRunningStreamIDs()
+	}
 	c.mu.Unlock()
 
 	resp, err := c.coordinatorClient.Heartbeat(ctx, &pb.HeartbeatRequest{
-		Id:   hostname,
-		Port: c.grpcPort,
+		Id:               hostname,
+		Port:             c.grpcPort,
+		RunningStreamIds: runningStreamIDs,
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to send heartbeat to coordinator")
@@ -136,7 +157,22 @@ func (c *coordinatorConnection) SendHeartbeat(ctx context.Context) error {
 		return err
 	}
 
-	log.Debug().Str("worker_id", hostname).Str("coordinator_response", resp.Message).Msg("Heartbeat sent")
+	for _, streamID := range resp.ExpiredLeaseStreamIds {
+		log.Warn().Int64("stream_id", streamID).Msg("Lease expired - stopping stream")
+		if c.streamManager != nil {
+			if err := c.streamManager.StopStream(streamID); err != nil {
+				log.Error().Err(err).Int64("stream_id", streamID).Msg("Failed to stop expired stream")
+			}
+		}
+	}
+
+	log.Debug().
+		Str("worker_id", hostname).
+		Int("running_streams", len(runningStreamIDs)).
+		Int("renewed", len(resp.RenewedLeaseStreamIds)).
+		Int("expired", len(resp.ExpiredLeaseStreamIds)).
+		Msg("Heartbeat sent")
+
 	return nil
 }
 
