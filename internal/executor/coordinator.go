@@ -10,6 +10,7 @@ import (
 
 type CoordinatorExecutor interface {
 	CheckWorkersAndAssignStreams(context.Context) error
+	CheckWorkerHeartbeats(context.Context) error
 	CheckStreamLeases(context.Context) error
 	ForwardRequestToWorker(context.Context, *http.Request) (int32, []byte, error)
 }
@@ -32,6 +33,10 @@ func NewCoordinatorExecutor(
 
 func (e *coordinatorExecutor) CheckWorkersAndAssignStreams(ctx context.Context) error {
 	return e.coordinator.CheckWorkersAndAssignStreams(ctx)
+}
+
+func (e *coordinatorExecutor) CheckWorkerHeartbeats(ctx context.Context) error {
+	return e.coordinator.CheckWorkerHeartbeats(ctx)
 }
 
 func (e *coordinatorExecutor) CheckStreamLeases(ctx context.Context) error {

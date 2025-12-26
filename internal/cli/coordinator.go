@@ -76,6 +76,24 @@ func (c *CoordinatorCLI) Run(ctx context.Context) {
 		}
 	})
 
+	heartbeatTicker := time.NewTicker(10 * time.Second)
+	defer heartbeatTicker.Stop()
+
+	g.Go(func() error {
+		for {
+			select {
+			case <-ctx.Done():
+				log.Info().Msg("Stopping worker heartbeat timeout checker routine...")
+				return ctx.Err()
+			case <-heartbeatTicker.C:
+				err := c.executor.CheckWorkerHeartbeats(ctx)
+				if err != nil {
+					log.Error().Err(err).Msg("Failed to check worker heartbeats")
+				}
+			}
+		}
+	})
+
 	cleanupTicker := time.NewTicker(1 * time.Hour)
 	defer cleanupTicker.Stop()
 

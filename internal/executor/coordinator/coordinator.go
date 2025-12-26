@@ -12,6 +12,7 @@ import (
 
 type CoordinatorExecutor interface {
 	CheckWorkersAndAssignStreams(context.Context) error
+	CheckWorkerHeartbeats(context.Context) error
 	CheckStreamLeases(context.Context) error
 	ForwardRequestToWorker(context.Context, *http.Request) (int32, []byte, error)
 }
@@ -21,6 +22,7 @@ type coordinatorExecutor struct {
 	requestForwarder RequestForwarder
 	streamWorkerMap  StreamWorkerMap
 	workerStreamRepo persistence.WorkerStreamRepository
+	workerRepo       persistence.WorkerRepository
 }
 
 func NewCoordinatorExecutor(
@@ -48,11 +50,53 @@ func NewCoordinatorExecutor(
 		requestForwarder: requestForwarder,
 		streamWorkerMap:  streamWorkerMap,
 		workerStreamRepo: workerStreamRepo,
+		workerRepo:       workerRepo,
 	}
 }
 
 func (e *coordinatorExecutor) CheckWorkersAndAssignStreams(ctx context.Context) error {
 	return e.streamAssigner.AssignStreams(ctx)
+}
+
+func (e *coordinatorExecutor) CheckWorkerHeartbeats(ctx context.Context) error {
+	workers, err := e.workerRepo.FindActiveWithStaleHeartbeat()
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to fetch workers with stale heartbeats")
+		return err
+	}
+
+	for _, worker := range workers {
+		timeSinceHeartbeat := time.Since(worker.LastHeartbeat)
+
+		log.Warn().
+			Str("worker_id", worker.ID).
+			Dur("time_since_heartbeat", timeSinceHeartbeat).
+			Msg("Worker heartbeat timeout - marking as inactive")
+
+		err := e.workerRepo.Deactivate(worker.ID)
+		if err != nil {
+			log.Error().
+				Err(err).
+				Str("worker_id", worker.ID).
+				Msg("Failed to deactivate worker")
+			continue
+		}
+
+		err = e.workerStreamRepo.StopAllRunningAndWaitingByWorkerID(worker.ID)
+		if err != nil {
+			log.Error().
+				Err(err).
+				Str("worker_id", worker.ID).
+				Msg("Failed to stop worker streams")
+			continue
+		}
+
+		log.Info().
+			Str("worker_id", worker.ID).
+			Msg("Worker marked as inactive due to heartbeat timeout")
+	}
+
+	return nil
 }
 
 func (e *coordinatorExecutor) CheckStreamLeases(ctx context.Context) error {
