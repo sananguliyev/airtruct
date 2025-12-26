@@ -145,9 +145,9 @@ func (c *coordinatorConnection) SendHeartbeat(ctx context.Context) error {
 	c.mu.Unlock()
 
 	resp, err := c.coordinatorClient.Heartbeat(ctx, &pb.HeartbeatRequest{
-		Id:               hostname,
-		Port:             c.grpcPort,
-		RunningStreamIds: runningStreamIDs,
+		Id:                     hostname,
+		Port:                   c.grpcPort,
+		RunningWorkerStreamIds: runningStreamIDs,
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to send heartbeat to coordinator")
@@ -157,11 +157,11 @@ func (c *coordinatorConnection) SendHeartbeat(ctx context.Context) error {
 		return err
 	}
 
-	for _, streamID := range resp.ExpiredLeaseStreamIds {
-		log.Warn().Int64("stream_id", streamID).Msg("Lease expired - stopping stream")
+	for _, workerStreamID := range resp.ExpiredLeaseWorkerStreamIds {
+		log.Warn().Int64("worker_stream_id", workerStreamID).Msg("Lease expired - stopping stream")
 		if c.streamManager != nil {
-			if err := c.streamManager.StopStream(streamID); err != nil {
-				log.Error().Err(err).Int64("stream_id", streamID).Msg("Failed to stop expired stream")
+			if err := c.streamManager.StopStream(workerStreamID); err != nil {
+				log.Error().Err(err).Int64("worker_stream_id", workerStreamID).Msg("Failed to stop expired stream")
 			}
 		}
 	}
@@ -169,8 +169,8 @@ func (c *coordinatorConnection) SendHeartbeat(ctx context.Context) error {
 	log.Debug().
 		Str("worker_id", hostname).
 		Int("running_streams", len(runningStreamIDs)).
-		Int("renewed", len(resp.RenewedLeaseStreamIds)).
-		Int("expired", len(resp.ExpiredLeaseStreamIds)).
+		Int("renewed", len(resp.RenewedLeaseWorkerStreamIds)).
+		Int("expired", len(resp.ExpiredLeaseWorkerStreamIds)).
 		Msg("Heartbeat sent")
 
 	return nil

@@ -23,13 +23,13 @@ message DeregisterWorkerRequest {
 message HeartbeatRequest {
   string id = 1;
   uint32 port = 2;
-  repeated int64 running_stream_ids = 3;
+  repeated int64 running_worker_stream_ids = 3;
 }
 
 message HeartbeatResponse {
   string message = 1;
-  repeated int64 renewed_lease_stream_ids = 2;
-  repeated int64 expired_lease_stream_ids = 3;
+  repeated int64 renewed_lease_worker_stream_ids = 2;
+  repeated int64 expired_lease_worker_stream_ids = 3;
 }
 
 message WorkerStreamStatusRequest {

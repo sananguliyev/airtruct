@@ -123,29 +123,35 @@ func (c *CoordinatorAPI) Heartbeat(ctx context.Context, in *pb.HeartbeatRequest)
 	}
 
 	response := &pb.HeartbeatResponse{
-		Message:               "Heartbeat acknowledged",
-		RenewedLeaseStreamIds: []int64{},
-		ExpiredLeaseStreamIds: []int64{},
+		Message:                     "Heartbeat acknowledged",
+		RenewedLeaseWorkerStreamIds: []int64{},
+		ExpiredLeaseWorkerStreamIds: []int64{},
 	}
 
-	for _, streamID := range in.GetRunningStreamIds() {
-		workerStream, err := c.workerStreamRepo.FindByWorkerIDAndStreamID(in.GetId(), streamID)
+	for _, workerStreamID := range in.GetRunningWorkerStreamIds() {
+		workerStream, err := c.workerStreamRepo.FindByID(workerStreamID)
 
 		if err != nil {
-			log.Error().Err(err).Str("worker_id", in.GetId()).Int64("stream_id", streamID).Msg("Failed to find worker stream")
-			response.ExpiredLeaseStreamIds = append(response.ExpiredLeaseStreamIds, streamID)
+			log.Error().Err(err).Str("worker_id", in.GetId()).Int64("worker_stream_id", workerStreamID).Msg("Failed to find worker stream")
+			response.ExpiredLeaseWorkerStreamIds = append(response.ExpiredLeaseWorkerStreamIds, workerStreamID)
 			continue
 		}
 
 		if workerStream == nil {
-			log.Warn().Str("worker_id", in.GetId()).Int64("stream_id", streamID).Msg("Stream not assigned to this worker")
-			response.ExpiredLeaseStreamIds = append(response.ExpiredLeaseStreamIds, streamID)
+			log.Warn().Str("worker_id", in.GetId()).Int64("worker_stream_id", workerStreamID).Msg("Worker stream not found")
+			response.ExpiredLeaseWorkerStreamIds = append(response.ExpiredLeaseWorkerStreamIds, workerStreamID)
+			continue
+		}
+
+		if workerStream.WorkerID != in.GetId() {
+			log.Warn().Str("worker_id", in.GetId()).Int64("worker_stream_id", workerStreamID).Str("actual_worker", workerStream.WorkerID).Msg("Worker stream belongs to different worker")
+			response.ExpiredLeaseWorkerStreamIds = append(response.ExpiredLeaseWorkerStreamIds, workerStreamID)
 			continue
 		}
 
 		if workerStream.Status != persistence.WorkerStreamStatusRunning {
-			log.Warn().Str("worker_id", in.GetId()).Int64("stream_id", streamID).Str("status", string(workerStream.Status)).Msg("Stream should not be running")
-			response.ExpiredLeaseStreamIds = append(response.ExpiredLeaseStreamIds, streamID)
+			log.Warn().Str("worker_id", in.GetId()).Int64("worker_stream_id", workerStreamID).Str("status", string(workerStream.Status)).Msg("Stream should not be running")
+			response.ExpiredLeaseWorkerStreamIds = append(response.ExpiredLeaseWorkerStreamIds, workerStreamID)
 			continue
 		}
 
@@ -154,8 +160,8 @@ func (c *CoordinatorAPI) Heartbeat(ctx context.Context, in *pb.HeartbeatRequest)
 		if workerStream.LeaseExpiresAt.IsZero() {
 			log.Info().
 				Str("worker_id", in.GetId()).
-				Int64("stream_id", streamID).
-				Int64("worker_stream_id", workerStream.ID).
+				Int64("worker_stream_id", workerStreamID).
+				Int64("stream_id", workerStream.StreamID).
 				Msg("Initializing lease for existing stream")
 		}
 
@@ -165,14 +171,14 @@ func (c *CoordinatorAPI) Heartbeat(ctx context.Context, in *pb.HeartbeatRequest)
 			continue
 		}
 
-		response.RenewedLeaseStreamIds = append(response.RenewedLeaseStreamIds, streamID)
+		response.RenewedLeaseWorkerStreamIds = append(response.RenewedLeaseWorkerStreamIds, workerStreamID)
 	}
 
 	log.Debug().
 		Str("worker_id", in.GetId()).
 		Str("address", workerEntity.Address).
-		Int("renewed", len(response.RenewedLeaseStreamIds)).
-		Int("expired", len(response.ExpiredLeaseStreamIds)).
+		Int("renewed", len(response.RenewedLeaseWorkerStreamIds)).
+		Int("expired", len(response.ExpiredLeaseWorkerStreamIds)).
 		Msg("Worker heartbeat received")
 
 	return response, nil

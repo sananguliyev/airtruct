@@ -123,12 +123,12 @@ func (x *DeregisterWorkerRequest) GetId() string {
 }
 
 type HeartbeatRequest struct {
-	state            protoimpl.MessageState `protogen:"open.v1"`
-	Id               string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Port             uint32                 `protobuf:"varint,2,opt,name=port,proto3" json:"port,omitempty"`
-	RunningStreamIds []int64                `protobuf:"varint,3,rep,packed,name=running_stream_ids,json=runningStreamIds,proto3" json:"running_stream_ids,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	state                  protoimpl.MessageState `protogen:"open.v1"`
+	Id                     string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Port                   uint32                 `protobuf:"varint,2,opt,name=port,proto3" json:"port,omitempty"`
+	RunningWorkerStreamIds []int64                `protobuf:"varint,3,rep,packed,name=running_worker_stream_ids,json=runningWorkerStreamIds,proto3" json:"running_worker_stream_ids,omitempty"`
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
 func (x *HeartbeatRequest) Reset() {
@@ -175,20 +175,20 @@ func (x *HeartbeatRequest) GetPort() uint32 {
 	return 0
 }
 
-func (x *HeartbeatRequest) GetRunningStreamIds() []int64 {
+func (x *HeartbeatRequest) GetRunningWorkerStreamIds() []int64 {
 	if x != nil {
-		return x.RunningStreamIds
+		return x.RunningWorkerStreamIds
 	}
 	return nil
 }
 
 type HeartbeatResponse struct {
-	state                 protoimpl.MessageState `protogen:"open.v1"`
-	Message               string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
-	RenewedLeaseStreamIds []int64                `protobuf:"varint,2,rep,packed,name=renewed_lease_stream_ids,json=renewedLeaseStreamIds,proto3" json:"renewed_lease_stream_ids,omitempty"`
-	ExpiredLeaseStreamIds []int64                `protobuf:"varint,3,rep,packed,name=expired_lease_stream_ids,json=expiredLeaseStreamIds,proto3" json:"expired_lease_stream_ids,omitempty"`
-	unknownFields         protoimpl.UnknownFields
-	sizeCache             protoimpl.SizeCache
+	state                       protoimpl.MessageState `protogen:"open.v1"`
+	Message                     string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+	RenewedLeaseWorkerStreamIds []int64                `protobuf:"varint,2,rep,packed,name=renewed_lease_worker_stream_ids,json=renewedLeaseWorkerStreamIds,proto3" json:"renewed_lease_worker_stream_ids,omitempty"`
+	ExpiredLeaseWorkerStreamIds []int64                `protobuf:"varint,3,rep,packed,name=expired_lease_worker_stream_ids,json=expiredLeaseWorkerStreamIds,proto3" json:"expired_lease_worker_stream_ids,omitempty"`
+	unknownFields               protoimpl.UnknownFields
+	sizeCache                   protoimpl.SizeCache
 }
 
 func (x *HeartbeatResponse) Reset() {
@@ -228,16 +228,16 @@ func (x *HeartbeatResponse) GetMessage() string {
 	return ""
 }
 
-func (x *HeartbeatResponse) GetRenewedLeaseStreamIds() []int64 {
+func (x *HeartbeatResponse) GetRenewedLeaseWorkerStreamIds() []int64 {
 	if x != nil {
-		return x.RenewedLeaseStreamIds
+		return x.RenewedLeaseWorkerStreamIds
 	}
 	return nil
 }
 
-func (x *HeartbeatResponse) GetExpiredLeaseStreamIds() []int64 {
+func (x *HeartbeatResponse) GetExpiredLeaseWorkerStreamIds() []int64 {
 	if x != nil {
-		return x.ExpiredLeaseStreamIds
+		return x.ExpiredLeaseWorkerStreamIds
 	}
 	return nil
 }
@@ -1247,15 +1247,15 @@ const file_coordinator_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04port\x18\x02 \x01(\rR\x04port\")\n" +
 	"\x17DeregisterWorkerRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\"d\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"q\n" +
 	"\x10HeartbeatRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
-	"\x04port\x18\x02 \x01(\rR\x04port\x12,\n" +
-	"\x12running_stream_ids\x18\x03 \x03(\x03R\x10runningStreamIds\"\x9f\x01\n" +
+	"\x04port\x18\x02 \x01(\rR\x04port\x129\n" +
+	"\x19running_worker_stream_ids\x18\x03 \x03(\x03R\x16runningWorkerStreamIds\"\xb9\x01\n" +
 	"\x11HeartbeatResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage\x127\n" +
-	"\x18renewed_lease_stream_ids\x18\x02 \x03(\x03R\x15renewedLeaseStreamIds\x127\n" +
-	"\x18expired_lease_stream_ids\x18\x03 \x03(\x03R\x15expiredLeaseStreamIds\"~\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\x12D\n" +
+	"\x1frenewed_lease_worker_stream_ids\x18\x02 \x03(\x03R\x1brenewedLeaseWorkerStreamIds\x12D\n" +
+	"\x1fexpired_lease_worker_stream_ids\x18\x03 \x03(\x03R\x1bexpiredLeaseWorkerStreamIds\"~\n" +
 	"\x19WorkerStreamStatusRequest\x12(\n" +
 	"\x10worker_stream_id\x18\x01 \x01(\x03R\x0eworkerStreamId\x127\n" +
 	"\x06status\x18\x02 \x01(\x0e2\x1f.protorender.WorkerStreamStatusR\x06status\"J\n" +
