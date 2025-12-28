@@ -1074,7 +1074,7 @@ func RegisterCoordinatorHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/protorender.Coordinator/ListRateLimits", runtime.WithHTTPPathPattern("/v0/rate_limits"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/protorender.Coordinator/ListRateLimits", runtime.WithHTTPPathPattern("/v0/rate-limits"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1094,7 +1094,7 @@ func RegisterCoordinatorHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/protorender.Coordinator/GetRateLimit", runtime.WithHTTPPathPattern("/v0/rate_limits/{id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/protorender.Coordinator/GetRateLimit", runtime.WithHTTPPathPattern("/v0/rate-limits/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1114,7 +1114,7 @@ func RegisterCoordinatorHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/protorender.Coordinator/CreateRateLimit", runtime.WithHTTPPathPattern("/v0/rate_limits"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/protorender.Coordinator/CreateRateLimit", runtime.WithHTTPPathPattern("/v0/rate-limits"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1134,7 +1134,7 @@ func RegisterCoordinatorHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/protorender.Coordinator/UpdateRateLimit", runtime.WithHTTPPathPattern("/v0/rate_limits/{id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/protorender.Coordinator/UpdateRateLimit", runtime.WithHTTPPathPattern("/v0/rate-limits/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1154,7 +1154,7 @@ func RegisterCoordinatorHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/protorender.Coordinator/DeleteRateLimit", runtime.WithHTTPPathPattern("/v0/rate_limits/{id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/protorender.Coordinator/DeleteRateLimit", runtime.WithHTTPPathPattern("/v0/rate-limits/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1467,7 +1467,7 @@ func RegisterCoordinatorHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/protorender.Coordinator/ListRateLimits", runtime.WithHTTPPathPattern("/v0/rate_limits"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/protorender.Coordinator/ListRateLimits", runtime.WithHTTPPathPattern("/v0/rate-limits"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1484,7 +1484,7 @@ func RegisterCoordinatorHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/protorender.Coordinator/GetRateLimit", runtime.WithHTTPPathPattern("/v0/rate_limits/{id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/protorender.Coordinator/GetRateLimit", runtime.WithHTTPPathPattern("/v0/rate-limits/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1501,7 +1501,7 @@ func RegisterCoordinatorHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/protorender.Coordinator/CreateRateLimit", runtime.WithHTTPPathPattern("/v0/rate_limits"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/protorender.Coordinator/CreateRateLimit", runtime.WithHTTPPathPattern("/v0/rate-limits"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1518,7 +1518,7 @@ func RegisterCoordinatorHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/protorender.Coordinator/UpdateRateLimit", runtime.WithHTTPPathPattern("/v0/rate_limits/{id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/protorender.Coordinator/UpdateRateLimit", runtime.WithHTTPPathPattern("/v0/rate-limits/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1535,7 +1535,7 @@ func RegisterCoordinatorHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/protorender.Coordinator/DeleteRateLimit", runtime.WithHTTPPathPattern("/v0/rate_limits/{id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/protorender.Coordinator/DeleteRateLimit", runtime.WithHTTPPathPattern("/v0/rate-limits/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1567,11 +1567,11 @@ var (
 	pattern_Coordinator_CreateCache_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "caches"}, ""))
 	pattern_Coordinator_UpdateCache_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "caches", "id"}, ""))
 	pattern_Coordinator_DeleteCache_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "caches", "id"}, ""))
-	pattern_Coordinator_ListRateLimits_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "rate_limits"}, ""))
-	pattern_Coordinator_GetRateLimit_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "rate_limits", "id"}, ""))
-	pattern_Coordinator_CreateRateLimit_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "rate_limits"}, ""))
-	pattern_Coordinator_UpdateRateLimit_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "rate_limits", "id"}, ""))
-	pattern_Coordinator_DeleteRateLimit_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "rate_limits", "id"}, ""))
+	pattern_Coordinator_ListRateLimits_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "rate-limits"}, ""))
+	pattern_Coordinator_GetRateLimit_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "rate-limits", "id"}, ""))
+	pattern_Coordinator_CreateRateLimit_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "rate-limits"}, ""))
+	pattern_Coordinator_UpdateRateLimit_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "rate-limits", "id"}, ""))
+	pattern_Coordinator_DeleteRateLimit_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "rate-limits", "id"}, ""))
 )
 
 var (

@@ -229,25 +229,25 @@ service Coordinator {
 
   // Rate limit methods
   rpc ListRateLimits(google.protobuf.Empty) returns (ListRateLimitsResponse) {
-    option (google.api.http) = {get: "/v0/rate_limits"};
+    option (google.api.http) = {get: "/v0/rate-limits"};
   }
   rpc GetRateLimit(GetRateLimitRequest) returns (RateLimitResponse) {
-    option (google.api.http) = {get: "/v0/rate_limits/{id}"};
+    option (google.api.http) = {get: "/v0/rate-limits/{id}"};
   }
   rpc CreateRateLimit(RateLimit) returns (RateLimitResponse) {
     option (google.api.http) = {
-      post: "/v0/rate_limits"
+      post: "/v0/rate-limits"
       body: "*"
     };
   }
   rpc UpdateRateLimit(RateLimit) returns (RateLimitResponse) {
     option (google.api.http) = {
-      put: "/v0/rate_limits/{id}"
+      put: "/v0/rate-limits/{id}"
       body: "*"
     };
   }
   rpc DeleteRateLimit(GetRateLimitRequest) returns (CommonResponse) {
-    option (google.api.http) = {delete: "/v0/rate_limits/{id}"};
+    option (google.api.http) = {delete: "/v0/rate-limits/{id}"};
   }
   rpc CheckRateLimit(RateLimitCheckRequest) returns (RateLimitCheckResponse) {}
 

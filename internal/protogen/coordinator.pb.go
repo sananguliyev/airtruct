@@ -1346,11 +1346,11 @@ const file_coordinator_proto_rawDesc = "" +
 	"/v0/caches\x12Y\n" +
 	"\vUpdateCache\x12\x12.protorender.Cache\x1a\x1a.protorender.CacheResponse\"\x1a\x82\xd3\xe4\x93\x02\x14:\x01*\x1a\x0f/v0/caches/{id}\x12a\n" +
 	"\vDeleteCache\x12\x1c.protorender.GetCacheRequest\x1a\x1b.protorender.CommonResponse\"\x17\x82\xd3\xe4\x93\x02\x11*\x0f/v0/caches/{id}\x12f\n" +
-	"\x0eListRateLimits\x12\x16.google.protobuf.Empty\x1a#.protorender.ListRateLimitsResponse\"\x17\x82\xd3\xe4\x93\x02\x11\x12\x0f/v0/rate_limits\x12n\n" +
-	"\fGetRateLimit\x12 .protorender.GetRateLimitRequest\x1a\x1e.protorender.RateLimitResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\x12\x14/v0/rate_limits/{id}\x12e\n" +
-	"\x0fCreateRateLimit\x12\x16.protorender.RateLimit\x1a\x1e.protorender.RateLimitResponse\"\x1a\x82\xd3\xe4\x93\x02\x14:\x01*\"\x0f/v0/rate_limits\x12j\n" +
-	"\x0fUpdateRateLimit\x12\x16.protorender.RateLimit\x1a\x1e.protorender.RateLimitResponse\"\x1f\x82\xd3\xe4\x93\x02\x19:\x01*\x1a\x14/v0/rate_limits/{id}\x12n\n" +
-	"\x0fDeleteRateLimit\x12 .protorender.GetRateLimitRequest\x1a\x1b.protorender.CommonResponse\"\x1c\x82\xd3\xe4\x93\x02\x16*\x14/v0/rate_limits/{id}\x12[\n" +
+	"\x0eListRateLimits\x12\x16.google.protobuf.Empty\x1a#.protorender.ListRateLimitsResponse\"\x17\x82\xd3\xe4\x93\x02\x11\x12\x0f/v0/rate-limits\x12n\n" +
+	"\fGetRateLimit\x12 .protorender.GetRateLimitRequest\x1a\x1e.protorender.RateLimitResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\x12\x14/v0/rate-limits/{id}\x12e\n" +
+	"\x0fCreateRateLimit\x12\x16.protorender.RateLimit\x1a\x1e.protorender.RateLimitResponse\"\x1a\x82\xd3\xe4\x93\x02\x14:\x01*\"\x0f/v0/rate-limits\x12j\n" +
+	"\x0fUpdateRateLimit\x12\x16.protorender.RateLimit\x1a\x1e.protorender.RateLimitResponse\"\x1f\x82\xd3\xe4\x93\x02\x19:\x01*\x1a\x14/v0/rate-limits/{id}\x12n\n" +
+	"\x0fDeleteRateLimit\x12 .protorender.GetRateLimitRequest\x1a\x1b.protorender.CommonResponse\"\x1c\x82\xd3\xe4\x93\x02\x16*\x14/v0/rate-limits/{id}\x12[\n" +
 	"\x0eCheckRateLimit\x12\".protorender.RateLimitCheckRequest\x1a#.protorender.RateLimitCheckResponse\"\x00\x12>\n" +
 	"\fIngestEvents\x12\x12.protorender.Event\x1a\x16.google.protobuf.Empty(\x010\x01\x12F\n" +
 	"\rIngestMetrics\x12\x1b.protorender.MetricsRequest\x1a\x16.google.protobuf.Empty\"\x00B4Z2github.com/sananguliyev/airtruct/internal/protogenb\x06proto3"
