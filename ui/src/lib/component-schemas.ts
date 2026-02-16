@@ -2116,6 +2116,148 @@ export const componentSchemas = {
       },
     },
   },
+  buffer: {
+    memory: {
+      title: "Memory",
+      description:
+        "Stores consumed messages in memory and acknowledges them at the input level. During graceful shutdown, the buffer flushes remaining messages. Delivery is not guaranteed in case of crashes.",
+      properties: {
+        limit: {
+          type: "number",
+          title: "Limit",
+          description:
+            "The maximum buffer size (in bytes) to allow before applying backpressure upstream.",
+          required: true,
+          default: 524288000,
+          min: 1,
+        },
+        spillover: {
+          type: "select",
+          title: "Spillover",
+          description:
+            "Whether to drop incoming messages that will exceed the buffer limit.",
+          options: ["true", "false"],
+          default: "false",
+        },
+        batch_policy: {
+          type: "object",
+          title: "Batch Policy",
+          description:
+            "Optionally configure a policy to flush buffered messages in batches.",
+          properties: {
+            enabled: {
+              type: "select",
+              title: "Enabled",
+              description: "Whether to batch messages as they are flushed.",
+              options: ["true", "false"],
+              default: "false",
+            },
+            count: {
+              type: "number",
+              title: "Count",
+              description:
+                "Number of messages at which the batch should be flushed. If 0 disables count based batching.",
+              default: 0,
+              min: 0,
+            },
+            byte_size: {
+              type: "number",
+              title: "Byte Size",
+              description:
+                "Amount of bytes at which the batch should be flushed. If 0 disables size based batching.",
+              default: 0,
+              min: 0,
+            },
+            period: {
+              type: "string",
+              title: "Period",
+              description:
+                "A period in which an incomplete batch should be flushed (e.g., 1s, 1m, 500ms).",
+              default: "",
+            },
+            jitter: {
+              type: "number",
+              title: "Jitter",
+              description:
+                "A non-negative factor that adds random delay to batch flush intervals (0-1).",
+              default: 0,
+              min: 0,
+            },
+            check: {
+              type: "textarea",
+              title: "Check",
+              description:
+                "A Bloblang query that should return a boolean value indicating whether a message should end a batch.",
+              default: "",
+            },
+            processors: {
+              type: "textarea",
+              title: "Processors",
+              description:
+                "A list of processors to apply to a batch as it is flushed (YAML array).",
+              default: "",
+            },
+          },
+        },
+      },
+    },
+    sqlite: {
+      title: "SQLite",
+      description:
+        "Persists messages to a SQLite database file. Messages are not acknowledged until written to disk, and are not removed until successfully delivered. Preserves at-least-once delivery across restarts.",
+      properties: {
+        path: {
+          type: "string",
+          title: "Path",
+          description:
+            "The path of the database file, which will be created if it does not already exist.",
+          required: true,
+        },
+      },
+    },
+    system_window: {
+      title: "System Window",
+      description:
+        "Groups messages into time-based windows using system clocks. Supports tumbling, sliding, and hopping windows with configurable lateness handling.",
+      properties: {
+        timestamp_mapping: {
+          type: "textarea",
+          title: "Timestamp Mapping",
+          description:
+            "A Bloblang mapping that provides the timestamp to use for allocating messages to windows.",
+          default: "root = now()",
+        },
+        size: {
+          type: "string",
+          title: "Size",
+          description:
+            "A duration string describing the size of each window (e.g., 30s, 10m, 1h).",
+          required: true,
+        },
+        slide: {
+          type: "string",
+          title: "Slide",
+          description:
+            "An optional duration for sliding windows. Must be smaller than the size (e.g., 30s, 10m).",
+          default: "",
+        },
+        offset: {
+          type: "string",
+          title: "Offset",
+          description:
+            "An optional duration to offset the beginning of each window (e.g., -6h, 30m).",
+          default: "",
+        },
+        allowed_lateness: {
+          type: "string",
+          title: "Allowed Lateness",
+          description:
+            "Length of time to wait after a window ends before flushing it (e.g., 10s, 1m).",
+          default: "",
+        },
+      },
+    },
+  },
 };
 
 // Component lists for each type
@@ -2155,4 +2297,5 @@ export const componentLists = {
     "noop",
   ],
   rate_limit: ["coordinator"],
+  buffer: ["memory", "sqlite", "system_window"],
 };

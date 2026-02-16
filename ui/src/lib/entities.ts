@@ -23,6 +23,7 @@ export type Stream = {
   output_label: string;
   output_component: string;
   output_config: string;
+  buffer_id?: number;
   processors: Array<{
     label: string;
     component: string;
@@ -56,6 +57,15 @@ export type Cache = {
 };
 
 export type RateLimit = {
+  id: string;
+  parentID?: string;
+  label: string;
+  component: string;
+  config: string;
+  createdAt: string;
+};
+
+export type Buffer = {
   id: string;
   parentID?: string;
   label: string;

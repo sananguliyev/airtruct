@@ -77,6 +77,7 @@ export async function fetchStreams(): Promise<Stream[]> {
       output_label: stream.output_label,
       output_component: stream.output_component,
       output_config: stream.output_config || "",
+      buffer_id: stream.buffer_id || undefined,
       processors:
         stream.processors?.map((processor: any) => ({
           label: processor.label,
@@ -115,6 +116,7 @@ export async function fetchStream(id: string): Promise<Stream> {
       output_label: data.data.output_label,
       output_component: data.data.output_component,
       output_config: data.data.output_config || "",
+      buffer_id: data.data.buffer_id || undefined,
       processors:
         data.data.processors?.map((processor: any) => ({
           label: processor.label,
@@ -139,6 +141,7 @@ export async function createStream(stream: {
   output_component: string;
   output_label: string;
   output_config: string;
+  buffer_id?: number;
   processors: Array<{
     label: string;
     component: string;
@@ -159,6 +162,7 @@ export async function createStream(stream: {
           output_component: stream.output_component,
           output_label: stream.output_label,
           output_config: stream.output_config,
+          buffer_id: stream.buffer_id || undefined,
           processors: stream.processors.map((processor) => ({
             label: processor.label,
             component: processor.component,
@@ -183,6 +187,7 @@ export async function createStream(stream: {
       output_label: data.data.output_label,
       output_component: data.data.output_component,
       output_config: data.data.output_config,
+      buffer_id: data.data.buffer_id || undefined,
       processors:
         data.data.processors?.map((processor: any) => ({
           label: processor.label,
@@ -209,6 +214,7 @@ export async function updateStream(
     output_component: string;
     output_label: string;
     output_config: string;
+    buffer_id?: number;
     processors: Array<{
       label: string;
       component: string;
@@ -230,6 +236,7 @@ export async function updateStream(
           output_component: stream.output_component,
           output_label: stream.output_label,
           output_config: stream.output_config,
+          buffer_id: stream.buffer_id || undefined,
           processors: stream.processors.map((processor) => ({
             label: processor.label,
             component: processor.component,
@@ -254,6 +261,7 @@ export async function updateStream(
       output_label: data.data.output_label,
       output_component: data.data.output_component,
       output_config: data.data.output_config,
+      buffer_id: data.data.buffer_id || undefined,
       processors:
         data.data.processors?.map((processor: any) => ({
           label: processor.label,
@@ -736,6 +744,161 @@ export async function deleteRateLimit(id: string): Promise<void> {
     }
   } catch (error) {
     console.error("Error deleting rate limit:", error);
+    throw error;
+  }
+}
+
+export async function fetchBuffers(): Promise<any[]> {
+  try {
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/buffers`, {
+        headers: getAuthHeaders(),
+      }),
+    );
+
+    const data = await response.json();
+
+    return data.data.map((buffer: any) => ({
+      id: buffer.id,
+      label: buffer.label,
+      component: buffer.component,
+      config: buffer.config,
+      createdAt: buffer.created_at,
+    }));
+  } catch (error) {
+    console.error("Error fetching buffers:", error);
+    throw error;
+  }
+}
+
+export async function fetchBuffer(id: string): Promise<any> {
+  try {
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/buffers/${id}`, {
+        headers: getAuthHeaders(),
+      }),
+    );
+
+    const data = await response.json();
+
+    return {
+      id: data.data.id,
+      label: data.data.label,
+      component: data.data.component,
+      config: data.data.config,
+      createdAt: data.data.created_at,
+    };
+  } catch (error) {
+    console.error("Error fetching buffer:", error);
+    throw error;
+  }
+}
+
+export async function createBuffer(data: {
+  label: string;
+  component: string;
+  config: any;
+}): Promise<any> {
+  try {
+    const configYaml = yaml.dump(data.config);
+
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/buffers`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          label: data.label,
+          component: data.component,
+          config: configYaml,
+        }),
+      }),
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(
+        errorData.message || `HTTP error! status: ${response.status}`,
+      );
+    }
+
+    const responseData = await response.json();
+
+    return {
+      id: responseData.data.id,
+      label: responseData.data.label,
+      component: responseData.data.component,
+      config: responseData.data.config,
+      createdAt: responseData.data.created_at,
+    };
+  } catch (error) {
+    console.error("Error creating buffer:", error);
+    throw error;
+  }
+}
+
+export async function updateBuffer(
+  id: string,
+  data: {
+    label: string;
+    component: string;
+    config: any;
+  },
+): Promise<any> {
+  try {
+    const configYaml = yaml.dump(data.config);
+
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/buffers/${id}`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          id: Number(id),
+          label: data.label,
+          component: data.component,
+          config: configYaml,
+        }),
+      }),
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(
+        errorData.message || `HTTP error! status: ${response.status}`,
+      );
+    }
+
+    const responseData = await response.json();
+
+    return {
+      id: responseData.data.id,
+      label: responseData.data.label,
+      component: responseData.data.component,
+      config: responseData.data.config,
+      createdAt: responseData.data.created_at,
+    };
+  } catch (error) {
+    console.error("Error updating buffer:", error);
+    throw error;
+  }
+}
+
+export async function deleteBuffer(id: string): Promise<void> {
+  try {
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/buffers/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      }),
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(
+        errorData.message || `HTTP error! status: ${response.status}`,
+      );
+    }
+  } catch (error) {
+    console.error("Error deleting buffer:", error);
     throw error;
   }
 }

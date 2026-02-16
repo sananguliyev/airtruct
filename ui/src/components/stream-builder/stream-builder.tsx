@@ -33,6 +33,8 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/toast";
+import { fetchBuffers } from "@/lib/api";
+import type { Buffer } from "@/lib/entities";
 import * as yaml from "js-yaml";
 
 // --- Custom Types Definition ---
@@ -69,14 +71,14 @@ interface StreamBuilderProps {
   initialData?: {
     name: string;
     status: string;
-    // initialData.nodes will now be our CustomNodeDataType array
-    nodes: StreamNodeData[]; 
-    // Edges are implicit in order for now, or can be rebuilt if source/target provided
+    bufferId?: number;
+    nodes: StreamNodeData[];
   };
   onSave: (data: {
     name: string;
     status: string;
-    nodes: StreamNodeData[]; // Save will be an array of node data objects
+    bufferId?: number;
+    nodes: StreamNodeData[];
   }) => void;
 }
 
@@ -164,6 +166,12 @@ function StreamBuilderContent({
 
   const [name, setName] = useState(initialData?.name || "");
   const [status, setStatus] = useState(initialData?.status || "active");
+  const [bufferId, setBufferId] = useState<number | undefined>(initialData?.bufferId);
+  const [availableBuffers, setAvailableBuffers] = useState<Buffer[]>([]);
+
+  useEffect(() => {
+    fetchBuffers().then(setAvailableBuffers).catch(() => setAvailableBuffers([]));
+  }, []);
   const [nodes, setNodes] = useState<CustomNode[]>(() => {
     if (initialData?.nodes) {
       return initialData.nodes.map(nd => {
@@ -419,15 +427,15 @@ function StreamBuilderContent({
       }
     }
 
-    onSave({ name, status, nodes: nodesToSave });
-  }, [name, status, nodes, onSave, addToast, validateRequiredFields]);
+    onSave({ name, status, bufferId, nodes: nodesToSave });
+  }, [name, status, bufferId, nodes, onSave, addToast, validateRequiredFields]);
 
   return (
     <div className="flex flex-col h-[calc(100vh-10rem)] w-full">
-      <div className="flex space-x-4 mb-4">
+      <div className="flex items-end space-x-4 mb-4">
         <div className="flex-1">
           <Label htmlFor="stream-name">Stream Name</Label>
-          <Input id="stream-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter stream name" className="mb-2" />
+          <Input id="stream-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter stream name" />
         </div>
         <div className="w-48">
           <Label htmlFor="stream-status">Status</Label>
@@ -440,6 +448,9 @@ function StreamBuilderContent({
             </SelectContent>
           </Select>
         </div>
+        <Button onClick={handleSave} disabled={!name.trim() || !nodes.some(n=>n.type ==='input') || !nodes.some(n=>n.type ==='output')} className="flex items-center gap-1">
+          <Save className="h-4 w-4" /> Save Stream
+        </Button>
       </div>
 
       <div className="flex flex-1 gap-4 mt-4 w-full h-full">
@@ -471,7 +482,24 @@ function StreamBuilderContent({
 
         {/* Right Panel (Stream) */}
         <div className="flex-[3] flex flex-col h-full border rounded-md bg-background relative min-w-0">
-          <div className="p-4 pt-8 overflow-y-auto h-full">
+          <div className="p-4 pt-4 overflow-y-auto h-full">
+            <div className="flex items-center gap-2 mb-4">
+              <Label htmlFor="stream-buffer" className="text-sm whitespace-nowrap">Buffer</Label>
+              <Select
+                value={bufferId ? String(bufferId) : "none"}
+                onValueChange={(val) => setBufferId(val === "none" ? undefined : Number(val))}
+              >
+                <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="None" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {availableBuffers.map((buffer) => (
+                    <SelectItem key={buffer.id} value={buffer.id}>
+                      {buffer.label} ({buffer.component})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="flex flex-col items-center gap-6 min-h-full">
               {renderSection('input', 'Input', inputNodes)}
               {renderSection('processor', 'Pipeline', pipelineNodes)}
@@ -479,12 +507,6 @@ function StreamBuilderContent({
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="flex justify-end mt-4">
-        <Button onClick={handleSave} disabled={!name.trim() || !nodes.some(n=>n.type ==='input') || !nodes.some(n=>n.type ==='output')} className="flex items-center gap-1">
-          <Save className="h-4 w-4" /> Save Stream
-        </Button>
       </div>
     </div>
   );

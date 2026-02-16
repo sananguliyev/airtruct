@@ -46,6 +46,23 @@ func extractRateLimitResourceName(configYAML string) (string, error) {
 	return "", nil
 }
 
+func extractBufferResourceName(configYAML string) (string, error) {
+	if configYAML == "" {
+		return "", nil
+	}
+
+	var config map[string]any
+	if err := yaml.Unmarshal([]byte(configYAML), &config); err != nil {
+		return "", err
+	}
+
+	if bufferResource, ok := config["buffer"].(string); ok && bufferResource != "" {
+		return bufferResource, nil
+	}
+
+	return "", nil
+}
+
 func (c *CoordinatorAPI) CreateStream(_ context.Context, in *pb.Stream) (*pb.StreamResponse, error) {
 	if err := in.Validate(); err != nil {
 		log.Debug().Err(err).Msg("Invalid request")
@@ -56,6 +73,20 @@ func (c *CoordinatorAPI) CreateStream(_ context.Context, in *pb.Stream) (*pb.Str
 		Processors: make([]persistence.StreamProcessor, len(in.Processors)),
 	}
 	stream.FromProto(in)
+
+	// Validate buffer_id if provided
+	if stream.BufferID != nil && *stream.BufferID != 0 {
+		buffer, err := c.bufferRepo.FindByID(*stream.BufferID)
+		if err != nil {
+			log.Error().Err(err).Int64("buffer_id", *stream.BufferID).Msg("Failed to find buffer")
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+		if buffer == nil {
+			return nil, status.Error(codes.InvalidArgument, "Buffer not found")
+		}
+	} else {
+		stream.BufferID = nil
+	}
 
 	for i, processor := range in.Processors {
 		stream.Processors[i] = persistence.StreamProcessor{
@@ -139,6 +170,41 @@ func (c *CoordinatorAPI) CreateStream(_ context.Context, in *pb.Stream) (*pb.Str
 		}
 	}
 
+	// Extract and store buffer resources
+	bufferNames := make(map[string]bool)
+
+	// Check input config
+	if bufferName, err := extractBufferResourceName(in.GetInputConfig()); err == nil && bufferName != "" {
+		bufferNames[bufferName] = true
+	}
+
+	// Check output config
+	if bufferName, err := extractBufferResourceName(in.GetOutputConfig()); err == nil && bufferName != "" {
+		bufferNames[bufferName] = true
+	}
+
+	// Store buffer references
+	for bufferName := range bufferNames {
+		buffer, err := c.bufferRepo.FindByLabel(bufferName)
+		if err != nil {
+			log.Warn().Err(err).Str("buffer_label", bufferName).Msg("Failed to find buffer")
+			continue
+		}
+		if buffer == nil {
+			log.Warn().Str("buffer_label", bufferName).Msg("Buffer not found")
+			continue
+		}
+
+		streamBuffer := persistence.StreamBuffer{
+			StreamID: stream.ID,
+			BufferID: buffer.ID,
+		}
+
+		if err := c.streamBufferRepo.Create(streamBuffer); err != nil {
+			log.Error().Err(err).Str("buffer_label", bufferName).Msg("Failed to store stream buffer")
+		}
+	}
+
 	return &pb.StreamResponse{
 		Data: stream.ToProto(),
 		Meta: &pb.CommonResponse{Message: "Stream has been created successfully"},
@@ -216,6 +282,20 @@ func (c *CoordinatorAPI) UpdateStream(_ context.Context, in *pb.Stream) (*pb.Str
 		Processors: make([]persistence.StreamProcessor, len(in.Processors)),
 	}
 	newStream.FromProto(in)
+
+	// Validate buffer_id if provided
+	if newStream.BufferID != nil && *newStream.BufferID != 0 {
+		buffer, err := c.bufferRepo.FindByID(*newStream.BufferID)
+		if err != nil {
+			log.Error().Err(err).Int64("buffer_id", *newStream.BufferID).Msg("Failed to find buffer")
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+		if buffer == nil {
+			return nil, status.Error(codes.InvalidArgument, "Buffer not found")
+		}
+	} else {
+		newStream.BufferID = nil
+	}
 
 	for i, processor := range in.Processors {
 		newStream.Processors[i] = persistence.StreamProcessor{

@@ -21,6 +21,8 @@ import StreamsPage from "./pages/streams/page.tsx";
 import WorkersPage from "./pages/workers/page.tsx";
 import ScannersPage from "./pages/scanners/page.tsx";
 import BuffersPage from "./pages/buffers/page.tsx";
+import BufferNewPage from "./pages/buffers/new/page.tsx";
+import BufferEditPage from "./pages/buffers/[id]/edit/page.tsx";
 import CachesPage from "./pages/caches/page.tsx";
 import SecretsPage from "./pages/secrets/page.tsx";
 import CacheNewPage from "./pages/caches/new/page.tsx";
@@ -94,6 +96,8 @@ function App() {
             <Route path="secrets" element={<SecretsPage />} />
             <Route path="scanners" element={<ScannersPage />} />
             <Route path="buffers" element={<BuffersPage />} />
+            <Route path="buffers/new" element={<BufferNewPage />} />
+            <Route path="buffers/:id/edit" element={<BufferEditPage />} />
             <Route path="caches" element={<CachesPage />} />
             <Route path="caches/new" element={<CacheNewPage />} />
             <Route path="caches/:id/edit" element={<CacheEditPage />} />
