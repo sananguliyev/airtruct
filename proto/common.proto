@@ -80,6 +80,7 @@ message Stream {
   optional google.protobuf.Timestamp updated_at = 13 [json_name = "updated_at"];
   repeated Processor processors = 14 [json_name = "processors"];
   bool is_http_server = 15 [json_name = "is_http_server"];
+  optional int64 buffer_id = 16 [json_name = "buffer_id"];
 }
 
 message Secret {

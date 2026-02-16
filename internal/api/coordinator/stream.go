@@ -74,6 +74,20 @@ func (c *CoordinatorAPI) CreateStream(_ context.Context, in *pb.Stream) (*pb.Str
 	}
 	stream.FromProto(in)
 
+	// Validate buffer_id if provided
+	if stream.BufferID != nil && *stream.BufferID != 0 {
+		buffer, err := c.bufferRepo.FindByID(*stream.BufferID)
+		if err != nil {
+			log.Error().Err(err).Int64("buffer_id", *stream.BufferID).Msg("Failed to find buffer")
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+		if buffer == nil {
+			return nil, status.Error(codes.InvalidArgument, "Buffer not found")
+		}
+	} else {
+		stream.BufferID = nil
+	}
+
 	for i, processor := range in.Processors {
 		stream.Processors[i] = persistence.StreamProcessor{
 			Label:     processor.GetLabel(),
@@ -268,6 +282,20 @@ func (c *CoordinatorAPI) UpdateStream(_ context.Context, in *pb.Stream) (*pb.Str
 		Processors: make([]persistence.StreamProcessor, len(in.Processors)),
 	}
 	newStream.FromProto(in)
+
+	// Validate buffer_id if provided
+	if newStream.BufferID != nil && *newStream.BufferID != 0 {
+		buffer, err := c.bufferRepo.FindByID(*newStream.BufferID)
+		if err != nil {
+			log.Error().Err(err).Int64("buffer_id", *newStream.BufferID).Msg("Failed to find buffer")
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+		if buffer == nil {
+			return nil, status.Error(codes.InvalidArgument, "Buffer not found")
+		}
+	} else {
+		newStream.BufferID = nil
+	}
 
 	for i, processor := range in.Processors {
 		newStream.Processors[i] = persistence.StreamProcessor{

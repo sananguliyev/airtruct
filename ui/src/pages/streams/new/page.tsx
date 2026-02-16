@@ -62,7 +62,7 @@ export default function NewStreamPage() {
     setTransformedSchemas(transformComponentSchemas());
   }, []);
 
-  const handleSaveStream = async (data: { name: string; status: string; nodes: StreamNodeData[] }) => {
+  const handleSaveStream = async (data: { name: string; status: string; bufferId?: number; nodes: StreamNodeData[] }) => {
     setIsSubmitting(true);
     try {
       // Extract input, processors, and output from the nodes
@@ -115,6 +115,7 @@ export default function NewStreamPage() {
         output_component: outputComponent.component,
         output_label: outputNode.label,
         output_config: outputNode.configYaml || "",
+        buffer_id: data.bufferId,
         processors: processors
       };
 

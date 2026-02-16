@@ -62,6 +62,7 @@ export default function EditStreamPage() {
   const [streamData, setStreamData] = useState<{
     name: string;
     status: string;
+    bufferId?: number;
     nodes: StreamNodeData[];
   } | null>(null);
   const [transformedSchemas, setTransformedSchemas] = useState<AllComponentSchemas | null>(null);
@@ -130,6 +131,7 @@ export default function EditStreamPage() {
         setStreamData({
           name: streamResponse.name,
           status: streamResponse.status,
+          bufferId: streamResponse.buffer_id,
           nodes,
         });
 
@@ -152,7 +154,7 @@ export default function EditStreamPage() {
     loadDataWithSchemas();
   }, [id, navigate, addToast]);
 
-  const handleSaveStream = async (data: { name: string; status: string; nodes: StreamNodeData[] }) => {
+  const handleSaveStream = async (data: { name: string; status: string; bufferId?: number; nodes: StreamNodeData[] }) => {
     setIsSubmitting(true);
 
     try {
@@ -206,6 +208,7 @@ export default function EditStreamPage() {
         output_component: outputComponent.component,
         output_label: outputNode.label,
         output_config: outputNode.configYaml || "",
+        buffer_id: data.bufferId,
         processors: processors
       };
 

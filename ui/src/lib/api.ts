@@ -77,6 +77,7 @@ export async function fetchStreams(): Promise<Stream[]> {
       output_label: stream.output_label,
       output_component: stream.output_component,
       output_config: stream.output_config || "",
+      buffer_id: stream.buffer_id || undefined,
       processors:
         stream.processors?.map((processor: any) => ({
           label: processor.label,
@@ -115,6 +116,7 @@ export async function fetchStream(id: string): Promise<Stream> {
       output_label: data.data.output_label,
       output_component: data.data.output_component,
       output_config: data.data.output_config || "",
+      buffer_id: data.data.buffer_id || undefined,
       processors:
         data.data.processors?.map((processor: any) => ({
           label: processor.label,
@@ -139,6 +141,7 @@ export async function createStream(stream: {
   output_component: string;
   output_label: string;
   output_config: string;
+  buffer_id?: number;
   processors: Array<{
     label: string;
     component: string;
@@ -159,6 +162,7 @@ export async function createStream(stream: {
           output_component: stream.output_component,
           output_label: stream.output_label,
           output_config: stream.output_config,
+          buffer_id: stream.buffer_id || undefined,
           processors: stream.processors.map((processor) => ({
             label: processor.label,
             component: processor.component,
@@ -183,6 +187,7 @@ export async function createStream(stream: {
       output_label: data.data.output_label,
       output_component: data.data.output_component,
       output_config: data.data.output_config,
+      buffer_id: data.data.buffer_id || undefined,
       processors:
         data.data.processors?.map((processor: any) => ({
           label: processor.label,
@@ -209,6 +214,7 @@ export async function updateStream(
     output_component: string;
     output_label: string;
     output_config: string;
+    buffer_id?: number;
     processors: Array<{
       label: string;
       component: string;
@@ -230,6 +236,7 @@ export async function updateStream(
           output_component: stream.output_component,
           output_label: stream.output_label,
           output_config: stream.output_config,
+          buffer_id: stream.buffer_id || undefined,
           processors: stream.processors.map((processor) => ({
             label: processor.label,
             component: processor.component,
@@ -254,6 +261,7 @@ export async function updateStream(
       output_label: data.data.output_label,
       output_component: data.data.output_component,
       output_config: data.data.output_config,
+      buffer_id: data.data.buffer_id || undefined,
       processors:
         data.data.processors?.map((processor: any) => ({
           label: processor.label,

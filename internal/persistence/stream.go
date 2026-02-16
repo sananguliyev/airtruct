@@ -33,12 +33,14 @@ type Stream struct {
 	OutputLabel     string       `json:"output_label"`
 	OutputComponent string       `json:"output_component" gorm:"not null"`
 	OutputConfig    []byte       `json:"output_config" gorm:"not null"`
+	BufferID        *int64       `json:"buffer_id"`
 	IsCurrent       bool         `json:"is_current" gorm:"default:true"`
 	Status          StreamStatus `json:"status" gorm:"not null"`
 	CreatedAt       time.Time    `json:"created_at" gorm:"not null"`
 	UpdatedAt       *time.Time   `json:"updated_at"`
 
 	ParentStream *Stream           `json:"parent_stream" gorm:"foreignKey:ParentID"`
+	Buffer       *Buffer           `json:"buffer" gorm:"foreignKey:BufferID"`
 	Processors   []StreamProcessor `json:"processors" gorm:"foreignKey:StreamID;references:ID"`
 	Caches       []StreamCache     `json:"caches" gorm:"foreignKey:StreamID;references:ID"`
 }
@@ -60,6 +62,7 @@ func (s *Stream) ToProto() *pb.Stream {
 		OutputLabel:     s.OutputLabel,
 		OutputComponent: s.OutputComponent,
 		OutputConfig:    string(s.OutputConfig),
+		BufferId:        s.BufferID,
 		IsCurrent:       s.IsCurrent,
 		Status:          string(s.Status),
 		CreatedAt:       timestamppb.New(s.CreatedAt),
@@ -90,6 +93,7 @@ func (s *Stream) FromProto(p *pb.Stream) {
 	s.OutputLabel = p.OutputLabel
 	s.OutputComponent = p.OutputComponent
 	s.OutputConfig = []byte(p.OutputConfig)
+	s.BufferID = p.BufferId
 	s.IsCurrent = p.GetIsCurrent()
 	s.Status = StreamStatus(p.GetStatus())
 	s.CreatedAt = p.CreatedAt.AsTime()
@@ -164,6 +168,7 @@ func (r *streamRepository) FindByID(id int64) (*Stream, error) {
 	err := r.db.
 		Preload("Processors").
 		Preload("Caches").
+		Preload("Buffer").
 		Preload("ParentStream").
 		First(stream).
 		Error
@@ -192,7 +197,8 @@ func (r *streamRepository) ListAllByStatuses(statuses ...StreamStatus) ([]Stream
 	var streams []Stream
 	db := r.db.
 		Preload("Processors").
-		Preload("Caches")
+		Preload("Caches").
+		Preload("Buffer")
 
 	if len(statuses) > 0 {
 		db = db.Where("is_current = true AND status IN ?", statuses)
@@ -210,6 +216,7 @@ func (r *streamRepository) ListAllActiveAndNonAssigned() ([]Stream, error) {
 	err := r.db.
 		Preload("Processors").
 		Preload("Caches").
+		Preload("Buffer").
 		Where("is_current = true AND status = ?", StreamStatusActive).
 		Where(
 			"NOT EXISTS (?)",

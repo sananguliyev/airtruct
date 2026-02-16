@@ -23,6 +23,7 @@ export type Stream = {
   output_label: string;
   output_component: string;
   output_config: string;
+  buffer_id?: number;
   processors: Array<{
     label: string;
     component: string;

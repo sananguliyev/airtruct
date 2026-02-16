@@ -33,6 +33,8 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/toast";
+import { fetchBuffers } from "@/lib/api";
+import type { Buffer } from "@/lib/entities";
 import * as yaml from "js-yaml";
 
 // --- Custom Types Definition ---
@@ -69,14 +71,14 @@ interface StreamBuilderProps {
   initialData?: {
     name: string;
     status: string;
-    // initialData.nodes will now be our CustomNodeDataType array
-    nodes: StreamNodeData[]; 
-    // Edges are implicit in order for now, or can be rebuilt if source/target provided
+    bufferId?: number;
+    nodes: StreamNodeData[];
   };
   onSave: (data: {
     name: string;
     status: string;
-    nodes: StreamNodeData[]; // Save will be an array of node data objects
+    bufferId?: number;
+    nodes: StreamNodeData[];
   }) => void;
 }
 
@@ -164,6 +166,12 @@ function StreamBuilderContent({
 
   const [name, setName] = useState(initialData?.name || "");
   const [status, setStatus] = useState(initialData?.status || "active");
+  const [bufferId, setBufferId] = useState<number | undefined>(initialData?.bufferId);
+  const [availableBuffers, setAvailableBuffers] = useState<Buffer[]>([]);
+
+  useEffect(() => {
+    fetchBuffers().then(setAvailableBuffers).catch(() => setAvailableBuffers([]));
+  }, []);
   const [nodes, setNodes] = useState<CustomNode[]>(() => {
     if (initialData?.nodes) {
       return initialData.nodes.map(nd => {
@@ -419,8 +427,8 @@ function StreamBuilderContent({
       }
     }
 
-    onSave({ name, status, nodes: nodesToSave });
-  }, [name, status, nodes, onSave, addToast, validateRequiredFields]);
+    onSave({ name, status, bufferId, nodes: nodesToSave });
+  }, [name, status, bufferId, nodes, onSave, addToast, validateRequiredFields]);
 
   return (
     <div className="flex flex-col h-[calc(100vh-10rem)] w-full">
@@ -437,6 +445,23 @@ function StreamBuilderContent({
               <SelectItem value="active">Active</SelectItem>
               <SelectItem value="paused">Paused</SelectItem>
               <SelectItem value="completed">Completed</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="w-56">
+          <Label htmlFor="stream-buffer">Buffer</Label>
+          <Select
+            value={bufferId ? String(bufferId) : "none"}
+            onValueChange={(val) => setBufferId(val === "none" ? undefined : Number(val))}
+          >
+            <SelectTrigger><SelectValue placeholder="Select a buffer" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None</SelectItem>
+              {availableBuffers.map((buffer) => (
+                <SelectItem key={buffer.id} value={buffer.id}>
+                  {buffer.label} ({buffer.component})
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

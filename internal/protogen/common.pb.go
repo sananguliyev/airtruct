@@ -140,6 +140,7 @@ type Stream struct {
 	UpdatedAt       *timestamppb.Timestamp `protobuf:"bytes,13,opt,name=updated_at,proto3,oneof" json:"updated_at,omitempty"`
 	Processors      []*Stream_Processor    `protobuf:"bytes,14,rep,name=processors,proto3" json:"processors,omitempty"`
 	IsHttpServer    bool                   `protobuf:"varint,15,opt,name=is_http_server,proto3" json:"is_http_server,omitempty"`
+	BufferId        *int64                 `protobuf:"varint,16,opt,name=buffer_id,proto3,oneof" json:"buffer_id,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -277,6 +278,13 @@ func (x *Stream) GetIsHttpServer() bool {
 		return x.IsHttpServer
 	}
 	return false
+}
+
+func (x *Stream) GetBufferId() int64 {
+	if x != nil && x.BufferId != nil {
+		return *x.BufferId
+	}
+	return 0
 }
 
 type Secret struct {
@@ -858,7 +866,7 @@ const file_common_proto_rawDesc = "" +
 	"\n" +
 	"\fcommon.proto\x12\vprotorender\x1a google/protobuf/descriptor.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x17validate/validate.proto\"*\n" +
 	"\x0eCommonResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage\"\xd6\x06\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\"\x87\a\n" +
 	"\x06Stream\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12!\n" +
 	"\tparent_id\x18\x02 \x01(\x03H\x00R\tparent_id\x88\x01\x01\x12\x1d\n" +
@@ -883,14 +891,17 @@ const file_common_proto_rawDesc = "" +
 	"\n" +
 	"processors\x18\x0e \x03(\v2\x1d.protorender.Stream.ProcessorR\n" +
 	"processors\x12&\n" +
-	"\x0eis_http_server\x18\x0f \x01(\bR\x0eis_http_server\x1au\n" +
+	"\x0eis_http_server\x18\x0f \x01(\bR\x0eis_http_server\x12!\n" +
+	"\tbuffer_id\x18\x10 \x01(\x03H\x02R\tbuffer_id\x88\x01\x01\x1au\n" +
 	"\tProcessor\x122\n" +
 	"\x05label\x18\x01 \x01(\tB\x1c\xfaB\x19r\x17\x10\x01\x18d2\x11^[a-zA-Z0-9 _-]+$R\x05label\x12\x1c\n" +
 	"\tcomponent\x18\x02 \x01(\tR\tcomponent\x12\x16\n" +
 	"\x06config\x18\x03 \x01(\tR\x06configB\f\n" +
 	"\n" +
 	"_parent_idB\r\n" +
-	"\v_updated_at\"\x80\x01\n" +
+	"\v_updated_atB\f\n" +
+	"\n" +
+	"_buffer_id\"\x80\x01\n" +
 	"\x06Secret\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12(\n" +
 	"\x0fencrypted_value\x18\x02 \x01(\tR\x0fencrypted_value\x12:\n" +

@@ -338,6 +338,10 @@ func (m *Stream) validate(all bool) error {
 
 	}
 
+	if m.BufferId != nil {
+		// no validation rules for BufferId
+	}
+
 	if len(errors) > 0 {
 		return StreamMultiError(errors)
 	}
