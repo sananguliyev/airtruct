@@ -3,6 +3,7 @@ package persistence
 import (
 	configstruct "github.com/sananguliyev/airtruct/internal/config"
 	"github.com/sananguliyev/airtruct/internal/logger"
+	"github.com/sananguliyev/airtruct/internal/persistence/migrations"
 
 	"github.com/rs/zerolog/log"
 	"gorm.io/driver/postgres"
@@ -21,11 +22,15 @@ func NewGormDB(config *configstruct.DatabaseConfig) *gorm.DB {
 		Logger:         customLogger,
 	}
 
+	var dialect string
+
 	switch config.Driver {
 	case configstruct.DatabaseTypeSQLite:
 		db, err = gorm.Open(sqlite.Open(config.URI), gormConfig)
+		dialect = "sqlite"
 	case configstruct.DatabaseTypePostgres:
 		db, err = gorm.Open(postgres.Open(config.URI), gormConfig)
+		dialect = "postgres"
 	default:
 		log.Fatal().Msg("Unsupported database driver")
 		return nil
@@ -36,9 +41,14 @@ func NewGormDB(config *configstruct.DatabaseConfig) *gorm.DB {
 		return nil
 	}
 
-	err = db.AutoMigrate(&Event{}, &Stream{}, &StreamProcessor{}, &StreamCache{}, &Worker{}, &WorkerStream{}, &Secret{}, &Cache{}, &Buffer{}, &RateLimit{}, &RateLimitState{}, &StreamRateLimit{}, &StreamBuffer{})
+	sqlDB, err := db.DB()
 	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to migrate database")
+		log.Fatal().Err(err).Msg("Failed to get underlying sql.DB")
+		return nil
+	}
+
+	if err := migrations.Run(sqlDB, dialect); err != nil {
+		log.Fatal().Err(err).Msg("Failed to run migrations")
 	}
 
 	return db

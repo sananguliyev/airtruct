@@ -345,7 +345,6 @@ require (
 require (
 	github.com/bold-commerce/go-shopify/v4 v4.7.0
 	github.com/go-mysql-org/go-mysql v1.13.0
-	github.com/pressly/goose/v3 v3.24.3
 	github.com/rakyll/statik v0.1.7
 	github.com/rs/cors v1.11.1
 	gorm.io/driver/postgres v1.6.0
@@ -366,13 +365,11 @@ require (
 	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/jackc/pgx/v5 v5.7.5 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
-	github.com/mfridman/interpolate v0.0.2 // indirect
 	github.com/ncruces/go-strftime v0.1.9 // indirect
 	github.com/pingcap/errors v0.11.5-0.20250318082626-8f80e5cb09ec // indirect
 	github.com/pingcap/log v1.1.1-0.20241212030209-7e3ff8601a2a // indirect
 	github.com/pingcap/tidb/pkg/parser v0.0.0-20250421232622-526b2c79173d // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
-	github.com/sethvargo/go-retry v0.3.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/contrib/detectors/gcp v1.34.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.35.0 // indirect
