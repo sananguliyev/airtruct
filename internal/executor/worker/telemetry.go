@@ -57,14 +57,14 @@ func (t *telemetryManager) ShipLogs(ctx context.Context) {
 
 				for workerStreamID, stream := range streams {
 					tracingSummary := stream.TracingSummary
-					eventGetters := map[string]func(bool) map[string][]service.TracingEvent{
+					eventGetters := map[string]func() map[string][]service.TracingEvent{
 						string(persistence.StreamSectionInput):    tracingSummary.InputEvents,
 						string(persistence.StreamSectionPipeline): tracingSummary.ProcessorEvents,
 						string(persistence.StreamSectionOutput):   tracingSummary.OutputEvents,
 					}
 
 					for section, getEvents := range eventGetters {
-						for componentLabel, events := range getEvents(true) {
+						for componentLabel, events := range getEvents() {
 							for _, event := range events {
 								metaStruct, err := structpb.NewStruct(event.Meta)
 								if err != nil {

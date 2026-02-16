@@ -380,5 +380,3 @@ require (
 	go.opentelemetry.io/contrib/detectors/gcp v1.34.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.35.0 // indirect
 )
-
-replace github.com/warpstreamlabs/bento => github.com/sananguliyev/bento v0.0.0-20240913055941-5fd5bc5ba9e4

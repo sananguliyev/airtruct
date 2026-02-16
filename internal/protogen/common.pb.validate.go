@@ -762,6 +762,211 @@ var _ interface {
 
 var _Cache_Label_Pattern = regexp.MustCompile("^[a-zA-Z0-9_-]+$")
 
+// Validate checks the field values on Buffer with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *Buffer) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on Buffer with the rules defined in the
+// proto definition for this message. If any rules are violated, the result is
+// a list of violation errors wrapped in BufferMultiError, or nil if none found.
+func (m *Buffer) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *Buffer) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Id
+
+	if l := utf8.RuneCountInString(m.GetLabel()); l < 1 || l > 100 {
+		err := BufferValidationError{
+			field:  "Label",
+			reason: "value length must be between 1 and 100 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_Buffer_Label_Pattern.MatchString(m.GetLabel()) {
+		err := BufferValidationError{
+			field:  "Label",
+			reason: "value does not match regex pattern \"^[a-zA-Z0-9_-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetComponent()); l < 1 || l > 100 {
+		err := BufferValidationError{
+			field:  "Component",
+			reason: "value length must be between 1 and 100 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Config
+
+	// no validation rules for IsCurrent
+
+	if all {
+		switch v := interface{}(m.GetCreatedAt()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, BufferValidationError{
+					field:  "CreatedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, BufferValidationError{
+					field:  "CreatedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCreatedAt()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return BufferValidationError{
+				field:  "CreatedAt",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if m.ParentId != nil {
+		// no validation rules for ParentId
+	}
+
+	if m.UpdatedAt != nil {
+
+		if all {
+			switch v := interface{}(m.GetUpdatedAt()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, BufferValidationError{
+						field:  "UpdatedAt",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, BufferValidationError{
+						field:  "UpdatedAt",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetUpdatedAt()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return BufferValidationError{
+					field:  "UpdatedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return BufferMultiError(errors)
+	}
+
+	return nil
+}
+
+// BufferMultiError is an error wrapping multiple validation errors returned by
+// Buffer.ValidateAll() if the designated constraints aren't met.
+type BufferMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m BufferMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m BufferMultiError) AllErrors() []error { return m }
+
+// BufferValidationError is the validation error returned by Buffer.Validate if
+// the designated constraints aren't met.
+type BufferValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e BufferValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e BufferValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e BufferValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e BufferValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e BufferValidationError) ErrorName() string { return "BufferValidationError" }
+
+// Error satisfies the builtin error interface
+func (e BufferValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sBuffer.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = BufferValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = BufferValidationError{}
+
+var _Buffer_Label_Pattern = regexp.MustCompile("^[a-zA-Z0-9_-]+$")
+
 // Validate checks the field values on RateLimit with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.

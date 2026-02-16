@@ -36,7 +36,7 @@ func NewGormDB(config *configstruct.DatabaseConfig) *gorm.DB {
 		return nil
 	}
 
-	err = db.AutoMigrate(&Event{}, &Stream{}, &StreamProcessor{}, &StreamCache{}, &Worker{}, &WorkerStream{}, &Secret{}, &Cache{}, &RateLimit{}, &RateLimitState{}, &StreamRateLimit{})
+	err = db.AutoMigrate(&Event{}, &Stream{}, &StreamProcessor{}, &StreamCache{}, &Worker{}, &WorkerStream{}, &Secret{}, &Cache{}, &Buffer{}, &RateLimit{}, &RateLimitState{}, &StreamRateLimit{}, &StreamBuffer{})
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to migrate database")
 	}

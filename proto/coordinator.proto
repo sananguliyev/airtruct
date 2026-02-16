@@ -140,6 +140,19 @@ message ListRateLimitsResponse {
   repeated RateLimit data = 1;
 }
 
+message GetBufferRequest {
+  int64 id = 1 [(validate.rules).int64.gt = 0];
+}
+
+message BufferResponse {
+  Buffer data = 1;
+  CommonResponse meta = 2;
+}
+
+message ListBuffersResponse {
+  repeated Buffer data = 1;
+}
+
 message GetRateLimitRequest {
   int64 id = 1 [(validate.rules).int64.gt = 0];
 }
@@ -250,6 +263,29 @@ service Coordinator {
     option (google.api.http) = {delete: "/v0/rate-limits/{id}"};
   }
   rpc CheckRateLimit(RateLimitCheckRequest) returns (RateLimitCheckResponse) {}
+
+  // Buffer methods
+  rpc ListBuffers(google.protobuf.Empty) returns (ListBuffersResponse) {
+    option (google.api.http) = {get: "/v0/buffers"};
+  }
+  rpc GetBuffer(GetBufferRequest) returns (BufferResponse) {
+    option (google.api.http) = {get: "/v0/buffers/{id}"};
+  }
+  rpc CreateBuffer(Buffer) returns (BufferResponse) {
+    option (google.api.http) = {
+      post: "/v0/buffers"
+      body: "*"
+    };
+  }
+  rpc UpdateBuffer(Buffer) returns (BufferResponse) {
+    option (google.api.http) = {
+      put: "/v0/buffers/{id}"
+      body: "*"
+    };
+  }
+  rpc DeleteBuffer(GetBufferRequest) returns (CommonResponse) {
+    option (google.api.http) = {delete: "/v0/buffers/{id}"};
+  }
 
   // Observability methods
   rpc IngestEvents(stream Event) returns (stream google.protobuf.Empty);

@@ -46,6 +46,23 @@ func extractRateLimitResourceName(configYAML string) (string, error) {
 	return "", nil
 }
 
+func extractBufferResourceName(configYAML string) (string, error) {
+	if configYAML == "" {
+		return "", nil
+	}
+
+	var config map[string]any
+	if err := yaml.Unmarshal([]byte(configYAML), &config); err != nil {
+		return "", err
+	}
+
+	if bufferResource, ok := config["buffer"].(string); ok && bufferResource != "" {
+		return bufferResource, nil
+	}
+
+	return "", nil
+}
+
 func (c *CoordinatorAPI) CreateStream(_ context.Context, in *pb.Stream) (*pb.StreamResponse, error) {
 	if err := in.Validate(); err != nil {
 		log.Debug().Err(err).Msg("Invalid request")
@@ -136,6 +153,41 @@ func (c *CoordinatorAPI) CreateStream(_ context.Context, in *pb.Stream) (*pb.Str
 
 		if err := c.streamRateLimitRepo.Create(streamRateLimit); err != nil {
 			log.Error().Err(err).Str("rate_limit_label", rateLimitName).Msg("Failed to store stream rate limit")
+		}
+	}
+
+	// Extract and store buffer resources
+	bufferNames := make(map[string]bool)
+
+	// Check input config
+	if bufferName, err := extractBufferResourceName(in.GetInputConfig()); err == nil && bufferName != "" {
+		bufferNames[bufferName] = true
+	}
+
+	// Check output config
+	if bufferName, err := extractBufferResourceName(in.GetOutputConfig()); err == nil && bufferName != "" {
+		bufferNames[bufferName] = true
+	}
+
+	// Store buffer references
+	for bufferName := range bufferNames {
+		buffer, err := c.bufferRepo.FindByLabel(bufferName)
+		if err != nil {
+			log.Warn().Err(err).Str("buffer_label", bufferName).Msg("Failed to find buffer")
+			continue
+		}
+		if buffer == nil {
+			log.Warn().Str("buffer_label", bufferName).Msg("Buffer not found")
+			continue
+		}
+
+		streamBuffer := persistence.StreamBuffer{
+			StreamID: stream.ID,
+			BufferID: buffer.ID,
+		}
+
+		if err := c.streamBufferRepo.Create(streamBuffer); err != nil {
+			log.Error().Err(err).Str("buffer_label", bufferName).Msg("Failed to store stream buffer")
 		}
 	}
 

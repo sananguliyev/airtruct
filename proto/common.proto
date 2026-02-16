@@ -1,11 +1,10 @@
 syntax = "proto3";
 
+package protorender;
+
 import "google/protobuf/descriptor.proto";
 import "google/protobuf/timestamp.proto";
-
 import "validate/validate.proto";
-
-package protorender;
 
 option go_package = "github.com/sananguliyev/airtruct/internal/protogen";
 
@@ -30,8 +29,8 @@ message Stream {
     string label = 1 [
       json_name = "label",
       (validate.rules).string = {
-        min_len: 1,
-        max_len: 100,
+        min_len: 1
+        max_len: 100
         pattern: "^[a-zA-Z0-9 _-]+$"
       }
     ];
@@ -40,11 +39,11 @@ message Stream {
   }
 
   int64 id = 1 [json_name = "id"];
-  optional int64 parent_id = 2 [ json_name = "parent_id" ];
+  optional int64 parent_id = 2 [json_name = "parent_id"];
   string name = 3 [
     json_name = "name",
     (validate.rules).string = {
-      min_len: 1,
+      min_len: 1
       max_len: 100
     }
   ];
@@ -52,8 +51,8 @@ message Stream {
   string input_label = 5 [
     json_name = "input_label",
     (validate.rules).string = {
-      min_len: 1,
-      max_len: 100,
+      min_len: 1
+      max_len: 100
       pattern: "^[a-zA-Z0-9 _-]+$"
     }
   ];
@@ -62,20 +61,23 @@ message Stream {
   string output_label = 8 [
     json_name = "output_label",
     (validate.rules).string = {
-      min_len: 1,
-      max_len: 100,
+      min_len: 1
+      max_len: 100
       pattern: "^[a-zA-Z0-9 _-]+$"
     }
   ];
   string output_component = 9 [json_name = "output_component"];
-  bool is_current = 10 [ json_name = "is_current" ];
-  string status = 11 [
-    (validate.rules).string = {
-      in: ["active", "completed", "paused", "failed"]
-    }
-  ];
-  google.protobuf.Timestamp created_at = 12 [ json_name = "created_at" ];
-  optional google.protobuf.Timestamp updated_at = 13 [ json_name = "updated_at" ];
+  bool is_current = 10 [json_name = "is_current"];
+  string status = 11 [(validate.rules).string = {
+    in: [
+      "active",
+      "completed",
+      "paused",
+      "failed"
+    ]
+  }];
+  google.protobuf.Timestamp created_at = 12 [json_name = "created_at"];
+  optional google.protobuf.Timestamp updated_at = 13 [json_name = "updated_at"];
   repeated Processor processors = 14 [json_name = "processors"];
   bool is_http_server = 15 [json_name = "is_http_server"];
 }
@@ -83,70 +85,90 @@ message Stream {
 message Secret {
   string key = 1 [json_name = "key"];
   string encrypted_value = 2 [json_name = "encrypted_value"];
-  google.protobuf.Timestamp created_at = 3 [ json_name = "created_at" ];
+  google.protobuf.Timestamp created_at = 3 [json_name = "created_at"];
 }
 
 message Cache {
   int64 id = 1 [json_name = "id"];
-  optional int64 parent_id = 2 [ json_name = "parent_id" ];
+  optional int64 parent_id = 2 [json_name = "parent_id"];
   string label = 3 [
     json_name = "label",
     (validate.rules).string = {
-      min_len: 1,
-      max_len: 100,
+      min_len: 1
+      max_len: 100
       pattern: "^[a-zA-Z0-9_-]+$"
     }
   ];
   string component = 4 [
     json_name = "component",
     (validate.rules).string = {
-      min_len: 1,
+      min_len: 1
       max_len: 100
     }
   ];
   string config = 5 [json_name = "config"];
-  bool is_current = 6 [ json_name = "is_current" ];
-  google.protobuf.Timestamp created_at = 7 [ json_name = "created_at" ];
-  optional google.protobuf.Timestamp updated_at = 8 [ json_name = "updated_at" ];
+  bool is_current = 6 [json_name = "is_current"];
+  google.protobuf.Timestamp created_at = 7 [json_name = "created_at"];
+  optional google.protobuf.Timestamp updated_at = 8 [json_name = "updated_at"];
+}
+
+message Buffer {
+  int64 id = 1 [json_name = "id"];
+  optional int64 parent_id = 2 [json_name = "parent_id"];
+  string label = 3 [
+    json_name = "label",
+    (validate.rules).string = {
+      min_len: 1
+      max_len: 100
+      pattern: "^[a-zA-Z0-9_-]+$"
+    }
+  ];
+  string component = 4 [
+    json_name = "component",
+    (validate.rules).string = {
+      min_len: 1
+      max_len: 100
+    }
+  ];
+  string config = 5 [json_name = "config"];
+  bool is_current = 6 [json_name = "is_current"];
+  google.protobuf.Timestamp created_at = 7 [json_name = "created_at"];
+  optional google.protobuf.Timestamp updated_at = 8 [json_name = "updated_at"];
 }
 
 message RateLimit {
   int64 id = 1 [json_name = "id"];
-  optional int64 parent_id = 2 [ json_name = "parent_id" ];
+  optional int64 parent_id = 2 [json_name = "parent_id"];
   string label = 3 [
     json_name = "label",
     (validate.rules).string = {
-      min_len: 1,
-      max_len: 100,
+      min_len: 1
+      max_len: 100
       pattern: "^[a-zA-Z0-9_-]+$"
     }
   ];
   string component = 4 [
     json_name = "component",
     (validate.rules).string = {
-      min_len: 1,
+      min_len: 1
       max_len: 100
     }
   ];
   string config = 5 [json_name = "config"];
-  bool is_current = 6 [ json_name = "is_current" ];
-  google.protobuf.Timestamp created_at = 7 [ json_name = "created_at" ];
-  optional google.protobuf.Timestamp updated_at = 8 [ json_name = "updated_at" ];
+  bool is_current = 6 [json_name = "is_current"];
+  google.protobuf.Timestamp created_at = 7 [json_name = "created_at"];
+  optional google.protobuf.Timestamp updated_at = 8 [json_name = "updated_at"];
 }
 
 message RateLimitCheckRequest {
-  string label = 1 [
-    (validate.rules).string = {
-      min_len: 1,
-      max_len: 100
-    }
-  ];
-  string key = 2 [
-    (validate.rules).string = {
-      min_len: 1,
-      max_len: 255
-    }
-  ];
+  string label = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+  string key = 2 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
   int64 cost = 3;
 }
 

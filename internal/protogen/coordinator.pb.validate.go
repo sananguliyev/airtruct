@@ -2556,6 +2556,411 @@ var _ interface {
 	ErrorName() string
 } = ListRateLimitsResponseValidationError{}
 
+// Validate checks the field values on GetBufferRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *GetBufferRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetBufferRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetBufferRequestMultiError, or nil if none found.
+func (m *GetBufferRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetBufferRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if m.GetId() <= 0 {
+		err := GetBufferRequestValidationError{
+			field:  "Id",
+			reason: "value must be greater than 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return GetBufferRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetBufferRequestMultiError is an error wrapping multiple validation errors
+// returned by GetBufferRequest.ValidateAll() if the designated constraints
+// aren't met.
+type GetBufferRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetBufferRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetBufferRequestMultiError) AllErrors() []error { return m }
+
+// GetBufferRequestValidationError is the validation error returned by
+// GetBufferRequest.Validate if the designated constraints aren't met.
+type GetBufferRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetBufferRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetBufferRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetBufferRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetBufferRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetBufferRequestValidationError) ErrorName() string { return "GetBufferRequestValidationError" }
+
+// Error satisfies the builtin error interface
+func (e GetBufferRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetBufferRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetBufferRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetBufferRequestValidationError{}
+
+// Validate checks the field values on BufferResponse with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *BufferResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on BufferResponse with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in BufferResponseMultiError,
+// or nil if none found.
+func (m *BufferResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *BufferResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, BufferResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, BufferResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return BufferResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetMeta()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, BufferResponseValidationError{
+					field:  "Meta",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, BufferResponseValidationError{
+					field:  "Meta",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetMeta()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return BufferResponseValidationError{
+				field:  "Meta",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return BufferResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// BufferResponseMultiError is an error wrapping multiple validation errors
+// returned by BufferResponse.ValidateAll() if the designated constraints
+// aren't met.
+type BufferResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m BufferResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m BufferResponseMultiError) AllErrors() []error { return m }
+
+// BufferResponseValidationError is the validation error returned by
+// BufferResponse.Validate if the designated constraints aren't met.
+type BufferResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e BufferResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e BufferResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e BufferResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e BufferResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e BufferResponseValidationError) ErrorName() string { return "BufferResponseValidationError" }
+
+// Error satisfies the builtin error interface
+func (e BufferResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sBufferResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = BufferResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = BufferResponseValidationError{}
+
+// Validate checks the field values on ListBuffersResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListBuffersResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListBuffersResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListBuffersResponseMultiError, or nil if none found.
+func (m *ListBuffersResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListBuffersResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListBuffersResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListBuffersResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListBuffersResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ListBuffersResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListBuffersResponseMultiError is an error wrapping multiple validation
+// errors returned by ListBuffersResponse.ValidateAll() if the designated
+// constraints aren't met.
+type ListBuffersResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListBuffersResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListBuffersResponseMultiError) AllErrors() []error { return m }
+
+// ListBuffersResponseValidationError is the validation error returned by
+// ListBuffersResponse.Validate if the designated constraints aren't met.
+type ListBuffersResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListBuffersResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListBuffersResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListBuffersResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListBuffersResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListBuffersResponseValidationError) ErrorName() string {
+	return "ListBuffersResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListBuffersResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListBuffersResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListBuffersResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListBuffersResponseValidationError{}
+
 // Validate checks the field values on GetRateLimitRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.

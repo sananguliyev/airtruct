@@ -45,6 +45,11 @@ const (
 	Coordinator_UpdateRateLimit_FullMethodName          = "/protorender.Coordinator/UpdateRateLimit"
 	Coordinator_DeleteRateLimit_FullMethodName          = "/protorender.Coordinator/DeleteRateLimit"
 	Coordinator_CheckRateLimit_FullMethodName           = "/protorender.Coordinator/CheckRateLimit"
+	Coordinator_ListBuffers_FullMethodName              = "/protorender.Coordinator/ListBuffers"
+	Coordinator_GetBuffer_FullMethodName                = "/protorender.Coordinator/GetBuffer"
+	Coordinator_CreateBuffer_FullMethodName             = "/protorender.Coordinator/CreateBuffer"
+	Coordinator_UpdateBuffer_FullMethodName             = "/protorender.Coordinator/UpdateBuffer"
+	Coordinator_DeleteBuffer_FullMethodName             = "/protorender.Coordinator/DeleteBuffer"
 	Coordinator_IngestEvents_FullMethodName             = "/protorender.Coordinator/IngestEvents"
 	Coordinator_IngestMetrics_FullMethodName            = "/protorender.Coordinator/IngestMetrics"
 )
@@ -84,6 +89,12 @@ type CoordinatorClient interface {
 	UpdateRateLimit(ctx context.Context, in *RateLimit, opts ...grpc.CallOption) (*RateLimitResponse, error)
 	DeleteRateLimit(ctx context.Context, in *GetRateLimitRequest, opts ...grpc.CallOption) (*CommonResponse, error)
 	CheckRateLimit(ctx context.Context, in *RateLimitCheckRequest, opts ...grpc.CallOption) (*RateLimitCheckResponse, error)
+	// Buffer methods
+	ListBuffers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListBuffersResponse, error)
+	GetBuffer(ctx context.Context, in *GetBufferRequest, opts ...grpc.CallOption) (*BufferResponse, error)
+	CreateBuffer(ctx context.Context, in *Buffer, opts ...grpc.CallOption) (*BufferResponse, error)
+	UpdateBuffer(ctx context.Context, in *Buffer, opts ...grpc.CallOption) (*BufferResponse, error)
+	DeleteBuffer(ctx context.Context, in *GetBufferRequest, opts ...grpc.CallOption) (*CommonResponse, error)
 	// Observability methods
 	IngestEvents(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Event, emptypb.Empty], error)
 	IngestMetrics(ctx context.Context, in *MetricsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -347,6 +358,56 @@ func (c *coordinatorClient) CheckRateLimit(ctx context.Context, in *RateLimitChe
 	return out, nil
 }
 
+func (c *coordinatorClient) ListBuffers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListBuffersResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListBuffersResponse)
+	err := c.cc.Invoke(ctx, Coordinator_ListBuffers_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *coordinatorClient) GetBuffer(ctx context.Context, in *GetBufferRequest, opts ...grpc.CallOption) (*BufferResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(BufferResponse)
+	err := c.cc.Invoke(ctx, Coordinator_GetBuffer_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *coordinatorClient) CreateBuffer(ctx context.Context, in *Buffer, opts ...grpc.CallOption) (*BufferResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(BufferResponse)
+	err := c.cc.Invoke(ctx, Coordinator_CreateBuffer_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *coordinatorClient) UpdateBuffer(ctx context.Context, in *Buffer, opts ...grpc.CallOption) (*BufferResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(BufferResponse)
+	err := c.cc.Invoke(ctx, Coordinator_UpdateBuffer_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *coordinatorClient) DeleteBuffer(ctx context.Context, in *GetBufferRequest, opts ...grpc.CallOption) (*CommonResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CommonResponse)
+	err := c.cc.Invoke(ctx, Coordinator_DeleteBuffer_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *coordinatorClient) IngestEvents(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Event, emptypb.Empty], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &Coordinator_ServiceDesc.Streams[0], Coordinator_IngestEvents_FullMethodName, cOpts...)
@@ -405,6 +466,12 @@ type CoordinatorServer interface {
 	UpdateRateLimit(context.Context, *RateLimit) (*RateLimitResponse, error)
 	DeleteRateLimit(context.Context, *GetRateLimitRequest) (*CommonResponse, error)
 	CheckRateLimit(context.Context, *RateLimitCheckRequest) (*RateLimitCheckResponse, error)
+	// Buffer methods
+	ListBuffers(context.Context, *emptypb.Empty) (*ListBuffersResponse, error)
+	GetBuffer(context.Context, *GetBufferRequest) (*BufferResponse, error)
+	CreateBuffer(context.Context, *Buffer) (*BufferResponse, error)
+	UpdateBuffer(context.Context, *Buffer) (*BufferResponse, error)
+	DeleteBuffer(context.Context, *GetBufferRequest) (*CommonResponse, error)
 	// Observability methods
 	IngestEvents(grpc.BidiStreamingServer[Event, emptypb.Empty]) error
 	IngestMetrics(context.Context, *MetricsRequest) (*emptypb.Empty, error)
@@ -492,6 +559,21 @@ func (UnimplementedCoordinatorServer) DeleteRateLimit(context.Context, *GetRateL
 }
 func (UnimplementedCoordinatorServer) CheckRateLimit(context.Context, *RateLimitCheckRequest) (*RateLimitCheckResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CheckRateLimit not implemented")
+}
+func (UnimplementedCoordinatorServer) ListBuffers(context.Context, *emptypb.Empty) (*ListBuffersResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListBuffers not implemented")
+}
+func (UnimplementedCoordinatorServer) GetBuffer(context.Context, *GetBufferRequest) (*BufferResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetBuffer not implemented")
+}
+func (UnimplementedCoordinatorServer) CreateBuffer(context.Context, *Buffer) (*BufferResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateBuffer not implemented")
+}
+func (UnimplementedCoordinatorServer) UpdateBuffer(context.Context, *Buffer) (*BufferResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateBuffer not implemented")
+}
+func (UnimplementedCoordinatorServer) DeleteBuffer(context.Context, *GetBufferRequest) (*CommonResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteBuffer not implemented")
 }
 func (UnimplementedCoordinatorServer) IngestEvents(grpc.BidiStreamingServer[Event, emptypb.Empty]) error {
 	return status.Error(codes.Unimplemented, "method IngestEvents not implemented")
@@ -970,6 +1052,96 @@ func _Coordinator_CheckRateLimit_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Coordinator_ListBuffers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoordinatorServer).ListBuffers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Coordinator_ListBuffers_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoordinatorServer).ListBuffers(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Coordinator_GetBuffer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetBufferRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoordinatorServer).GetBuffer(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Coordinator_GetBuffer_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoordinatorServer).GetBuffer(ctx, req.(*GetBufferRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Coordinator_CreateBuffer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Buffer)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoordinatorServer).CreateBuffer(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Coordinator_CreateBuffer_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoordinatorServer).CreateBuffer(ctx, req.(*Buffer))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Coordinator_UpdateBuffer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Buffer)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoordinatorServer).UpdateBuffer(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Coordinator_UpdateBuffer_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoordinatorServer).UpdateBuffer(ctx, req.(*Buffer))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Coordinator_DeleteBuffer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetBufferRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoordinatorServer).DeleteBuffer(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Coordinator_DeleteBuffer_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoordinatorServer).DeleteBuffer(ctx, req.(*GetBufferRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Coordinator_IngestEvents_Handler(srv interface{}, stream grpc.ServerStream) error {
 	return srv.(CoordinatorServer).IngestEvents(&grpc.GenericServerStream[Event, emptypb.Empty]{ServerStream: stream})
 }
@@ -1101,6 +1273,26 @@ var Coordinator_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CheckRateLimit",
 			Handler:    _Coordinator_CheckRateLimit_Handler,
+		},
+		{
+			MethodName: "ListBuffers",
+			Handler:    _Coordinator_ListBuffers_Handler,
+		},
+		{
+			MethodName: "GetBuffer",
+			Handler:    _Coordinator_GetBuffer_Handler,
+		},
+		{
+			MethodName: "CreateBuffer",
+			Handler:    _Coordinator_CreateBuffer_Handler,
+		},
+		{
+			MethodName: "UpdateBuffer",
+			Handler:    _Coordinator_UpdateBuffer_Handler,
+		},
+		{
+			MethodName: "DeleteBuffer",
+			Handler:    _Coordinator_DeleteBuffer_Handler,
 		},
 		{
 			MethodName: "IngestMetrics",

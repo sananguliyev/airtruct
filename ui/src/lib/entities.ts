@@ -63,3 +63,12 @@ export type RateLimit = {
   config: string;
   createdAt: string;
 };
+
+export type Buffer = {
+  id: string;
+  parentID?: string;
+  label: string;
+  component: string;
+  config: string;
+  createdAt: string;
+};
