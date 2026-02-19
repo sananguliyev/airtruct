@@ -1,149 +1,42 @@
-# Airtruct - Powerful ETL tool in a single file
+# Airtruct
 
 > ETL Pipelines, Made Simple — scale as you need, without the hassle.
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)]() [![Status](https://img.shields.io/badge/Status-Early%20Development-orange.svg)]()
 
-Airtruct is a modern, open-source data pipeline tool designed to be a powerful and efficient alternative to tools like Airbyte and Fivetran. It empowers data analysts and scientists to easily build and manage data streams with a user-friendly, DAG-style UI.
+Airtruct is an open-source data pipeline tool — a lightweight, self-hosted alternative to Airbyte and Fivetran. Build and manage streams visually with a DAG-style UI, transform data with the built-in Bloblang DSL, and scale horizontally with a simple coordinator & worker architecture. Single binary, no Docker or JVM required.
 
-## Key Features
-
-- **Visual DAG-style Stream Builder:** Intuitive UI to visually create and manage data pipelines using a Directed Acyclic Graph (DAG) interface.
-- **Powerful In-Pipeline Transformations:** Utilize Bloblang, a lightweight, JSON-like DSL, for efficient data transformation and enrichment within the pipeline. Bloblang offers built-in mapping, filtering, and conditional logic, often replacing the need for separate transformation tools like dbt.
-- **Flexible Subprocess Processor:** Integrate processors or enrichers developed in any programming language. Communication occurs via stdin/stdout, ensuring language-agnostic compatibility.
-- **Native HTTP Input:** Accept data over HTTP, making it ideal for handling webhooks and streaming data sources.
-- **Horizontally Scalable Worker Pool Architecture:** Scale your data processing capabilities with a horizontally scalable worker pool.
-- **Delivery Guarantee:** Ensures reliable data delivery.
-- **Buffering and Caching:** Optimizes performance through buffering and caching mechanisms.
-- **Robust Error Handling:** Provides comprehensive error handling capabilities.
-
-## Why Airtruct?
-
-Airtruct stands out from traditional ETL tools through its **completely free Apache 2.0 license** and **zero operational overhead**. Unlike Docker-heavy alternatives that require complex setups, Airtruct runs as a single lightweight binary with no dependencies. It features **native transformation capabilities** using the powerful Bloblang DSL, eliminating the need for separate tools like dbt, while supporting **custom processors in any programming language** through simple stdin/stdout communication. With built-in HTTP input support for webhooks, a full **DAG-style visual interface**, and comprehensive observability (metrics, tracing, and logs), Airtruct delivers enterprise-grade functionality without the enterprise complexity. Its horizontally scalable worker pool architecture ensures you can handle massive workloads while maintaining the simplicity that makes data engineering enjoyable again.
-
-## Architecture
-
-Airtruct employs a Coordinator & Worker model:
-
-- **Coordinator:** Handles pipeline orchestration and workload balancing across workers.
-- **Workers:** Stateless processing units that auto-scale to meet processing demands.
-
-This architecture is lightweight and modular, with no Docker dependency, enabling easy deployment on various platforms, including Kubernetes, bare-metal servers, and virtual machines.
-
-```mermaid
-graph TD;
-    A[Coordinator] <--> B[Worker 1];
-    A[Coordinator] <--> C[Worker 2];
-    A[Coordinator] <--> D[Worker 3];
-    A[Coordinator] <--> E[Worker ...];
-
-    %% Styling for clarity
-    class A rectangle;
-    class B,C,D,E rectangle;
-
-```
-
-## Performance & Scalability
-
-Airtruct is designed for high performance and scalability:
-
-- **Go-native:** Built as a single binary with no VM or container overhead, keeping things light and fast.
-- **Memory-safe and Low CPU Usage:** Engineered for efficient resource utilization.
-- **Smart Load Balancing:** Worker pool model with intelligent load balancing.
-- **Parallel Execution Control:** Fine-grained control over parallel processing threads.
-- **Real-time & Batch Friendly:** Supports both real-time and batch data processing.
+**[Documentation](https://sananguliyev.github.io/airtruct/)** | **[Guides](https://sananguliyev.github.io/airtruct/docs/guides/kafka-to-postgresql)**
 
 ## Quick Start
 
-### 📦 1. Download the Latest Binary
+**Download** the latest binary from the [Releases page](https://github.com/sananguliyev/airtruct/releases), then:
 
-You can get started with **AirTruct** quickly by downloading the precompiled binary:
-
-- Go to the [Releases page](https://github.com/sananguliyev/airtruct/releases).
-- Find the latest release.
-- Download the appropriate binary for your operating system (Windows, macOS, or Linux).
-
-After downloading and extractict binary:
-
-- **On Linux/macOS**: make the binary executable:
 ```bash
-chmod +x [airtruct-binary-path]
-```
-- **On Windows**: just run the .exe file directly.
+chmod +x airtruct
 
-### ⚙️ 2. Set up Database
-Airtruct supports SQLite and PostgreSQL. Set the `DATABASE_DRIVER` and `DATABASE_URI` environment variables before running the coordinator, otherwise Airtruct will store data in memory and you will lose the data after the process stops.
+# Start coordinator
+./airtruct -role coordinator -grpc-port 50000
 
-#### SQLite (default)
-```bash
-export DATABASE_DRIVER="sqlite"
-export DATABASE_URI="file:./airtruct.sqlite?_foreign_keys=1&mode=rwc"
+# Start worker (in a separate terminal)
+./airtruct -role worker -grpc-port 50001
 ```
 
-#### PostgreSQL
+Open **http://localhost:8080** and start building pipelines.
 
-Airtruct supports both URL and DSN formats for PostgreSQL connections:
+### Docker Compose
 
-**URL Format (recommended):**
 ```bash
-export DATABASE_DRIVER="postgres"
-export DATABASE_URI="postgres://airtruct:yourpassword@localhost:5432/airtruct?sslmode=disable"
-```
-
-**DSN Format (alternative):**
-```bash
-export DATABASE_DRIVER="postgres"
-export DATABASE_URI="host=localhost user=airtruct password=yourpassword dbname=airtruct port=5432 sslmode=disable"
-```
-
-**Note:** For production PostgreSQL deployments, use `sslmode=require` or `sslmode=verify-full` and secure credentials.
-
-### 🚀 3. Run coordinator & worker
-Start the AirTruct coordinator by specifying the role and gRPC port:
- - optionatlly you can specify `-http-port` if you want to run console different port that `8080`
-```bash
-[airtruct-binary-path] -role coordinator -grpc-port 50000
-```
-
-Now run the worker with same command but role `worker` (if you are running both on the same host consider using different GRPC port).
-```bash
-[airtruct-binary-path] -role worker -grpc-port 50001
-```
-
-You're all set, just open the console http://localhost:8080 — happy building with AirTruct! 🎉
-
-### 🐳 Docker Compose (Alternative)
-
-Instead of running binaries manually, you can use Docker Compose to run Airtruct with either SQLite or PostgreSQL:
-
-#### Using SQLite (default)
-```bash
+git clone https://github.com/sananguliyev/airtruct.git
+cd airtruct
 docker-compose up
 ```
 
-#### Using PostgreSQL
-Edit `docker-compose.yml` and:
-1. Uncomment the `postgres` service section
-2. Uncomment the PostgreSQL environment variables in the `coordinator` service
-3. Comment out the SQLite environment variables
-4. Uncomment the `depends_on` section for the coordinator
-5. Uncomment the `postgres_data` volume at the bottom
+See the [Configuration docs](https://sananguliyev.github.io/airtruct/docs/getting-started/configuration) for database setup (SQLite, PostgreSQL) and other options.
 
-Then run:
-```bash
-docker-compose up
-```
+## Examples
 
-The coordinator will be available at http://localhost:8080
-
-## Example: Kafka to PostgreSQL Pipeline
-
-Want to see Airtruct in action? Check out our comprehensive [Kafka to PostgreSQL streaming example](examples/kafka-to-psql/) that demonstrates a complete end-to-end pipeline. This tutorial shows you how to stream events from Kafka through Avro schema registry processing directly into PostgreSQL, showcasing Airtruct's real-time processing capabilities and easy configuration.
-  
-## Documentation
-
-Documentation is currently in progress.  
-Feel free to open [issues](https://github.com/sananguliyev/airtruct/issues) if you have specific questions!
+- [Kafka to PostgreSQL](examples/kafka-to-psql/) — Stream events from Kafka through Avro schema decoding into PostgreSQL.
 
 ## Contributing
 
@@ -151,4 +44,4 @@ We welcome contributions! Please check out [CONTRIBUTING](CONTRIBUTING) (coming 
 
 ## License
 
-This project is licensed under the Apache 2.0 License. See the [LICENSE](LICENSE) file for details.
+Apache 2.0 — see [LICENSE](LICENSE) for details.
