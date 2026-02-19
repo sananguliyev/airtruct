@@ -4,7 +4,7 @@
 const config = {
   title: "Airtruct",
   tagline: "ETL Pipelines, Made Simple — scale as you need, without the hassle.",
-  favicon: "img/favicon.ico",
+  favicon: "img/favicon.svg",
 
   url: "https://airtruct.com",
   baseUrl: "/",
@@ -47,7 +47,12 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       navbar: {
-        title: "Airtruct",
+        title: "airtruct",
+        logo: {
+          alt: "Airtruct Logo",
+          src: "img/logo.svg",
+          srcDark: "img/logo-dark.svg",
+        },
         items: [
           {
             type: "docSidebar",

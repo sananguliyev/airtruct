@@ -494,6 +494,13 @@
 /* ======================== Features ======================== */
 .features {
   padding: 5rem 0;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+}
+
+[data-theme="dark"] .features {
+  background: #0f1623;
+  border-top-color: #1f2937;
 }
 
 .featuresHeader {
@@ -604,6 +611,7 @@
 .cta {
   padding: 5rem 0;
   background: #111827;
+  border-top: 1px solid #1f2937;
   color: #ffffff;
 }
 
