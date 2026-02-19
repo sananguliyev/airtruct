@@ -6,6 +6,7 @@ build
 *__debug*
 *.back
 dist
+target
 *.sqlite
 .test
 *.pos
