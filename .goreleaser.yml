@@ -19,11 +19,11 @@ builds:
       -X main.DateBuilt={{.Date}}
 archives:
   - id: airtruct
-    builds: [airtruct]
-    format: tar.gz
+    ids: [airtruct]
+    formats: [tar.gz]
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [zip]
     files:
       - README.md
       - LICENSE
