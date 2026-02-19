@@ -1,4 +1,11 @@
-import { Stream, Worker, Secret, Cache, RateLimit } from "./entities";
+import {
+  Stream,
+  StreamEvent,
+  Worker,
+  Secret,
+  Cache,
+  RateLimit,
+} from "./entities";
 import * as yaml from "js-yaml";
 
 // Placeholder API functions - adapt based on original logic and backend
@@ -899,6 +906,58 @@ export async function deleteBuffer(id: string): Promise<void> {
     }
   } catch (error) {
     console.error("Error deleting buffer:", error);
+    throw error;
+  }
+}
+
+export async function fetchStreamEvents(
+  streamId: string,
+  params: {
+    limit: number;
+    offset: number;
+    startTime: string;
+    endTime: string;
+  },
+): Promise<{ data: StreamEvent[]; total: number }> {
+  try {
+    const query = new URLSearchParams({
+      limit: params.limit.toString(),
+      offset: params.offset.toString(),
+      start_time: params.startTime,
+      end_time: params.endTime,
+    });
+
+    const response = await handleResponse(
+      await fetch(
+        `${API_BASE_URL}/streams/${streamId}/events?${query.toString()}`,
+        {
+          headers: getAuthHeaders(),
+        },
+      ),
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+
+    return {
+      data: (result.data || []).map((event: any) => ({
+        id: event.id,
+        worker_stream_id: event.workerStreamId,
+        flow_id: event.flowId,
+        section: event.section,
+        component_label: event.componentLabel,
+        type: event.type,
+        content: event.content,
+        meta: event.meta || {},
+        created_at: event.createdAt,
+      })),
+      total: result.total || 0,
+    };
+  } catch (error) {
+    console.error("Error fetching stream events:", error);
     throw error;
   }
 }

@@ -108,6 +108,7 @@ type StreamRepository interface {
 	Delete(id int64) error
 	ListAllByStatuses(...StreamStatus) ([]Stream, error)
 	ListAllActiveAndNonAssigned() ([]Stream, error)
+	ListAllVersionsByParentID(parentID int64) ([]Stream, error)
 }
 
 type streamRepository struct {
@@ -233,5 +234,16 @@ func (r *streamRepository) ListAllActiveAndNonAssigned() ([]Stream, error) {
 		return nil, err
 	}
 
+	return streams, nil
+}
+
+func (r *streamRepository) ListAllVersionsByParentID(parentID int64) ([]Stream, error) {
+	var streams []Stream
+	err := r.db.
+		Where("id = ? OR parent_id = ?", parentID, parentID).
+		Find(&streams).Error
+	if err != nil {
+		return nil, err
+	}
 	return streams, nil
 }

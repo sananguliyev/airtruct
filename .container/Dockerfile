@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM golang:1.24 AS build
+FROM golang:1.25 AS build
 
 ENV CGO_ENABLED=1
 ENV GOOS=linux

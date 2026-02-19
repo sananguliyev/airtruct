@@ -1,6 +1,8 @@
 CREATE TABLE IF NOT EXISTS events (
     id bigserial PRIMARY KEY,
+    stream_id bigint NOT NULL,
     worker_stream_id bigint NOT NULL,
+    flow_id text NOT NULL,
     section text NOT NULL,
     component_label text,
     type text NOT NULL,
@@ -8,7 +10,9 @@ CREATE TABLE IF NOT EXISTS events (
     meta bytea NOT NULL,
     created_at timestamptz
 );
+CREATE INDEX IF NOT EXISTS idx_events_stream_id ON events(stream_id);
 CREATE INDEX IF NOT EXISTS idx_events_worker_stream_id ON events(worker_stream_id);
+CREATE INDEX IF NOT EXISTS idx_events_flow_id ON events(flow_id);
 
 CREATE TABLE IF NOT EXISTS streams (
     id bigserial PRIMARY KEY,

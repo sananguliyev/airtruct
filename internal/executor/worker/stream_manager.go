@@ -96,7 +96,7 @@ func (m *streamManager) AddStream(workerStreamID int64, config string) error {
 		return err
 	}
 
-	stream, tracingSummary, err := streamBuilder.BuildTraced()
+	stream, tracingSummary, err := streamBuilder.BuildTracedV2()
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to build stream")
 		return err

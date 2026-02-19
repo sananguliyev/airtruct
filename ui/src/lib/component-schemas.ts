@@ -478,13 +478,6 @@ export const componentSchemas = {
     http_server: {
       title: "HTTP Server",
       properties: {
-        address: {
-          type: "input",
-          title: "Address",
-          description:
-            "An alternative address to host from. If left empty the service wide address is used",
-          default: "",
-        },
         path: {
           type: "input",
           title: "Path",

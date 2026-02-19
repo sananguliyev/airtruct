@@ -73,3 +73,15 @@ export type Buffer = {
   config: string;
   createdAt: string;
 };
+
+export type StreamEvent = {
+  id: number;
+  worker_stream_id: number;
+  flow_id: string;
+  section: string;
+  component_label: string;
+  type: string;
+  content: string;
+  meta: Record<string, any>;
+  created_at: string;
+};

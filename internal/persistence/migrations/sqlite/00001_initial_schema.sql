@@ -1,6 +1,8 @@
 CREATE TABLE IF NOT EXISTS events (
     id integer PRIMARY KEY,
+    stream_id integer,
     worker_stream_id integer NOT NULL,
+    flow_id text,
     section text NOT NULL,
     component_label text,
     type text NOT NULL,
@@ -8,7 +10,9 @@ CREATE TABLE IF NOT EXISTS events (
     meta blob NOT NULL,
     created_at datetime
 );
+CREATE INDEX IF NOT EXISTS idx_events_stream_id ON events(stream_id);
 CREATE INDEX IF NOT EXISTS idx_events_worker_stream_id ON events(worker_stream_id);
+CREATE INDEX IF NOT EXISTS idx_events_flow_id ON events(flow_id);
 
 CREATE TABLE IF NOT EXISTS streams (
     id integer PRIMARY KEY,

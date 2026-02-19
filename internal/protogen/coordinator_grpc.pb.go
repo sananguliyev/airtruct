@@ -50,6 +50,7 @@ const (
 	Coordinator_CreateBuffer_FullMethodName             = "/protorender.Coordinator/CreateBuffer"
 	Coordinator_UpdateBuffer_FullMethodName             = "/protorender.Coordinator/UpdateBuffer"
 	Coordinator_DeleteBuffer_FullMethodName             = "/protorender.Coordinator/DeleteBuffer"
+	Coordinator_ListEvents_FullMethodName               = "/protorender.Coordinator/ListEvents"
 	Coordinator_IngestEvents_FullMethodName             = "/protorender.Coordinator/IngestEvents"
 	Coordinator_IngestMetrics_FullMethodName            = "/protorender.Coordinator/IngestMetrics"
 )
@@ -96,6 +97,7 @@ type CoordinatorClient interface {
 	UpdateBuffer(ctx context.Context, in *Buffer, opts ...grpc.CallOption) (*BufferResponse, error)
 	DeleteBuffer(ctx context.Context, in *GetBufferRequest, opts ...grpc.CallOption) (*CommonResponse, error)
 	// Observability methods
+	ListEvents(ctx context.Context, in *ListEventsRequest, opts ...grpc.CallOption) (*ListEventsResponse, error)
 	IngestEvents(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Event, emptypb.Empty], error)
 	IngestMetrics(ctx context.Context, in *MetricsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
@@ -408,6 +410,16 @@ func (c *coordinatorClient) DeleteBuffer(ctx context.Context, in *GetBufferReque
 	return out, nil
 }
 
+func (c *coordinatorClient) ListEvents(ctx context.Context, in *ListEventsRequest, opts ...grpc.CallOption) (*ListEventsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListEventsResponse)
+	err := c.cc.Invoke(ctx, Coordinator_ListEvents_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *coordinatorClient) IngestEvents(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Event, emptypb.Empty], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &Coordinator_ServiceDesc.Streams[0], Coordinator_IngestEvents_FullMethodName, cOpts...)
@@ -473,6 +485,7 @@ type CoordinatorServer interface {
 	UpdateBuffer(context.Context, *Buffer) (*BufferResponse, error)
 	DeleteBuffer(context.Context, *GetBufferRequest) (*CommonResponse, error)
 	// Observability methods
+	ListEvents(context.Context, *ListEventsRequest) (*ListEventsResponse, error)
 	IngestEvents(grpc.BidiStreamingServer[Event, emptypb.Empty]) error
 	IngestMetrics(context.Context, *MetricsRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedCoordinatorServer()
@@ -574,6 +587,9 @@ func (UnimplementedCoordinatorServer) UpdateBuffer(context.Context, *Buffer) (*B
 }
 func (UnimplementedCoordinatorServer) DeleteBuffer(context.Context, *GetBufferRequest) (*CommonResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteBuffer not implemented")
+}
+func (UnimplementedCoordinatorServer) ListEvents(context.Context, *ListEventsRequest) (*ListEventsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListEvents not implemented")
 }
 func (UnimplementedCoordinatorServer) IngestEvents(grpc.BidiStreamingServer[Event, emptypb.Empty]) error {
 	return status.Error(codes.Unimplemented, "method IngestEvents not implemented")
@@ -1142,6 +1158,24 @@ func _Coordinator_DeleteBuffer_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Coordinator_ListEvents_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListEventsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoordinatorServer).ListEvents(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Coordinator_ListEvents_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoordinatorServer).ListEvents(ctx, req.(*ListEventsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Coordinator_IngestEvents_Handler(srv interface{}, stream grpc.ServerStream) error {
 	return srv.(CoordinatorServer).IngestEvents(&grpc.GenericServerStream[Event, emptypb.Empty]{ServerStream: stream})
 }
@@ -1293,6 +1327,10 @@ var Coordinator_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteBuffer",
 			Handler:    _Coordinator_DeleteBuffer_Handler,
+		},
+		{
+			MethodName: "ListEvents",
+			Handler:    _Coordinator_ListEvents_Handler,
 		},
 		{
 			MethodName: "IngestMetrics",
