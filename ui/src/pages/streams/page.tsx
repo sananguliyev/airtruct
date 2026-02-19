@@ -1,7 +1,7 @@
 import React, { useEffect, useState, lazy, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/data-table";
-import { Plus, Eye, Play, Pause, RotateCcw } from "lucide-react";
+import { Plus, Eye, Play, Pause, RotateCcw, ScrollText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/toast";
 import {
@@ -141,6 +141,16 @@ export default function StreamsPage() {
                   <RotateCcw className="h-4 w-4" />
                 </Button>
               )}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() =>
+                  navigate(`/streams/${stream.parentID || stream.id}/events`)
+                }
+                title="Events"
+              >
+                <ScrollText className="h-4 w-4" />
+              </Button>
               <Button
                 variant="ghost"
                 size="icon"

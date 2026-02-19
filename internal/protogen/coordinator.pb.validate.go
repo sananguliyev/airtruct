@@ -1409,6 +1409,39 @@ func (m *Event) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for FlowId
+
+	// no validation rules for Id
+
+	if all {
+		switch v := interface{}(m.GetCreatedAt()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, EventValidationError{
+					field:  "CreatedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, EventValidationError{
+					field:  "CreatedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCreatedAt()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return EventValidationError{
+				field:  "CreatedAt",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return EventMultiError(errors)
 	}
@@ -1493,6 +1526,319 @@ var _Event_Type_InLookup = map[string]struct{}{
 	"ERROR":   {},
 	"UNKNOWN": {},
 }
+
+// Validate checks the field values on ListEventsRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *ListEventsRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListEventsRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListEventsRequestMultiError, or nil if none found.
+func (m *ListEventsRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListEventsRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if m.GetStreamId() <= 0 {
+		err := ListEventsRequestValidationError{
+			field:  "StreamId",
+			reason: "value must be greater than 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Limit
+
+	// no validation rules for Offset
+
+	if all {
+		switch v := interface{}(m.GetStartTime()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ListEventsRequestValidationError{
+					field:  "StartTime",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ListEventsRequestValidationError{
+					field:  "StartTime",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetStartTime()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ListEventsRequestValidationError{
+				field:  "StartTime",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetEndTime()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ListEventsRequestValidationError{
+					field:  "EndTime",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ListEventsRequestValidationError{
+					field:  "EndTime",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetEndTime()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ListEventsRequestValidationError{
+				field:  "EndTime",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return ListEventsRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListEventsRequestMultiError is an error wrapping multiple validation errors
+// returned by ListEventsRequest.ValidateAll() if the designated constraints
+// aren't met.
+type ListEventsRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListEventsRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListEventsRequestMultiError) AllErrors() []error { return m }
+
+// ListEventsRequestValidationError is the validation error returned by
+// ListEventsRequest.Validate if the designated constraints aren't met.
+type ListEventsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListEventsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListEventsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListEventsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListEventsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListEventsRequestValidationError) ErrorName() string {
+	return "ListEventsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListEventsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListEventsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListEventsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListEventsRequestValidationError{}
+
+// Validate checks the field values on ListEventsResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListEventsResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListEventsResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListEventsResponseMultiError, or nil if none found.
+func (m *ListEventsResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListEventsResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListEventsResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListEventsResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListEventsResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for Total
+
+	if len(errors) > 0 {
+		return ListEventsResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListEventsResponseMultiError is an error wrapping multiple validation errors
+// returned by ListEventsResponse.ValidateAll() if the designated constraints
+// aren't met.
+type ListEventsResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListEventsResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListEventsResponseMultiError) AllErrors() []error { return m }
+
+// ListEventsResponseValidationError is the validation error returned by
+// ListEventsResponse.Validate if the designated constraints aren't met.
+type ListEventsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListEventsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListEventsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListEventsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListEventsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListEventsResponseValidationError) ErrorName() string {
+	return "ListEventsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListEventsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListEventsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListEventsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListEventsResponseValidationError{}
 
 // Validate checks the field values on MetricsRequest with the rules defined in
 // the proto definition for this message. If any rules are violated, the first

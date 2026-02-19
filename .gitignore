@@ -10,3 +10,6 @@ dist
 .test
 *.pos
 /airtruct
+*_test.yaml
+*.log
+.claude/settings.local.json

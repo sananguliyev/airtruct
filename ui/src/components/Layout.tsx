@@ -62,7 +62,7 @@ export default function ClientLayout({
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <div className="main-content flex-1 ml-[220px] transition-all duration-300">
+      <div className="main-content flex-1 min-w-0 ml-[220px] transition-all duration-300 overflow-hidden">
         <header
           className="h-16 flex items-center justify-between px-6 fixed top-0 z-10 rounded-b-lg shadow-sm bg-white dark:bg-gray-950 transition-all duration-300"
           style={{
@@ -132,7 +132,7 @@ export default function ClientLayout({
             </TooltipProvider>
           </div>
         </header>
-        <main className="pt-16 px-2">{children}</main>
+        <main className="pt-16 px-2 min-w-0 overflow-x-hidden">{children}</main>
       </div>
       <CommandPalette
         open={commandPaletteOpen}

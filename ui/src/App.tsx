@@ -31,6 +31,7 @@ import RateLimitsPage from "./pages/rate-limits/page.tsx";
 import RateLimitNewPage from "./pages/rate-limits/new/page.tsx";
 import RateLimitEditPage from "./pages/rate-limits/[id]/edit/page.tsx";
 import StreamEditPage from "./pages/streams/[id]/edit/page.tsx";
+import StreamEventsPage from "./pages/streams/[id]/events/page.tsx";
 import StreamNewPage from "./pages/streams/new/page.tsx";
 
 const AppLayout: React.FC = () => {
@@ -92,6 +93,7 @@ function App() {
             <Route path="streams" element={<StreamsPage />} />
             <Route path="streams/new" element={<StreamNewPage />} />
             <Route path="streams/:id/edit" element={<StreamEditPage />} />
+            <Route path="streams/:id/events" element={<StreamEventsPage />} />
             <Route path="workers" element={<WorkersPage />} />
             <Route path="secrets" element={<SecretsPage />} />
             <Route path="scanners" element={<ScannersPage />} />
