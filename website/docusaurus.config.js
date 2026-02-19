@@ -6,8 +6,8 @@ const config = {
   tagline: "ETL Pipelines, Made Simple — scale as you need, without the hassle.",
   favicon: "img/favicon.ico",
 
-  url: "https://sananguliyev.github.io",
-  baseUrl: "/airtruct/",
+  url: "https://airtruct.com",
+  baseUrl: "/",
 
   organizationName: "sananguliyev",
   projectName: "airtruct",

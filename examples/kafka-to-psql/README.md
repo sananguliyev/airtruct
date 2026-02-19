@@ -9,7 +9,7 @@ This tutorial demonstrates how to set up a complete streaming pipeline from Kafk
 5. Configure an Airtruct stream
 6. Test the end-to-end flow
 
-> For full documentation, see the [Kafka to PostgreSQL guide](https://sananguliyev.github.io/airtruct/docs/guides/kafka-to-postgresql).
+> For full documentation, see the [Kafka to PostgreSQL guide](https://airtruct.com/docs/guides/kafka-to-postgresql).
 
 ## Prerequisites
 

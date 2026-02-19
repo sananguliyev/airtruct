@@ -6,7 +6,7 @@
 
 Airtruct is an open-source data pipeline tool — a lightweight, self-hosted alternative to Airbyte and Fivetran. Build and manage streams visually with a DAG-style UI, transform data with the built-in Bloblang DSL, and scale horizontally with a simple coordinator & worker architecture. Single binary, no Docker or JVM required.
 
-**[Documentation](https://sananguliyev.github.io/airtruct/)** | **[Guides](https://sananguliyev.github.io/airtruct/docs/guides/kafka-to-postgresql)**
+**[Documentation](https://airtruct.com/)** | **[Guides](https://airtruct.com/docs/guides/kafka-to-postgresql)**
 
 ## Quick Start
 
@@ -32,7 +32,7 @@ cd airtruct
 docker-compose up
 ```
 
-See the [Configuration docs](https://sananguliyev.github.io/airtruct/docs/getting-started/configuration) for database setup (SQLite, PostgreSQL) and other options.
+See the [Configuration docs](https://airtruct.com/docs/getting-started/configuration) for database setup (SQLite, PostgreSQL) and other options.
 
 ## Examples
 
