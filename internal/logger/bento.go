@@ -110,7 +110,7 @@ func ParseBentoLogLevel(level string) string {
 func parseLogfmt(line string) map[string]string {
 	fields := make(map[string]string)
 
-	var key, value string
+	var key string
 	var inQuotes bool
 	var currentToken string
 
@@ -125,10 +125,8 @@ func parseLogfmt(line string) map[string]string {
 			inQuotes = !inQuotes
 		case ch == ' ' && !inQuotes:
 			if key != "" {
-				value = currentToken
-				fields[key] = value
+				fields[key] = currentToken
 				key = ""
-				value = ""
 				currentToken = ""
 			} else if currentToken != "" {
 				currentToken = ""
