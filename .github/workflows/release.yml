@@ -106,7 +106,7 @@ jobs:
             -e CGO_ENABLED=1 \
             -e GOOS=windows \
             -e GOARCH=${{ matrix.build_group == 'windows-amd64' && 'amd64' || 'arm64' }} \
-            x1unix/go-mingw:1.24 \
+            x1unix/go-mingw:1.25 \
             go build \
               -buildvcs=false \
               -ldflags="-s -w -X main.Version=${{ github.ref_name }} -X main.DateBuilt=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
