@@ -626,9 +626,10 @@ export const componentSchemas = {
           default: "1000",
         },
         position_cache: {
-          type: "input",
+          type: "dynamic_select",
           title: "Position Cache",
-          description: "Name of the cache resource to use for position tracking.",
+          description: "Cache resource to use for position tracking.",
+          dataSource: "caches",
           required: true,
         },
         position_cache_key: {
