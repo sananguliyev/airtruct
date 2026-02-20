@@ -1,4 +1,4 @@
-package mysql_replication
+package cdc_mysql
 
 import (
 	"fmt"
@@ -26,9 +26,8 @@ func newSchemaCache(host string, port int, user, password string, cacheTTL time.
 		return nil, fmt.Errorf("failed to connect to MySQL: %w", err)
 	}
 
-	// Test connection
 	if err := conn.Ping(); err != nil {
-		conn.Close()
+		_ = conn.Close()
 		return nil, fmt.Errorf("failed to ping MySQL: %w", err)
 	}
 
@@ -46,18 +45,15 @@ func (sc *schemaCache) getColumnNames(database, table string) ([]string, error) 
 	schema, exists := sc.cache[tableKey]
 	sc.mutex.RUnlock()
 
-	// Check if we have cached data and it's still valid
 	if exists && time.Since(schema.updatedAt) < sc.cacheTTL {
 		return schema.columns, nil
 	}
 
-	// Fetch fresh schema information
 	columns, err := sc.fetchColumnNames(database, table)
 	if err != nil {
 		return nil, err
 	}
 
-	// Update cache
 	sc.mutex.Lock()
 	sc.cache[tableKey] = &tableSchema{
 		columns:   columns,
@@ -70,9 +66,9 @@ func (sc *schemaCache) getColumnNames(database, table string) ([]string, error) 
 
 func (sc *schemaCache) fetchColumnNames(database, table string) ([]string, error) {
 	query := `
-		SELECT COLUMN_NAME 
-		FROM COLUMNS 
-		WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? 
+		SELECT COLUMN_NAME
+		FROM COLUMNS
+		WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?
 		ORDER BY ORDINAL_POSITION
 	`
 
@@ -91,13 +87,6 @@ func (sc *schemaCache) fetchColumnNames(database, table string) ([]string, error
 	}
 
 	return columns, nil
-}
-
-func (sc *schemaCache) invalidateTable(database, table string) {
-	tableKey := fmt.Sprintf("%s.%s", database, table)
-	sc.mutex.Lock()
-	delete(sc.cache, tableKey)
-	sc.mutex.Unlock()
 }
 
 func (sc *schemaCache) close() error {
