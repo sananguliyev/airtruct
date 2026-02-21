@@ -8,7 +8,7 @@ Inputs define where data enters your pipeline. Select an input type when creatin
 
 | Component | Description |
 |-----------|-------------|
-| [Generate](/docs/components/inputs/generate) | Generates synthetic messages for testing |
+| [Generate](/docs/components/inputs/generate) | Generates messages on a schedule — for testing or recurring job triggers |
 | [HTTP Client](/docs/components/inputs/http-client) | Pulls data via HTTP requests |
 | [HTTP Server](/docs/components/inputs/http-server) | Accepts incoming HTTP requests (webhooks) |
 | [Kafka](/docs/components/inputs/kafka) | Consumes messages from Kafka topics |
