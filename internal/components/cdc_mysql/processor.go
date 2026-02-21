@@ -92,7 +92,7 @@ func (ep *eventProcessor) processEvent(ev *replication.BinlogEvent) []binlogEven
 		case replication.WRITE_ROWS_EVENTv1, replication.WRITE_ROWS_EVENTv2:
 			event.Type = eventTypeInsert
 			for _, row := range e.Rows {
-				event.Data = ep.rowToMap(e.Table, row)
+				event.New = ep.rowToMap(e.Table, row)
 				events = append(events, event)
 			}
 		case replication.UPDATE_ROWS_EVENTv1, replication.UPDATE_ROWS_EVENTv2:
@@ -100,14 +100,14 @@ func (ep *eventProcessor) processEvent(ev *replication.BinlogEvent) []binlogEven
 			for i := 0; i < len(e.Rows); i += 2 {
 				if i+1 < len(e.Rows) {
 					event.Old = ep.rowToMap(e.Table, e.Rows[i])
-					event.Data = ep.rowToMap(e.Table, e.Rows[i+1])
+					event.New = ep.rowToMap(e.Table, e.Rows[i+1])
 					events = append(events, event)
 				}
 			}
 		case replication.DELETE_ROWS_EVENTv1, replication.DELETE_ROWS_EVENTv2:
 			event.Type = eventTypeDelete
 			for _, row := range e.Rows {
-				event.Data = ep.rowToMap(e.Table, row)
+				event.Old = ep.rowToMap(e.Table, row)
 				events = append(events, event)
 			}
 		}
