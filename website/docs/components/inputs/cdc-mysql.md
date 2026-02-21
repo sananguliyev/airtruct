@@ -68,8 +68,8 @@ Each message contains:
 | `type` | string | Operation type: `insert`, `update`, or `delete` |
 | `ts` | integer | Unix timestamp when the event was processed |
 | `server_id` | string | The configured server ID value |
-| `data` | object | Row data (present for all operation types) |
-| `old` | object | Previous row data (only for `update`) |
+| `new` | object | Row after the change — present for `insert` and `update`, absent for `delete` |
+| `old` | object | Row before the change — present for `update` and `delete`, absent for `insert` |
 | `gtid` | string | GTID of the transaction (when using GTID mode) |
 
 :::tip

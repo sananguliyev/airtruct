@@ -14,7 +14,7 @@ type binlogEvent struct {
 	Type     eventType      `json:"type"`
 	Ts       int64          `json:"ts"`
 	ServerID string         `json:"server_id"`
-	Data     map[string]any `json:"data"`
+	New      map[string]any `json:"new,omitempty"`
 	Old      map[string]any `json:"old,omitempty"`
 	GTID     string         `json:"gtid,omitempty"`
 }
@@ -26,7 +26,7 @@ func (be *binlogEvent) ToMap() map[string]any {
 		"type":     string(be.Type),
 		"ts":       be.Ts,
 		"server_id": be.ServerID,
-		"data":     be.Data,
+		"new":      be.New,
 		"old":      be.Old,
 		"gtid":     be.GTID,
 	}
