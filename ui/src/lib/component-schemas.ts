@@ -590,8 +590,8 @@ export const componentSchemas = {
         },
       },
     },
-    mysql_replication: {
-      title: "MySQL (MariaDB) Replication (Experimental)",
+    cdc_mysql: {
+      title: "MySQL (MariaDB) CDC (Experimental)",
       properties: {
         host: {
           type: "input",
@@ -619,18 +619,45 @@ export const componentSchemas = {
           required: true,
         },
         server_id: {
-          type: "number",
+          type: "input",
           title: "Server ID",
           description:
-            "Unique server ID for this binlog consumer. Must be different from the MySQL server ID and other consumers.",
-          default: 1000,
+            "Unique server ID for this binlog consumer. Corresponds to MySQL's server_id. Can be an integer or string.",
+          default: "1000",
         },
-        position_file: {
+        position_cache: {
+          type: "dynamic_select",
+          title: "Position Cache",
+          description: "Cache resource to use for position tracking.",
+          dataSource: "caches",
+          required: true,
+        },
+        position_cache_key: {
           type: "input",
-          title: "Position File",
+          title: "Position Cache Key",
+          description: "Cache key to use for storing position information.",
+          required: true,
+        },
+        position_mode: {
+          type: "select",
+          title: "Position Mode",
+          description: "Position tracking mode: 'gtid' (default) or 'file'.",
+          options: ["gtid", "file"],
+          default: "gtid",
+        },
+        flavor: {
+          type: "select",
+          title: "Flavor",
+          description: "Database flavor: 'mysql' (default) or 'mariadb'.",
+          options: ["mysql", "mariadb"],
+          default: "mysql",
+        },
+        cache_save_interval: {
+          type: "input",
+          title: "Cache Save Interval",
           description:
-            "File path to store/read position information for resuming. Will be created if it doesn't exist.",
-          default: "./mysql_binlog.pos",
+            "Interval for saving binlog position to cache (e.g., '10s', '1m'). Set to '0s' to save immediately.",
+          default: "30s",
         },
         include_tables: {
           type: "array",
@@ -650,8 +677,8 @@ export const componentSchemas = {
           type: "bool",
           title: "Use Schema Cache",
           description:
-            "Enable schema caching to get column names without requiring --binlog-row-metadata=FULL. This queries INFORMATION_SCHEMA to map column positions to names.",
-          default: false,
+            "Enable schema caching to get column names without requiring --binlog-row-metadata=FULL.",
+          default: true,
         },
         schema_cache_ttl: {
           type: "input",
@@ -660,19 +687,40 @@ export const componentSchemas = {
             "TTL for schema cache entries (e.g., '5m', '1h'). Schema is refreshed when cache expires.",
           default: "5m",
         },
-        position_mode: {
-          type: "select",
-          title: "Position Mode",
-          description: "Position tracking mode: 'gtid' (default) or 'file'.",
-          options: ["gtid", "file"],
-          default: "gtid",
+        max_batch_size: {
+          type: "number",
+          title: "Max Batch Size",
+          description:
+            "Maximum number of messages per batch. Prevents unbounded memory growth for large transactions.",
+          default: 1000,
         },
-        flavor: {
-          type: "select",
-          title: "Flavor",
-          description: "Database flavor: 'mysql' (default) or 'mariadb'.",
-          options: ["mysql", "mariadb"],
-          default: "mysql",
+        max_pending_checkpoints: {
+          type: "number",
+          title: "Max Pending Checkpoints",
+          description:
+            "Maximum number of pending checkpoints. Provides backpressure when downstream is slow.",
+          default: 100,
+        },
+        retry_initial_interval: {
+          type: "input",
+          title: "Retry Initial Interval",
+          description:
+            "Initial wait time before first retry attempt (e.g., '1s', '500ms').",
+          default: "1s",
+        },
+        retry_max_interval: {
+          type: "input",
+          title: "Retry Max Interval",
+          description:
+            "Maximum wait time between retry attempts (e.g., '30s', '1m').",
+          default: "30s",
+        },
+        retry_multiplier: {
+          type: "number",
+          title: "Retry Multiplier",
+          description:
+            "Multiplier for exponential backoff (e.g., 2.0 for doubling).",
+          default: 2.0,
         },
       },
     },
@@ -2261,7 +2309,7 @@ export const componentLists = {
     "http_server",
     "kafka",
     "broker",
-    "mysql_replication",
+    "cdc_mysql",
     "shopify",
   ],
   pipeline: [
