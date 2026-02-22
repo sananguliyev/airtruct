@@ -33,6 +33,7 @@ const sidebars = {
             "components/inputs/http-client",
             "components/inputs/http-server",
             "components/inputs/kafka",
+            "components/inputs/amqp-0-9",
             "components/inputs/broker",
             "components/inputs/cdc-mysql",
             "components/inputs/shopify",
@@ -57,6 +58,7 @@ const sidebars = {
           items: [
             "components/outputs/http-client",
             "components/outputs/kafka",
+            "components/outputs/amqp-0-9",
             "components/outputs/sql-insert",
             "components/outputs/sync-response",
             "components/outputs/switch",
