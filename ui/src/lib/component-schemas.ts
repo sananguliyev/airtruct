@@ -827,6 +827,13 @@ export const componentSchemas = {
           description: "The maximum number of pending messages to have consumed at a time.",
           default: 10,
         },
+        nack_reject_patterns: {
+          type: "array",
+          title: "Nack Reject Patterns",
+          description:
+            "A list of regular expressions. If a message fails processing and its error matches any pattern, it will be dropped (rejected) instead of requeued.",
+          default: [],
+        },
         queue_declare: {
           type: "object",
           title: "Queue Declare",
