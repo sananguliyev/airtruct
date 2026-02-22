@@ -29,7 +29,7 @@ type IngestResult struct {
 type ServiceStream struct {
 	Stream         *service.Stream
 	Cancel         context.CancelFunc
-	Mux            *http.ServeMux
+	Mux            http.Handler
 	Status         persistence.WorkerStreamStatus
 	TracingSummary *service.TracingSummary
 }
@@ -72,7 +72,7 @@ func (m *streamManager) AddStream(workerStreamID int64, config string) error {
 	}
 
 	streamBuilder := service.NewStreamBuilder()
-	streamMux := http.NewServeMux()
+	streamMux := newSafeMux()
 	streamBuilder.SetHTTPMux(streamMux)
 
 	slogLogger := logger.NewSlogLogger("INFO", map[string]any{
