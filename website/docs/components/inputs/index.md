@@ -12,6 +12,7 @@ Inputs define where data enters your pipeline. Select an input type when creatin
 | [HTTP Client](/docs/components/inputs/http-client) | Pulls data via HTTP requests |
 | [HTTP Server](/docs/components/inputs/http-server) | Accepts incoming HTTP requests (webhooks) |
 | [Kafka](/docs/components/inputs/kafka) | Consumes messages from Kafka topics |
+| [AMQP 0.9](/docs/components/inputs/amqp-0-9) | Consumes messages from an AMQP 0.9 queue (e.g. RabbitMQ) |
 | [Broker](/docs/components/inputs/broker) | Combines multiple inputs into one stream |
 | [CDC MySQL](/docs/components/inputs/cdc-mysql) | CDC from MySQL/MariaDB binlog |
 | [Shopify](/docs/components/inputs/shopify) | Fetches data from Shopify stores |

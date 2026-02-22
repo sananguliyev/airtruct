@@ -7,6 +7,8 @@ slug: /
 
 Airtruct is a modern, open-source data pipeline tool designed to be a powerful and efficient alternative to tools like Airbyte and Fivetran. It empowers data analysts and scientists to easily build and manage data streams with a user-friendly, DAG-style UI.
 
+At its core, Airtruct uses [Bento](https://warpstreamlabs.github.io/bento/) as the stream processing engine. Bento provides battle-tested connectors, at-least-once delivery guarantees, and a rich set of processors — all driven by Airtruct's coordinator-worker architecture and managed through the UI without writing any configuration by hand.
+
 ## Key Features
 
 - **Visual DAG-style Stream Builder** — Intuitive UI to visually create and manage data pipelines using a Directed Acyclic Graph interface.

@@ -791,6 +791,69 @@ export const componentSchemas = {
         },
       },
     },
+    amqp_0_9: {
+      title: "AMQP 0.9",
+      properties: {
+        urls: {
+          type: "array",
+          title: "URLs",
+          description:
+            "A list of URLs to connect to. The first URL to successfully establish a connection will be used.",
+          default: [],
+          required: true,
+        },
+        queue: {
+          type: "input",
+          title: "Queue",
+          description: "An AMQP queue to consume from.",
+          required: true,
+        },
+        consumer_tag: {
+          type: "input",
+          title: "Consumer Tag",
+          description: "An identifier for the consumer connection.",
+          default: "",
+        },
+        auto_ack: {
+          type: "bool",
+          title: "Auto Ack",
+          description:
+            "Acknowledge messages automatically on receipt, skipping downstream acknowledgment.",
+          default: false,
+        },
+        prefetch_count: {
+          type: "number",
+          title: "Prefetch Count",
+          description: "The maximum number of pending messages to have consumed at a time.",
+          default: 10,
+        },
+        queue_declare: {
+          type: "object",
+          title: "Queue Declare",
+          description: "Optionally declare the queue during connection.",
+          properties: {
+            enabled: {
+              type: "bool",
+              title: "Enabled",
+              description: "Whether to declare the queue during connection.",
+              default: false,
+            },
+            durable: {
+              type: "bool",
+              title: "Durable",
+              description: "Whether the declared queue is durable.",
+              default: true,
+            },
+            auto_delete: {
+              type: "bool",
+              title: "Auto Delete",
+              description: "Whether the declared queue will auto-delete when there are no consumers.",
+              default: false,
+            },
+          },
+        },
+      },
+    },
   },
   pipeline: {
     mapping: {
@@ -1827,6 +1890,81 @@ export const componentSchemas = {
         },
       },
     },
+    amqp_0_9: {
+      title: "AMQP 0.9",
+      properties: {
+        urls: {
+          type: "array",
+          title: "URLs",
+          description:
+            "A list of URLs to connect to. The first URL to successfully establish a connection will be used.",
+          default: [],
+          required: true,
+        },
+        exchange: {
+          type: "input",
+          title: "Exchange",
+          description: "An AMQP exchange to publish to. Supports interpolation functions.",
+          required: true,
+        },
+        key: {
+          type: "input",
+          title: "Routing Key",
+          description: "The binding key for each message. Supports interpolation functions.",
+          default: "",
+        },
+        type: {
+          type: "input",
+          title: "Type",
+          description: "The type property for each message. Supports interpolation functions.",
+          default: "",
+        },
+        content_type: {
+          type: "input",
+          title: "Content Type",
+          description: "The content type attribute for published messages.",
+          default: "application/octet-stream",
+        },
+        persistent: {
+          type: "bool",
+          title: "Persistent",
+          description: "Whether messages should be sent with persistent delivery mode.",
+          default: false,
+        },
+        max_in_flight: {
+          type: "number",
+          title: "Max In Flight",
+          description: "The maximum number of messages to have in flight at a given time.",
+          default: 64,
+        },
+        exchange_declare: {
+          type: "object",
+          title: "Exchange Declare",
+          description: "Optionally declare the target exchange during connection.",
+          properties: {
+            enabled: {
+              type: "bool",
+              title: "Enabled",
+              description: "Whether to declare the exchange during connection.",
+              default: false,
+            },
+            type: {
+              type: "select",
+              title: "Type",
+              description: "The type of exchange to declare.",
+              options: ["direct", "fanout", "topic", "x-custom"],
+              default: "direct",
+            },
+            durable: {
+              type: "bool",
+              title: "Durable",
+              description: "Whether the declared exchange is durable.",
+              default: true,
+            },
+          },
+        },
+      },
+    },
   },
   cache: {
     memory: {
@@ -2308,6 +2446,7 @@ export const componentLists = {
     "http_client",
     "http_server",
     "kafka",
+    "amqp_0_9",
     "broker",
     "cdc_mysql",
     "shopify",
@@ -2322,6 +2461,7 @@ export const componentLists = {
   output: [
     "http_client",
     "kafka",
+    "amqp_0_9",
     "sync_response",
     "switch",
     "broker",
