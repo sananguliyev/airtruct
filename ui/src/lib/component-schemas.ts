@@ -863,6 +863,89 @@ export const componentSchemas = {
     },
   },
   pipeline: {
+    ai_gateway: {
+      title: "AI Gateway",
+      description:
+        "Calls an AI chat completion API and maps the response into the message.",
+      properties: {
+        provider: {
+          type: "select",
+          title: "Provider",
+          description: "The AI provider to use for chat completions.",
+          options: ["openai", "anthropic"],
+          required: true,
+        },
+        model: {
+          type: "input",
+          title: "Model",
+          description:
+            "The model identifier to use (e.g., 'gpt-4o', 'claude-sonnet-4-6').",
+          required: true,
+        },
+        api_key: {
+          type: "input",
+          title: "API Key",
+          description:
+            "API key for authenticating with the AI provider.",
+          required: true,
+        },
+        base_url: {
+          type: "input",
+          title: "Base URL",
+          description:
+            "Custom base URL for the API endpoint. When empty, uses the provider's default URL.",
+          default: "",
+        },
+        system_prompt: {
+          type: "code",
+          title: "System Prompt",
+          description:
+            "An optional system prompt to set the behavior of the AI model.",
+          default: "",
+        },
+        prompt: {
+          type: "code",
+          title: "Prompt",
+          description:
+            "The user prompt template. Use %v placeholders for values provided by args_mapping.",
+          required: true,
+        },
+        args_mapping: {
+          type: "code",
+          title: "Args Mapping",
+          description:
+            "A Bloblang mapping which should evaluate to an array of values matching the number of %v placeholders in the prompt.",
+        },
+        unsafe_dynamic_prompt: {
+          type: "bool",
+          title: "Unsafe Dynamic Prompt",
+          description:
+            "When enabled, the prompt and system_prompt fields support interpolation functions like ${!this.field_name}.",
+          default: false,
+        },
+        max_tokens: {
+          type: "number",
+          title: "Max Tokens",
+          description:
+            "Maximum number of tokens to generate in the response.",
+          default: 1024,
+        },
+        temperature: {
+          type: "number",
+          title: "Temperature",
+          description:
+            "Sampling temperature for the model. Higher values produce more random output.",
+          default: 1.0,
+        },
+        result_map: {
+          type: "code",
+          title: "Result Map",
+          description:
+            "A Bloblang mapping executed on the AI response and applied to the original message. In this mapping, 'this' refers to the AI response object (content, model, finish_reason, usage) and 'root' refers to the original message.",
+          required: true,
+        },
+      },
+    },
     mapping: {
       title: "Mapping",
       flat: true,
@@ -2459,6 +2542,7 @@ export const componentLists = {
     "shopify",
   ],
   pipeline: [
+    "ai_gateway",
     "mapping",
     "json_schema",
     "catch",

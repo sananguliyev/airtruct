@@ -326,8 +326,10 @@ require (
 )
 
 require (
+	github.com/anthropics/anthropic-sdk-go v1.26.0
 	github.com/bold-commerce/go-shopify/v4 v4.7.0
 	github.com/go-mysql-org/go-mysql v1.13.0
+	github.com/openai/openai-go/v3 v3.22.0
 	github.com/rakyll/statik v0.1.7
 	github.com/rs/cors v1.11.1
 	gorm.io/driver/postgres v1.6.0
@@ -432,6 +434,10 @@ require (
 	github.com/sugarme/tokenizer v0.2.3-0.20250716014333-b9b58278e3cc // indirect
 	github.com/theparanoids/crypki v1.20.9 // indirect
 	github.com/tidwall/btree v1.8.1 // indirect
+	github.com/tidwall/gjson v1.18.0 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.1 // indirect
+	github.com/tidwall/sjson v1.2.5 // indirect
 	github.com/viant/afs v1.26.3 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/yalue/onnxruntime_go v1.21.0 // indirect

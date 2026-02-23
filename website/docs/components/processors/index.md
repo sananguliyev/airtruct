@@ -8,6 +8,7 @@ Processors transform, validate, or route messages within a pipeline. They are ap
 
 | Component | Description |
 |-----------|-------------|
+| [AI Gateway](/docs/components/processors/ai-gateway) | Calls an AI chat completion API (OpenAI, Anthropic) |
 | [Mapping](/docs/components/processors/mapping) | Bloblang transformations |
 | [JSON Schema](/docs/components/processors/json-schema) | Validates messages against a JSON schema |
 | [Catch](/docs/components/processors/catch) | Error handling — runs processors on failure |

@@ -44,6 +44,7 @@ const sidebars = {
           label: "Processors",
           link: { type: "doc", id: "components/processors/index" },
           items: [
+            "components/processors/ai-gateway",
             "components/processors/mapping",
             "components/processors/json-schema",
             "components/processors/catch",
