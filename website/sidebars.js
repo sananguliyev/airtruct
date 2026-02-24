@@ -9,6 +9,7 @@ const sidebars = {
         "getting-started/installation",
         "getting-started/quickstart",
         "getting-started/configuration",
+        "getting-started/authentication",
       ],
     },
     {
@@ -76,6 +77,7 @@ const sidebars = {
         "guides/kafka-to-postgresql",
         "guides/http-webhooks",
         "guides/scaling-workers",
+        "guides/keycloak-authentication",
       ],
     },
     {
