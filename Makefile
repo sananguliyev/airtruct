@@ -38,6 +38,9 @@ run-worker: check-env
 run-ui:
 	pnpm --prefix ui run dev
 
+run-website:
+	pnpm --prefix website start
+
 docker-up: check-env
 	docker-compose up -d
 

@@ -4,7 +4,7 @@
 
 [![license](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/sananguliyev/airtruct)](https://github.com/sananguliyev/airtruct/releases) [![Go Report Card](https://goreportcard.com/badge/github.com/sananguliyev/airtruct)](https://goreportcard.com/report/github.com/sananguliyev/airtruct)
 
-Airtruct is an open-source data pipeline tool — a lightweight, self-hosted alternative to Airbyte and Fivetran. Build and manage streams visually with a DAG-style UI, transform data with the built-in Bloblang DSL, and scale horizontally with a simple coordinator & worker architecture. Single binary, no Docker or JVM required.
+Airtruct is an open-source data pipeline tool — a lightweight, self-hosted alternative to Airbyte and Fivetran. Build and manage streams visually with a pipeline builder UI, transform data with the built-in Bloblang DSL, and scale horizontally with a simple coordinator & worker architecture. Single binary, no Docker or JVM required.
 
 **[Documentation](https://airtruct.com/)** | **[Guides](https://airtruct.com/docs/guides/kafka-to-postgresql)**
 
