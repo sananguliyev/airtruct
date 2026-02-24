@@ -16,6 +16,32 @@ All Airtruct settings can be configured via environment variables.
 | `DISCOVERY_URI` | string | `localhost:50000` | Coordinator address for worker discovery |
 | `DEBUG_MODE` | bool | `false` | Enable debug logging |
 
+## Security
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `SECRET_KEY` | string | — | 32-byte encryption key, also used for signing JWT tokens |
+
+## Authentication
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `AUTH_TYPE` | string | `none` | Authentication mode: `none`, `basic`, or `oauth2` |
+| `AUTH_BASIC_USERNAME` | string | — | Username for basic auth |
+| `AUTH_BASIC_PASSWORD` | string | — | Password for basic auth |
+| `AUTH_OAUTH2_CLIENT_ID` | string | — | OAuth2 client ID |
+| `AUTH_OAUTH2_CLIENT_SECRET` | string | — | OAuth2 client secret |
+| `AUTH_OAUTH2_AUTHORIZATION_URL` | string | — | OAuth2 authorization endpoint |
+| `AUTH_OAUTH2_TOKEN_URL` | string | — | OAuth2 token endpoint |
+| `AUTH_OAUTH2_REDIRECT_URL` | string | — | OAuth2 redirect URL (e.g., `http://localhost:8080/auth/callback`) |
+| `AUTH_OAUTH2_SCOPES` | string | — | Comma-separated OAuth2 scopes |
+| `AUTH_OAUTH2_USER_INFO_URL` | string | — | OAuth2 user info endpoint |
+| `AUTH_OAUTH2_ALLOWED_USERS` | string | — | Comma-separated allowed email addresses |
+| `AUTH_OAUTH2_ALLOWED_DOMAINS` | string | — | Comma-separated allowed email domains |
+| `AUTH_OAUTH2_SESSION_COOKIE_NAME` | string | `airtruct_session` | Session cookie name |
+
+See [Authentication](/docs/getting-started/authentication) for setup instructions.
+
 ## Database
 
 | Variable | Type | Default | Description |
