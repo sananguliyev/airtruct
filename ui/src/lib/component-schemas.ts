@@ -961,11 +961,17 @@ export const componentSchemas = {
     json_schema: {
       title: "JSON Schema",
       properties: {
+        schema_path: {
+          type: "file",
+          title: "Schema File",
+          description:
+            "Select a file from the file manager containing the JSON schema.",
+        },
         schema: {
           type: "code",
-          title: "Schema",
-          description: "A JSON schema to validate messages against.",
-          required: true,
+          title: "Inline Schema",
+          description:
+            "A JSON schema to validate messages against. Used if no schema file is selected.",
         },
       },
     },
@@ -1175,6 +1181,12 @@ export const componentSchemas = {
           },
         },
       },
+    },
+    sync_response: {
+      title: "Sync Response",
+      description:
+        "Returns the current message payload as a synchronous response to the input source. Useful with http_server input to send custom responses.",
+      properties: {},
     },
   },
   output: {
@@ -2548,6 +2560,7 @@ export const componentLists = {
     "catch",
     "switch",
     "schema_registry_decode",
+    "sync_response",
   ],
   output: [
     "http_client",

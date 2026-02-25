@@ -176,6 +176,7 @@ func (c *CoordinatorCLI) Run(ctx context.Context) {
 		if err != nil {
 			log.Error().Err(err).Msg("failed to ingest stream")
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 		w.WriteHeader(int(statusCode))
 		w.Write(response)

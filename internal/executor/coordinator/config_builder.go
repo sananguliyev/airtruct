@@ -1,45 +1,58 @@
 package coordinator
 
 import (
+	"fmt"
+	"path/filepath"
 	"slices"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 
 	"github.com/sananguliyev/airtruct/internal/persistence"
 )
 
+const (
+	FileRefPrefix    = "airtruct://"
+	WorkerFilesDir   = "/tmp/airtruct/files"
+)
+
+type BuildResult struct {
+	Config string
+	Files  []persistence.File
+}
+
 type ConfigBuilder interface {
-	BuildStreamConfig(stream persistence.Stream) (string, error)
+	BuildStreamConfig(stream persistence.Stream) (*BuildResult, error)
 }
 
 type configBuilder struct {
 	streamCacheRepo     persistence.StreamCacheRepository
 	streamRateLimitRepo persistence.StreamRateLimitRepository
+	fileRepo            persistence.FileRepository
 }
 
-func NewConfigBuilder(streamCacheRepo persistence.StreamCacheRepository, streamRateLimitRepo persistence.StreamRateLimitRepository) ConfigBuilder {
+func NewConfigBuilder(streamCacheRepo persistence.StreamCacheRepository, streamRateLimitRepo persistence.StreamRateLimitRepository, fileRepo persistence.FileRepository) ConfigBuilder {
 	return &configBuilder{
 		streamCacheRepo:     streamCacheRepo,
 		streamRateLimitRepo: streamRateLimitRepo,
+		fileRepo:            fileRepo,
 	}
 }
 
-func (b *configBuilder) BuildStreamConfig(stream persistence.Stream) (string, error) {
+func (b *configBuilder) BuildStreamConfig(stream persistence.Stream) (*BuildResult, error) {
 	configMap := make(map[string]any)
 
-	// Build cache_resources section if there are any
 	cacheResources, err := b.buildCacheResourcesConfig(stream.ID)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if len(cacheResources) > 0 {
 		configMap["cache_resources"] = cacheResources
 	}
 
-	// Build rate_limit_resources section if there are any
 	rateLimitResources, err := b.buildRateLimitResourcesConfig(stream.ID)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if len(rateLimitResources) > 0 {
 		configMap["rate_limit_resources"] = rateLimitResources
@@ -47,30 +60,97 @@ func (b *configBuilder) BuildStreamConfig(stream persistence.Stream) (string, er
 
 	input, err := b.buildInputConfig(stream)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	configMap["input"] = input
 
 	if len(stream.Processors) > 0 {
 		pipeline, err := b.buildPipelineConfig(stream.Processors)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 		configMap["pipeline"] = pipeline
 	}
 
 	output, err := b.buildOutputConfig(stream)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	configMap["output"] = output
 
-	configYAML, err := yaml.Marshal(configMap)
-	if err != nil {
-		return "", err
+	fileKeys := collectFileRefs(configMap)
+	var files []persistence.File
+	if len(fileKeys) > 0 {
+		files, err = b.fileRepo.FindByKeys(fileKeys)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch referenced files: %w", err)
+		}
+		if len(files) != len(fileKeys) {
+			found := make(map[string]bool)
+			for _, f := range files {
+				found[f.Key] = true
+			}
+			for _, key := range fileKeys {
+				if !found[key] {
+					return nil, fmt.Errorf("referenced file not found: %s", key)
+				}
+			}
+		}
+		resolveFileRefs(configMap)
 	}
 
-	return string(configYAML), nil
+	configYAML, err := yaml.Marshal(configMap)
+	if err != nil {
+		return nil, err
+	}
+
+	return &BuildResult{
+		Config: string(configYAML),
+		Files:  files,
+	}, nil
+}
+
+func collectFileRefs(v any) []string {
+	var keys []string
+	switch val := v.(type) {
+	case map[string]any:
+		for _, child := range val {
+			keys = append(keys, collectFileRefs(child)...)
+		}
+	case []any:
+		for _, child := range val {
+			keys = append(keys, collectFileRefs(child)...)
+		}
+	case string:
+		if strings.HasPrefix(val, FileRefPrefix) {
+			key := strings.TrimPrefix(val, FileRefPrefix)
+			keys = append(keys, key)
+		}
+	}
+	return keys
+}
+
+func resolveFileRefs(v any) {
+	switch val := v.(type) {
+	case map[string]any:
+		for k, child := range val {
+			if s, ok := child.(string); ok && strings.HasPrefix(s, FileRefPrefix) {
+				key := strings.TrimPrefix(s, FileRefPrefix)
+				val[k] = "file://" + filepath.Join(WorkerFilesDir, key)
+			} else {
+				resolveFileRefs(child)
+			}
+		}
+	case []any:
+		for i, child := range val {
+			if s, ok := child.(string); ok && strings.HasPrefix(s, FileRefPrefix) {
+				key := strings.TrimPrefix(s, FileRefPrefix)
+				val[i] = "file://" + filepath.Join(WorkerFilesDir, key)
+			} else {
+				resolveFileRefs(child)
+			}
+		}
+	}
 }
 
 func (b *configBuilder) buildInputConfig(stream persistence.Stream) (map[string]any, error) {
@@ -97,20 +177,20 @@ func (b *configBuilder) buildOutputConfig(stream persistence.Stream) (map[string
 	return output, nil
 }
 
-func (b *configBuilder) buildPipelineConfig(processors []persistence.StreamProcessor) (map[string][]any, error) {
-	pipeline := map[string][]any{
-		"processors": make([]any, len(processors)),
-	}
+func (b *configBuilder) buildPipelineConfig(processors []persistence.StreamProcessor) (map[string]any, error) {
+	processorList := make([]any, len(processors))
 
 	for i, processor := range processors {
 		processorConfig, err := b.buildProcessorConfig(processor)
 		if err != nil {
 			return nil, err
 		}
-		pipeline["processors"][i] = processorConfig
+		processorList[i] = processorConfig
 	}
 
-	return pipeline, nil
+	return map[string]any{
+		"processors": processorList,
+	}, nil
 }
 
 func (b *configBuilder) buildProcessorConfig(processor persistence.StreamProcessor) (map[string]any, error) {
@@ -155,7 +235,6 @@ func (b *configBuilder) buildCacheResourcesConfig(streamID int64) ([]map[string]
 		cacheResource := make(map[string]any)
 		cacheResource["label"] = streamCache.Cache.Label
 
-		// Parse the cache config
 		cacheConfig := make(map[string]any)
 		if err := yaml.Unmarshal(streamCache.Cache.Config, &cacheConfig); err != nil {
 			return nil, err

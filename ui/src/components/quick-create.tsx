@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Layers, KeyRound, MemoryStick, Gauge } from "lucide-react";
+import { Plus, Layers, KeyRound, MemoryStick, Gauge, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -26,6 +26,10 @@ export function QuickCreate({ isCollapsed }: { isCollapsed: boolean }) {
 
   const handleCreateSecret = () => {
     navigate("/secrets?create=true");
+  };
+
+  const handleCreateFile = () => {
+    navigate("/files/new");
   };
 
   return (
@@ -59,6 +63,10 @@ export function QuickCreate({ isCollapsed }: { isCollapsed: boolean }) {
         <DropdownMenuItem onSelect={handleCreateRateLimit}>
           <Gauge className="mr-2 h-4 w-4" />
           New Rate Limit
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={handleCreateFile}>
+          <FileText className="mr-2 h-4 w-4" />
+          New File
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

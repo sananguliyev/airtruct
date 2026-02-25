@@ -11,7 +11,12 @@ import {
 } from "@/components/ui/select";
 import { useTheme } from "next-themes";
 import * as yaml from "js-yaml";
-import { fetchCaches, fetchSecrets, fetchRateLimits } from "@/lib/api";
+import {
+  fetchCaches,
+  fetchSecrets,
+  fetchRateLimits,
+  fetchFiles,
+} from "@/lib/api";
 
 import { InlineYamlEditorProps, FieldState, FieldSchema } from "./types";
 import { getDefaultValue } from "./utils/defaults";
@@ -109,6 +114,82 @@ function DynamicSelectField({
           options.map((option) => (
             <SelectItem key={option} value={option}>
               {option}
+            </SelectItem>
+          ))
+        )}
+      </SelectContent>
+    </Select>
+  );
+}
+
+function FileSelectField({
+  value,
+  onChange,
+  isDark,
+  inputStyle,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  isDark: boolean;
+  inputStyle: React.CSSProperties;
+}) {
+  const [options, setOptions] = useState<{ key: string; label: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const files = await fetchFiles();
+        setOptions(
+          files.map((f) => ({
+            key: f.key,
+            label: f.key,
+          })),
+        );
+      } catch (error) {
+        console.error("Failed to fetch files:", error);
+        setOptions([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  const displayValue = value?.startsWith("airtruct://")
+    ? value.replace("airtruct://", "")
+    : value;
+
+  if (loading) {
+    return (
+      <div className="text-xs text-muted-foreground font-mono">Loading...</div>
+    );
+  }
+
+  return (
+    <Select
+      value={displayValue || ""}
+      onValueChange={(val) => onChange(`airtruct://${val}`)}
+    >
+      <SelectTrigger
+        className={`h-6 text-sm w-auto min-w-[150px] bg-background border-border text-foreground
+          focus-visible:ring-1 focus-visible:ring-ring font-mono ${isDark ? "text-green-400" : "text-green-600"}`}
+        style={inputStyle}
+      >
+        <SelectValue
+          placeholder={options.length === 0 ? "No files" : "Select file..."}
+        />
+      </SelectTrigger>
+      <SelectContent>
+        {options.length === 0 ? (
+          <div className="px-2 py-1.5 text-sm text-muted-foreground">
+            No files available. Create files in the Files page first.
+          </div>
+        ) : (
+          options.map((option) => (
+            <SelectItem key={option.key} value={option.key}>
+              {option.label}
             </SelectItem>
           ))
         )}
@@ -439,6 +520,16 @@ export function InlineYamlEditor({
         return (
           <DynamicSelectField
             fieldSchema={fieldSchema}
+            value={state.value || ""}
+            onChange={handleValueChange}
+            isDark={isDark}
+            inputStyle={inputStyle}
+          />
+        );
+
+      case "file":
+        return (
+          <FileSelectField
             value={state.value || ""}
             onChange={handleValueChange}
             isDark={isDark}

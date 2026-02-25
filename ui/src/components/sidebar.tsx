@@ -9,6 +9,7 @@ import {
   Truck,
   KeyRound,
   Gauge,
+  FileText,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -70,6 +71,11 @@ const menuItems = [
         name: "Scanners",
         href: "/scanners",
         icon: ScanLine,
+      },
+      {
+        name: "Files",
+        href: "/files",
+        icon: FileText,
       },
     ],
   },

@@ -33,6 +33,7 @@ import RateLimitEditPage from "./pages/rate-limits/[id]/edit/page.tsx";
 import StreamEditPage from "./pages/streams/[id]/edit/page.tsx";
 import StreamEventsPage from "./pages/streams/[id]/events/page.tsx";
 import StreamNewPage from "./pages/streams/new/page.tsx";
+import FilesPage from "./pages/files/page.tsx";
 
 const AppLayout: React.FC = () => {
   return (
@@ -109,6 +110,7 @@ function App() {
               path="rate-limits/:id/edit"
               element={<RateLimitEditPage />}
             />
+            <Route path="files" element={<FilesPage />} />
           </Route>
         </Routes>
       </AuthProvider>

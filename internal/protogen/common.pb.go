@@ -647,6 +647,106 @@ func (x *RateLimit) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+type File struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	ParentId      *int64                 `protobuf:"varint,2,opt,name=parent_id,proto3,oneof" json:"parent_id,omitempty"`
+	Key           string                 `protobuf:"bytes,3,opt,name=key,proto3" json:"key,omitempty"`
+	Content       []byte                 `protobuf:"bytes,4,opt,name=content,proto3" json:"content,omitempty"`
+	Size          int64                  `protobuf:"varint,5,opt,name=size,proto3" json:"size,omitempty"`
+	IsCurrent     bool                   `protobuf:"varint,6,opt,name=is_current,proto3" json:"is_current,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,proto3" json:"created_at,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=updated_at,proto3,oneof" json:"updated_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *File) Reset() {
+	*x = File{}
+	mi := &file_common_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *File) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*File) ProtoMessage() {}
+
+func (x *File) ProtoReflect() protoreflect.Message {
+	mi := &file_common_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use File.ProtoReflect.Descriptor instead.
+func (*File) Descriptor() ([]byte, []int) {
+	return file_common_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *File) GetId() int64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *File) GetParentId() int64 {
+	if x != nil && x.ParentId != nil {
+		return *x.ParentId
+	}
+	return 0
+}
+
+func (x *File) GetKey() string {
+	if x != nil {
+		return x.Key
+	}
+	return ""
+}
+
+func (x *File) GetContent() []byte {
+	if x != nil {
+		return x.Content
+	}
+	return nil
+}
+
+func (x *File) GetSize() int64 {
+	if x != nil {
+		return x.Size
+	}
+	return 0
+}
+
+func (x *File) GetIsCurrent() bool {
+	if x != nil {
+		return x.IsCurrent
+	}
+	return false
+}
+
+func (x *File) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *File) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return nil
+}
+
 type RateLimitCheckRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Label         string                 `protobuf:"bytes,1,opt,name=label,proto3" json:"label,omitempty"`
@@ -658,7 +758,7 @@ type RateLimitCheckRequest struct {
 
 func (x *RateLimitCheckRequest) Reset() {
 	*x = RateLimitCheckRequest{}
-	mi := &file_common_proto_msgTypes[6]
+	mi := &file_common_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -670,7 +770,7 @@ func (x *RateLimitCheckRequest) String() string {
 func (*RateLimitCheckRequest) ProtoMessage() {}
 
 func (x *RateLimitCheckRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_common_proto_msgTypes[6]
+	mi := &file_common_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -683,7 +783,7 @@ func (x *RateLimitCheckRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RateLimitCheckRequest.ProtoReflect.Descriptor instead.
 func (*RateLimitCheckRequest) Descriptor() ([]byte, []int) {
-	return file_common_proto_rawDescGZIP(), []int{6}
+	return file_common_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *RateLimitCheckRequest) GetLabel() string {
@@ -720,7 +820,7 @@ type RateLimitCheckResponse struct {
 
 func (x *RateLimitCheckResponse) Reset() {
 	*x = RateLimitCheckResponse{}
-	mi := &file_common_proto_msgTypes[7]
+	mi := &file_common_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -732,7 +832,7 @@ func (x *RateLimitCheckResponse) String() string {
 func (*RateLimitCheckResponse) ProtoMessage() {}
 
 func (x *RateLimitCheckResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_common_proto_msgTypes[7]
+	mi := &file_common_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -745,7 +845,7 @@ func (x *RateLimitCheckResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RateLimitCheckResponse.ProtoReflect.Descriptor instead.
 func (*RateLimitCheckResponse) Descriptor() ([]byte, []int) {
-	return file_common_proto_rawDescGZIP(), []int{7}
+	return file_common_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *RateLimitCheckResponse) GetAllowed() bool {
@@ -794,7 +894,7 @@ type Stream_Processor struct {
 
 func (x *Stream_Processor) Reset() {
 	*x = Stream_Processor{}
-	mi := &file_common_proto_msgTypes[8]
+	mi := &file_common_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -806,7 +906,7 @@ func (x *Stream_Processor) String() string {
 func (*Stream_Processor) ProtoMessage() {}
 
 func (x *Stream_Processor) ProtoReflect() protoreflect.Message {
-	mi := &file_common_proto_msgTypes[8]
+	mi := &file_common_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -961,6 +1061,24 @@ const file_common_proto_rawDesc = "" +
 	"updated_at\x88\x01\x01B\f\n" +
 	"\n" +
 	"_parent_idB\r\n" +
+	"\v_updated_at\"\xd4\x02\n" +
+	"\x04File\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12!\n" +
+	"\tparent_id\x18\x02 \x01(\x03H\x00R\tparent_id\x88\x01\x01\x121\n" +
+	"\x03key\x18\x03 \x01(\tB\x1f\xfaB\x1cr\x1a\x10\x01\x18\xf4\x032\x13^[a-zA-Z0-9._/ -]+$R\x03key\x12\x18\n" +
+	"\acontent\x18\x04 \x01(\fR\acontent\x12\x12\n" +
+	"\x04size\x18\x05 \x01(\x03R\x04size\x12\x1e\n" +
+	"\n" +
+	"is_current\x18\x06 \x01(\bR\n" +
+	"is_current\x12:\n" +
+	"\n" +
+	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"created_at\x12?\n" +
+	"\n" +
+	"updated_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampH\x01R\n" +
+	"updated_at\x88\x01\x01B\f\n" +
+	"\n" +
+	"_parent_idB\r\n" +
 	"\v_updated_at\"j\n" +
 	"\x15RateLimitCheckRequest\x12\x1f\n" +
 	"\x05label\x18\x01 \x01(\tB\t\xfaB\x06r\x04\x10\x01\x18dR\x05label\x12\x1c\n" +
@@ -995,7 +1113,7 @@ func file_common_proto_rawDescGZIP() []byte {
 }
 
 var file_common_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_common_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_common_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_common_proto_goTypes = []any{
 	(WorkerStreamStatus)(0),               // 0: protorender.WorkerStreamStatus
 	(*CommonResponse)(nil),                // 1: protorender.CommonResponse
@@ -1004,29 +1122,32 @@ var file_common_proto_goTypes = []any{
 	(*Cache)(nil),                         // 4: protorender.Cache
 	(*Buffer)(nil),                        // 5: protorender.Buffer
 	(*RateLimit)(nil),                     // 6: protorender.RateLimit
-	(*RateLimitCheckRequest)(nil),         // 7: protorender.RateLimitCheckRequest
-	(*RateLimitCheckResponse)(nil),        // 8: protorender.RateLimitCheckResponse
-	(*Stream_Processor)(nil),              // 9: protorender.Stream.Processor
-	(*timestamppb.Timestamp)(nil),         // 10: google.protobuf.Timestamp
-	(*descriptorpb.EnumValueOptions)(nil), // 11: google.protobuf.EnumValueOptions
+	(*File)(nil),                          // 7: protorender.File
+	(*RateLimitCheckRequest)(nil),         // 8: protorender.RateLimitCheckRequest
+	(*RateLimitCheckResponse)(nil),        // 9: protorender.RateLimitCheckResponse
+	(*Stream_Processor)(nil),              // 10: protorender.Stream.Processor
+	(*timestamppb.Timestamp)(nil),         // 11: google.protobuf.Timestamp
+	(*descriptorpb.EnumValueOptions)(nil), // 12: google.protobuf.EnumValueOptions
 }
 var file_common_proto_depIdxs = []int32{
-	10, // 0: protorender.Stream.created_at:type_name -> google.protobuf.Timestamp
-	10, // 1: protorender.Stream.updated_at:type_name -> google.protobuf.Timestamp
-	9,  // 2: protorender.Stream.processors:type_name -> protorender.Stream.Processor
-	10, // 3: protorender.Secret.created_at:type_name -> google.protobuf.Timestamp
-	10, // 4: protorender.Cache.created_at:type_name -> google.protobuf.Timestamp
-	10, // 5: protorender.Cache.updated_at:type_name -> google.protobuf.Timestamp
-	10, // 6: protorender.Buffer.created_at:type_name -> google.protobuf.Timestamp
-	10, // 7: protorender.Buffer.updated_at:type_name -> google.protobuf.Timestamp
-	10, // 8: protorender.RateLimit.created_at:type_name -> google.protobuf.Timestamp
-	10, // 9: protorender.RateLimit.updated_at:type_name -> google.protobuf.Timestamp
-	11, // 10: protorender.string_value:extendee -> google.protobuf.EnumValueOptions
-	11, // [11:11] is the sub-list for method output_type
-	11, // [11:11] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	10, // [10:11] is the sub-list for extension extendee
-	0,  // [0:10] is the sub-list for field type_name
+	11, // 0: protorender.Stream.created_at:type_name -> google.protobuf.Timestamp
+	11, // 1: protorender.Stream.updated_at:type_name -> google.protobuf.Timestamp
+	10, // 2: protorender.Stream.processors:type_name -> protorender.Stream.Processor
+	11, // 3: protorender.Secret.created_at:type_name -> google.protobuf.Timestamp
+	11, // 4: protorender.Cache.created_at:type_name -> google.protobuf.Timestamp
+	11, // 5: protorender.Cache.updated_at:type_name -> google.protobuf.Timestamp
+	11, // 6: protorender.Buffer.created_at:type_name -> google.protobuf.Timestamp
+	11, // 7: protorender.Buffer.updated_at:type_name -> google.protobuf.Timestamp
+	11, // 8: protorender.RateLimit.created_at:type_name -> google.protobuf.Timestamp
+	11, // 9: protorender.RateLimit.updated_at:type_name -> google.protobuf.Timestamp
+	11, // 10: protorender.File.created_at:type_name -> google.protobuf.Timestamp
+	11, // 11: protorender.File.updated_at:type_name -> google.protobuf.Timestamp
+	12, // 12: protorender.string_value:extendee -> google.protobuf.EnumValueOptions
+	13, // [13:13] is the sub-list for method output_type
+	13, // [13:13] is the sub-list for method input_type
+	13, // [13:13] is the sub-list for extension type_name
+	12, // [12:13] is the sub-list for extension extendee
+	0,  // [0:12] is the sub-list for field type_name
 }
 
 func init() { file_common_proto_init() }
@@ -1038,13 +1159,14 @@ func file_common_proto_init() {
 	file_common_proto_msgTypes[3].OneofWrappers = []any{}
 	file_common_proto_msgTypes[4].OneofWrappers = []any{}
 	file_common_proto_msgTypes[5].OneofWrappers = []any{}
+	file_common_proto_msgTypes[6].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_proto_rawDesc), len(file_common_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   9,
+			NumMessages:   10,
 			NumExtensions: 1,
 			NumServices:   0,
 		},

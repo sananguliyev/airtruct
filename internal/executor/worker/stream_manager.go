@@ -9,6 +9,8 @@ import (
 	"maps"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -36,6 +38,7 @@ type ServiceStream struct {
 
 type StreamManager interface {
 	AddStream(workerStreamID int64, config string) error
+	WriteFiles(files []*pb.StreamFile) error
 	GetStream(workerStreamID int64) (*ServiceStream, bool)
 	GetStreamStatus(workerStreamID int64) (*persistence.WorkerStreamStatus, error)
 	DeleteStream(workerStreamID int64) error
@@ -60,6 +63,20 @@ func NewStreamManager(coordinatorConnection CoordinatorConnection, vaultProvider
 		coordinatorConnection: coordinatorConnection,
 		vaultProvider:         vaultProvider,
 	}
+}
+
+func (m *streamManager) WriteFiles(files []*pb.StreamFile) error {
+	for _, f := range files {
+		dest := filepath.Join("/tmp/airtruct/files", f.Key)
+		if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
+			return fmt.Errorf("failed to create directory for file %s: %w", f.Key, err)
+		}
+		if err := os.WriteFile(dest, f.Content, 0o644); err != nil {
+			return fmt.Errorf("failed to write file %s: %w", f.Key, err)
+		}
+		log.Debug().Str("key", f.Key).Str("path", dest).Msg("Wrote file to disk")
+	}
+	return nil
 }
 
 func (m *streamManager) AddStream(workerStreamID int64, config string) error {
@@ -168,8 +185,8 @@ func (m *streamManager) IngestData(workerStreamID int64, method, path, contentTy
 
 	stream, exists := m.streams[workerStreamID]
 	if !exists {
-		log.Debug().Int64("worker_stream_id", workerStreamID).Msg("HTTP Server of the stream not found")
-		return nil, fmt.Errorf("HTTP Server of the stream not found")
+		log.Debug().Int64("worker_stream_id", workerStreamID).Msg("stream is not running on this worker")
+		return nil, fmt.Errorf("stream is assigned but not yet running on this worker (worker_stream_id: %d)", workerStreamID)
 	}
 
 	rr := httptest.NewRecorder()

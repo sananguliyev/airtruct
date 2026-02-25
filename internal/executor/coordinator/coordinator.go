@@ -31,10 +31,11 @@ func NewCoordinatorExecutor(
 	streamCacheRepo persistence.StreamCacheRepository,
 	streamRateLimitRepo persistence.StreamRateLimitRepository,
 	workerStreamRepo persistence.WorkerStreamRepository,
+	fileRepo persistence.FileRepository,
 ) CoordinatorExecutor {
 	clientManager := NewGRPCClientManager()
 	workerManager := NewWorkerManager(workerRepo, workerStreamRepo, clientManager)
-	configBuilder := NewConfigBuilder(streamCacheRepo, streamRateLimitRepo)
+	configBuilder := NewConfigBuilder(streamCacheRepo, streamRateLimitRepo, fileRepo)
 	streamWorkerMap := NewStreamWorkerMap()
 
 	err := initializeStreamWorkerMapping(workerStreamRepo, streamWorkerMap)
@@ -43,7 +44,7 @@ func NewCoordinatorExecutor(
 	}
 
 	streamAssigner := NewStreamAssigner(workerManager, streamRepo, workerStreamRepo, configBuilder, streamWorkerMap)
-	requestForwarder := NewRequestForwarder(workerManager, streamWorkerMap)
+	requestForwarder := NewRequestForwarder(workerManager, streamWorkerMap, streamRepo)
 
 	return &coordinatorExecutor{
 		streamAssigner:   streamAssigner,

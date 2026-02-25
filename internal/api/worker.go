@@ -29,7 +29,7 @@ func (a *WorkerAPI) AssignStream(ctx context.Context, in *pb.AssignStreamRequest
 		Str("config", in.GetConfig()).
 		Msg("Starting stream for processing")
 
-	err := a.workerExecutor.AddStreamToQueue(ctx, in.GetWorkerStreamId(), in.GetConfig())
+	err := a.workerExecutor.AddStreamToQueue(ctx, in.GetWorkerStreamId(), in.GetConfig(), in.GetFiles())
 	if err != nil {
 		log.Error().Err(err).Int64("worker_stream_id", in.GetWorkerStreamId()).Msg("Failed to queue stream")
 		return nil, status.Error(codes.Internal, "Failed to queue stream")
@@ -95,7 +95,7 @@ func (a *WorkerAPI) Ingest(ctx context.Context, in *pb.IngestRequest) (*pb.Inges
 			Err(err).
 			Int64("worker_stream_id", in.GetWorkerStreamId()).
 			Msg("Failed to ingest data")
-		return nil, status.Error(codes.Internal, "Failed to ingest data")
+		return nil, status.Errorf(codes.Internal, "Failed to ingest data: %v", err)
 	}
 
 	return &pb.IngestResponse{
