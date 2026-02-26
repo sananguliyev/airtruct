@@ -74,6 +74,16 @@ export type Buffer = {
   createdAt: string;
 };
 
+export type FileEntry = {
+  id: string;
+  parentID?: string;
+  key: string;
+  content?: string;
+  size: number;
+  createdAt: string;
+  updatedAt?: string;
+};
+
 export type StreamEvent = {
   id: number;
   worker_stream_id: number;

@@ -5,6 +5,7 @@ import {
   Secret,
   Cache,
   RateLimit,
+  FileEntry,
 } from "./entities";
 import * as yaml from "js-yaml";
 
@@ -958,6 +959,163 @@ export async function fetchStreamEvents(
     };
   } catch (error) {
     console.error("Error fetching stream events:", error);
+    throw error;
+  }
+}
+
+// File methods
+
+export async function fetchFiles(): Promise<FileEntry[]> {
+  try {
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/files`, {
+        headers: getAuthHeaders(),
+      }),
+    );
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+
+    return (data?.data || []).map((file: any) => ({
+      id: file.id,
+      parentID: file.parent_id,
+      key: file.key,
+      size: file.size || 0,
+      createdAt: new Date(file.created_at).toLocaleString(),
+      updatedAt: file.updated_at
+        ? new Date(file.updated_at).toLocaleString()
+        : undefined,
+    }));
+  } catch (error) {
+    console.error("Error fetching files:", error);
+    throw error;
+  }
+}
+
+export async function fetchFile(id: string): Promise<FileEntry> {
+  try {
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/files/${id}`, {
+        headers: getAuthHeaders(),
+      }),
+    );
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+
+    let content = "";
+    if (data.data.content) {
+      content = atob(data.data.content);
+    }
+
+    return {
+      id: data.data.id,
+      parentID: data.data.parent_id,
+      key: data.data.key,
+      content,
+      size: data.data.size || 0,
+      createdAt: new Date(data.data.created_at).toLocaleString(),
+      updatedAt: data.data.updated_at
+        ? new Date(data.data.updated_at).toLocaleString()
+        : undefined,
+    };
+  } catch (error) {
+    console.error("Error fetching file:", error);
+    throw error;
+  }
+}
+
+export async function createFile(fileData: {
+  key: string;
+  content: string;
+}): Promise<FileEntry> {
+  try {
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/files`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          key: fileData.key,
+          content: btoa(fileData.content),
+        }),
+      }),
+    );
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.message || `HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    return {
+      id: data.data.id,
+      key: data.data.key,
+      size: data.data.size || 0,
+      createdAt: new Date(data.data.created_at).toLocaleString(),
+    };
+  } catch (error) {
+    console.error("Error creating file:", error);
+    throw error;
+  }
+}
+
+export async function updateFile(
+  id: string,
+  fileData: {
+    key: string;
+    content: string;
+  },
+): Promise<FileEntry> {
+  try {
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/files/${id}`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          id: parseInt(id),
+          key: fileData.key,
+          content: btoa(fileData.content),
+        }),
+      }),
+    );
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.message || `HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    return {
+      id: data.data.id,
+      key: data.data.key,
+      size: data.data.size || 0,
+      createdAt: new Date(data.data.created_at).toLocaleString(),
+    };
+  } catch (error) {
+    console.error("Error updating file:", error);
+    throw error;
+  }
+}
+
+export async function deleteFile(id: string): Promise<void> {
+  try {
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/files/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      }),
+    );
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.message || `HTTP error! status: ${response.status}`);
+    }
+  } catch (error) {
+    console.error("Error deleting file:", error);
     throw error;
   }
 }

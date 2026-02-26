@@ -161,6 +161,24 @@ message RateLimit {
   optional google.protobuf.Timestamp updated_at = 8 [json_name = "updated_at"];
 }
 
+message File {
+  int64 id = 1 [json_name = "id"];
+  optional int64 parent_id = 2 [json_name = "parent_id"];
+  string key = 3 [
+    json_name = "key",
+    (validate.rules).string = {
+      min_len: 1
+      max_len: 500
+      pattern: "^[a-zA-Z0-9._/ -]+$"
+    }
+  ];
+  bytes content = 4 [json_name = "content"];
+  int64 size = 5 [json_name = "size"];
+  bool is_current = 6 [json_name = "is_current"];
+  google.protobuf.Timestamp created_at = 7 [json_name = "created_at"];
+  optional google.protobuf.Timestamp updated_at = 8 [json_name = "updated_at"];
+}
+
 message RateLimitCheckRequest {
   string label = 1 [(validate.rules).string = {
     min_len: 1

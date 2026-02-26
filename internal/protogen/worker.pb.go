@@ -22,17 +22,70 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type StreamFile struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	Content       []byte                 `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StreamFile) Reset() {
+	*x = StreamFile{}
+	mi := &file_worker_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StreamFile) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StreamFile) ProtoMessage() {}
+
+func (x *StreamFile) ProtoReflect() protoreflect.Message {
+	mi := &file_worker_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StreamFile.ProtoReflect.Descriptor instead.
+func (*StreamFile) Descriptor() ([]byte, []int) {
+	return file_worker_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *StreamFile) GetKey() string {
+	if x != nil {
+		return x.Key
+	}
+	return ""
+}
+
+func (x *StreamFile) GetContent() []byte {
+	if x != nil {
+		return x.Content
+	}
+	return nil
+}
+
 type AssignStreamRequest struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	WorkerStreamId int64                  `protobuf:"varint,1,opt,name=worker_stream_id,json=workerStreamId,proto3" json:"worker_stream_id,omitempty"`
 	Config         string                 `protobuf:"bytes,2,opt,name=config,proto3" json:"config,omitempty"`
+	Files          []*StreamFile          `protobuf:"bytes,3,rep,name=files,proto3" json:"files,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
 
 func (x *AssignStreamRequest) Reset() {
 	*x = AssignStreamRequest{}
-	mi := &file_worker_proto_msgTypes[0]
+	mi := &file_worker_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -44,7 +97,7 @@ func (x *AssignStreamRequest) String() string {
 func (*AssignStreamRequest) ProtoMessage() {}
 
 func (x *AssignStreamRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_worker_proto_msgTypes[0]
+	mi := &file_worker_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -57,7 +110,7 @@ func (x *AssignStreamRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AssignStreamRequest.ProtoReflect.Descriptor instead.
 func (*AssignStreamRequest) Descriptor() ([]byte, []int) {
-	return file_worker_proto_rawDescGZIP(), []int{0}
+	return file_worker_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *AssignStreamRequest) GetWorkerStreamId() int64 {
@@ -74,6 +127,13 @@ func (x *AssignStreamRequest) GetConfig() string {
 	return ""
 }
 
+func (x *AssignStreamRequest) GetFiles() []*StreamFile {
+	if x != nil {
+		return x.Files
+	}
+	return nil
+}
+
 type FetchStreamRequest struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	WorkerStreamId int64                  `protobuf:"varint,1,opt,name=worker_stream_id,json=workerStreamId,proto3" json:"worker_stream_id,omitempty"`
@@ -83,7 +143,7 @@ type FetchStreamRequest struct {
 
 func (x *FetchStreamRequest) Reset() {
 	*x = FetchStreamRequest{}
-	mi := &file_worker_proto_msgTypes[1]
+	mi := &file_worker_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -95,7 +155,7 @@ func (x *FetchStreamRequest) String() string {
 func (*FetchStreamRequest) ProtoMessage() {}
 
 func (x *FetchStreamRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_worker_proto_msgTypes[1]
+	mi := &file_worker_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -108,7 +168,7 @@ func (x *FetchStreamRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FetchStreamRequest.ProtoReflect.Descriptor instead.
 func (*FetchStreamRequest) Descriptor() ([]byte, []int) {
-	return file_worker_proto_rawDescGZIP(), []int{1}
+	return file_worker_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *FetchStreamRequest) GetWorkerStreamId() int64 {
@@ -127,7 +187,7 @@ type FetchStreamResponse struct {
 
 func (x *FetchStreamResponse) Reset() {
 	*x = FetchStreamResponse{}
-	mi := &file_worker_proto_msgTypes[2]
+	mi := &file_worker_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -139,7 +199,7 @@ func (x *FetchStreamResponse) String() string {
 func (*FetchStreamResponse) ProtoMessage() {}
 
 func (x *FetchStreamResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_worker_proto_msgTypes[2]
+	mi := &file_worker_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -152,7 +212,7 @@ func (x *FetchStreamResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FetchStreamResponse.ProtoReflect.Descriptor instead.
 func (*FetchStreamResponse) Descriptor() ([]byte, []int) {
-	return file_worker_proto_rawDescGZIP(), []int{2}
+	return file_worker_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *FetchStreamResponse) GetStatus() WorkerStreamStatus {
@@ -171,7 +231,7 @@ type CompleteStreamRequest struct {
 
 func (x *CompleteStreamRequest) Reset() {
 	*x = CompleteStreamRequest{}
-	mi := &file_worker_proto_msgTypes[3]
+	mi := &file_worker_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -183,7 +243,7 @@ func (x *CompleteStreamRequest) String() string {
 func (*CompleteStreamRequest) ProtoMessage() {}
 
 func (x *CompleteStreamRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_worker_proto_msgTypes[3]
+	mi := &file_worker_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -196,7 +256,7 @@ func (x *CompleteStreamRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CompleteStreamRequest.ProtoReflect.Descriptor instead.
 func (*CompleteStreamRequest) Descriptor() ([]byte, []int) {
-	return file_worker_proto_rawDescGZIP(), []int{3}
+	return file_worker_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *CompleteStreamRequest) GetWorkerStreamId() int64 {
@@ -219,7 +279,7 @@ type IngestRequest struct {
 
 func (x *IngestRequest) Reset() {
 	*x = IngestRequest{}
-	mi := &file_worker_proto_msgTypes[4]
+	mi := &file_worker_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -231,7 +291,7 @@ func (x *IngestRequest) String() string {
 func (*IngestRequest) ProtoMessage() {}
 
 func (x *IngestRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_worker_proto_msgTypes[4]
+	mi := &file_worker_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -244,7 +304,7 @@ func (x *IngestRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IngestRequest.ProtoReflect.Descriptor instead.
 func (*IngestRequest) Descriptor() ([]byte, []int) {
-	return file_worker_proto_rawDescGZIP(), []int{4}
+	return file_worker_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *IngestRequest) GetWorkerStreamId() int64 {
@@ -292,7 +352,7 @@ type IngestResponse struct {
 
 func (x *IngestResponse) Reset() {
 	*x = IngestResponse{}
-	mi := &file_worker_proto_msgTypes[5]
+	mi := &file_worker_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -304,7 +364,7 @@ func (x *IngestResponse) String() string {
 func (*IngestResponse) ProtoMessage() {}
 
 func (x *IngestResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_worker_proto_msgTypes[5]
+	mi := &file_worker_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -317,7 +377,7 @@ func (x *IngestResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IngestResponse.ProtoReflect.Descriptor instead.
 func (*IngestResponse) Descriptor() ([]byte, []int) {
-	return file_worker_proto_rawDescGZIP(), []int{5}
+	return file_worker_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *IngestResponse) GetStatusCode() int32 {
@@ -338,10 +398,15 @@ var File_worker_proto protoreflect.FileDescriptor
 
 const file_worker_proto_rawDesc = "" +
 	"\n" +
-	"\fworker.proto\x12\vprotorender\x1a\x1bgoogle/protobuf/empty.proto\x1a\fcommon.proto\"W\n" +
+	"\fworker.proto\x12\vprotorender\x1a\x1bgoogle/protobuf/empty.proto\x1a\fcommon.proto\"8\n" +
+	"\n" +
+	"StreamFile\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x18\n" +
+	"\acontent\x18\x02 \x01(\fR\acontent\"\x86\x01\n" +
 	"\x13AssignStreamRequest\x12(\n" +
 	"\x10worker_stream_id\x18\x01 \x01(\x03R\x0eworkerStreamId\x12\x16\n" +
-	"\x06config\x18\x02 \x01(\tR\x06config\">\n" +
+	"\x06config\x18\x02 \x01(\tR\x06config\x12-\n" +
+	"\x05files\x18\x03 \x03(\v2\x17.protorender.StreamFileR\x05files\">\n" +
 	"\x12FetchStreamRequest\x12(\n" +
 	"\x10worker_stream_id\x18\x01 \x01(\x03R\x0eworkerStreamId\"N\n" +
 	"\x13FetchStreamResponse\x127\n" +
@@ -378,35 +443,37 @@ func file_worker_proto_rawDescGZIP() []byte {
 	return file_worker_proto_rawDescData
 }
 
-var file_worker_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_worker_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_worker_proto_goTypes = []any{
-	(*AssignStreamRequest)(nil),   // 0: protorender.AssignStreamRequest
-	(*FetchStreamRequest)(nil),    // 1: protorender.FetchStreamRequest
-	(*FetchStreamResponse)(nil),   // 2: protorender.FetchStreamResponse
-	(*CompleteStreamRequest)(nil), // 3: protorender.CompleteStreamRequest
-	(*IngestRequest)(nil),         // 4: protorender.IngestRequest
-	(*IngestResponse)(nil),        // 5: protorender.IngestResponse
-	(WorkerStreamStatus)(0),       // 6: protorender.WorkerStreamStatus
-	(*emptypb.Empty)(nil),         // 7: google.protobuf.Empty
-	(*CommonResponse)(nil),        // 8: protorender.CommonResponse
+	(*StreamFile)(nil),            // 0: protorender.StreamFile
+	(*AssignStreamRequest)(nil),   // 1: protorender.AssignStreamRequest
+	(*FetchStreamRequest)(nil),    // 2: protorender.FetchStreamRequest
+	(*FetchStreamResponse)(nil),   // 3: protorender.FetchStreamResponse
+	(*CompleteStreamRequest)(nil), // 4: protorender.CompleteStreamRequest
+	(*IngestRequest)(nil),         // 5: protorender.IngestRequest
+	(*IngestResponse)(nil),        // 6: protorender.IngestResponse
+	(WorkerStreamStatus)(0),       // 7: protorender.WorkerStreamStatus
+	(*emptypb.Empty)(nil),         // 8: google.protobuf.Empty
+	(*CommonResponse)(nil),        // 9: protorender.CommonResponse
 }
 var file_worker_proto_depIdxs = []int32{
-	6, // 0: protorender.FetchStreamResponse.status:type_name -> protorender.WorkerStreamStatus
-	7, // 1: protorender.Worker.HealthCheck:input_type -> google.protobuf.Empty
-	0, // 2: protorender.Worker.AssignStream:input_type -> protorender.AssignStreamRequest
-	1, // 3: protorender.Worker.FetchStream:input_type -> protorender.FetchStreamRequest
-	3, // 4: protorender.Worker.CompleteStream:input_type -> protorender.CompleteStreamRequest
-	4, // 5: protorender.Worker.Ingest:input_type -> protorender.IngestRequest
-	8, // 6: protorender.Worker.HealthCheck:output_type -> protorender.CommonResponse
-	8, // 7: protorender.Worker.AssignStream:output_type -> protorender.CommonResponse
-	2, // 8: protorender.Worker.FetchStream:output_type -> protorender.FetchStreamResponse
-	8, // 9: protorender.Worker.CompleteStream:output_type -> protorender.CommonResponse
-	5, // 10: protorender.Worker.Ingest:output_type -> protorender.IngestResponse
-	6, // [6:11] is the sub-list for method output_type
-	1, // [1:6] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	0, // 0: protorender.AssignStreamRequest.files:type_name -> protorender.StreamFile
+	7, // 1: protorender.FetchStreamResponse.status:type_name -> protorender.WorkerStreamStatus
+	8, // 2: protorender.Worker.HealthCheck:input_type -> google.protobuf.Empty
+	1, // 3: protorender.Worker.AssignStream:input_type -> protorender.AssignStreamRequest
+	2, // 4: protorender.Worker.FetchStream:input_type -> protorender.FetchStreamRequest
+	4, // 5: protorender.Worker.CompleteStream:input_type -> protorender.CompleteStreamRequest
+	5, // 6: protorender.Worker.Ingest:input_type -> protorender.IngestRequest
+	9, // 7: protorender.Worker.HealthCheck:output_type -> protorender.CommonResponse
+	9, // 8: protorender.Worker.AssignStream:output_type -> protorender.CommonResponse
+	3, // 9: protorender.Worker.FetchStream:output_type -> protorender.FetchStreamResponse
+	9, // 10: protorender.Worker.CompleteStream:output_type -> protorender.CommonResponse
+	6, // 11: protorender.Worker.Ingest:output_type -> protorender.IngestResponse
+	7, // [7:12] is the sub-list for method output_type
+	2, // [2:7] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_worker_proto_init() }
@@ -421,7 +488,7 @@ func file_worker_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_worker_proto_rawDesc), len(file_worker_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

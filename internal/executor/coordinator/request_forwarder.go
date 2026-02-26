@@ -19,16 +19,19 @@ type RequestForwarder interface {
 type requestForwarder struct {
 	workerManager   WorkerManager
 	streamWorkerMap StreamWorkerMap
+	streamRepo      persistence.StreamRepository
 	pathRegex       *regexp.Regexp
 }
 
 func NewRequestForwarder(
 	workerManager WorkerManager,
 	streamWorkerMap StreamWorkerMap,
+	streamRepo persistence.StreamRepository,
 ) RequestForwarder {
 	return &requestForwarder{
 		workerManager:   workerManager,
 		streamWorkerMap: streamWorkerMap,
+		streamRepo:      streamRepo,
 		pathRegex:       regexp.MustCompile(`^/ingest/(\d+)(/.*)?$`),
 	}
 }
@@ -54,12 +57,19 @@ func (f *requestForwarder) ForwardRequestToWorker(ctx context.Context, r *http.R
 
 	workerStreamID, ok := f.streamWorkerMap.GetStreamWorkerStream(id)
 	if !ok {
-		return 0, nil, fmt.Errorf("worker stream not found for stream ID %d", id)
+		stream, err := f.streamRepo.FindByID(id)
+		if err != nil {
+			return 0, nil, fmt.Errorf("failed to look up stream %d: %w", id, err)
+		}
+		if stream == nil {
+			return 0, nil, fmt.Errorf("stream %d not found", id)
+		}
+		return 0, nil, fmt.Errorf("stream %d exists but is not currently assigned to any worker", id)
 	}
 
 	workerID, ok := f.streamWorkerMap.GetStreamWorker(id)
 	if !ok {
-		return 0, nil, fmt.Errorf("worker not found for stream ID %d", id)
+		return 0, nil, fmt.Errorf("stream %d exists but is not currently assigned to any worker", id)
 	}
 
 	workerClient, err := f.workerManager.GetWorkerClient(&persistence.Worker{ID: workerID})

@@ -8,9 +8,15 @@ package protorender;
 
 option go_package = "github.com/sananguliyev/airtruct/internal/protogen";
 
+message StreamFile {
+  string key = 1;
+  bytes content = 2;
+}
+
 message AssignStreamRequest {
   int64 worker_stream_id = 1;
   string config = 2;
+  repeated StreamFile files = 3;
 }
 
 message FetchStreamRequest {

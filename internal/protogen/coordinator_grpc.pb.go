@@ -50,6 +50,11 @@ const (
 	Coordinator_CreateBuffer_FullMethodName             = "/protorender.Coordinator/CreateBuffer"
 	Coordinator_UpdateBuffer_FullMethodName             = "/protorender.Coordinator/UpdateBuffer"
 	Coordinator_DeleteBuffer_FullMethodName             = "/protorender.Coordinator/DeleteBuffer"
+	Coordinator_ListFiles_FullMethodName                = "/protorender.Coordinator/ListFiles"
+	Coordinator_GetFile_FullMethodName                  = "/protorender.Coordinator/GetFile"
+	Coordinator_CreateFile_FullMethodName               = "/protorender.Coordinator/CreateFile"
+	Coordinator_UpdateFile_FullMethodName               = "/protorender.Coordinator/UpdateFile"
+	Coordinator_DeleteFile_FullMethodName               = "/protorender.Coordinator/DeleteFile"
 	Coordinator_ListEvents_FullMethodName               = "/protorender.Coordinator/ListEvents"
 	Coordinator_IngestEvents_FullMethodName             = "/protorender.Coordinator/IngestEvents"
 	Coordinator_IngestMetrics_FullMethodName            = "/protorender.Coordinator/IngestMetrics"
@@ -96,6 +101,12 @@ type CoordinatorClient interface {
 	CreateBuffer(ctx context.Context, in *Buffer, opts ...grpc.CallOption) (*BufferResponse, error)
 	UpdateBuffer(ctx context.Context, in *Buffer, opts ...grpc.CallOption) (*BufferResponse, error)
 	DeleteBuffer(ctx context.Context, in *GetBufferRequest, opts ...grpc.CallOption) (*CommonResponse, error)
+	// File methods
+	ListFiles(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListFilesResponse, error)
+	GetFile(ctx context.Context, in *GetFileRequest, opts ...grpc.CallOption) (*FileResponse, error)
+	CreateFile(ctx context.Context, in *File, opts ...grpc.CallOption) (*FileResponse, error)
+	UpdateFile(ctx context.Context, in *File, opts ...grpc.CallOption) (*FileResponse, error)
+	DeleteFile(ctx context.Context, in *GetFileRequest, opts ...grpc.CallOption) (*CommonResponse, error)
 	// Observability methods
 	ListEvents(ctx context.Context, in *ListEventsRequest, opts ...grpc.CallOption) (*ListEventsResponse, error)
 	IngestEvents(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Event, emptypb.Empty], error)
@@ -410,6 +421,56 @@ func (c *coordinatorClient) DeleteBuffer(ctx context.Context, in *GetBufferReque
 	return out, nil
 }
 
+func (c *coordinatorClient) ListFiles(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListFilesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListFilesResponse)
+	err := c.cc.Invoke(ctx, Coordinator_ListFiles_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *coordinatorClient) GetFile(ctx context.Context, in *GetFileRequest, opts ...grpc.CallOption) (*FileResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FileResponse)
+	err := c.cc.Invoke(ctx, Coordinator_GetFile_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *coordinatorClient) CreateFile(ctx context.Context, in *File, opts ...grpc.CallOption) (*FileResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FileResponse)
+	err := c.cc.Invoke(ctx, Coordinator_CreateFile_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *coordinatorClient) UpdateFile(ctx context.Context, in *File, opts ...grpc.CallOption) (*FileResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FileResponse)
+	err := c.cc.Invoke(ctx, Coordinator_UpdateFile_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *coordinatorClient) DeleteFile(ctx context.Context, in *GetFileRequest, opts ...grpc.CallOption) (*CommonResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CommonResponse)
+	err := c.cc.Invoke(ctx, Coordinator_DeleteFile_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *coordinatorClient) ListEvents(ctx context.Context, in *ListEventsRequest, opts ...grpc.CallOption) (*ListEventsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListEventsResponse)
@@ -484,6 +545,12 @@ type CoordinatorServer interface {
 	CreateBuffer(context.Context, *Buffer) (*BufferResponse, error)
 	UpdateBuffer(context.Context, *Buffer) (*BufferResponse, error)
 	DeleteBuffer(context.Context, *GetBufferRequest) (*CommonResponse, error)
+	// File methods
+	ListFiles(context.Context, *emptypb.Empty) (*ListFilesResponse, error)
+	GetFile(context.Context, *GetFileRequest) (*FileResponse, error)
+	CreateFile(context.Context, *File) (*FileResponse, error)
+	UpdateFile(context.Context, *File) (*FileResponse, error)
+	DeleteFile(context.Context, *GetFileRequest) (*CommonResponse, error)
 	// Observability methods
 	ListEvents(context.Context, *ListEventsRequest) (*ListEventsResponse, error)
 	IngestEvents(grpc.BidiStreamingServer[Event, emptypb.Empty]) error
@@ -587,6 +654,21 @@ func (UnimplementedCoordinatorServer) UpdateBuffer(context.Context, *Buffer) (*B
 }
 func (UnimplementedCoordinatorServer) DeleteBuffer(context.Context, *GetBufferRequest) (*CommonResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteBuffer not implemented")
+}
+func (UnimplementedCoordinatorServer) ListFiles(context.Context, *emptypb.Empty) (*ListFilesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListFiles not implemented")
+}
+func (UnimplementedCoordinatorServer) GetFile(context.Context, *GetFileRequest) (*FileResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetFile not implemented")
+}
+func (UnimplementedCoordinatorServer) CreateFile(context.Context, *File) (*FileResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateFile not implemented")
+}
+func (UnimplementedCoordinatorServer) UpdateFile(context.Context, *File) (*FileResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateFile not implemented")
+}
+func (UnimplementedCoordinatorServer) DeleteFile(context.Context, *GetFileRequest) (*CommonResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteFile not implemented")
 }
 func (UnimplementedCoordinatorServer) ListEvents(context.Context, *ListEventsRequest) (*ListEventsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListEvents not implemented")
@@ -1158,6 +1240,96 @@ func _Coordinator_DeleteBuffer_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Coordinator_ListFiles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoordinatorServer).ListFiles(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Coordinator_ListFiles_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoordinatorServer).ListFiles(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Coordinator_GetFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetFileRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoordinatorServer).GetFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Coordinator_GetFile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoordinatorServer).GetFile(ctx, req.(*GetFileRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Coordinator_CreateFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(File)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoordinatorServer).CreateFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Coordinator_CreateFile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoordinatorServer).CreateFile(ctx, req.(*File))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Coordinator_UpdateFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(File)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoordinatorServer).UpdateFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Coordinator_UpdateFile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoordinatorServer).UpdateFile(ctx, req.(*File))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Coordinator_DeleteFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetFileRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoordinatorServer).DeleteFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Coordinator_DeleteFile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoordinatorServer).DeleteFile(ctx, req.(*GetFileRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Coordinator_ListEvents_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListEventsRequest)
 	if err := dec(in); err != nil {
@@ -1327,6 +1499,26 @@ var Coordinator_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteBuffer",
 			Handler:    _Coordinator_DeleteBuffer_Handler,
+		},
+		{
+			MethodName: "ListFiles",
+			Handler:    _Coordinator_ListFiles_Handler,
+		},
+		{
+			MethodName: "GetFile",
+			Handler:    _Coordinator_GetFile_Handler,
+		},
+		{
+			MethodName: "CreateFile",
+			Handler:    _Coordinator_CreateFile_Handler,
+		},
+		{
+			MethodName: "UpdateFile",
+			Handler:    _Coordinator_UpdateFile_Handler,
+		},
+		{
+			MethodName: "DeleteFile",
+			Handler:    _Coordinator_DeleteFile_Handler,
 		},
 		{
 			MethodName: "ListEvents",

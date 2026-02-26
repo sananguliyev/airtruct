@@ -91,7 +91,7 @@ func (s *streamAssigner) assignStreamToWorker(ctx context.Context, worker persis
 		return err
 	}
 
-	configYAML, err := s.configBuilder.BuildStreamConfig(stream)
+	buildResult, err := s.configBuilder.BuildStreamConfig(stream)
 	if err != nil {
 		return err
 	}
@@ -99,7 +99,8 @@ func (s *streamAssigner) assignStreamToWorker(ctx context.Context, worker persis
 	log.Debug().
 		Str("worker_id", worker.ID).
 		Int64("stream_id", stream.ID).
-		Str("config", configYAML).
+		Str("config", buildResult.Config).
+		Int("files_count", len(buildResult.Files)).
 		Msg("Config for worker stream")
 
 	workerStream, err := s.workerStreamRepo.Queue(worker.ID, stream.ID)
@@ -107,9 +108,18 @@ func (s *streamAssigner) assignStreamToWorker(ctx context.Context, worker persis
 		return err
 	}
 
+	var streamFiles []*pb.StreamFile
+	for _, f := range buildResult.Files {
+		streamFiles = append(streamFiles, &pb.StreamFile{
+			Key:     f.Key,
+			Content: f.Content,
+		})
+	}
+
 	resp, err := workerClient.AssignStream(ctx, &pb.AssignStreamRequest{
 		WorkerStreamId: workerStream.ID,
-		Config:         configYAML,
+		Config:         buildResult.Config,
+		Files:          streamFiles,
 	})
 	if err != nil {
 		if err := s.workerStreamRepo.UpdateStatus(workerStream.ID, persistence.WorkerStreamStatusFailed); err != nil {

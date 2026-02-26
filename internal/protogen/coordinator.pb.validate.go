@@ -3307,6 +3307,410 @@ var _ interface {
 	ErrorName() string
 } = ListBuffersResponseValidationError{}
 
+// Validate checks the field values on ListFilesResponse with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *ListFilesResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListFilesResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListFilesResponseMultiError, or nil if none found.
+func (m *ListFilesResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListFilesResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListFilesResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListFilesResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListFilesResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ListFilesResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListFilesResponseMultiError is an error wrapping multiple validation errors
+// returned by ListFilesResponse.ValidateAll() if the designated constraints
+// aren't met.
+type ListFilesResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListFilesResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListFilesResponseMultiError) AllErrors() []error { return m }
+
+// ListFilesResponseValidationError is the validation error returned by
+// ListFilesResponse.Validate if the designated constraints aren't met.
+type ListFilesResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListFilesResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListFilesResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListFilesResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListFilesResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListFilesResponseValidationError) ErrorName() string {
+	return "ListFilesResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListFilesResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListFilesResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListFilesResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListFilesResponseValidationError{}
+
+// Validate checks the field values on GetFileRequest with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *GetFileRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetFileRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in GetFileRequestMultiError,
+// or nil if none found.
+func (m *GetFileRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetFileRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if m.GetId() <= 0 {
+		err := GetFileRequestValidationError{
+			field:  "Id",
+			reason: "value must be greater than 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return GetFileRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetFileRequestMultiError is an error wrapping multiple validation errors
+// returned by GetFileRequest.ValidateAll() if the designated constraints
+// aren't met.
+type GetFileRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetFileRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetFileRequestMultiError) AllErrors() []error { return m }
+
+// GetFileRequestValidationError is the validation error returned by
+// GetFileRequest.Validate if the designated constraints aren't met.
+type GetFileRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetFileRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetFileRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetFileRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetFileRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetFileRequestValidationError) ErrorName() string { return "GetFileRequestValidationError" }
+
+// Error satisfies the builtin error interface
+func (e GetFileRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetFileRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetFileRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetFileRequestValidationError{}
+
+// Validate checks the field values on FileResponse with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *FileResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on FileResponse with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in FileResponseMultiError, or
+// nil if none found.
+func (m *FileResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *FileResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, FileResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, FileResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return FileResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetMeta()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, FileResponseValidationError{
+					field:  "Meta",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, FileResponseValidationError{
+					field:  "Meta",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetMeta()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return FileResponseValidationError{
+				field:  "Meta",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return FileResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// FileResponseMultiError is an error wrapping multiple validation errors
+// returned by FileResponse.ValidateAll() if the designated constraints aren't met.
+type FileResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m FileResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m FileResponseMultiError) AllErrors() []error { return m }
+
+// FileResponseValidationError is the validation error returned by
+// FileResponse.Validate if the designated constraints aren't met.
+type FileResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e FileResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e FileResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e FileResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e FileResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e FileResponseValidationError) ErrorName() string { return "FileResponseValidationError" }
+
+// Error satisfies the builtin error interface
+func (e FileResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sFileResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = FileResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = FileResponseValidationError{}
+
 // Validate checks the field values on GetRateLimitRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.

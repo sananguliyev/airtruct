@@ -21,6 +21,7 @@ type CoordinatorAPI struct {
 	cacheRepo           persistence.CacheRepository
 	bufferRepo          persistence.BufferRepository
 	rateLimitRepo       persistence.RateLimitRepository
+	fileRepo            persistence.FileRepository
 	rateLimiterEngine   *ratelimiter.Engine
 	aesgcm              *vault.AESGCM
 }
@@ -37,6 +38,7 @@ func NewCoordinatorAPI(
 	cacheRepo persistence.CacheRepository,
 	bufferRepo persistence.BufferRepository,
 	rateLimitRepo persistence.RateLimitRepository,
+	fileRepo persistence.FileRepository,
 	rateLimiterEngine *ratelimiter.Engine,
 	aesgcm *vault.AESGCM,
 ) *CoordinatorAPI {
@@ -52,6 +54,7 @@ func NewCoordinatorAPI(
 		cacheRepo:           cacheRepo,
 		bufferRepo:          bufferRepo,
 		rateLimitRepo:       rateLimitRepo,
+		fileRepo:            fileRepo,
 		rateLimiterEngine:   rateLimiterEngine,
 		aesgcm:              aesgcm,
 	}

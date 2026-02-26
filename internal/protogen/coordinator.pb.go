@@ -1366,6 +1366,146 @@ func (x *ListBuffersResponse) GetData() []*Buffer {
 	return nil
 }
 
+type ListFilesResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Data          []*File                `protobuf:"bytes,1,rep,name=data,proto3" json:"data,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListFilesResponse) Reset() {
+	*x = ListFilesResponse{}
+	mi := &file_coordinator_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListFilesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListFilesResponse) ProtoMessage() {}
+
+func (x *ListFilesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_coordinator_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListFilesResponse.ProtoReflect.Descriptor instead.
+func (*ListFilesResponse) Descriptor() ([]byte, []int) {
+	return file_coordinator_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *ListFilesResponse) GetData() []*File {
+	if x != nil {
+		return x.Data
+	}
+	return nil
+}
+
+type GetFileRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetFileRequest) Reset() {
+	*x = GetFileRequest{}
+	mi := &file_coordinator_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetFileRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetFileRequest) ProtoMessage() {}
+
+func (x *GetFileRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_coordinator_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetFileRequest.ProtoReflect.Descriptor instead.
+func (*GetFileRequest) Descriptor() ([]byte, []int) {
+	return file_coordinator_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *GetFileRequest) GetId() int64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+type FileResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Data          *File                  `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
+	Meta          *CommonResponse        `protobuf:"bytes,2,opt,name=meta,proto3" json:"meta,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FileResponse) Reset() {
+	*x = FileResponse{}
+	mi := &file_coordinator_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FileResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FileResponse) ProtoMessage() {}
+
+func (x *FileResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_coordinator_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FileResponse.ProtoReflect.Descriptor instead.
+func (*FileResponse) Descriptor() ([]byte, []int) {
+	return file_coordinator_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *FileResponse) GetData() *File {
+	if x != nil {
+		return x.Data
+	}
+	return nil
+}
+
+func (x *FileResponse) GetMeta() *CommonResponse {
+	if x != nil {
+		return x.Meta
+	}
+	return nil
+}
+
 type GetRateLimitRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -1375,7 +1515,7 @@ type GetRateLimitRequest struct {
 
 func (x *GetRateLimitRequest) Reset() {
 	*x = GetRateLimitRequest{}
-	mi := &file_coordinator_proto_msgTypes[25]
+	mi := &file_coordinator_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1387,7 +1527,7 @@ func (x *GetRateLimitRequest) String() string {
 func (*GetRateLimitRequest) ProtoMessage() {}
 
 func (x *GetRateLimitRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_coordinator_proto_msgTypes[25]
+	mi := &file_coordinator_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1400,7 +1540,7 @@ func (x *GetRateLimitRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRateLimitRequest.ProtoReflect.Descriptor instead.
 func (*GetRateLimitRequest) Descriptor() ([]byte, []int) {
-	return file_coordinator_proto_rawDescGZIP(), []int{25}
+	return file_coordinator_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *GetRateLimitRequest) GetId() int64 {
@@ -1420,7 +1560,7 @@ type RateLimitResponse struct {
 
 func (x *RateLimitResponse) Reset() {
 	*x = RateLimitResponse{}
-	mi := &file_coordinator_proto_msgTypes[26]
+	mi := &file_coordinator_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1432,7 +1572,7 @@ func (x *RateLimitResponse) String() string {
 func (*RateLimitResponse) ProtoMessage() {}
 
 func (x *RateLimitResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_coordinator_proto_msgTypes[26]
+	mi := &file_coordinator_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1445,7 +1585,7 @@ func (x *RateLimitResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RateLimitResponse.ProtoReflect.Descriptor instead.
 func (*RateLimitResponse) Descriptor() ([]byte, []int) {
-	return file_coordinator_proto_rawDescGZIP(), []int{26}
+	return file_coordinator_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *RateLimitResponse) GetData() *RateLimit {
@@ -1474,7 +1614,7 @@ type ListWorkersResponse_Worker struct {
 
 func (x *ListWorkersResponse_Worker) Reset() {
 	*x = ListWorkersResponse_Worker{}
-	mi := &file_coordinator_proto_msgTypes[27]
+	mi := &file_coordinator_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1486,7 +1626,7 @@ func (x *ListWorkersResponse_Worker) String() string {
 func (*ListWorkersResponse_Worker) ProtoMessage() {}
 
 func (x *ListWorkersResponse_Worker) ProtoReflect() protoreflect.Message {
-	mi := &file_coordinator_proto_msgTypes[27]
+	mi := &file_coordinator_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1630,12 +1770,19 @@ const file_coordinator_proto_rawDesc = "" +
 	"\x04data\x18\x01 \x01(\v2\x13.protorender.BufferR\x04data\x12/\n" +
 	"\x04meta\x18\x02 \x01(\v2\x1b.protorender.CommonResponseR\x04meta\">\n" +
 	"\x13ListBuffersResponse\x12'\n" +
-	"\x04data\x18\x01 \x03(\v2\x13.protorender.BufferR\x04data\".\n" +
+	"\x04data\x18\x01 \x03(\v2\x13.protorender.BufferR\x04data\":\n" +
+	"\x11ListFilesResponse\x12%\n" +
+	"\x04data\x18\x01 \x03(\v2\x11.protorender.FileR\x04data\")\n" +
+	"\x0eGetFileRequest\x12\x17\n" +
+	"\x02id\x18\x01 \x01(\x03B\a\xfaB\x04\"\x02 \x00R\x02id\"f\n" +
+	"\fFileResponse\x12%\n" +
+	"\x04data\x18\x01 \x01(\v2\x11.protorender.FileR\x04data\x12/\n" +
+	"\x04meta\x18\x02 \x01(\v2\x1b.protorender.CommonResponseR\x04meta\".\n" +
 	"\x13GetRateLimitRequest\x12\x17\n" +
 	"\x02id\x18\x01 \x01(\x03B\a\xfaB\x04\"\x02 \x00R\x02id\"p\n" +
 	"\x11RateLimitResponse\x12*\n" +
 	"\x04data\x18\x01 \x01(\v2\x16.protorender.RateLimitR\x04data\x12/\n" +
-	"\x04meta\x18\x02 \x01(\v2\x1b.protorender.CommonResponseR\x04meta2\xef\x18\n" +
+	"\x04meta\x18\x02 \x01(\v2\x1b.protorender.CommonResponseR\x04meta2\xab\x1c\n" +
 	"\vCoordinator\x12a\n" +
 	"\x18UpdateWorkerStreamStatus\x12&.protorender.WorkerStreamStatusRequest\x1a\x1b.protorender.CommonResponse\"\x00\x12S\n" +
 	"\x0eRegisterWorker\x12\".protorender.RegisterWorkerRequest\x1a\x1b.protorender.CommonResponse\"\x00\x12W\n" +
@@ -1669,7 +1816,15 @@ const file_coordinator_proto_rawDesc = "" +
 	"\tGetBuffer\x12\x1d.protorender.GetBufferRequest\x1a\x1b.protorender.BufferResponse\"\x18\x82\xd3\xe4\x93\x02\x12\x12\x10/v0/buffers/{id}\x12X\n" +
 	"\fCreateBuffer\x12\x13.protorender.Buffer\x1a\x1b.protorender.BufferResponse\"\x16\x82\xd3\xe4\x93\x02\x10:\x01*\"\v/v0/buffers\x12]\n" +
 	"\fUpdateBuffer\x12\x13.protorender.Buffer\x1a\x1b.protorender.BufferResponse\"\x1b\x82\xd3\xe4\x93\x02\x15:\x01*\x1a\x10/v0/buffers/{id}\x12d\n" +
-	"\fDeleteBuffer\x12\x1d.protorender.GetBufferRequest\x1a\x1b.protorender.CommonResponse\"\x18\x82\xd3\xe4\x93\x02\x12*\x10/v0/buffers/{id}\x12u\n" +
+	"\fDeleteBuffer\x12\x1d.protorender.GetBufferRequest\x1a\x1b.protorender.CommonResponse\"\x18\x82\xd3\xe4\x93\x02\x12*\x10/v0/buffers/{id}\x12V\n" +
+	"\tListFiles\x12\x16.google.protobuf.Empty\x1a\x1e.protorender.ListFilesResponse\"\x11\x82\xd3\xe4\x93\x02\v\x12\t/v0/files\x12Y\n" +
+	"\aGetFile\x12\x1b.protorender.GetFileRequest\x1a\x19.protorender.FileResponse\"\x16\x82\xd3\xe4\x93\x02\x10\x12\x0e/v0/files/{id}\x12P\n" +
+	"\n" +
+	"CreateFile\x12\x11.protorender.File\x1a\x19.protorender.FileResponse\"\x14\x82\xd3\xe4\x93\x02\x0e:\x01*\"\t/v0/files\x12U\n" +
+	"\n" +
+	"UpdateFile\x12\x11.protorender.File\x1a\x19.protorender.FileResponse\"\x19\x82\xd3\xe4\x93\x02\x13:\x01*\x1a\x0e/v0/files/{id}\x12^\n" +
+	"\n" +
+	"DeleteFile\x12\x1b.protorender.GetFileRequest\x1a\x1b.protorender.CommonResponse\"\x16\x82\xd3\xe4\x93\x02\x10*\x0e/v0/files/{id}\x12u\n" +
 	"\n" +
 	"ListEvents\x12\x1e.protorender.ListEventsRequest\x1a\x1f.protorender.ListEventsResponse\"&\x82\xd3\xe4\x93\x02 \x12\x1e/v0/streams/{stream_id}/events\x12>\n" +
 	"\fIngestEvents\x12\x12.protorender.Event\x1a\x16.google.protobuf.Empty(\x010\x01\x12F\n" +
@@ -1687,7 +1842,7 @@ func file_coordinator_proto_rawDescGZIP() []byte {
 	return file_coordinator_proto_rawDescData
 }
 
-var file_coordinator_proto_msgTypes = make([]protoimpl.MessageInfo, 31)
+var file_coordinator_proto_msgTypes = make([]protoimpl.MessageInfo, 34)
 var file_coordinator_proto_goTypes = []any{
 	(*RegisterWorkerRequest)(nil),      // 0: protorender.RegisterWorkerRequest
 	(*DeregisterWorkerRequest)(nil),    // 1: protorender.DeregisterWorkerRequest
@@ -1714,123 +1869,140 @@ var file_coordinator_proto_goTypes = []any{
 	(*GetBufferRequest)(nil),           // 22: protorender.GetBufferRequest
 	(*BufferResponse)(nil),             // 23: protorender.BufferResponse
 	(*ListBuffersResponse)(nil),        // 24: protorender.ListBuffersResponse
-	(*GetRateLimitRequest)(nil),        // 25: protorender.GetRateLimitRequest
-	(*RateLimitResponse)(nil),          // 26: protorender.RateLimitResponse
-	(*ListWorkersResponse_Worker)(nil), // 27: protorender.ListWorkersResponse.Worker
-	nil,                                // 28: protorender.MetricsRequest.InputEventsByComponentEntry
-	nil,                                // 29: protorender.MetricsRequest.ProcessorEventsByComponentEntry
-	nil,                                // 30: protorender.MetricsRequest.OutputEventsByComponentEntry
-	(WorkerStreamStatus)(0),            // 31: protorender.WorkerStreamStatus
-	(*Stream)(nil),                     // 32: protorender.Stream
-	(*CommonResponse)(nil),             // 33: protorender.CommonResponse
-	(*structpb.Struct)(nil),            // 34: google.protobuf.Struct
-	(*timestamppb.Timestamp)(nil),      // 35: google.protobuf.Timestamp
-	(*Secret)(nil),                     // 36: protorender.Secret
-	(*Cache)(nil),                      // 37: protorender.Cache
-	(*RateLimit)(nil),                  // 38: protorender.RateLimit
-	(*Buffer)(nil),                     // 39: protorender.Buffer
-	(*emptypb.Empty)(nil),              // 40: google.protobuf.Empty
-	(*RateLimitCheckRequest)(nil),      // 41: protorender.RateLimitCheckRequest
-	(*RateLimitCheckResponse)(nil),     // 42: protorender.RateLimitCheckResponse
+	(*ListFilesResponse)(nil),          // 25: protorender.ListFilesResponse
+	(*GetFileRequest)(nil),             // 26: protorender.GetFileRequest
+	(*FileResponse)(nil),               // 27: protorender.FileResponse
+	(*GetRateLimitRequest)(nil),        // 28: protorender.GetRateLimitRequest
+	(*RateLimitResponse)(nil),          // 29: protorender.RateLimitResponse
+	(*ListWorkersResponse_Worker)(nil), // 30: protorender.ListWorkersResponse.Worker
+	nil,                                // 31: protorender.MetricsRequest.InputEventsByComponentEntry
+	nil,                                // 32: protorender.MetricsRequest.ProcessorEventsByComponentEntry
+	nil,                                // 33: protorender.MetricsRequest.OutputEventsByComponentEntry
+	(WorkerStreamStatus)(0),            // 34: protorender.WorkerStreamStatus
+	(*Stream)(nil),                     // 35: protorender.Stream
+	(*CommonResponse)(nil),             // 36: protorender.CommonResponse
+	(*structpb.Struct)(nil),            // 37: google.protobuf.Struct
+	(*timestamppb.Timestamp)(nil),      // 38: google.protobuf.Timestamp
+	(*Secret)(nil),                     // 39: protorender.Secret
+	(*Cache)(nil),                      // 40: protorender.Cache
+	(*RateLimit)(nil),                  // 41: protorender.RateLimit
+	(*Buffer)(nil),                     // 42: protorender.Buffer
+	(*File)(nil),                       // 43: protorender.File
+	(*emptypb.Empty)(nil),              // 44: google.protobuf.Empty
+	(*RateLimitCheckRequest)(nil),      // 45: protorender.RateLimitCheckRequest
+	(*RateLimitCheckResponse)(nil),     // 46: protorender.RateLimitCheckResponse
 }
 var file_coordinator_proto_depIdxs = []int32{
-	31, // 0: protorender.WorkerStreamStatusRequest.status:type_name -> protorender.WorkerStreamStatus
-	27, // 1: protorender.ListWorkersResponse.data:type_name -> protorender.ListWorkersResponse.Worker
-	32, // 2: protorender.ListStreamsResponse.data:type_name -> protorender.Stream
-	32, // 3: protorender.StreamResponse.data:type_name -> protorender.Stream
-	33, // 4: protorender.StreamResponse.meta:type_name -> protorender.CommonResponse
-	34, // 5: protorender.Event.meta:type_name -> google.protobuf.Struct
-	35, // 6: protorender.Event.created_at:type_name -> google.protobuf.Timestamp
-	35, // 7: protorender.ListEventsRequest.start_time:type_name -> google.protobuf.Timestamp
-	35, // 8: protorender.ListEventsRequest.end_time:type_name -> google.protobuf.Timestamp
+	34, // 0: protorender.WorkerStreamStatusRequest.status:type_name -> protorender.WorkerStreamStatus
+	30, // 1: protorender.ListWorkersResponse.data:type_name -> protorender.ListWorkersResponse.Worker
+	35, // 2: protorender.ListStreamsResponse.data:type_name -> protorender.Stream
+	35, // 3: protorender.StreamResponse.data:type_name -> protorender.Stream
+	36, // 4: protorender.StreamResponse.meta:type_name -> protorender.CommonResponse
+	37, // 5: protorender.Event.meta:type_name -> google.protobuf.Struct
+	38, // 6: protorender.Event.created_at:type_name -> google.protobuf.Timestamp
+	38, // 7: protorender.ListEventsRequest.start_time:type_name -> google.protobuf.Timestamp
+	38, // 8: protorender.ListEventsRequest.end_time:type_name -> google.protobuf.Timestamp
 	11, // 9: protorender.ListEventsResponse.data:type_name -> protorender.Event
-	28, // 10: protorender.MetricsRequest.input_events_by_component:type_name -> protorender.MetricsRequest.InputEventsByComponentEntry
-	29, // 11: protorender.MetricsRequest.processor_events_by_component:type_name -> protorender.MetricsRequest.ProcessorEventsByComponentEntry
-	30, // 12: protorender.MetricsRequest.output_events_by_component:type_name -> protorender.MetricsRequest.OutputEventsByComponentEntry
-	36, // 13: protorender.ListSecretsResponse.data:type_name -> protorender.Secret
-	36, // 14: protorender.SecretResponse.data:type_name -> protorender.Secret
-	33, // 15: protorender.SecretResponse.meta:type_name -> protorender.CommonResponse
-	37, // 16: protorender.ListCachesResponse.data:type_name -> protorender.Cache
-	37, // 17: protorender.CacheResponse.data:type_name -> protorender.Cache
-	33, // 18: protorender.CacheResponse.meta:type_name -> protorender.CommonResponse
-	38, // 19: protorender.ListRateLimitsResponse.data:type_name -> protorender.RateLimit
-	39, // 20: protorender.BufferResponse.data:type_name -> protorender.Buffer
-	33, // 21: protorender.BufferResponse.meta:type_name -> protorender.CommonResponse
-	39, // 22: protorender.ListBuffersResponse.data:type_name -> protorender.Buffer
-	38, // 23: protorender.RateLimitResponse.data:type_name -> protorender.RateLimit
-	33, // 24: protorender.RateLimitResponse.meta:type_name -> protorender.CommonResponse
-	35, // 25: protorender.ListWorkersResponse.Worker.last_heartbeat:type_name -> google.protobuf.Timestamp
-	4,  // 26: protorender.Coordinator.UpdateWorkerStreamStatus:input_type -> protorender.WorkerStreamStatusRequest
-	0,  // 27: protorender.Coordinator.RegisterWorker:input_type -> protorender.RegisterWorkerRequest
-	1,  // 28: protorender.Coordinator.DeregisterWorker:input_type -> protorender.DeregisterWorkerRequest
-	2,  // 29: protorender.Coordinator.Heartbeat:input_type -> protorender.HeartbeatRequest
-	5,  // 30: protorender.Coordinator.ListWorkers:input_type -> protorender.ListWorkersRequest
-	7,  // 31: protorender.Coordinator.ListStreams:input_type -> protorender.ListStreamsRequest
-	9,  // 32: protorender.Coordinator.GetStream:input_type -> protorender.GetStreamRequest
-	32, // 33: protorender.Coordinator.CreateStream:input_type -> protorender.Stream
-	32, // 34: protorender.Coordinator.UpdateStream:input_type -> protorender.Stream
-	40, // 35: protorender.Coordinator.ListSecrets:input_type -> google.protobuf.Empty
-	15, // 36: protorender.Coordinator.CreateSecret:input_type -> protorender.SecretRequest
-	15, // 37: protorender.Coordinator.UpdateSecret:input_type -> protorender.SecretRequest
-	15, // 38: protorender.Coordinator.GetSecret:input_type -> protorender.SecretRequest
-	15, // 39: protorender.Coordinator.DeleteSecret:input_type -> protorender.SecretRequest
-	40, // 40: protorender.Coordinator.ListCaches:input_type -> google.protobuf.Empty
-	19, // 41: protorender.Coordinator.GetCache:input_type -> protorender.GetCacheRequest
-	37, // 42: protorender.Coordinator.CreateCache:input_type -> protorender.Cache
-	37, // 43: protorender.Coordinator.UpdateCache:input_type -> protorender.Cache
-	19, // 44: protorender.Coordinator.DeleteCache:input_type -> protorender.GetCacheRequest
-	40, // 45: protorender.Coordinator.ListRateLimits:input_type -> google.protobuf.Empty
-	25, // 46: protorender.Coordinator.GetRateLimit:input_type -> protorender.GetRateLimitRequest
-	38, // 47: protorender.Coordinator.CreateRateLimit:input_type -> protorender.RateLimit
-	38, // 48: protorender.Coordinator.UpdateRateLimit:input_type -> protorender.RateLimit
-	25, // 49: protorender.Coordinator.DeleteRateLimit:input_type -> protorender.GetRateLimitRequest
-	41, // 50: protorender.Coordinator.CheckRateLimit:input_type -> protorender.RateLimitCheckRequest
-	40, // 51: protorender.Coordinator.ListBuffers:input_type -> google.protobuf.Empty
-	22, // 52: protorender.Coordinator.GetBuffer:input_type -> protorender.GetBufferRequest
-	39, // 53: protorender.Coordinator.CreateBuffer:input_type -> protorender.Buffer
-	39, // 54: protorender.Coordinator.UpdateBuffer:input_type -> protorender.Buffer
-	22, // 55: protorender.Coordinator.DeleteBuffer:input_type -> protorender.GetBufferRequest
-	12, // 56: protorender.Coordinator.ListEvents:input_type -> protorender.ListEventsRequest
-	11, // 57: protorender.Coordinator.IngestEvents:input_type -> protorender.Event
-	14, // 58: protorender.Coordinator.IngestMetrics:input_type -> protorender.MetricsRequest
-	33, // 59: protorender.Coordinator.UpdateWorkerStreamStatus:output_type -> protorender.CommonResponse
-	33, // 60: protorender.Coordinator.RegisterWorker:output_type -> protorender.CommonResponse
-	33, // 61: protorender.Coordinator.DeregisterWorker:output_type -> protorender.CommonResponse
-	3,  // 62: protorender.Coordinator.Heartbeat:output_type -> protorender.HeartbeatResponse
-	6,  // 63: protorender.Coordinator.ListWorkers:output_type -> protorender.ListWorkersResponse
-	8,  // 64: protorender.Coordinator.ListStreams:output_type -> protorender.ListStreamsResponse
-	10, // 65: protorender.Coordinator.GetStream:output_type -> protorender.StreamResponse
-	10, // 66: protorender.Coordinator.CreateStream:output_type -> protorender.StreamResponse
-	10, // 67: protorender.Coordinator.UpdateStream:output_type -> protorender.StreamResponse
-	16, // 68: protorender.Coordinator.ListSecrets:output_type -> protorender.ListSecretsResponse
-	33, // 69: protorender.Coordinator.CreateSecret:output_type -> protorender.CommonResponse
-	33, // 70: protorender.Coordinator.UpdateSecret:output_type -> protorender.CommonResponse
-	17, // 71: protorender.Coordinator.GetSecret:output_type -> protorender.SecretResponse
-	33, // 72: protorender.Coordinator.DeleteSecret:output_type -> protorender.CommonResponse
-	18, // 73: protorender.Coordinator.ListCaches:output_type -> protorender.ListCachesResponse
-	20, // 74: protorender.Coordinator.GetCache:output_type -> protorender.CacheResponse
-	20, // 75: protorender.Coordinator.CreateCache:output_type -> protorender.CacheResponse
-	20, // 76: protorender.Coordinator.UpdateCache:output_type -> protorender.CacheResponse
-	33, // 77: protorender.Coordinator.DeleteCache:output_type -> protorender.CommonResponse
-	21, // 78: protorender.Coordinator.ListRateLimits:output_type -> protorender.ListRateLimitsResponse
-	26, // 79: protorender.Coordinator.GetRateLimit:output_type -> protorender.RateLimitResponse
-	26, // 80: protorender.Coordinator.CreateRateLimit:output_type -> protorender.RateLimitResponse
-	26, // 81: protorender.Coordinator.UpdateRateLimit:output_type -> protorender.RateLimitResponse
-	33, // 82: protorender.Coordinator.DeleteRateLimit:output_type -> protorender.CommonResponse
-	42, // 83: protorender.Coordinator.CheckRateLimit:output_type -> protorender.RateLimitCheckResponse
-	24, // 84: protorender.Coordinator.ListBuffers:output_type -> protorender.ListBuffersResponse
-	23, // 85: protorender.Coordinator.GetBuffer:output_type -> protorender.BufferResponse
-	23, // 86: protorender.Coordinator.CreateBuffer:output_type -> protorender.BufferResponse
-	23, // 87: protorender.Coordinator.UpdateBuffer:output_type -> protorender.BufferResponse
-	33, // 88: protorender.Coordinator.DeleteBuffer:output_type -> protorender.CommonResponse
-	13, // 89: protorender.Coordinator.ListEvents:output_type -> protorender.ListEventsResponse
-	40, // 90: protorender.Coordinator.IngestEvents:output_type -> google.protobuf.Empty
-	40, // 91: protorender.Coordinator.IngestMetrics:output_type -> google.protobuf.Empty
-	59, // [59:92] is the sub-list for method output_type
-	26, // [26:59] is the sub-list for method input_type
-	26, // [26:26] is the sub-list for extension type_name
-	26, // [26:26] is the sub-list for extension extendee
-	0,  // [0:26] is the sub-list for field type_name
+	31, // 10: protorender.MetricsRequest.input_events_by_component:type_name -> protorender.MetricsRequest.InputEventsByComponentEntry
+	32, // 11: protorender.MetricsRequest.processor_events_by_component:type_name -> protorender.MetricsRequest.ProcessorEventsByComponentEntry
+	33, // 12: protorender.MetricsRequest.output_events_by_component:type_name -> protorender.MetricsRequest.OutputEventsByComponentEntry
+	39, // 13: protorender.ListSecretsResponse.data:type_name -> protorender.Secret
+	39, // 14: protorender.SecretResponse.data:type_name -> protorender.Secret
+	36, // 15: protorender.SecretResponse.meta:type_name -> protorender.CommonResponse
+	40, // 16: protorender.ListCachesResponse.data:type_name -> protorender.Cache
+	40, // 17: protorender.CacheResponse.data:type_name -> protorender.Cache
+	36, // 18: protorender.CacheResponse.meta:type_name -> protorender.CommonResponse
+	41, // 19: protorender.ListRateLimitsResponse.data:type_name -> protorender.RateLimit
+	42, // 20: protorender.BufferResponse.data:type_name -> protorender.Buffer
+	36, // 21: protorender.BufferResponse.meta:type_name -> protorender.CommonResponse
+	42, // 22: protorender.ListBuffersResponse.data:type_name -> protorender.Buffer
+	43, // 23: protorender.ListFilesResponse.data:type_name -> protorender.File
+	43, // 24: protorender.FileResponse.data:type_name -> protorender.File
+	36, // 25: protorender.FileResponse.meta:type_name -> protorender.CommonResponse
+	41, // 26: protorender.RateLimitResponse.data:type_name -> protorender.RateLimit
+	36, // 27: protorender.RateLimitResponse.meta:type_name -> protorender.CommonResponse
+	38, // 28: protorender.ListWorkersResponse.Worker.last_heartbeat:type_name -> google.protobuf.Timestamp
+	4,  // 29: protorender.Coordinator.UpdateWorkerStreamStatus:input_type -> protorender.WorkerStreamStatusRequest
+	0,  // 30: protorender.Coordinator.RegisterWorker:input_type -> protorender.RegisterWorkerRequest
+	1,  // 31: protorender.Coordinator.DeregisterWorker:input_type -> protorender.DeregisterWorkerRequest
+	2,  // 32: protorender.Coordinator.Heartbeat:input_type -> protorender.HeartbeatRequest
+	5,  // 33: protorender.Coordinator.ListWorkers:input_type -> protorender.ListWorkersRequest
+	7,  // 34: protorender.Coordinator.ListStreams:input_type -> protorender.ListStreamsRequest
+	9,  // 35: protorender.Coordinator.GetStream:input_type -> protorender.GetStreamRequest
+	35, // 36: protorender.Coordinator.CreateStream:input_type -> protorender.Stream
+	35, // 37: protorender.Coordinator.UpdateStream:input_type -> protorender.Stream
+	44, // 38: protorender.Coordinator.ListSecrets:input_type -> google.protobuf.Empty
+	15, // 39: protorender.Coordinator.CreateSecret:input_type -> protorender.SecretRequest
+	15, // 40: protorender.Coordinator.UpdateSecret:input_type -> protorender.SecretRequest
+	15, // 41: protorender.Coordinator.GetSecret:input_type -> protorender.SecretRequest
+	15, // 42: protorender.Coordinator.DeleteSecret:input_type -> protorender.SecretRequest
+	44, // 43: protorender.Coordinator.ListCaches:input_type -> google.protobuf.Empty
+	19, // 44: protorender.Coordinator.GetCache:input_type -> protorender.GetCacheRequest
+	40, // 45: protorender.Coordinator.CreateCache:input_type -> protorender.Cache
+	40, // 46: protorender.Coordinator.UpdateCache:input_type -> protorender.Cache
+	19, // 47: protorender.Coordinator.DeleteCache:input_type -> protorender.GetCacheRequest
+	44, // 48: protorender.Coordinator.ListRateLimits:input_type -> google.protobuf.Empty
+	28, // 49: protorender.Coordinator.GetRateLimit:input_type -> protorender.GetRateLimitRequest
+	41, // 50: protorender.Coordinator.CreateRateLimit:input_type -> protorender.RateLimit
+	41, // 51: protorender.Coordinator.UpdateRateLimit:input_type -> protorender.RateLimit
+	28, // 52: protorender.Coordinator.DeleteRateLimit:input_type -> protorender.GetRateLimitRequest
+	45, // 53: protorender.Coordinator.CheckRateLimit:input_type -> protorender.RateLimitCheckRequest
+	44, // 54: protorender.Coordinator.ListBuffers:input_type -> google.protobuf.Empty
+	22, // 55: protorender.Coordinator.GetBuffer:input_type -> protorender.GetBufferRequest
+	42, // 56: protorender.Coordinator.CreateBuffer:input_type -> protorender.Buffer
+	42, // 57: protorender.Coordinator.UpdateBuffer:input_type -> protorender.Buffer
+	22, // 58: protorender.Coordinator.DeleteBuffer:input_type -> protorender.GetBufferRequest
+	44, // 59: protorender.Coordinator.ListFiles:input_type -> google.protobuf.Empty
+	26, // 60: protorender.Coordinator.GetFile:input_type -> protorender.GetFileRequest
+	43, // 61: protorender.Coordinator.CreateFile:input_type -> protorender.File
+	43, // 62: protorender.Coordinator.UpdateFile:input_type -> protorender.File
+	26, // 63: protorender.Coordinator.DeleteFile:input_type -> protorender.GetFileRequest
+	12, // 64: protorender.Coordinator.ListEvents:input_type -> protorender.ListEventsRequest
+	11, // 65: protorender.Coordinator.IngestEvents:input_type -> protorender.Event
+	14, // 66: protorender.Coordinator.IngestMetrics:input_type -> protorender.MetricsRequest
+	36, // 67: protorender.Coordinator.UpdateWorkerStreamStatus:output_type -> protorender.CommonResponse
+	36, // 68: protorender.Coordinator.RegisterWorker:output_type -> protorender.CommonResponse
+	36, // 69: protorender.Coordinator.DeregisterWorker:output_type -> protorender.CommonResponse
+	3,  // 70: protorender.Coordinator.Heartbeat:output_type -> protorender.HeartbeatResponse
+	6,  // 71: protorender.Coordinator.ListWorkers:output_type -> protorender.ListWorkersResponse
+	8,  // 72: protorender.Coordinator.ListStreams:output_type -> protorender.ListStreamsResponse
+	10, // 73: protorender.Coordinator.GetStream:output_type -> protorender.StreamResponse
+	10, // 74: protorender.Coordinator.CreateStream:output_type -> protorender.StreamResponse
+	10, // 75: protorender.Coordinator.UpdateStream:output_type -> protorender.StreamResponse
+	16, // 76: protorender.Coordinator.ListSecrets:output_type -> protorender.ListSecretsResponse
+	36, // 77: protorender.Coordinator.CreateSecret:output_type -> protorender.CommonResponse
+	36, // 78: protorender.Coordinator.UpdateSecret:output_type -> protorender.CommonResponse
+	17, // 79: protorender.Coordinator.GetSecret:output_type -> protorender.SecretResponse
+	36, // 80: protorender.Coordinator.DeleteSecret:output_type -> protorender.CommonResponse
+	18, // 81: protorender.Coordinator.ListCaches:output_type -> protorender.ListCachesResponse
+	20, // 82: protorender.Coordinator.GetCache:output_type -> protorender.CacheResponse
+	20, // 83: protorender.Coordinator.CreateCache:output_type -> protorender.CacheResponse
+	20, // 84: protorender.Coordinator.UpdateCache:output_type -> protorender.CacheResponse
+	36, // 85: protorender.Coordinator.DeleteCache:output_type -> protorender.CommonResponse
+	21, // 86: protorender.Coordinator.ListRateLimits:output_type -> protorender.ListRateLimitsResponse
+	29, // 87: protorender.Coordinator.GetRateLimit:output_type -> protorender.RateLimitResponse
+	29, // 88: protorender.Coordinator.CreateRateLimit:output_type -> protorender.RateLimitResponse
+	29, // 89: protorender.Coordinator.UpdateRateLimit:output_type -> protorender.RateLimitResponse
+	36, // 90: protorender.Coordinator.DeleteRateLimit:output_type -> protorender.CommonResponse
+	46, // 91: protorender.Coordinator.CheckRateLimit:output_type -> protorender.RateLimitCheckResponse
+	24, // 92: protorender.Coordinator.ListBuffers:output_type -> protorender.ListBuffersResponse
+	23, // 93: protorender.Coordinator.GetBuffer:output_type -> protorender.BufferResponse
+	23, // 94: protorender.Coordinator.CreateBuffer:output_type -> protorender.BufferResponse
+	23, // 95: protorender.Coordinator.UpdateBuffer:output_type -> protorender.BufferResponse
+	36, // 96: protorender.Coordinator.DeleteBuffer:output_type -> protorender.CommonResponse
+	25, // 97: protorender.Coordinator.ListFiles:output_type -> protorender.ListFilesResponse
+	27, // 98: protorender.Coordinator.GetFile:output_type -> protorender.FileResponse
+	27, // 99: protorender.Coordinator.CreateFile:output_type -> protorender.FileResponse
+	27, // 100: protorender.Coordinator.UpdateFile:output_type -> protorender.FileResponse
+	36, // 101: protorender.Coordinator.DeleteFile:output_type -> protorender.CommonResponse
+	13, // 102: protorender.Coordinator.ListEvents:output_type -> protorender.ListEventsResponse
+	44, // 103: protorender.Coordinator.IngestEvents:output_type -> google.protobuf.Empty
+	44, // 104: protorender.Coordinator.IngestMetrics:output_type -> google.protobuf.Empty
+	67, // [67:105] is the sub-list for method output_type
+	29, // [29:67] is the sub-list for method input_type
+	29, // [29:29] is the sub-list for extension type_name
+	29, // [29:29] is the sub-list for extension extendee
+	0,  // [0:29] is the sub-list for field type_name
 }
 
 func init() { file_coordinator_proto_init() }
@@ -1845,7 +2017,7 @@ func file_coordinator_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_coordinator_proto_rawDesc), len(file_coordinator_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   31,
+			NumMessages:   34,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

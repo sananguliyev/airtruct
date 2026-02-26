@@ -5,6 +5,7 @@ import (
 
 	"github.com/sananguliyev/airtruct/internal/executor/worker"
 	"github.com/sananguliyev/airtruct/internal/persistence"
+	pb "github.com/sananguliyev/airtruct/internal/protogen"
 	"github.com/sananguliyev/airtruct/internal/vault"
 
 	"google.golang.org/grpc"
@@ -16,7 +17,7 @@ type WorkerExecutor interface {
 	JoinToCoordinator(context.Context) error
 	LeaveCoordinator(context.Context) error
 	SendHeartbeat(context.Context) error
-	AddStreamToQueue(ctx context.Context, workerStreamID int64, config string) error
+	AddStreamToQueue(ctx context.Context, workerStreamID int64, config string, files []*pb.StreamFile) error
 	FetchWorkerStreamStatus(ctx context.Context, workerStreamID int64) (*persistence.WorkerStreamStatus, error)
 	DeleteWorkerStream(ctx context.Context, workerStreamID int64) error
 	ShipLogs(context.Context)
@@ -47,8 +48,8 @@ func (e *workerExecutor) SendHeartbeat(ctx context.Context) error {
 	return e.worker.SendHeartbeat(ctx)
 }
 
-func (e *workerExecutor) AddStreamToQueue(ctx context.Context, workerStreamID int64, config string) error {
-	return e.worker.AddStreamToQueue(ctx, workerStreamID, config)
+func (e *workerExecutor) AddStreamToQueue(ctx context.Context, workerStreamID int64, config string, files []*pb.StreamFile) error {
+	return e.worker.AddStreamToQueue(ctx, workerStreamID, config, files)
 }
 
 func (e *workerExecutor) FetchWorkerStreamStatus(ctx context.Context, workerStreamID int64) (*persistence.WorkerStreamStatus, error) {

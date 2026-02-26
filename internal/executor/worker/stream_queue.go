@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
+
+	pb "github.com/sananguliyev/airtruct/internal/protogen"
 )
 
 const (
@@ -16,10 +18,11 @@ const (
 type StreamQueueItem struct {
 	WorkerStreamID int64
 	Config         string
+	Files          []*pb.StreamFile
 }
 
 type StreamQueue interface {
-	AddStreamToQueue(workerStreamID int64, config string) error
+	AddStreamToQueue(workerStreamID int64, config string, files []*pb.StreamFile) error
 	ConsumeStreamQueue(ctx context.Context)
 }
 
@@ -35,10 +38,11 @@ func NewStreamQueue(streamManager StreamManager) StreamQueue {
 	}
 }
 
-func (q *streamQueue) AddStreamToQueue(workerStreamID int64, config string) error {
+func (q *streamQueue) AddStreamToQueue(workerStreamID int64, config string, files []*pb.StreamFile) error {
 	item := StreamQueueItem{
 		WorkerStreamID: workerStreamID,
 		Config:         config,
+		Files:          files,
 	}
 
 	select {
@@ -56,6 +60,11 @@ func (q *streamQueue) ConsumeStreamQueue(ctx context.Context) {
 		select {
 		case item := <-q.queue:
 			log.Info().Int64("worker_stream_id", item.WorkerStreamID).Msg("Processing stream from queue")
+
+			if err := q.streamManager.WriteFiles(item.Files); err != nil {
+				log.Error().Err(err).Int64("worker_stream_id", item.WorkerStreamID).Msg("Failed to write files to disk")
+				continue
+			}
 
 			if err := q.streamManager.AddStream(item.WorkerStreamID, item.Config); err != nil {
 				log.Error().Err(err).Int64("worker_stream_id", item.WorkerStreamID).Msg("Failed to add stream to manager")

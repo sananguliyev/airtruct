@@ -13,7 +13,8 @@ export interface FieldSchema {
     | "output_cases"
     | "output_list"
     | "input_list"
-    | "processor_cases";
+    | "processor_cases"
+    | "file";
   title: string;
   description?: string;
   required?: boolean;

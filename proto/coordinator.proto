@@ -169,6 +169,19 @@ message ListBuffersResponse {
   repeated Buffer data = 1;
 }
 
+message ListFilesResponse {
+  repeated File data = 1;
+}
+
+message GetFileRequest {
+  int64 id = 1 [(validate.rules).int64.gt = 0];
+}
+
+message FileResponse {
+  File data = 1;
+  CommonResponse meta = 2;
+}
+
 message GetRateLimitRequest {
   int64 id = 1 [(validate.rules).int64.gt = 0];
 }
@@ -301,6 +314,29 @@ service Coordinator {
   }
   rpc DeleteBuffer(GetBufferRequest) returns (CommonResponse) {
     option (google.api.http) = {delete: "/v0/buffers/{id}"};
+  }
+
+  // File methods
+  rpc ListFiles(google.protobuf.Empty) returns (ListFilesResponse) {
+    option (google.api.http) = {get: "/v0/files"};
+  }
+  rpc GetFile(GetFileRequest) returns (FileResponse) {
+    option (google.api.http) = {get: "/v0/files/{id}"};
+  }
+  rpc CreateFile(File) returns (FileResponse) {
+    option (google.api.http) = {
+      post: "/v0/files"
+      body: "*"
+    };
+  }
+  rpc UpdateFile(File) returns (FileResponse) {
+    option (google.api.http) = {
+      put: "/v0/files/{id}"
+      body: "*"
+    };
+  }
+  rpc DeleteFile(GetFileRequest) returns (CommonResponse) {
+    option (google.api.http) = {delete: "/v0/files/{id}"};
   }
 
   // Observability methods
