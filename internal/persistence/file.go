@@ -61,7 +61,11 @@ func (f *File) FromProto(p *pb.File) {
 	f.ID = p.Id
 	f.ParentID = p.ParentId
 	f.Key = p.Key
-	f.Content = p.Content
+	if p.Content != nil {
+		f.Content = p.Content
+	} else {
+		f.Content = []byte{}
+	}
 	f.Size = int64(len(p.Content))
 	f.IsCurrent = p.GetIsCurrent()
 	if p.GetCreatedAt() != nil {
@@ -79,6 +83,7 @@ type FileRepository interface {
 	FindByID(id int64) (*File, error)
 	FindByKey(key string) (*File, error)
 	FindByKeys(keys []string) ([]File, error)
+	HasKeyConflict(key string, excludeID int64) (bool, error)
 	Delete(id int64) error
 	ListAll() ([]File, error)
 }
@@ -178,6 +183,21 @@ func (r *fileRepository) FindByKeys(keys []string) ([]File, error) {
 		return nil, err
 	}
 	return files, nil
+}
+
+func (r *fileRepository) HasKeyConflict(key string, excludeID int64) (bool, error) {
+	var count int64
+	query := r.db.Model(&File{}).Where("is_current = true")
+	if excludeID != 0 {
+		query = query.Where("id != ?", excludeID)
+	}
+	err := query.
+		Where("key LIKE ? OR ? LIKE key || '/%'", key+"/%", key).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
 
 func (r *fileRepository) Delete(id int64) error {

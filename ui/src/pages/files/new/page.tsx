@@ -20,11 +20,23 @@ export default function FileNewPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.key.trim()) {
+    const key = formData.key.trim();
+
+    if (!key) {
       addToast({
         id: "validation-error",
         title: "Validation Error",
         description: "File key is required.",
+        variant: "error",
+      });
+      return;
+    }
+
+    if (key.endsWith("/")) {
+      addToast({
+        id: "validation-error",
+        title: "Validation Error",
+        description: "File key must include a filename (cannot end with '/').",
         variant: "error",
       });
       return;

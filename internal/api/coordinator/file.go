@@ -2,6 +2,7 @@ package coordinator
 
 import (
 	"context"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
@@ -16,6 +17,10 @@ func (c *CoordinatorAPI) CreateFile(_ context.Context, in *pb.File) (*pb.FileRes
 	if err := in.Validate(); err != nil {
 		log.Debug().Err(err).Msg("Invalid request")
 		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	if err := c.validateFileKey(in.GetKey(), 0); err != nil {
+		return nil, err
 	}
 
 	existing, err := c.fileRepo.FindByKey(in.GetKey())
@@ -97,6 +102,10 @@ func (c *CoordinatorAPI) UpdateFile(_ context.Context, in *pb.File) (*pb.FileRes
 		return nil, status.Error(codes.NotFound, "File not found")
 	}
 
+	if err := c.validateFileKey(in.GetKey(), in.GetId()); err != nil {
+		return nil, err
+	}
+
 	existingByKey, err := c.fileRepo.FindByKey(in.GetKey())
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to check existing file by key")
@@ -143,4 +152,21 @@ func (c *CoordinatorAPI) DeleteFile(_ context.Context, in *pb.GetFileRequest) (*
 	return &pb.CommonResponse{
 		Message: "File has been deleted successfully",
 	}, nil
+}
+
+func (c *CoordinatorAPI) validateFileKey(key string, excludeID int64) error {
+	if strings.HasSuffix(key, "/") {
+		return status.Error(codes.InvalidArgument, "File key must include a filename (cannot end with '/')")
+	}
+
+	conflict, err := c.fileRepo.HasKeyConflict(key, excludeID)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to check file key conflict")
+		return status.Error(codes.Internal, "Failed to validate file key")
+	}
+	if conflict {
+		return status.Errorf(codes.InvalidArgument, "File key \"%s\" conflicts with an existing file or folder of the same name", key)
+	}
+
+	return nil
 }

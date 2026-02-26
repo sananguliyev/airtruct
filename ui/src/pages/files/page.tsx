@@ -97,6 +97,7 @@ function TreeItem({
   expandedFolders,
   onSelectFile,
   onToggleFolder,
+  onCreateInFolder,
 }: {
   node: TreeNode;
   depth: number;
@@ -104,6 +105,7 @@ function TreeItem({
   expandedFolders: Set<string>;
   onSelectFile: (file: FileEntry) => void;
   onToggleFolder: (path: string) => void;
+  onCreateInFolder: (folderPath: string) => void;
 }) {
   const isExpanded = expandedFolders.has(node.path);
   const isSelected = node.file && node.file.id === selectedFileId;
@@ -111,12 +113,12 @@ function TreeItem({
   if (node.isFolder) {
     return (
       <div>
-        <button
-          onClick={() => onToggleFolder(node.path)}
+        <div
           className={cn(
-            "flex items-center gap-1 w-full text-left py-1 px-2 text-sm hover:bg-accent rounded-sm",
+            "group flex items-center gap-1 w-full text-left py-1 px-2 text-sm hover:bg-accent rounded-sm cursor-pointer",
           )}
           style={{ paddingLeft: `${depth * 16 + 8}px` }}
+          onClick={() => onToggleFolder(node.path)}
         >
           {isExpanded ? (
             <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -128,8 +130,18 @@ function TreeItem({
           ) : (
             <Folder className="h-4 w-4 shrink-0 text-blue-500" />
           )}
-          <span className="truncate">{node.name}</span>
-        </button>
+          <span className="truncate flex-1">{node.name}</span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onCreateInFolder(node.path);
+            }}
+            className="hidden group-hover:flex h-5 w-5 items-center justify-center rounded-sm hover:bg-accent-foreground/10 shrink-0"
+            title={`New file in ${node.name}`}
+          >
+            <Plus className="h-3.5 w-3.5 text-muted-foreground" />
+          </button>
+        </div>
         {isExpanded && (
           <div>
             {node.children.map((child) => (
@@ -141,6 +153,7 @@ function TreeItem({
                 expandedFolders={expandedFolders}
                 onSelectFile={onSelectFile}
                 onToggleFolder={onToggleFolder}
+                onCreateInFolder={onCreateInFolder}
               />
             ))}
           </div>
@@ -295,6 +308,15 @@ export default function FilesPage() {
     setSearchParams({ new: "" }, { replace: true });
   };
 
+  const handleNewFileInFolder = (folderPath: string) => {
+    setSelectedFile(null);
+    setIsNewFile(true);
+    setFormData({ key: `${folderPath}/`, content: "" });
+    setHasChanges(false);
+    setSearchParams({ new: "" }, { replace: true });
+    expandFoldersForKey(`${folderPath}/placeholder`);
+  };
+
   const handleToggleFolder = (path: string) => {
     setExpandedFolders((prev) => {
       const next = new Set(prev);
@@ -313,11 +335,37 @@ export default function FilesPage() {
   };
 
   const handleSave = async () => {
-    if (!formData.key.trim()) {
+    const key = formData.key.trim();
+
+    if (!key) {
       addToast({
         id: "validation-error",
         title: "Validation Error",
         description: "File key is required.",
+        variant: "error",
+      });
+      return;
+    }
+
+    if (key.endsWith("/")) {
+      addToast({
+        id: "validation-error",
+        title: "Validation Error",
+        description: "File key must include a filename (cannot end with '/').",
+        variant: "error",
+      });
+      return;
+    }
+
+    const hasConflict = files.some((f) => {
+      if (!isNewFile && selectedFile?.id === f.id) return false;
+      return f.key.startsWith(key + "/") || key.startsWith(f.key + "/");
+    });
+    if (hasConflict) {
+      addToast({
+        id: "validation-error",
+        title: "Validation Error",
+        description: `"${key}" conflicts with an existing file or folder of the same name.`,
         variant: "error",
       });
       return;
@@ -454,6 +502,7 @@ export default function FilesPage() {
                       expandedFolders={expandedFolders}
                       onSelectFile={handleSelectFile}
                       onToggleFolder={handleToggleFolder}
+                      onCreateInFolder={handleNewFileInFolder}
                     />
                   ))
                 )}
