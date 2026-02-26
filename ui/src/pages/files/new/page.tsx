@@ -62,10 +62,7 @@ export default function FileNewPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Create New File</h1>
         <p className="text-muted-foreground">
-          Create a file that can be referenced by stream components using{" "}
-          <code className="text-xs bg-muted px-1 py-0.5 rounded">
-            airtruct://your/file/path
-          </code>
+          Create a file that can be referenced by stream components.
         </p>
       </div>
 
@@ -89,11 +86,11 @@ export default function FileNewPage() {
                 required
               />
               <p className="text-xs text-muted-foreground">
-                Use forward slashes to organize files into directories. Reference
-                this file in stream configs as{" "}
+                Use forward slashes to organize files into directories (e.g.,{" "}
                 <code className="bg-muted px-1 py-0.5 rounded">
-                  airtruct://{formData.key || "your/file/path"}
+                  schemas/order.json
                 </code>
+                ).
               </p>
             </div>
 

@@ -550,10 +550,11 @@ export default function FilesPage() {
                     className="font-mono mt-1 h-8 text-sm"
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Reference:{" "}
+                    Use forward slashes to organize files into directories (e.g.,{" "}
                     <code className="bg-muted px-1 py-0.5 rounded">
-                      airtruct://{formData.key || "path/to/file"}
+                      schemas/order.json
                     </code>
+                    ).
                   </p>
                 </div>
 

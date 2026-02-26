@@ -19,6 +19,7 @@ const sidebars = {
         "concepts/architecture",
         "concepts/streams",
         "concepts/components",
+        "concepts/files",
       ],
     },
     {

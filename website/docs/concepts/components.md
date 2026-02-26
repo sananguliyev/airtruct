@@ -64,6 +64,10 @@ Caches provide key-value state storage for components like [CDC MySQL](/docs/com
 
 See the [Caches](/docs/components/caches) page for detailed configuration of each type.
 
+### [Files](/docs/concepts/files)
+
+The File Manager lets you upload files that components can reference at runtime — for example, JSON Schema files for validation. Files are stored centrally and distributed to workers automatically.
+
 ### Rate Limits
 
 | Rate Limit | Description |
