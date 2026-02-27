@@ -13,6 +13,7 @@ At its core, Airtruct uses [Bento](https://warpstreamlabs.github.io/bento/) as t
 
 - **Visual Stream Builder** — Intuitive UI to visually create and manage data pipelines with support for conditional routing and fan-out patterns.
 - **Powerful In-Pipeline Transformations** — Bloblang DSL for efficient data transformation and enrichment within the pipeline, replacing the need for separate tools like dbt.
+- **MCP Integration** — Expose streams as tools for AI assistants via the Model Context Protocol. Connect with Claude Desktop, Claude Code, Cursor, and other MCP-compatible clients.
 - **Flexible Subprocess Processor** — Integrate processors written in any programming language. Communication via stdin/stdout ensures language-agnostic compatibility.
 - **Native HTTP Input** — Accept data over HTTP, ideal for webhooks and streaming data sources.
 - **Horizontally Scalable Worker Pool** — Scale your data processing with a horizontally scalable worker pool architecture.
@@ -23,6 +24,7 @@ At its core, Airtruct uses [Bento](https://warpstreamlabs.github.io/bento/) as t
 - **Completely free** — Apache 2.0 license with no usage limits or paid tiers.
 - **Zero operational overhead** — Runs as a single lightweight binary with no Docker, JVM, or external dependencies required.
 - **Native transformations** — The built-in Bloblang DSL handles mapping, filtering, and conditional logic, eliminating the need for separate tools like dbt.
+- **MCP Server built-in** — Turn any stream into an AI tool with the built-in Model Context Protocol server. No external infrastructure needed.
 - **Language-agnostic processors** — Write custom processors in any language through simple stdin/stdout communication.
 - **Built-in observability** — Metrics, tracing, and logs out of the box.
 - **High performance** — Written in Go with low memory and CPU footprint. Supports both real-time and batch workloads with fine-grained parallel execution control.
@@ -31,6 +33,7 @@ At its core, Airtruct uses [Bento](https://warpstreamlabs.github.io/bento/) as t
 
 - **Data Engineers** who want a lightweight, self-hosted ETL tool without Docker overhead.
 - **Backend Developers** who need to move data between systems with transformations.
+- **AI Developers** building agentic systems that need custom tools for AI assistants via MCP.
 - **Small Teams** that want powerful data pipelines without enterprise complexity or cost.
 
 ## Next Steps
