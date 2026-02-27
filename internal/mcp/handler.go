@@ -164,6 +164,8 @@ func parseToolConfig(inputConfig []byte) (*toolConfig, error) {
 			return nil, fmt.Errorf("failed to convert input_schema: %w", err)
 		}
 		cfg.InputSchema = jsonSchema
+	} else {
+		cfg.InputSchema = json.RawMessage(`{"type":"object","properties":{}}`)
 	}
 
 	return cfg, nil

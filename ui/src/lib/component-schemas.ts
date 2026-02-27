@@ -544,7 +544,6 @@ export const componentSchemas = {
           title: "Input Parameters",
           description:
             "Define the parameters that AI assistants will pass when calling this tool.",
-          required: true,
         },
       },
     },
