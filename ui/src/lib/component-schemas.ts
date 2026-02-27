@@ -1216,6 +1216,286 @@ export const componentSchemas = {
         "Returns the current message payload as a synchronous response to the input source. Useful with http_server input to send custom responses.",
       properties: {},
     },
+    http: {
+      title: "HTTP",
+      description:
+        "Performs an HTTP request using a message batch as the request body, and replaces the original message parts with the body of the response.",
+      properties: {
+        url: {
+          type: "input",
+          title: "URL",
+          description: "The URL to connect to.",
+          required: true,
+        },
+        verb: {
+          type: "select",
+          title: "HTTP Verb",
+          description: "The HTTP verb to use.",
+          options: ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD"],
+          default: "POST",
+        },
+        headers: {
+          type: "key_value",
+          title: "Headers",
+          description: "A map of headers to add to the request.",
+          default: {},
+        },
+        metadata: {
+          type: "object",
+          title: "Metadata",
+          description: "Metadata configuration",
+          properties: {
+            include_prefixes: {
+              type: "array",
+              title: "Include Prefixes",
+              description: "Include metadata prefixes",
+              default: [],
+            },
+            include_patterns: {
+              type: "array",
+              title: "Include Patterns",
+              description: "Include metadata patterns",
+              default: [],
+            },
+          },
+        },
+        oauth: {
+          type: "object",
+          title: "OAuth",
+          description: "OAuth configuration",
+          properties: {
+            enabled: {
+              type: "bool",
+              title: "Enabled",
+              description: "Enable OAuth authentication",
+              default: false,
+            },
+            consumer_key: {
+              type: "input",
+              title: "Consumer Key",
+              description: "OAuth consumer key",
+              default: "",
+            },
+            consumer_secret: {
+              type: "input",
+              title: "Consumer Secret",
+              description: "OAuth consumer secret",
+              default: "",
+            },
+            access_token: {
+              type: "input",
+              title: "Access Token",
+              description: "OAuth access token",
+              default: "",
+            },
+            access_token_secret: {
+              type: "input",
+              title: "Access Token Secret",
+              description: "OAuth access token secret",
+              default: "",
+            },
+          },
+        },
+        oauth2: {
+          type: "object",
+          title: "OAuth2",
+          description: "OAuth2 configuration",
+          properties: {
+            enabled: {
+              type: "bool",
+              title: "Enabled",
+              description: "Enable OAuth2 authentication",
+              default: false,
+            },
+            client_key: {
+              type: "input",
+              title: "Client Key",
+              description: "OAuth2 client key",
+              default: "",
+            },
+            client_secret: {
+              type: "input",
+              title: "Client Secret",
+              description: "OAuth2 client secret",
+              default: "",
+            },
+            token_url: {
+              type: "input",
+              title: "Token URL",
+              description: "OAuth2 token URL",
+              default: "",
+            },
+            scopes: {
+              type: "array",
+              title: "Scopes",
+              description: "OAuth2 scopes",
+              default: [],
+            },
+            endpoint_params: {
+              type: "key_value",
+              title: "Endpoint Parameters",
+              description: "OAuth2 endpoint parameters",
+              default: {},
+            },
+          },
+        },
+        basic_auth: {
+          type: "object",
+          title: "Basic Auth",
+          description: "Basic authentication configuration",
+          properties: {
+            enabled: {
+              type: "bool",
+              title: "Enabled",
+              description: "Enable basic authentication",
+              default: false,
+            },
+            username: {
+              type: "input",
+              title: "Username",
+              description: "Basic auth username",
+              default: "",
+            },
+            password: {
+              type: "input",
+              title: "Password",
+              description: "Basic auth password",
+              default: "",
+            },
+          },
+        },
+        jwt: {
+          type: "object",
+          title: "JWT",
+          description: "JWT configuration",
+          properties: {
+            enabled: {
+              type: "bool",
+              title: "Enabled",
+              description: "Enable JWT authentication",
+              default: false,
+            },
+            private_key_file: {
+              type: "input",
+              title: "Private Key File",
+              description: "JWT private key file",
+              default: "",
+            },
+            signing_method: {
+              type: "input",
+              title: "Signing Method",
+              description: "JWT signing method",
+              default: "",
+            },
+            claims: {
+              type: "key_value",
+              title: "Claims",
+              description: "JWT claims",
+              default: {},
+            },
+            headers: {
+              type: "key_value",
+              title: "Headers",
+              description: "JWT headers",
+              default: {},
+            },
+          },
+        },
+        extract_headers: {
+          type: "object",
+          title: "Extract Headers",
+          description: "Extract headers configuration",
+          properties: {
+            include_prefixes: {
+              type: "array",
+              title: "Include Prefixes",
+              description: "Include header prefixes",
+              default: [],
+            },
+            include_patterns: {
+              type: "array",
+              title: "Include Patterns",
+              description: "Include header patterns",
+              default: [],
+            },
+          },
+        },
+        rate_limit: {
+          type: "input",
+          title: "Rate Limit",
+          description: "An optional rate limit to apply to the requests.",
+          default: "",
+        },
+        timeout: {
+          type: "input",
+          title: "Timeout",
+          description: "An optional timeout for the request.",
+          default: "5s",
+        },
+        retry_period: {
+          type: "input",
+          title: "Retry Period",
+          description: "Period to wait between retries",
+          default: "1s",
+        },
+        max_retry_backoff: {
+          type: "input",
+          title: "Max Retry Backoff",
+          description: "Maximum backoff time between retries",
+          default: "300s",
+        },
+        retries: {
+          type: "number",
+          title: "Retries",
+          description: "Number of retries",
+          default: 3,
+        },
+        backoff_on: {
+          type: "array",
+          title: "Backoff On",
+          description: "Status codes to backoff on",
+          default: [429],
+        },
+        drop_on: {
+          type: "array",
+          title: "Drop On",
+          description: "Status codes to drop on",
+          default: [],
+        },
+        successful_on: {
+          type: "array",
+          title: "Successful On",
+          description: "Status codes to consider successful",
+          default: [],
+        },
+        proxy_url: {
+          type: "input",
+          title: "Proxy URL",
+          description: "Proxy URL",
+          default: "",
+        },
+        payload: {
+          type: "code",
+          title: "Payload",
+          description:
+            "An optional Bloblang mapping to create the request payload. If not specified, the raw message payload is used.",
+          default: "",
+        },
+        batch_as_multipart: {
+          type: "bool",
+          title: "Batch as Multipart",
+          description: "Whether to send batched messages as multipart requests",
+          default: false,
+        },
+        parallel: {
+          type: "bool",
+          title: "Parallel",
+          description:
+            "When processing batched messages, whether to send messages in parallel",
+          default: false,
+        },
+      },
+    },
   },
   output: {
     http_client: {
@@ -2590,6 +2870,7 @@ export const componentLists = {
     "switch",
     "schema_registry_decode",
     "sync_response",
+    "http",
   ],
   output: [
     "http_client",

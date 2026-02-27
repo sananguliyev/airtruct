@@ -53,6 +53,7 @@ const sidebars = {
             "components/processors/catch",
             "components/processors/switch",
             "components/processors/schema-registry-decode",
+            "components/processors/http-client",
           ],
         },
         {

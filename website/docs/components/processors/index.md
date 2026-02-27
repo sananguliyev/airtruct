@@ -14,3 +14,4 @@ Processors transform, validate, or route messages within a pipeline. They are ap
 | [Catch](/docs/components/processors/catch) | Error handling — runs processors on failure |
 | [Switch](/docs/components/processors/switch) | Conditional processing based on message content |
 | [Schema Registry Decode](/docs/components/processors/schema-registry-decode) | Decodes Avro messages via Schema Registry |
+| [HTTP Client](/docs/components/processors/http-client) | Sends a message as an HTTP request and replaces it with the response |
