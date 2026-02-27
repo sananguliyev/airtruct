@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	FileRefPrefix    = "airtruct://"
-	WorkerFilesDir   = "/tmp/airtruct/files"
+	FileRefPrefix  = "airtruct://"
+	WorkerFilesDir = "/tmp/airtruct/files"
 )
 
 type BuildResult struct {
@@ -155,10 +155,20 @@ func resolveFileRefs(v any) {
 
 func (b *configBuilder) buildInputConfig(stream persistence.Stream) (map[string]any, error) {
 	input := make(map[string]any)
-	input[stream.InputComponent] = make(map[string]any)
 
-	if err := yaml.Unmarshal(stream.InputConfig, input[stream.InputComponent]); err != nil {
-		return nil, err
+	if stream.InputComponent == "mcp_tool" {
+		input["http_server"] = map[string]any{
+			"path":          "/",
+			"allowed_verbs": []string{"POST"},
+			"sync_response": map[string]any{
+				"status": `${! metadata("status_code").or("200") }`,
+			},
+		}
+	} else {
+		input[stream.InputComponent] = make(map[string]any)
+		if err := yaml.Unmarshal(stream.InputConfig, input[stream.InputComponent]); err != nil {
+			return nil, err
+		}
 	}
 
 	input["label"] = stream.InputLabel

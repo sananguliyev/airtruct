@@ -26,6 +26,7 @@ The coordinator is the control plane. It:
 - Handles **worker registration** and health tracking via gRPC.
 - Balances **workload distribution** across available workers.
 - Stores all state in the configured database (SQLite or PostgreSQL).
+- Exposes an **MCP server** at `/mcp` endpoint using Streamable HTTP transport, allowing AI assistants to discover and call streams configured as MCP Tools.
 
 There is one coordinator per deployment.
 
@@ -44,6 +45,24 @@ You can run as many workers as needed. Each worker handles one or more streams a
 ## Communication
 
 All communication between coordinator and workers uses **gRPC**. The coordinator exposes a REST/HTTP API (with gRPC-Gateway) for the web UI and external integrations.
+
+### MCP Server
+
+The coordinator includes a built-in **Model Context Protocol (MCP) server** that exposes streams as tools for AI assistants. This server:
+
+- Is accessible at the `/mcp` endpoint on the coordinator's HTTP port
+- Uses the **Streamable HTTP transport** protocol from the MCP specification
+- Automatically syncs tools every 5 seconds based on active streams with the MCP Tool input
+- Works with any MCP-compatible client (Claude Desktop, Claude Code, Cursor, etc.)
+- Forwards tool calls to workers for execution and returns the response
+
+When an AI assistant calls a tool, the MCP server:
+1. Receives the tool call via the `/mcp` endpoint
+2. Forwards the request to a worker running the corresponding stream
+3. The stream processes the request through its processors
+4. Returns the result with optional status code (via `meta status_code`) to the AI client
+
+See the [MCP Tool component](/docs/components/inputs/mcp-tool) and [MCP Tool Integration guide](/docs/guides/mcp-tool) for details on creating and connecting MCP tools.
 
 ## Deployment
 

@@ -41,6 +41,7 @@ interface NodeConfigPanelProps {
   allComponentSchemas: AllComponentSchemas;
   onUpdateNode: (nodeId: string, data: StreamNodeData) => void;
   onDeleteNode: (nodeId: string) => void;
+  lockedComponentId?: string;
 }
 
 export function NodeConfigPanel({
@@ -48,6 +49,7 @@ export function NodeConfigPanel({
   allComponentSchemas,
   onUpdateNode,
   onDeleteNode,
+  lockedComponentId,
 }: NodeConfigPanelProps) {
   const [nodeData, setNodeData] = useState<StreamNodeData | null>(null);
 
@@ -118,6 +120,34 @@ export function NodeConfigPanel({
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">Select a node to configure it</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (lockedComponentId) {
+    return (
+      <Card className="w-full h-full flex flex-col">
+        <CardHeader>
+          <CardTitle>
+            Configure{" "}
+            {(nodeData.type.charAt(0).toUpperCase() + nodeData.type.slice(1))} Node
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col flex-1 p-4 min-h-0">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Label</Label>
+              <Input value={nodeData.label} disabled />
+            </div>
+            <div className="space-y-2">
+              <Label>Component</Label>
+              <Input value={nodeData.component || nodeData.componentId || ""} disabled />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Output is automatically configured for MCP Server input.
+            </p>
+          </div>
         </CardContent>
       </Card>
     );

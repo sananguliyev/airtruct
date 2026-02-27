@@ -68,6 +68,7 @@ func (s *Stream) ToProto() *pb.Stream {
 		CreatedAt:       timestamppb.New(s.CreatedAt),
 		UpdatedAt:       updatedAt,
 		IsHttpServer:    s.InputComponent == "http_server",
+		IsMcpTool:       s.InputComponent == "mcp_tool",
 	}
 
 	for i, processor := range s.Processors {

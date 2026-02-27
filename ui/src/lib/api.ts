@@ -94,6 +94,7 @@ export async function fetchStreams(): Promise<Stream[]> {
         })) || [],
       createdAt: new Date(stream.created_at).toLocaleString(),
       is_http_server: stream.is_http_server || false,
+      is_mcp_tool: stream.is_mcp_tool || false,
     }));
   } catch (error) {
     console.error("Error fetching streams:", error);
@@ -133,6 +134,7 @@ export async function fetchStream(id: string): Promise<Stream> {
         })) || [],
       createdAt: new Date(data.data.created_at).toLocaleString(),
       is_http_server: data.data.is_http_server || false,
+      is_mcp_server: data.data.is_mcp_server || false,
     };
   } catch (error) {
     console.error("Error fetching stream:", error);
@@ -204,6 +206,7 @@ export async function createStream(stream: {
         })) || [],
       createdAt: new Date(data.data.created_at).toLocaleString(),
       is_http_server: data.data.is_http_server || false,
+      is_mcp_server: data.data.is_mcp_server || false,
     };
   } catch (error) {
     console.error("Error creating stream:", error);
@@ -278,6 +281,7 @@ export async function updateStream(
         })) || [],
       createdAt: new Date(data.data.created_at).toLocaleString(),
       is_http_server: data.data.is_http_server || false,
+      is_mcp_server: data.data.is_mcp_server || false,
     };
   } catch (error) {
     console.error("Error updating stream:", error);
@@ -356,6 +360,7 @@ export async function updateStreamStatus(
         })) || [],
       createdAt: new Date(data.data.created_at).toLocaleString(),
       is_http_server: data.data.input_component === "http_server",
+      is_mcp_server: data.data.input_component === "mcp_server",
     };
   } catch (error) {
     console.error("Error updating stream status:", error);

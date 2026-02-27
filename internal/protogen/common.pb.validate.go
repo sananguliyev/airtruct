@@ -301,6 +301,8 @@ func (m *Stream) validate(all bool) error {
 
 	// no validation rules for IsHttpServer
 
+	// no validation rules for IsMcpTool
+
 	if m.ParentId != nil {
 		// no validation rules for ParentId
 	}

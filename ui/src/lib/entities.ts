@@ -31,6 +31,7 @@ export type Stream = {
   }>;
   createdAt: string;
   is_http_server: boolean;
+  is_mcp_tool: boolean;
 
   // Legacy fields for backward compatibility
   inputLabel?: string;
