@@ -14,12 +14,15 @@ export interface FieldSchema {
     | "output_list"
     | "input_list"
     | "processor_cases"
-    | "file";
+    | "file"
+    | "property_list";
   title: string;
   description?: string;
   required?: boolean;
   default?: any;
   options?: string[];
+  pattern?: string;
+  patternMessage?: string;
   dataSource?: "caches" | "secrets";
   properties?: Record<string, FieldSchema>;
 }

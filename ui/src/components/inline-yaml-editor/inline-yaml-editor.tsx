@@ -44,6 +44,7 @@ import {
   LazyCodeEditorField,
   LazyObjectEditor,
   LazyArrayEditor,
+  LazyPropertyListEditor,
 } from "./components/lazy-components";
 import { Suspense } from "react";
 
@@ -466,6 +467,8 @@ export function InlineYamlEditor({
             onChange={handleValueChange}
             previewMode={previewMode}
             placeholder="Enter value..."
+            pattern={fieldSchema.pattern}
+            patternMessage={fieldSchema.patternMessage}
           />
         );
 
@@ -565,6 +568,19 @@ export function InlineYamlEditor({
             fallback={<div className="text-xs text-gray-400">Loading...</div>}
           >
             <LazyArrayEditor
+              value={state.value || []}
+              updateValue={handleValueChange}
+              previewMode={previewMode}
+            />
+          </Suspense>
+        );
+
+      case "property_list":
+        return (
+          <Suspense
+            fallback={<div className="text-xs text-gray-400">Loading...</div>}
+          >
+            <LazyPropertyListEditor
               value={state.value || []}
               updateValue={handleValueChange}
               previewMode={previewMode}

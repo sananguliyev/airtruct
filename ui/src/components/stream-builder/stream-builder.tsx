@@ -85,18 +85,19 @@ interface StreamBuilderProps {
 // Component-specific constants for sizing, defined inside StreamBuilderContent or passed if needed.
 // For NodeCard, CARD_MAX_WIDTH_STREAM_PANEL and CARD_MIN_WIDTH_STREAM_PANEL will be used from parent.
 
-const NodeCard: React.FC<{ 
-  node: CustomNode; 
-  onClick: () => void; 
-  selected: boolean; 
-  onDelete: () => void; 
-  onAddBelow?: () => void; 
-  onAddAbove?: () => void; 
-  isFirstInPipeline?: boolean; 
+const NodeCard: React.FC<{
+  node: CustomNode;
+  onClick: () => void;
+  selected: boolean;
+  onDelete: () => void;
+  onAddBelow?: () => void;
+  onAddAbove?: () => void;
+  isFirstInPipeline?: boolean;
   isPipeline?: boolean;
   cardMaxWidth: string; // Pass dynamic max width
   cardMinWidth: string; // Pass dynamic min width
-}> = ({ node, onClick, selected, onDelete, onAddBelow, onAddAbove, isFirstInPipeline, isPipeline, cardMaxWidth, cardMinWidth }) => {
+  hideDelete?: boolean;
+}> = ({ node, onClick, selected, onDelete, onAddBelow, onAddAbove, isFirstInPipeline, isPipeline, cardMaxWidth, cardMinWidth, hideDelete }) => {
   const showTopPlus = isPipeline && onAddAbove && isFirstInPipeline;
   const showBottomPlus = isPipeline && onAddBelow;
 
@@ -126,9 +127,11 @@ const NodeCard: React.FC<{
       >
         <CardHeader className="p-3 pb-1 flex-row justify-between items-center">
           <CardTitle className="text-sm font-medium truncate">{node.data.label}</CardTitle>
-          <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onDelete();}} className="h-6 w-6">
-            <Trash2 className="h-4 w-4 text-destructive"/>
-          </Button>
+          {!hideDelete && (
+            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onDelete();}} className="h-6 w-6">
+              <Trash2 className="h-4 w-4 text-destructive"/>
+            </Button>
+          )}
         </CardHeader>
         <CardContent className="p-3 pt-0">
           <p className="text-xs text-muted-foreground break-all">
@@ -243,8 +246,30 @@ function StreamBuilderContent({
   }, [selectedNodeId]);
 
   const handleUpdateNode = useCallback((nodeId: string, data: StreamNodeData) => {
-    setNodes(prevNodes => prevNodes.map(n => n.id === nodeId ? { ...n, data: {...data} } : n));
+    setNodes(prevNodes => {
+      const updated = prevNodes.map(n => n.id === nodeId ? { ...n, data: {...data} } : n);
+
+      if (data.type === 'input' && data.componentId === 'mcp_tool') {
+        const outputNode = updated.find(n => n.parentId === 'output-section');
+        if (outputNode) {
+          if (outputNode.data.componentId !== 'sync_response' || outputNode.data.label !== 'mcp_tool_response') {
+            outputNode.data = { ...outputNode.data, label: 'mcp_tool_response', componentId: 'sync_response', component: 'sync_response', configYaml: '' };
+          }
+        } else {
+          updated.push({
+            id: uuidv4(),
+            type: 'output',
+            parentId: 'output-section',
+            data: { label: 'mcp_tool_response', type: 'output', componentId: 'sync_response', component: 'sync_response', configYaml: '' },
+          });
+        }
+      }
+
+      return updated;
+    });
   }, []);
+
+  const isMcpServer = useMemo(() => inputNodes.some(n => n.data.componentId === 'mcp_tool'), [inputNodes]);
 
   const selectedNodeDetails = useMemo(() => nodes.find(n => n.id === selectedNodeId), [nodes, selectedNodeId]);
   
@@ -287,10 +312,10 @@ function StreamBuilderContent({
 
         <div className="flex flex-col items-center w-full gap-1">
           {specificNodes.map((node, index) => (
-              <NodeCard 
-                key={node.id} 
-                node={node} 
-                onClick={() => setSelectedNodeId(node.id)} 
+              <NodeCard
+                key={node.id}
+                node={node}
+                onClick={() => setSelectedNodeId(node.id)}
                 selected={selectedNodeId === node.id}
                 onDelete={() => handleDeleteNode(node.id)}
                 isPipeline={type === 'processor'}
@@ -299,6 +324,7 @@ function StreamBuilderContent({
                 onAddBelow={type === 'processor' ? () => handleAddNode('processor', node.id, 'below') : undefined}
                 cardMaxWidth={CARD_MAX_WIDTH_STREAM_PANEL}
                 cardMinWidth={CARD_MIN_WIDTH_STREAM_PANEL}
+                hideDelete={type === 'output' && isMcpServer}
               />
             ))}
         </div>
@@ -458,21 +484,26 @@ function StreamBuilderContent({
         <div className="flex-[7] flex flex-col h-full min-w-0">
           <div className="flex flex-col h-full">
             {selectedNodeDetails ? (
-              <NodeConfigPanel 
-                key={selectedNodeDetails.id} 
+              <NodeConfigPanel
+                key={selectedNodeDetails.id}
                 allComponentSchemas={allComponentSchemas}
-                selectedNode={{ 
-                  id: selectedNodeDetails.id, 
-                  data: selectedNodeDetails.data, 
-                  type: selectedNodeDetails.type, 
-                  position: {x:0, y:0}, 
-                  measured: { width: 0, height: 0}, 
-                  selected: true, 
+                selectedNode={{
+                  id: selectedNodeDetails.id,
+                  data: selectedNodeDetails.data,
+                  type: selectedNodeDetails.type,
+                  position: {x:0, y:0},
+                  measured: { width: 0, height: 0},
+                  selected: true,
                   dragging: false,
                   resizing: false,
-                } as any} 
-                onUpdateNode={handleUpdateNode} 
-                onDeleteNode={handleDeleteNode} 
+                } as any}
+                onUpdateNode={handleUpdateNode}
+                onDeleteNode={handleDeleteNode}
+                lockedComponentId={
+                  selectedNodeDetails.data.type === 'output' && isMcpServer
+                    ? 'sync_response'
+                    : undefined
+                }
               />
             ) : (
               <Card className="w-full h-full flex flex-col"><CardHeader><CardTitle>Stream Builder</CardTitle></CardHeader><CardContent className="flex-1"><p className="text-muted-foreground">Select a node to configure it.</p></CardContent></Card>

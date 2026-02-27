@@ -20,6 +20,10 @@ export const LazyObjectEditor = lazy(() =>
   import('./object-editor').then(module => ({ default: module.ObjectEditor }))
 );
 
-export const LazyArrayEditor = lazy(() => 
+export const LazyArrayEditor = lazy(() =>
   import('./array-editor').then(module => ({ default: module.ArrayEditor }))
-); 
+);
+
+export const LazyPropertyListEditor = lazy(() =>
+  import('./property-list-editor').then(module => ({ default: module.PropertyListEditor }))
+);

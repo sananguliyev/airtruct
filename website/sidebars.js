@@ -38,6 +38,7 @@ const sidebars = {
             "components/inputs/amqp-0-9",
             "components/inputs/broker",
             "components/inputs/cdc-mysql",
+            "components/inputs/mcp-tool",
             "components/inputs/shopify",
           ],
         },
@@ -79,6 +80,7 @@ const sidebars = {
         "guides/http-webhooks",
         "guides/scaling-workers",
         "guides/keycloak-authentication",
+        "guides/mcp-tool",
       ],
     },
     {

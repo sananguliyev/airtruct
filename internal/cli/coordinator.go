@@ -25,16 +25,25 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
+type MCPSyncer interface {
+	SyncTools()
+}
+
 type CoordinatorCLI struct {
 	api                *coordinator.CoordinatorAPI
 	executor           executor.CoordinatorExecutor
 	rateLimiterEngine  interface{ Cleanup(time.Duration) error }
 	authManager        *auth.Manager
+	mcpHandler         http.Handler
+	mcpSyncer          MCPSyncer
 	httpPort, grpcPort uint32
 }
 
-func NewCoordinatorCLI(api *coordinator.CoordinatorAPI, executor executor.CoordinatorExecutor, rateLimiterEngine interface{ Cleanup(time.Duration) error }, authManager *auth.Manager, httpPort, grpcPort uint32) *CoordinatorCLI {
-	return &CoordinatorCLI{api, executor, rateLimiterEngine, authManager, httpPort, grpcPort}
+func NewCoordinatorCLI(api *coordinator.CoordinatorAPI, executor executor.CoordinatorExecutor, rateLimiterEngine interface{ Cleanup(time.Duration) error }, authManager *auth.Manager, mcpHandler interface {
+	http.Handler
+	MCPSyncer
+}, httpPort, grpcPort uint32) *CoordinatorCLI {
+	return &CoordinatorCLI{api, executor, rateLimiterEngine, authManager, mcpHandler, mcpHandler, httpPort, grpcPort}
 }
 
 func (c *CoordinatorCLI) Run(ctx context.Context) {
@@ -114,6 +123,21 @@ func (c *CoordinatorCLI) Run(ctx context.Context) {
 		}
 	})
 
+	mcpSyncTicker := time.NewTicker(5 * time.Second)
+	defer mcpSyncTicker.Stop()
+
+	g.Go(func() error {
+		for {
+			select {
+			case <-ctx.Done():
+				log.Info().Msg("Stopping MCP tool sync routine...")
+				return ctx.Err()
+			case <-mcpSyncTicker.C:
+				c.mcpSyncer.SyncTools()
+			}
+		}
+	})
+
 	coordinatorServerAddress := fmt.Sprintf(":%d", c.grpcPort)
 	lis, err := net.Listen("tcp", coordinatorServerAddress)
 	if err != nil {
@@ -155,8 +179,8 @@ func (c *CoordinatorCLI) Run(ctx context.Context) {
 	corsMiddleware := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Accept-Encoding", "Authorization", "Content-Type", "Origin"},
-		ExposedHeaders:   []string{"Content-Length"},
+		AllowedHeaders:   []string{"Accept", "Accept-Encoding", "Authorization", "Content-Type", "Origin", "Mcp-Session-Id"},
+		ExposedHeaders:   []string{"Content-Length", "Mcp-Session-Id"},
 		AllowCredentials: true,
 		MaxAge:           12 * 60 * 60,
 	})
@@ -181,6 +205,8 @@ func (c *CoordinatorCLI) Run(ctx context.Context) {
 		w.WriteHeader(int(statusCode))
 		w.Write(response)
 	})
+	mainMux.Handle("/mcp", c.mcpHandler)
+	mainMux.Handle("/mcp/", c.mcpHandler)
 	mainMux.HandleFunc("/", serveSpa(statikFS, "/index.html"))
 
 	httpServer := &http.Server{

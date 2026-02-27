@@ -15,4 +15,5 @@ Inputs define where data enters your pipeline. Select an input type when creatin
 | [AMQP 0.9](/docs/components/inputs/amqp-0-9) | Consumes messages from an AMQP 0.9 queue (e.g. RabbitMQ) |
 | [Broker](/docs/components/inputs/broker) | Combines multiple inputs into one stream |
 | [CDC MySQL](/docs/components/inputs/cdc-mysql) | CDC from MySQL/MariaDB binlog |
+| [MCP Tool](/docs/components/inputs/mcp-tool) | Exposes a stream as a tool for AI assistants via MCP |
 | [Shopify](/docs/components/inputs/shopify) | Fetches data from Shopify stores |

@@ -520,6 +520,34 @@ export const componentSchemas = {
         },
       },
     },
+    mcp_tool: {
+      title: "MCP Tool",
+      properties: {
+        name: {
+          type: "input",
+          title: "Tool Name",
+          description:
+            "Unique identifier for the MCP tool. This is the name AI assistants will use to call it.",
+          required: true,
+          pattern: "[a-zA-Z0-9_-]*",
+          patternMessage: "Only letters, numbers, underscores and hyphens allowed",
+        },
+        description: {
+          type: "input",
+          title: "Description",
+          description:
+            "Human-readable description of what the tool does. This is shown to AI assistants.",
+          required: true,
+        },
+        input_schema: {
+          type: "property_list",
+          title: "Input Parameters",
+          description:
+            "Define the parameters that AI assistants will pass when calling this tool.",
+          required: true,
+        },
+      },
+    },
     broker: {
       title: "Broker",
       description:
@@ -2547,6 +2575,7 @@ export const componentLists = {
     "generate",
     "http_client",
     "http_server",
+    "mcp_tool",
     "kafka",
     "amqp_0_9",
     "broker",

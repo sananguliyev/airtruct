@@ -69,16 +69,16 @@ export const columns = () => [
       );
 
       if (record.is_http_server) {
-        const ingestPath = `/ingest/${record.parentID}`;
+        const endpointPath = `/ingest/${record.parentID}`;
 
-        const CopyableIngestPath = () => {
+        const CopyableEndpointPath = () => {
           const { addToast } = useToast();
 
           const handleCopy = async () => {
             try {
-              await navigator.clipboard.writeText(ingestPath);
+              await navigator.clipboard.writeText(endpointPath);
               addToast({
-                id: "ingest-path-copied",
+                id: "endpoint-path-copied",
                 title: "Copied",
                 description: "Ingest path copied to clipboard",
                 variant: "success",
@@ -94,14 +94,14 @@ export const columns = () => [
               onClick={handleCopy}
               title="Click to copy"
             >
-              {ingestPath}
+              {endpointPath}
             </code>
           );
         };
 
         return (
           <span>
-            {value} ({componentDisplay}) - <CopyableIngestPath />
+            {value} ({componentDisplay}) - <CopyableEndpointPath />
           </span>
         );
       }

@@ -8,6 +8,8 @@ interface TextInputFieldProps {
   previewMode?: boolean;
   placeholder?: string;
   small?: boolean;
+  pattern?: string;
+  patternMessage?: string;
 }
 
 export function TextInputField({
@@ -16,6 +18,8 @@ export function TextInputField({
   previewMode = false,
   placeholder = "",
   small = false,
+  pattern,
+  patternMessage,
 }: TextInputFieldProps) {
   const [showTooltip, setShowTooltip] = useState(false);
   const { resolvedTheme } = useTheme();
@@ -65,17 +69,27 @@ export function TextInputField({
     );
   }
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (pattern && val !== "") {
+      const regex = new RegExp(`^${pattern}$`);
+      if (!regex.test(val)) return;
+    }
+    onChange(val);
+  };
+
   return (
     <Input
       value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className={`${heightClass} ${textSizeClass} p-1 bg-background border-border text-foreground 
-        focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring 
+      onChange={handleChange}
+      className={`${heightClass} ${textSizeClass} p-1 bg-background border-border text-foreground
+        focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring
         font-mono ${isDark ? "text-green-400" : "text-green-600"}`}
       style={{
         fontSize,
       }}
       placeholder={placeholder}
+      title={pattern ? (patternMessage || `Must match: ${pattern}`) : undefined}
     />
   );
 }
