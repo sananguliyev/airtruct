@@ -142,6 +142,33 @@ export async function fetchStream(id: string): Promise<Stream> {
   }
 }
 
+export async function validateStream(stream: {
+  input_component: string;
+  input_label: string;
+  input_config: string;
+  output_component: string;
+  output_label: string;
+  output_config: string;
+  processors: Array<{ label: string; component: string; config: string }>;
+}): Promise<{ valid: boolean; error?: string }> {
+  try {
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/streams/validate`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(stream),
+      }),
+    );
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error validating stream:", error);
+    throw error;
+  }
+}
+
 export async function createStream(stream: {
   name: string;
   status: string;
@@ -182,7 +209,8 @@ export async function createStream(stream: {
       }),
     );
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.message || `HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
 
@@ -257,7 +285,8 @@ export async function updateStream(
       }),
     );
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.message || `HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
 
@@ -336,7 +365,10 @@ export async function updateStreamStatus(
     );
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorData = await response.json().catch(() => null);
+      const message =
+        errorData?.message || `HTTP error! status: ${response.status}`;
+      throw new Error(message);
     }
 
     const data = await response.json();

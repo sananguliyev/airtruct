@@ -2,7 +2,7 @@ import type React from "react";
 import { useCallback, useState, useRef, useEffect, useMemo } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { Button } from "@/components/ui/button";
-import { Save, Trash2, PlusCircle } from "lucide-react"; 
+import { Save, Trash2, PlusCircle, CheckCircle2, XCircle, ShieldCheck } from "lucide-react";
 
 // Define types locally since the files were deleted
 export interface StreamNodeData {
@@ -66,6 +66,8 @@ const sectionVerticalSpacing = 30; // Space between Input/Pipeline/Output sectio
 
 // Removed old width constants: sectionMaxWidth, cardMaxWidth, cardMinWidth as they are redefined or context-dependent
 
+type ValidationResult = { valid: boolean; error?: string } | null;
+
 interface StreamBuilderProps {
   allComponentSchemas: AllComponentSchemas;
   initialData?: {
@@ -80,6 +82,12 @@ interface StreamBuilderProps {
     bufferId?: number;
     nodes: StreamNodeData[];
   }) => void;
+  onValidate?: (data: {
+    name: string;
+    status: string;
+    bufferId?: number;
+    nodes: StreamNodeData[];
+  }) => Promise<ValidationResult>;
 }
 
 // Component-specific constants for sizing, defined inside StreamBuilderContent or passed if needed.
@@ -160,6 +168,7 @@ function StreamBuilderContent({
   allComponentSchemas,
   initialData,
   onSave,
+  onValidate,
 }: StreamBuilderProps) {
   const { addToast } = useToast();
 
@@ -188,6 +197,8 @@ function StreamBuilderContent({
     return [];
   });
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [validationResult, setValidationResult] = useState<ValidationResult>(null);
+  const [isValidating, setIsValidating] = useState(false);
 
   const inputNodes = useMemo(() => nodes.filter(n => n.parentId === 'input-section'), [nodes]);
   const pipelineNodes = useMemo(() => nodes.filter(n => n.parentId === 'pipeline-section'), [nodes]); // Order might need to be managed if not by add order
@@ -246,6 +257,7 @@ function StreamBuilderContent({
   }, [selectedNodeId]);
 
   const handleUpdateNode = useCallback((nodeId: string, data: StreamNodeData) => {
+    setValidationResult(null);
     setNodes(prevNodes => {
       const updated = prevNodes.map(n => n.id === nodeId ? { ...n, data: {...data} } : n);
 
@@ -389,6 +401,20 @@ function StreamBuilderContent({
     return { isValid: missingFields.length === 0, missingFields };
   }, [allComponentSchemas]);
 
+  const handleValidate = useCallback(async () => {
+    if (!onValidate) return;
+    setIsValidating(true);
+    setValidationResult(null);
+    try {
+      const result = await onValidate({ name, status, bufferId, nodes: nodes.map(n => n.data) });
+      setValidationResult(result);
+    } catch {
+      setValidationResult({ valid: false, error: "Failed to reach validation endpoint." });
+    } finally {
+      setIsValidating(false);
+    }
+  }, [onValidate, name, status, bufferId, nodes]);
+
   const handleSave = useCallback(() => {
     const nodesToSave = nodes.map(n => n.data);
     const inputNode = nodes.find(n => n.type === 'input');
@@ -461,11 +487,11 @@ function StreamBuilderContent({
       <div className="flex items-end space-x-4 mb-4">
         <div className="flex-1">
           <Label htmlFor="stream-name">Stream Name</Label>
-          <Input id="stream-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter stream name" />
+          <Input id="stream-name" value={name} onChange={(e) => { setName(e.target.value); setValidationResult(null); }} placeholder="Enter stream name" />
         </div>
         <div className="w-48">
           <Label htmlFor="stream-status">Status</Label>
-          <Select value={status} onValueChange={setStatus}>
+          <Select value={status} onValueChange={(v) => { setStatus(v); setValidationResult(null); }}>
             <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="active">Active</SelectItem>
@@ -474,10 +500,40 @@ function StreamBuilderContent({
             </SelectContent>
           </Select>
         </div>
+        {onValidate && (
+          <Button
+            variant="outline"
+            onClick={handleValidate}
+            disabled={isValidating || !nodes.some(n => n.type === 'input') || !nodes.some(n => n.type === 'output')}
+            className="flex items-center gap-1"
+          >
+            <ShieldCheck className="h-4 w-4" />
+            {isValidating ? "Validating..." : "Validate"}
+          </Button>
+        )}
         <Button onClick={handleSave} disabled={!name.trim() || !nodes.some(n=>n.type ==='input') || !nodes.some(n=>n.type ==='output')} className="flex items-center gap-1">
           <Save className="h-4 w-4" /> Save Stream
         </Button>
       </div>
+
+      {validationResult && (
+        <div className={`flex items-start gap-2 p-3 mb-4 rounded-md border text-sm ${validationResult.valid ? "bg-green-50 border-green-200 text-green-800 dark:bg-green-950 dark:border-green-800 dark:text-green-200" : "bg-red-50 border-red-200 text-red-800 dark:bg-red-950 dark:border-red-800 dark:text-red-200"}`}>
+          {validationResult.valid
+            ? <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-green-600 dark:text-green-400" />
+            : <XCircle className="h-4 w-4 mt-0.5 shrink-0 text-red-600 dark:text-red-400" />}
+          <div className="flex-1 min-w-0">
+            {validationResult.valid
+              ? <span className="font-medium">Configuration is valid</span>
+              : (
+                <>
+                  <span className="font-medium block mb-1">Configuration is invalid</span>
+                  <pre className="whitespace-pre-wrap break-all font-mono text-xs">{validationResult.error}</pre>
+                </>
+              )
+            }
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-1 gap-4 mt-4 w-full h-full">
         {/* Left Panel (Config) */}
