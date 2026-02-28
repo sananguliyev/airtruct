@@ -20,6 +20,7 @@ const sidebars = {
         "concepts/streams",
         "concepts/components",
         "concepts/files",
+        "concepts/validation",
       ],
     },
     {

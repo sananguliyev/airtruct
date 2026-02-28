@@ -24,24 +24,24 @@ Streams are created through the Airtruct web UI:
 
 1. Open the console at `http://localhost:8080`.
 2. Click **Create New Stream**.
-3. Give the stream a name.
-4. Configure the input, processors, and output using the visual editor or YAML.
-5. Save and start the stream.
+3. Give the stream a name and set the desired status.
+4. Configure the input, optional processors, and output using the visual builder.
+5. Save the stream.
 
-Each component is configured with YAML. The visual editor provides forms for common settings.
+Each component is configured through its form in the visual editor. See [Validation](./validation) for how Airtruct checks your configuration before saving.
 
 ## Stream Lifecycle
 
-Streams have the following states:
+Streams have the following statuses:
 
-| State | Description |
-|-------|-------------|
-| **Created** | Stream is defined but not running |
-| **Running** | Stream is actively processing data |
-| **Stopped** | Stream was manually stopped |
-| **Error** | Stream encountered an error |
+| Status | Description |
+|--------|-------------|
+| **active** | Stream is queued to run and will be assigned to an available worker |
+| **paused** | Stream is saved but not running; no worker will pick it up |
+| **completed** | Stream finished processing (e.g., a finite input source was exhausted) |
+| **failed** | Stream encountered an unrecoverable runtime error |
 
-You can start, stop, and update streams from the UI at any time.
+You can change a stream's status from the UI at any time. To save a stream with an invalid configuration, set the status to **paused** — Airtruct will reject saves with status **active** if the configuration does not pass validation.
 
 ## Assignment
 

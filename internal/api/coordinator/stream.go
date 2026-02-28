@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/status"
 	"gopkg.in/yaml.v3"
 
+	coordinatorexecutor "github.com/sananguliyev/airtruct/internal/executor/coordinator"
 	"github.com/sananguliyev/airtruct/internal/persistence"
 	pb "github.com/sananguliyev/airtruct/internal/protogen"
 )
@@ -95,6 +96,13 @@ func (c *CoordinatorAPI) CreateStream(_ context.Context, in *pb.Stream) (*pb.Str
 			Config:    []byte(processor.GetConfig()),
 		}
 	}
+	if stream.Status == persistence.StreamStatusActive {
+		if validationErr := validateStreamConfig(*stream); validationErr != nil {
+			return nil, status.Error(codes.InvalidArgument,
+				"Stream configuration is invalid. Set status to \"paused\" to save without running.\n\n"+validationErr.Error())
+		}
+	}
+
 	if err := c.streamRepo.Create(stream); err != nil {
 		log.Error().Err(err).Msg("Failed to create stream")
 		return nil, status.Error(codes.Internal, err.Error())
@@ -306,6 +314,13 @@ func (c *CoordinatorAPI) UpdateStream(_ context.Context, in *pb.Stream) (*pb.Str
 	}
 	newStream.ParentID = stream.ParentID
 
+	if newStream.Status == persistence.StreamStatusActive {
+		if validationErr := validateStreamConfig(*newStream); validationErr != nil {
+			return nil, status.Error(codes.InvalidArgument,
+				"Stream configuration is invalid. Set status to \"paused\" to save without running.\n\n"+validationErr.Error())
+		}
+	}
+
 	if err = c.streamRepo.Update(newStream); err != nil {
 		log.Error().Err(err).Msg("Failed to update stream")
 		return nil, status.Error(codes.Internal, err.Error())
@@ -407,4 +422,8 @@ func (c *CoordinatorAPI) UpdateStream(_ context.Context, in *pb.Stream) (*pb.Str
 		Data: newStream.ToProto(),
 		Meta: &pb.CommonResponse{Message: "Stream has been updated successfully"},
 	}, nil
+}
+
+func validateStreamConfig(stream persistence.Stream) error {
+	return coordinatorexecutor.ValidateStream(stream)
 }
