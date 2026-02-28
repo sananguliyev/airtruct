@@ -2,7 +2,7 @@ import type React from "react";
 import { useCallback, useState, useRef, useEffect, useMemo } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { Button } from "@/components/ui/button";
-import { Save, Trash2, PlusCircle, CheckCircle2, XCircle, ShieldCheck } from "lucide-react";
+import { Save, Trash2, PlusCircle, CheckCircle2, XCircle, ShieldCheck, FlaskConical, Loader2, Plus, X } from "lucide-react";
 
 // Define types locally since the files were deleted
 export interface StreamNodeData {
@@ -32,6 +32,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/toast";
 import { fetchBuffers } from "@/lib/api";
 import type { Buffer } from "@/lib/entities";
@@ -68,6 +75,11 @@ const sectionVerticalSpacing = 30; // Space between Input/Pipeline/Output sectio
 
 type ValidationResult = { valid: boolean; error?: string } | null;
 
+type TryStreamResult = {
+  outputs: Array<{ content: string }>;
+  error?: string;
+};
+
 interface StreamBuilderProps {
   allComponentSchemas: AllComponentSchemas;
   initialData?: {
@@ -88,6 +100,10 @@ interface StreamBuilderProps {
     bufferId?: number;
     nodes: StreamNodeData[];
   }) => Promise<ValidationResult>;
+  onTry?: (data: {
+    processors: Array<{ label: string; component: string; config: string }>;
+    messages: Array<{ content: string }>;
+  }) => Promise<TryStreamResult>;
 }
 
 // Component-specific constants for sizing, defined inside StreamBuilderContent or passed if needed.
@@ -169,6 +185,7 @@ function StreamBuilderContent({
   initialData,
   onSave,
   onValidate,
+  onTry,
 }: StreamBuilderProps) {
   const { addToast } = useToast();
 
@@ -199,6 +216,10 @@ function StreamBuilderContent({
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [validationResult, setValidationResult] = useState<ValidationResult>(null);
   const [isValidating, setIsValidating] = useState(false);
+  const [tryDialogOpen, setTryDialogOpen] = useState(false);
+  const [tryMessages, setTryMessages] = useState<string[]>(['']);
+  const [tryResult, setTryResult] = useState<TryStreamResult | null>(null);
+  const [isTrying, setIsTrying] = useState(false);
 
   const inputNodes = useMemo(() => nodes.filter(n => n.parentId === 'input-section'), [nodes]);
   const pipelineNodes = useMemo(() => nodes.filter(n => n.parentId === 'pipeline-section'), [nodes]); // Order might need to be managed if not by add order
@@ -415,6 +436,33 @@ function StreamBuilderContent({
     }
   }, [onValidate, name, status, bufferId, nodes]);
 
+  const handleTrySubmit = useCallback(async () => {
+    if (!onTry) return;
+    const nonEmptyMessages = tryMessages.filter(m => m.trim());
+    if (nonEmptyMessages.length === 0) {
+      addToast({ id: "try-no-msg", title: "No Messages", description: "Enter at least one test message.", variant: "warning" });
+      return;
+    }
+    setIsTrying(true);
+    setTryResult(null);
+    try {
+      const processorNodes = nodes.filter(n => n.type === 'processor');
+      const processors = processorNodes.map(n => {
+        const comp = allComponentSchemas.processor.find(c => c.id === n.data.componentId);
+        return { label: n.data.label, component: comp?.component || n.data.componentId || "", config: n.data.configYaml || "" };
+      });
+      const result = await onTry({
+        processors,
+        messages: nonEmptyMessages.map(content => ({ content })),
+      });
+      setTryResult(result);
+    } catch {
+      setTryResult({ outputs: [], error: "Failed to reach try endpoint." });
+    } finally {
+      setIsTrying(false);
+    }
+  }, [onTry, tryMessages, nodes, allComponentSchemas, addToast]);
+
   const handleSave = useCallback(() => {
     const nodesToSave = nodes.map(n => n.data);
     const inputNode = nodes.find(n => n.type === 'input');
@@ -511,6 +559,17 @@ function StreamBuilderContent({
             {isValidating ? "Validating..." : "Validate"}
           </Button>
         )}
+        {onTry && (
+          <Button
+            variant="outline"
+            onClick={() => { setTryResult(null); setTryDialogOpen(true); }}
+            disabled={!nodes.some(n => n.type === 'processor')}
+            className="flex items-center gap-1"
+          >
+            <FlaskConical className="h-4 w-4" />
+            Try
+          </Button>
+        )}
         <Button onClick={handleSave} disabled={!name.trim() || !nodes.some(n=>n.type ==='input') || !nodes.some(n=>n.type ==='output')} className="flex items-center gap-1">
           <Save className="h-4 w-4" /> Save Stream
         </Button>
@@ -595,6 +654,99 @@ function StreamBuilderContent({
           </div>
         </div>
       </div>
+
+      {/* Try Stream Dialog */}
+      <Dialog open={tryDialogOpen} onOpenChange={(open) => { if (!open) setTryDialogOpen(false); }}>
+        <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Try Stream Processors</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 min-h-0 overflow-y-auto space-y-4">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <Label className="text-sm font-medium">Input Messages</Label>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setTryMessages([...tryMessages, ''])}
+                  className="flex items-center gap-1 h-7 text-xs"
+                >
+                  <Plus className="h-3 w-3" /> Add Message
+                </Button>
+              </div>
+              <div className="space-y-2">
+                {tryMessages.map((msg, idx) => (
+                  <div key={idx} className="flex gap-2">
+                    <Textarea
+                      value={msg}
+                      onChange={(e) => {
+                        const updated = [...tryMessages];
+                        updated[idx] = e.target.value;
+                        setTryMessages(updated);
+                      }}
+                      placeholder='{"key": "value"}'
+                      className="font-mono text-sm min-h-[80px]"
+                    />
+                    {tryMessages.length > 1 && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0 h-8 w-8 mt-1"
+                        onClick={() => setTryMessages(tryMessages.filter((_, i) => i !== idx))}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <Button
+              onClick={handleTrySubmit}
+              disabled={isTrying || !tryMessages.some(m => m.trim())}
+              className="w-full flex items-center justify-center gap-2"
+            >
+              {isTrying ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" /> Running...
+                </>
+              ) : (
+                <>
+                  <FlaskConical className="h-4 w-4" /> Run Test
+                </>
+              )}
+            </Button>
+
+            {tryResult && (
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Result</Label>
+                {tryResult.error ? (
+                  <div className="flex items-start gap-2 p-3 rounded-md border bg-red-50 border-red-200 text-red-800 dark:bg-red-950 dark:border-red-800 dark:text-red-200 text-sm">
+                    <XCircle className="h-4 w-4 mt-0.5 shrink-0 text-red-600 dark:text-red-400" />
+                    <pre className="whitespace-pre-wrap break-all font-mono text-xs flex-1">{tryResult.error}</pre>
+                  </div>
+                ) : !tryResult.outputs || tryResult.outputs.length === 0 ? (
+                  <div className="p-3 rounded-md border bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-950 dark:border-yellow-800 dark:text-yellow-200 text-sm">
+                    No output produced. The message may have been filtered out by the processors.
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {tryResult.outputs.map((output, idx) => (
+                      <div key={idx} className="rounded-md border bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800">
+                        <div className="px-3 py-1.5 border-b border-green-200 dark:border-green-800">
+                          <span className="text-xs font-medium text-green-700 dark:text-green-300">Output {idx + 1}</span>
+                        </div>
+                        <pre className="p-3 text-sm font-mono whitespace-pre-wrap break-all text-green-900 dark:text-green-100">{output.content}</pre>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

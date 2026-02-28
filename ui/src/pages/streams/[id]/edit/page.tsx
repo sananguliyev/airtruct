@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/components/toast";
 import { StreamBuilder } from "@/components/stream-builder/stream-builder";
-import { fetchStream, updateStream, validateStream } from "@/lib/api";
+import { fetchStream, updateStream, validateStream, tryStream } from "@/lib/api";
 import { 
   componentSchemas as rawComponentSchemas, 
   componentLists 
@@ -180,6 +180,10 @@ export default function EditStreamPage() {
     });
   };
 
+  const handleTryStream = async (data: { processors: Array<{ label: string; component: string; config: string }>; messages: Array<{ content: string }> }) => {
+    return tryStream(data);
+  };
+
   const handleSaveStream = async (data: { name: string; status: string; bufferId?: number; nodes: StreamNodeData[] }) => {
     setIsSubmitting(true);
 
@@ -296,6 +300,7 @@ export default function EditStreamPage() {
           initialData={streamData!}
           onSave={handleSaveStream}
           onValidate={handleValidateStream}
+          onTry={handleTryStream}
         />
       )}
     </div>
