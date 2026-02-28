@@ -249,7 +249,6 @@ export default function EditStreamPage() {
       // Navigate back to the streams list
       navigate("/streams");
     } catch (error) {
-      // Show error toast
       addToast({
         id: "stream-error",
         title: "Error Updating Stream",

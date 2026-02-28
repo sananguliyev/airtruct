@@ -365,7 +365,10 @@ export async function updateStreamStatus(
     );
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorData = await response.json().catch(() => null);
+      const message =
+        errorData?.message || `HTTP error! status: ${response.status}`;
+      throw new Error(message);
     }
 
     const data = await response.json();

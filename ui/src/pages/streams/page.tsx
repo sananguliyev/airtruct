@@ -64,8 +64,9 @@ export default function StreamsPage() {
     } catch (error) {
       addToast({
         id: "stream-status-error",
-        title: "Error",
-        description: "Failed to update stream status.",
+        title: "Failed to update stream status",
+        description:
+          error instanceof Error ? error.message : "An unknown error occurred.",
         variant: "error",
       });
     }
