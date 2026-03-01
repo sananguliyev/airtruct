@@ -39,7 +39,7 @@ Each line identifies:
 If the configuration is invalid and you attempt to save with status **active**, the save is **rejected** — nothing is written to the database. The full validation error is returned so you can correct it.
 
 :::tip
-Use the **Validate** button in the stream builder to check your configuration at any time before saving. This runs the same validation without attempting to save.
+Use the **Validate** button in the stream builder to check your configuration at any time before saving. This runs the same validation without attempting to save. To also verify that your processors produce the expected output, see [Testing Streams](./testing-streams).
 :::
 
 ## Saving an Invalid Configuration

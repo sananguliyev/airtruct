@@ -28,7 +28,7 @@ Streams are created through the Airtruct web UI:
 4. Configure the input, optional processors, and output using the visual builder.
 5. Save the stream.
 
-Each component is configured through its form in the visual editor. See [Validation](./validation) for how Airtruct checks your configuration before saving.
+Each component is configured through its form in the visual editor. See [Validation](./validation) for how Airtruct checks your configuration before saving, and [Testing Streams](./testing-streams) for how to test your processor pipeline with sample data before activating.
 
 ## Stream Lifecycle
 
