@@ -801,18 +801,24 @@ export function InlineYamlEditor({
         try {
           const processorsForYaml = currentProcessors
             .filter((proc) => {
-              if (
-                !proc.componentId ||
-                !proc.component ||
-                !proc.configYaml ||
-                !proc.configYaml.trim()
-              ) {
+              if (!proc.componentId || !proc.component) {
                 return false;
               }
 
               const selectedProcessor = availableProcessors.find(
                 (p) => p.id === proc.componentId,
               );
+
+              const hasNoFields = selectedProcessor?.schema?.properties &&
+                Object.keys(selectedProcessor.schema.properties).length === 0;
+              if (hasNoFields) {
+                return true;
+              }
+
+              if (!proc.configYaml || !proc.configYaml.trim()) {
+                return false;
+              }
+
               if (selectedProcessor?.schema?.flat) {
                 return proc.configYaml.trim().length > 0;
               } else {
