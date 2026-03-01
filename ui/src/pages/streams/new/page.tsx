@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/components/toast";
 import { StreamBuilder } from "@/components/stream-builder/stream-builder";
-import { createStream, validateStream } from "@/lib/api";
+import { createStream, validateStream, tryStream } from "@/lib/api";
 import { 
   componentSchemas as rawComponentSchemas, 
   componentLists 
@@ -86,6 +86,10 @@ export default function NewStreamPage() {
         return { label: node.label, component: comp?.component || node.componentId || "", config: node.configYaml || "" };
       }),
     });
+  };
+
+  const handleTryStream = async (data: { processors: Array<{ label: string; component: string; config: string }>; messages: Array<{ content: string }> }) => {
+    return tryStream(data);
   };
 
   const handleSaveStream = async (data: { name: string; status: string; bufferId?: number; nodes: StreamNodeData[] }) => {
@@ -192,6 +196,7 @@ export default function NewStreamPage() {
           allComponentSchemas={transformedSchemas}
           onSave={handleSaveStream}
           onValidate={handleValidateStream}
+          onTry={handleTryStream}
         />
       )}
     </div>

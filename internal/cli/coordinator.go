@@ -195,6 +195,7 @@ func (c *CoordinatorCLI) Run(ctx context.Context) {
 
 	protectedAPI := c.authManager.Middleware(mux)
 	mainMux.Handle("/api/v0/streams/validate", c.authManager.Middleware(http.HandlerFunc(c.api.ValidateStreamHTTP)))
+	mainMux.Handle("/api/v0/streams/try", c.authManager.Middleware(http.HandlerFunc(c.api.TryStreamHTTP)))
 	mainMux.Handle("/api/", http.StripPrefix("/api", protectedAPI))
 	mainMux.HandleFunc("/ingest/", func(w http.ResponseWriter, r *http.Request) {
 		statusCode, response, err := c.executor.ForwardRequestToWorker(r.Context(), r)

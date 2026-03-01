@@ -169,6 +169,28 @@ export async function validateStream(stream: {
   }
 }
 
+export async function tryStream(data: {
+  processors: Array<{ label: string; component: string; config: string }>;
+  messages: Array<{ content: string }>;
+}): Promise<{ outputs: Array<{ content: string }>; error?: string }> {
+  try {
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/streams/try`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+      }),
+    );
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error trying stream:", error);
+    throw error;
+  }
+}
+
 export async function createStream(stream: {
   name: string;
   status: string;
