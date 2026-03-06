@@ -26,6 +26,9 @@ export default defineConfig({
                         if (id.includes('lucide-react')) {
                             return 'vendor-icons';
                         }
+                        if (id.includes('@xyflow')) {
+                            return 'vendor-xyflow';
+                        }
                         return 'vendor-misc';
                     }
                     if (id.includes('inline-yaml-editor')) {

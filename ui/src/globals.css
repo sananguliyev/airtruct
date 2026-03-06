@@ -224,6 +224,22 @@ header {
   color: #f92672;
 }
 
+/* React Flow dark mode */
+.react-flow.dark {
+  --xy-background-color: hsl(var(--background));
+  --xy-node-background-color: hsl(var(--card));
+  --xy-node-border-color: hsl(var(--border));
+  --xy-edge-stroke: hsl(var(--muted-foreground));
+  --xy-minimap-background-color: hsl(var(--background));
+}
+
+/* React Flow edge animation */
+@keyframes dashmove {
+  to {
+    stroke-dashoffset: -9;
+  }
+}
+
 /* Textarea styling */
 textarea.code-editor {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
