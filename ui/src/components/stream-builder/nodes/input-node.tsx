@@ -34,7 +34,7 @@ export const InputNode = memo(({ data, selected }: NodeProps) => {
 
       <Handle type="source" position={Position.Right} className="!w-3 !h-3 !bg-green-500 !border-2 !border-background" />
 
-      <button
+      {!d.readOnly && <button
         type="button"
         className="absolute -right-3 top-1/2 translate-x-full -translate-y-1/2 flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground shadow-md hover:scale-110 transition-transform"
         onClick={(e) => {
@@ -44,7 +44,7 @@ export const InputNode = memo(({ data, selected }: NodeProps) => {
         title="Add processor"
       >
         <Plus className="h-3.5 w-3.5" />
-      </button>
+      </button>}
     </div>
   );
 });

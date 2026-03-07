@@ -106,6 +106,7 @@ export interface StreamFlowNodeData extends Record<string, unknown> {
   component?: string;
   configYaml?: string;
   disconnected?: boolean;
+  readOnly?: boolean;
   nodeId: string;
   isGroup?: boolean;
   childCount?: number;

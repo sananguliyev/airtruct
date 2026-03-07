@@ -19,8 +19,7 @@ export const ProcessorNode = memo(({ data, selected }: NodeProps) => {
     >
       <Handle type="target" position={Position.Left} className="!w-3 !h-3 !bg-blue-500 !border-2 !border-background" />
 
-      {/* Plus button on left side — add processor before this one */}
-      <button
+      {!d.readOnly && <button
         type="button"
         className="absolute -left-3 top-1/2 -translate-x-full -translate-y-1/2 flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground shadow-md hover:scale-110 transition-transform"
         onClick={(e) => {
@@ -30,7 +29,7 @@ export const ProcessorNode = memo(({ data, selected }: NodeProps) => {
         title="Add processor before"
       >
         <Plus className="h-3.5 w-3.5" />
-      </button>
+      </button>}
 
       <div className="p-3">
         <div className="flex items-center gap-2 mb-1">
@@ -49,8 +48,7 @@ export const ProcessorNode = memo(({ data, selected }: NodeProps) => {
 
       <Handle type="source" position={Position.Right} className="!w-3 !h-3 !bg-blue-500 !border-2 !border-background" />
 
-      {/* Plus button on right side — add processor after this one */}
-      <button
+      {!d.readOnly && <button
         type="button"
         className="absolute -right-3 top-1/2 translate-x-full -translate-y-1/2 flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground shadow-md hover:scale-110 transition-transform"
         onClick={(e) => {
@@ -60,7 +58,7 @@ export const ProcessorNode = memo(({ data, selected }: NodeProps) => {
         title="Add processor after"
       >
         <Plus className="h-3.5 w-3.5" />
-      </button>
+      </button>}
     </div>
   );
 });

@@ -24,8 +24,7 @@ export const CatchGroupNode = memo(({ data, selected }: NodeProps) => {
         className="!w-3 !h-3 !bg-red-500 !border-2 !border-background"
       />
 
-      {/* Plus button on left — add processor before this group */}
-      <button
+      {!(d as any).readOnly && <button
         type="button"
         className="absolute -left-3 top-1/2 -translate-x-full -translate-y-1/2 flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground shadow-md hover:scale-110 transition-transform z-10"
         onClick={(e) => {
@@ -35,7 +34,7 @@ export const CatchGroupNode = memo(({ data, selected }: NodeProps) => {
         title="Add processor before"
       >
         <Plus className="h-3.5 w-3.5" />
-      </button>
+      </button>}
 
       {/* Header */}
       <div className="px-3 py-2 border-b border-dashed border-red-300 dark:border-red-800">
@@ -53,8 +52,7 @@ export const CatchGroupNode = memo(({ data, selected }: NodeProps) => {
         <p className="text-sm font-medium truncate">{d.label || "catch"}</p>
       </div>
 
-      {/* Add child processor button — positioned at the bottom */}
-      <button
+      {!(d as any).readOnly && <button
         type="button"
         className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center justify-center w-6 h-6 rounded-full border border-dashed border-muted-foreground/40 text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
         onClick={(e) => {
@@ -64,7 +62,7 @@ export const CatchGroupNode = memo(({ data, selected }: NodeProps) => {
         title="Add processor"
       >
         <Plus className="h-3.5 w-3.5" />
-      </button>
+      </button>}
 
       <Handle
         type="source"
@@ -72,8 +70,7 @@ export const CatchGroupNode = memo(({ data, selected }: NodeProps) => {
         className="!w-3 !h-3 !bg-red-500 !border-2 !border-background"
       />
 
-      {/* Plus button on right — add processor after this group */}
-      <button
+      {!(d as any).readOnly && <button
         type="button"
         className="absolute -right-3 top-1/2 translate-x-full -translate-y-1/2 flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground shadow-md hover:scale-110 transition-transform z-10"
         onClick={(e) => {
@@ -83,7 +80,7 @@ export const CatchGroupNode = memo(({ data, selected }: NodeProps) => {
         title="Add processor after"
       >
         <Plus className="h-3.5 w-3.5" />
-      </button>
+      </button>}
     </div>
   );
 });

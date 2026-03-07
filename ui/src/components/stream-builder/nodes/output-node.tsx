@@ -19,8 +19,7 @@ export const OutputNode = memo(({ data, selected }: NodeProps) => {
     >
       <Handle type="target" position={Position.Left} className="!w-3 !h-3 !bg-amber-500 !border-2 !border-background" />
 
-      {/* Plus button on left side — add processor before output */}
-      <button
+      {!d.readOnly && <button
         type="button"
         className="absolute -left-3 top-1/2 -translate-x-full -translate-y-1/2 flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground shadow-md hover:scale-110 transition-transform"
         onClick={(e) => {
@@ -30,7 +29,7 @@ export const OutputNode = memo(({ data, selected }: NodeProps) => {
         title="Add processor before output"
       >
         <Plus className="h-3.5 w-3.5" />
-      </button>
+      </button>}
 
       <div className="p-3">
         <div className="flex items-center gap-2 mb-1">
