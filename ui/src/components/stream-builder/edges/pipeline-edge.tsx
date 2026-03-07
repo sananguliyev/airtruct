@@ -29,6 +29,7 @@ export const PipelineEdge = memo(({
   });
 
   const onDelete = data?.onDeleteEdge as ((id: string) => void) | undefined;
+  const isInternal = data?.internal as boolean;
 
   return (
     <>
@@ -37,13 +38,16 @@ export const PipelineEdge = memo(({
         markerEnd={markerEnd}
         style={{
           ...style,
-          strokeWidth: 2,
-          stroke: "hsl(var(--muted-foreground))",
-          strokeDasharray: "6 3",
-          animation: "dashmove 0.5s linear infinite",
+          strokeWidth: isInternal ? 1.5 : 2,
+          stroke: isInternal
+            ? "hsl(var(--muted-foreground) / 0.4)"
+            : "hsl(var(--muted-foreground))",
+          ...(isInternal
+            ? {}
+            : { strokeDasharray: "6 3", animation: "dashmove 0.5s linear infinite" }),
         }}
       />
-      {onDelete && (
+      {onDelete && !isInternal && (
         <EdgeLabelRenderer>
           <div
             style={{

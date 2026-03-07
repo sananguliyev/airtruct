@@ -65,6 +65,8 @@ import * as yaml from "js-yaml";
 import { InputNode } from "./nodes/input-node";
 import { ProcessorNode } from "./nodes/processor-node";
 import { OutputNode } from "./nodes/output-node";
+import { CatchGroupNode } from "./nodes/catch-group-node";
+import { ChildProcessorNode } from "./nodes/child-processor-node";
 import { PipelineEdge } from "./edges/pipeline-edge";
 
 // --- Exported types (unchanged for compatibility) ---
@@ -105,8 +107,11 @@ export interface StreamFlowNodeData extends Record<string, unknown> {
   configYaml?: string;
   disconnected?: boolean;
   nodeId: string;
+  isGroup?: boolean;
+  childCount?: number;
   onAddAndConnect?: (sourceNodeId: string, sourceType: string) => void;
   onAddBefore?: (targetNodeId: string) => void;
+  onAddChildProcessor?: (groupId: string) => void;
 }
 
 type ValidationResult = { valid: boolean; error?: string } | null;
@@ -146,6 +151,8 @@ const nodeTypes = {
   inputNode: InputNode,
   processorNode: ProcessorNode,
   outputNode: OutputNode,
+  catchGroupNode: CatchGroupNode,
+  childProcessorNode: ChildProcessorNode,
 };
 
 const edgeTypes = {
@@ -154,6 +161,20 @@ const edgeTypes = {
 
 const NODE_SPACING_X = 350;
 const NODE_Y = 200;
+
+// Catch group layout (vertical)
+const CATCH_GROUP_WIDTH = 210;
+const CATCH_CHILD_NODE_WIDTH = 150;
+const CATCH_CHILD_NODE_HEIGHT = 55;
+const CATCH_CHILD_GAP_Y = 40;
+const CATCH_CHILD_X = 25;
+const CATCH_CHILD_Y_START = 68;
+const CATCH_GROUP_MIN_HEIGHT = 140;
+
+function calcCatchGroupHeight(childCount: number): number {
+  if (childCount === 0) return CATCH_GROUP_MIN_HEIGHT;
+  return CATCH_CHILD_Y_START + childCount * CATCH_CHILD_NODE_HEIGHT + (childCount - 1) * CATCH_CHILD_GAP_Y + 48;
+}
 
 function toFlowNodeType(type: "input" | "processor" | "output"): string {
   if (type === "input") return "inputNode";
@@ -224,22 +245,95 @@ function StreamBuilderContent({
 
     for (const nd of processorNodes) {
       const id = uuidv4();
-      flowNodes.push({
-        id,
-        type: "processorNode",
-        position: { x: xPos, y: NODE_Y },
-        data: { ...nd, nodeId: id },
-      });
-      if (prevNodeId) {
-        flowEdges.push({
-          id: `e-${prevNodeId}-${id}`,
-          source: prevNodeId,
-          target: id,
-          type: "pipeline",
+
+      if (nd.componentId === "catch") {
+        // Parse catch children from configYaml
+        let childConfigs: any[] = [];
+        if (nd.configYaml?.trim()) {
+          try {
+            const parsed = yaml.load(nd.configYaml);
+            if (Array.isArray(parsed)) childConfigs = parsed;
+          } catch {}
+        }
+
+        const childCount = childConfigs.length;
+        const groupHeight = calcCatchGroupHeight(childCount);
+
+        flowNodes.push({
+          id,
+          type: "catchGroupNode",
+          position: { x: xPos, y: NODE_Y - 25 },
+          style: { width: CATCH_GROUP_WIDTH, height: groupHeight },
+          data: { ...nd, nodeId: id, isGroup: true, childCount, configYaml: "" },
         });
+
+        let prevChildId: string | null = null;
+        childConfigs.forEach((procObj, i) => {
+          const componentName = Object.keys(procObj).find((k) => k !== "label") || Object.keys(procObj)[0];
+          const config = procObj[componentName];
+          const childLabel = procObj.label as string | undefined;
+          const schema = allComponentSchemas.processor.find(
+            (p) => p.component === componentName || p.id === componentName
+          );
+          const childId = uuidv4();
+          flowNodes.push({
+            id: childId,
+            type: "childProcessorNode",
+            position: {
+              x: CATCH_CHILD_X,
+              y: CATCH_CHILD_Y_START + i * (CATCH_CHILD_NODE_HEIGHT + CATCH_CHILD_GAP_Y),
+            },
+            parentId: id,
+            extent: "parent" as const,
+            data: {
+              label: childLabel || schema?.id || componentName,
+              type: "processor",
+              componentId: schema?.id || componentName,
+              component: componentName,
+              configYaml: typeof config === "string" ? config : (config && Object.keys(config).length > 0 ? yaml.dump(config, { lineWidth: -1, noRefs: true }) : ""),
+              nodeId: childId,
+            },
+          });
+          if (prevChildId) {
+            flowEdges.push({
+              id: `e-internal-${prevChildId}-${childId}`,
+              source: prevChildId,
+              target: childId,
+              type: "pipeline",
+              data: { internal: true },
+            });
+          }
+          prevChildId = childId;
+        });
+
+        if (prevNodeId) {
+          flowEdges.push({
+            id: `e-${prevNodeId}-${id}`,
+            source: prevNodeId,
+            target: id,
+            type: "pipeline",
+          });
+        }
+        prevNodeId = id;
+        xPos += NODE_SPACING_X;
+      } else {
+        flowNodes.push({
+          id,
+          type: "processorNode",
+          position: { x: xPos, y: NODE_Y },
+          data: { ...nd, nodeId: id },
+        });
+        if (prevNodeId) {
+          flowEdges.push({
+            id: `e-${prevNodeId}-${id}`,
+            source: prevNodeId,
+            target: id,
+            type: "pipeline",
+          });
+        }
+        prevNodeId = id;
+        xPos += NODE_SPACING_X;
       }
-      prevNodeId = id;
-      xPos += NODE_SPACING_X;
     }
 
     for (const nd of outputNodes) {
@@ -322,10 +416,10 @@ function StreamBuilderContent({
         } satisfies Partial<StreamFlowNodeData>,
       };
 
-      // Shift all nodes to the right of insertX further right
+      // Shift all top-level nodes to the right of insertX further right
       setNodes((nds) => [
         ...nds.map((n) =>
-          n.id !== sourceNodeId && n.position.x >= insertX
+          !n.parentId && n.id !== sourceNodeId && n.position.x >= insertX
             ? { ...n, position: { ...n.position, x: n.position.x + NODE_SPACING_X } }
             : n
         ),
@@ -382,10 +476,10 @@ function StreamBuilderContent({
         } satisfies Partial<StreamFlowNodeData>,
       };
 
-      // Shift target and all nodes at or right of insertX further right
+      // Shift target and all top-level nodes at or right of insertX further right
       setNodes((nds) => [
         ...nds.map((n) =>
-          n.position.x >= insertX
+          !n.parentId && n.position.x >= insertX
             ? { ...n, position: { ...n.position, x: n.position.x + NODE_SPACING_X } }
             : n
         ),
@@ -419,6 +513,121 @@ function StreamBuilderContent({
     [nodes, setNodes, setEdges, scheduleAutoFit]
   );
 
+  const handleAddChildProcessor = useCallback(
+    (groupId: string) => {
+      const groupNode = nodes.find((n) => n.id === groupId);
+      if (!groupNode) return;
+
+      const existingChildren = nodes.filter((n) => n.parentId === groupId);
+      const childCount = existingChildren.length;
+      const newId = uuidv4();
+      const label = `catch_proc_${childCount + 1}`;
+
+      const newChild: Node = {
+        id: newId,
+        type: "childProcessorNode",
+        position: {
+          x: CATCH_CHILD_X,
+          y: CATCH_CHILD_Y_START + childCount * (CATCH_CHILD_NODE_HEIGHT + CATCH_CHILD_GAP_Y),
+        },
+        parentId: groupId,
+        extent: "parent" as const,
+        data: {
+          label,
+          type: "processor",
+          componentId: "",
+          component: "",
+          configYaml: "",
+          nodeId: newId,
+        } satisfies Partial<StreamFlowNodeData>,
+      };
+
+      const newHeight = calcCatchGroupHeight(childCount + 1);
+
+      setNodes((nds) => [
+        ...nds.map((n) =>
+          n.id === groupId
+            ? { ...n, style: { ...n.style, width: CATCH_GROUP_WIDTH, height: newHeight }, data: { ...n.data, childCount: childCount + 1 } }
+            : n
+        ),
+        newChild,
+      ]);
+
+      if (childCount > 0) {
+        const lastChild = existingChildren.sort((a, b) => a.position.y - b.position.y)[childCount - 1];
+        setEdges((eds) => [
+          ...eds,
+          {
+            id: `e-internal-${lastChild.id}-${newId}`,
+            source: lastChild.id,
+            target: newId,
+            type: "pipeline",
+            data: { internal: true },
+          },
+        ]);
+      }
+
+      setSelectedNodeId(newId);
+      scheduleAutoFit();
+    },
+    [nodes, setNodes, setEdges, scheduleAutoFit]
+  );
+
+  const handleChildDragStop = useCallback(
+    (_event: React.MouseEvent, node: Node) => {
+      if (!node.parentId) return;
+      const groupId = node.parentId;
+      const siblings = nodes
+        .filter((n) => n.parentId === groupId)
+        .sort((a, b) => a.position.y - b.position.y);
+      if (siblings.length <= 1) return;
+
+      // Snap all children to grid positions based on current y-order
+      setNodes((nds) => {
+        const sorted = nds
+          .filter((n) => n.parentId === groupId)
+          .sort((a, b) => a.position.y - b.position.y);
+        return nds.map((n) => {
+          const idx = sorted.findIndex((s) => s.id === n.id);
+          if (idx >= 0) {
+            return {
+              ...n,
+              position: { x: CATCH_CHILD_X, y: CATCH_CHILD_Y_START + idx * (CATCH_CHILD_NODE_HEIGHT + CATCH_CHILD_GAP_Y) },
+            };
+          }
+          return n;
+        });
+      });
+
+      // Rebuild internal edges in new order
+      const childIds = new Set(siblings.map((s) => s.id));
+      setEdges((eds) => {
+        const kept = eds.filter(
+          (e) => !((e.data as any)?.internal && (childIds.has(e.source) || childIds.has(e.target)))
+        );
+        const sorted = [...siblings];
+        // Re-sort using current (dragged) positions from nodes state
+        sorted.sort((a, b) => {
+          const na = nodes.find((n) => n.id === a.id);
+          const nb = nodes.find((n) => n.id === b.id);
+          return (na?.position.y ?? 0) - (nb?.position.y ?? 0);
+        });
+        const newEdges: Edge[] = [];
+        for (let i = 0; i < sorted.length - 1; i++) {
+          newEdges.push({
+            id: `e-internal-${sorted[i].id}-${sorted[i + 1].id}`,
+            source: sorted[i].id,
+            target: sorted[i + 1].id,
+            type: "pipeline",
+            data: { internal: true },
+          });
+        }
+        return [...kept, ...newEdges];
+      });
+    },
+    [nodes, setNodes, setEdges]
+  );
+
   // Inject callbacks into node data
   const nodesWithCallbacks = useMemo(() => {
     return nodes.map((n) => ({
@@ -428,14 +637,18 @@ function StreamBuilderContent({
         nodeId: n.id,
         onAddAndConnect: handleAddAndConnect,
         onAddBefore: handleAddBefore,
+        onAddChildProcessor: handleAddChildProcessor,
       },
     }));
-  }, [nodes, handleAddAndConnect, handleAddBefore]);
+  }, [nodes, handleAddAndConnect, handleAddBefore, handleAddChildProcessor]);
 
   const edgesWithCallbacks = useMemo(() => {
     return edges.map((e) => ({
       ...e,
-      data: { ...e.data, onDeleteEdge: handleDeleteEdge },
+      data: {
+        ...e.data,
+        ...(!(e.data as any)?.internal ? { onDeleteEdge: handleDeleteEdge } : {}),
+      },
       markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
     }));
   }, [edges, handleDeleteEdge]);
@@ -448,6 +661,9 @@ function StreamBuilderContent({
       const source = nodes.find((n) => n.id === connection.source);
       const target = nodes.find((n) => n.id === connection.target);
       if (!source || !target) return false;
+
+      // Prevent connections to/from child nodes
+      if (source.parentId || target.parentId) return false;
 
       // Each source can only have one outgoing edge
       const hasOutgoing = edges.some((e) => e.source === connection.source);
@@ -481,7 +697,7 @@ function StreamBuilderContent({
 
   const handleAddNode = useCallback(
     (type: "input" | "processor" | "output") => {
-      const existingOfType = nodes.filter((n) => (n.data as StreamFlowNodeData).type === type);
+      const existingOfType = nodes.filter((n) => (n.data as StreamFlowNodeData).type === type && !n.parentId);
       if (type === "input" && existingOfType.length > 0) {
         addToast({ id: "input-exists", title: "Input Exists", description: "Only one input node allowed.", variant: "info" });
         return;
@@ -549,8 +765,18 @@ function StreamBuilderContent({
         component: d.component,
         configYaml: d.configYaml,
       } as StreamNodeData,
+      isGroup: d.isGroup === true,
+      isGroupChild: !!n.parentId,
     };
   }, [nodes, selectedNodeId]);
+
+  const childFilteredSchemas = useMemo(() => {
+    if (!selectedNode?.isGroupChild) return allComponentSchemas;
+    return {
+      ...allComponentSchemas,
+      processor: allComponentSchemas.processor.filter((p) => p.id !== "catch"),
+    };
+  }, [allComponentSchemas, selectedNode?.isGroupChild]);
 
   const isMcpServer = useMemo(
     () => nodes.some((n) => (n.data as StreamFlowNodeData).type === "input" && (n.data as StreamFlowNodeData).componentId === "mcp_tool"),
@@ -560,6 +786,9 @@ function StreamBuilderContent({
   const handleUpdateNode = useCallback(
     (nodeId: string, data: StreamNodeData) => {
       setNodes((nds) => {
+        const currentNode = nds.find((n) => n.id === nodeId);
+        const prevComponentId = currentNode ? (currentNode.data as StreamFlowNodeData).componentId : undefined;
+
         // Clear disconnected state on all nodes when any config changes
         let updated = nds.map((n) =>
           n.id === nodeId
@@ -568,6 +797,39 @@ function StreamBuilderContent({
               ? { ...n, data: { ...n.data, disconnected: false } }
               : n
         );
+
+        // Transform to catch group when component changes to "catch"
+        if (data.componentId === "catch" && prevComponentId !== "catch" && data.type === "processor") {
+          updated = updated.map((n) =>
+            n.id === nodeId
+              ? {
+                  ...n,
+                  type: "catchGroupNode",
+                  style: { width: CATCH_GROUP_WIDTH, height: CATCH_GROUP_MIN_HEIGHT },
+                  position: { ...n.position, y: n.position.y - 25 },
+                  data: { ...n.data, isGroup: true, childCount: 0, configYaml: "" },
+                }
+              : n
+          );
+        }
+
+        // Transform back from catch group when component changes away from "catch"
+        if (prevComponentId === "catch" && data.componentId !== "catch" && data.type === "processor") {
+          const childIds = updated.filter((n) => n.parentId === nodeId).map((n) => n.id);
+          updated = updated.filter((n) => n.parentId !== nodeId);
+          setEdges((eds) => eds.filter((e) => !childIds.includes(e.source) && !childIds.includes(e.target)));
+          updated = updated.map((n) =>
+            n.id === nodeId
+              ? {
+                  ...n,
+                  type: "processorNode",
+                  style: undefined,
+                  position: { ...n.position, y: n.position.y + 25 },
+                  data: { ...n.data, isGroup: false, childCount: undefined },
+                }
+              : n
+          );
+        }
 
         if (data.type === "input" && data.componentId === "mcp_tool") {
           const outputNode = updated.find((n) => (n.data as StreamFlowNodeData).type === "output");
@@ -611,11 +873,66 @@ function StreamBuilderContent({
 
   const handleDeleteNode = useCallback(
     (nodeId: string) => {
-      setNodes((nds) => nds.filter((n) => n.id !== nodeId));
-      setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
+      const nodeToDelete = nodes.find((n) => n.id === nodeId);
+      if (!nodeToDelete) return;
+
+      if (nodeToDelete.parentId) {
+        // Deleting a child processor inside a group
+        const groupId = nodeToDelete.parentId;
+
+        // Remove old internal edges touching this node, rebuild chain for remaining siblings
+        setEdges((eds) => {
+          const cleaned = eds.filter((e) => e.source !== nodeId && e.target !== nodeId);
+          // Get remaining siblings in order
+          const remainingSiblings = nodes
+            .filter((n) => n.parentId === groupId && n.id !== nodeId)
+            .sort((a, b) => a.position.y - b.position.y);
+          // Remove all internal edges for this group
+          const sibIds = new Set(remainingSiblings.map((s) => s.id));
+          const kept = cleaned.filter(
+            (e) => !((e.data as any)?.internal && (sibIds.has(e.source) || sibIds.has(e.target)))
+          );
+          // Rebuild chain
+          const newEdges: Edge[] = [];
+          for (let i = 0; i < remainingSiblings.length - 1; i++) {
+            newEdges.push({
+              id: `e-internal-${remainingSiblings[i].id}-${remainingSiblings[i + 1].id}`,
+              source: remainingSiblings[i].id,
+              target: remainingSiblings[i + 1].id,
+              type: "pipeline",
+              data: { internal: true },
+            });
+          }
+          return [...kept, ...newEdges];
+        });
+
+        setNodes((nds) => {
+          const remaining = nds.filter((n) => n.id !== nodeId);
+          const siblings = remaining.filter((n) => n.parentId === groupId).sort((a, b) => a.position.y - b.position.y);
+          const newHeight = calcCatchGroupHeight(siblings.length);
+
+          return remaining.map((n) => {
+            if (n.id === groupId) {
+              return { ...n, style: { ...n.style, width: CATCH_GROUP_WIDTH, height: newHeight }, data: { ...n.data, childCount: siblings.length } };
+            }
+            const sibIdx = siblings.findIndex((s) => s.id === n.id);
+            if (sibIdx >= 0) {
+              return { ...n, position: { x: CATCH_CHILD_X, y: CATCH_CHILD_Y_START + sibIdx * (CATCH_CHILD_NODE_HEIGHT + CATCH_CHILD_GAP_Y) } };
+            }
+            return n;
+          });
+        });
+      } else {
+        // Deleting a top-level node — also delete children if it's a group
+        const childIds = nodes.filter((n) => n.parentId === nodeId).map((n) => n.id);
+        const allIds = [nodeId, ...childIds];
+        setNodes((nds) => nds.filter((n) => !allIds.includes(n.id)));
+        setEdges((eds) => eds.filter((e) => !allIds.includes(e.source) && !allIds.includes(e.target)));
+      }
+
       if (selectedNodeId === nodeId) setSelectedNodeId(null);
     },
-    [setNodes, setEdges, selectedNodeId]
+    [nodes, edges, setNodes, setEdges, selectedNodeId]
   );
 
   const validateRequiredFields = useCallback(
@@ -672,23 +989,26 @@ function StreamBuilderContent({
   );
 
   const findDisconnectedNodes = useCallback((): Set<string> => {
-    if (nodes.length === 0) return new Set();
+    // Only check top-level nodes (not children inside groups)
+    const topLevelNodes = nodes.filter((n) => !n.parentId);
+    if (topLevelNodes.length === 0) return new Set();
 
     const adj = new Map<string, string[]>();
     const radj = new Map<string, string[]>();
-    for (const n of nodes) {
+    for (const n of topLevelNodes) {
       adj.set(n.id, []);
       radj.set(n.id, []);
     }
-    for (const e of edges) {
+    const externalEdges = edges.filter((e) => !(e.data as any)?.internal);
+    for (const e of externalEdges) {
       adj.get(e.source)?.push(e.target);
       radj.get(e.target)?.push(e.source);
     }
 
-    const inputNode = nodes.find((n) => (n.data as StreamFlowNodeData).type === "input");
-    const outputNode = nodes.find((n) => (n.data as StreamFlowNodeData).type === "output");
+    const inputNode = topLevelNodes.find((n) => (n.data as StreamFlowNodeData).type === "input");
+    const outputNode = topLevelNodes.find((n) => (n.data as StreamFlowNodeData).type === "output");
 
-    if (!inputNode || !outputNode) return new Set(nodes.map((n) => n.id));
+    if (!inputNode || !outputNode) return new Set(topLevelNodes.map((n) => n.id));
 
     const forwardReachable = new Set<string>();
     const queue = [inputNode.id];
@@ -717,7 +1037,7 @@ function StreamBuilderContent({
     }
 
     const disconnected = new Set<string>();
-    for (const n of nodes) {
+    for (const n of topLevelNodes) {
       if (!forwardReachable.has(n.id) || !backwardReachable.has(n.id)) {
         disconnected.add(n.id);
       }
@@ -726,14 +1046,46 @@ function StreamBuilderContent({
     return disconnected;
   }, [nodes, edges]);
 
+  const serializeCatchGroup = useCallback(
+    (groupNode: Node): StreamNodeData => {
+      const d = groupNode.data as StreamFlowNodeData;
+      const children = nodes.filter((cn) => cn.parentId === groupNode.id).sort((a, b) => a.position.y - b.position.y);
+      const childConfigs = children.map((child) => {
+        const cd = child.data as StreamFlowNodeData;
+        const comp = allComponentSchemas.processor.find((c) => c.id === cd.componentId);
+        const componentName = comp?.component || cd.componentId || "";
+        const entry: any = {};
+        if (comp?.schema?.flat) {
+          entry[componentName] = cd.configYaml?.trim() || "";
+        } else {
+          let config: any = {};
+          if (cd.configYaml?.trim()) { try { config = yaml.load(cd.configYaml) || {}; } catch {} }
+          entry[componentName] = config;
+        }
+        if (cd.label) {
+          entry.label = cd.label;
+        }
+        return entry;
+      });
+      const catchYaml = childConfigs.length > 0
+        ? yaml.dump(childConfigs, { lineWidth: -1, noRefs: true, quotingType: '"', forceQuotes: false })
+        : "";
+      return { label: d.label, type: "processor", componentId: "catch", component: "catch", configYaml: catchYaml };
+    },
+    [nodes, allComponentSchemas]
+  );
+
   const handleValidate = useCallback(async () => {
     if (!onValidate) return;
     setIsValidating(true);
     try {
-      const nodeDataList = nodes.map((n) => {
-        const d = n.data as StreamFlowNodeData;
-        return { label: d.label, type: d.type, componentId: d.componentId, component: d.component, configYaml: d.configYaml } as StreamNodeData;
-      });
+      const nodeDataList = nodes
+        .filter((n) => !n.parentId)
+        .map((n) => {
+          const d = n.data as StreamFlowNodeData;
+          if (d.isGroup && d.componentId === "catch") return serializeCatchGroup(n);
+          return { label: d.label, type: d.type, componentId: d.componentId, component: d.component, configYaml: d.configYaml } as StreamNodeData;
+        });
       const result = await onValidate({ name, status, bufferId, nodes: nodeDataList });
       if (result?.valid) {
         addToast({ id: "validate-ok", title: "Valid", description: "Configuration is valid.", variant: "success", duration: 3000 });
@@ -745,7 +1097,7 @@ function StreamBuilderContent({
     } finally {
       setIsValidating(false);
     }
-  }, [onValidate, name, status, bufferId, nodes, addToast]);
+  }, [onValidate, name, status, bufferId, nodes, addToast, serializeCatchGroup]);
 
   const handleTrySubmit = useCallback(async () => {
     if (!onTry) return;
@@ -757,9 +1109,13 @@ function StreamBuilderContent({
     setIsTrying(true);
     setTryResult(null);
     try {
-      const processorNodes = nodes.filter((n) => (n.data as StreamFlowNodeData).type === "processor");
-      const processors = processorNodes.map((n) => {
+      const topProcessors = nodes.filter((n) => (n.data as StreamFlowNodeData).type === "processor" && !n.parentId);
+      const processors = topProcessors.map((n) => {
         const d = n.data as StreamFlowNodeData;
+        if (d.isGroup && d.componentId === "catch") {
+          const serialized = serializeCatchGroup(n);
+          return { label: serialized.label, component: "catch", config: serialized.configYaml || "" };
+        }
         const comp = allComponentSchemas.processor.find((c) => c.id === d.componentId);
         return { label: d.label, component: comp?.component || d.componentId || "", config: d.configYaml || "" };
       });
@@ -770,7 +1126,7 @@ function StreamBuilderContent({
     } finally {
       setIsTrying(false);
     }
-  }, [onTry, tryMessages, nodes, allComponentSchemas, addToast]);
+  }, [onTry, tryMessages, nodes, allComponentSchemas, addToast, serializeCatchGroup]);
 
   const handleSave = useCallback(() => {
     if (!name.trim()) {
@@ -809,8 +1165,30 @@ function StreamBuilderContent({
       return;
     }
 
+    // Validate top-level nodes (skip children — they're validated via their group)
     for (const n of nodes) {
+      if (n.parentId) continue; // child node
       const d = n.data as StreamFlowNodeData;
+      if (d.isGroup) {
+        // Validate each child processor in the group
+        const children = nodes.filter((cn) => cn.parentId === n.id);
+        for (const child of children) {
+          const cd = child.data as StreamFlowNodeData;
+          const childData: StreamNodeData = { label: cd.label, type: cd.type, componentId: cd.componentId, component: cd.component, configYaml: cd.configYaml };
+          const validation = validateRequiredFields(childData);
+          if (!validation.isValid) {
+            const errorMessage = validation.error || `Missing required fields: ${validation.missingFields.join(", ")}`;
+            addToast({
+              id: `validation-${child.id}`,
+              title: "Catch Processor Validation Error",
+              description: `"${cd.label}" in catch "${d.label}" - ${errorMessage}`,
+              variant: "warning",
+            });
+            return;
+          }
+        }
+        continue;
+      }
       const nodeData: StreamNodeData = { label: d.label, type: d.type, componentId: d.componentId, component: d.component, configYaml: d.configYaml };
       const validation = validateRequiredFields(nodeData);
       if (!validation.isValid) {
@@ -831,9 +1209,10 @@ function StreamBuilderContent({
     const inputD = inputNode.data as StreamFlowNodeData;
     orderedNodes.push({ label: inputD.label, type: inputD.type, componentId: inputD.componentId, component: inputD.component, configYaml: inputD.configYaml });
 
-    // Walk edges from input to output
+    // Walk edges from input to output (external edges only)
     const adj = new Map<string, string>();
     for (const e of edges) {
+      if ((e.data as any)?.internal) continue;
       adj.set(e.source, e.target);
     }
     let current = adj.get(inputNode.id);
@@ -841,7 +1220,11 @@ function StreamBuilderContent({
       const node = nodes.find((n) => n.id === current);
       if (node) {
         const d = node.data as StreamFlowNodeData;
-        orderedNodes.push({ label: d.label, type: d.type, componentId: d.componentId, component: d.component, configYaml: d.configYaml });
+        if (d.isGroup && d.componentId === "catch") {
+          orderedNodes.push(serializeCatchGroup(node));
+        } else {
+          orderedNodes.push({ label: d.label, type: d.type, componentId: d.componentId, component: d.component, configYaml: d.configYaml });
+        }
       }
       current = adj.get(current!);
     }
@@ -850,11 +1233,11 @@ function StreamBuilderContent({
     orderedNodes.push({ label: outputD.label, type: outputD.type, componentId: outputD.componentId, component: outputD.component, configYaml: outputD.configYaml });
 
     onSave({ name, status, bufferId, nodes: orderedNodes });
-  }, [name, status, bufferId, nodes, edges, onSave, addToast, findDisconnectedNodes, validateRequiredFields, setNodes]);
+  }, [name, status, bufferId, nodes, edges, onSave, addToast, findDisconnectedNodes, validateRequiredFields, setNodes, serializeCatchGroup]);
 
   const hasInput = nodes.some((n) => (n.data as StreamFlowNodeData).type === "input");
   const hasOutput = nodes.some((n) => (n.data as StreamFlowNodeData).type === "output");
-  const hasProcessors = nodes.some((n) => (n.data as StreamFlowNodeData).type === "processor");
+  const hasProcessors = nodes.some((n) => (n.data as StreamFlowNodeData).type === "processor" && !n.parentId);
 
   return (
     <div className="flex flex-col h-[calc(100vh-10rem)] w-full">
@@ -915,6 +1298,7 @@ function StreamBuilderContent({
           onNodesChange={onNodesChange}
           onEdgesChange={handleEdgesChange}
           onConnect={onConnect}
+          onNodeDragStop={handleChildDragStop}
           onNodeClick={handleNodeClick}
           onPaneClick={handlePaneClick}
           nodeTypes={nodeTypes}
@@ -969,16 +1353,47 @@ function StreamBuilderContent({
             <SheetDescription>Configure the selected node</SheetDescription>
           </SheetHeader>
           <div className="p-6 h-full">
-            <NodeConfigPanel
-              key={selectedNodeId || "none"}
-              allComponentSchemas={allComponentSchemas}
-              selectedNode={selectedNode}
-              onUpdateNode={handleUpdateNode}
-              onDeleteNode={handleDeleteNode}
-              lockedComponentId={
-                selectedNode?.data.type === "output" && isMcpServer ? "sync_response" : undefined
-              }
-            />
+            {selectedNode?.isGroup ? (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Catch Group</h3>
+                <div className="space-y-2">
+                  <Label htmlFor="group-label">Label</Label>
+                  <Input
+                    id="group-label"
+                    value={selectedNode.data.label}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (/^[a-z0-9_-]*$/.test(val)) {
+                        handleUpdateNode(selectedNode.id, { ...selectedNode.data, label: val });
+                      }
+                    }}
+                    placeholder="catch label"
+                  />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Use the <strong>+ Add</strong> button inside the group on the canvas to add child processors.
+                  Click on a child processor to configure it.
+                </p>
+                <Button
+                  variant="destructive"
+                  className="w-full"
+                  onClick={() => handleDeleteNode(selectedNode.id)}
+                >
+                  Delete Catch Group
+                </Button>
+              </div>
+            ) : (
+              <NodeConfigPanel
+                key={selectedNodeId || "none"}
+                allComponentSchemas={selectedNode?.isGroupChild ? childFilteredSchemas : allComponentSchemas}
+                selectedNode={selectedNode}
+                onUpdateNode={handleUpdateNode}
+                onDeleteNode={handleDeleteNode}
+                lockedComponentId={
+                  selectedNode?.data.type === "output" && isMcpServer ? "sync_response" : undefined
+                }
+              />
+            )}
           </div>
         </SheetContent>
       </Sheet>
