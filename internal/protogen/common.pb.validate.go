@@ -303,6 +303,10 @@ func (m *Stream) validate(all bool) error {
 
 	// no validation rules for IsMcpTool
 
+	// no validation rules for IsReady
+
+	// no validation rules for FlowState
+
 	if m.ParentId != nil {
 		// no validation rules for ParentId
 	}

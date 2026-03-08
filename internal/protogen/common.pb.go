@@ -142,6 +142,8 @@ type Stream struct {
 	IsHttpServer    bool                   `protobuf:"varint,15,opt,name=is_http_server,proto3" json:"is_http_server,omitempty"`
 	BufferId        *int64                 `protobuf:"varint,16,opt,name=buffer_id,proto3,oneof" json:"buffer_id,omitempty"`
 	IsMcpTool       bool                   `protobuf:"varint,17,opt,name=is_mcp_tool,proto3" json:"is_mcp_tool,omitempty"`
+	IsReady         bool                   `protobuf:"varint,18,opt,name=is_ready,proto3" json:"is_ready,omitempty"`
+	FlowState       string                 `protobuf:"bytes,19,opt,name=flow_state,proto3" json:"flow_state,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -293,6 +295,20 @@ func (x *Stream) GetIsMcpTool() bool {
 		return x.IsMcpTool
 	}
 	return false
+}
+
+func (x *Stream) GetIsReady() bool {
+	if x != nil {
+		return x.IsReady
+	}
+	return false
+}
+
+func (x *Stream) GetFlowState() string {
+	if x != nil {
+		return x.FlowState
+	}
+	return ""
 }
 
 type Secret struct {
@@ -974,7 +990,7 @@ const file_common_proto_rawDesc = "" +
 	"\n" +
 	"\fcommon.proto\x12\vprotorender\x1a google/protobuf/descriptor.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x17validate/validate.proto\"*\n" +
 	"\x0eCommonResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage\"\xa9\a\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\"\xe5\a\n" +
 	"\x06Stream\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12!\n" +
 	"\tparent_id\x18\x02 \x01(\x03H\x00R\tparent_id\x88\x01\x01\x12\x1d\n" +
@@ -1001,7 +1017,11 @@ const file_common_proto_rawDesc = "" +
 	"processors\x12&\n" +
 	"\x0eis_http_server\x18\x0f \x01(\bR\x0eis_http_server\x12!\n" +
 	"\tbuffer_id\x18\x10 \x01(\x03H\x02R\tbuffer_id\x88\x01\x01\x12 \n" +
-	"\vis_mcp_tool\x18\x11 \x01(\bR\vis_mcp_tool\x1au\n" +
+	"\vis_mcp_tool\x18\x11 \x01(\bR\vis_mcp_tool\x12\x1a\n" +
+	"\bis_ready\x18\x12 \x01(\bR\bis_ready\x12\x1e\n" +
+	"\n" +
+	"flow_state\x18\x13 \x01(\tR\n" +
+	"flow_state\x1au\n" +
 	"\tProcessor\x122\n" +
 	"\x05label\x18\x01 \x01(\tB\x1c\xfaB\x19r\x17\x10\x01\x18d2\x11^[a-zA-Z0-9 _-]+$R\x05label\x12\x1c\n" +
 	"\tcomponent\x18\x02 \x01(\tR\tcomponent\x12\x16\n" +

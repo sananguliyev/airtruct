@@ -92,25 +92,21 @@ export default function NewStreamPage() {
     return tryStream(data);
   };
 
-  const handleSaveStream = async (data: { name: string; status: string; bufferId?: number; nodes: StreamNodeData[] }) => {
+  const handleSaveStream = async (data: { name: string; status: string; bufferId?: number; nodes: StreamNodeData[]; flowState: string; isReady: boolean }) => {
     setIsSubmitting(true);
     try {
-      // Extract input, processors, and output from the nodes
       const inputNode = data.nodes.find((node) => node.type === "input");
       const processorNodes = data.nodes.filter((node) => node.type === "processor");
       const outputNode = data.nodes.find((node) => node.type === "output");
 
-      // Validate the stream configuration
       if (!inputNode || !outputNode) {
         throw new Error("Stream must have at least one input and one output");
       }
 
-      // Validate that nodes have required data
       if (!inputNode.componentId || !outputNode.componentId) {
         throw new Error("Input and output nodes must have components selected");
       }
 
-      // Find component details from schemas
       const inputComponent = transformedSchemas?.input.find(c => c.id === inputNode.componentId);
       const outputComponent = transformedSchemas?.output.find(c => c.id === outputNode.componentId);
 
@@ -118,12 +114,11 @@ export default function NewStreamPage() {
         throw new Error("Selected components not found in available schemas");
       }
 
-      // Create processors array
       const processors = processorNodes.map((node) => {
         if (!node.componentId) {
           throw new Error(`Processor node "${node.label}" must have a component selected`);
         }
-        
+
         const processorComponent = transformedSchemas?.processor.find(c => c.id === node.componentId);
         if (!processorComponent) {
           throw new Error(`Processor component not found for node "${node.label}"`);
@@ -146,6 +141,8 @@ export default function NewStreamPage() {
         output_label: outputNode.label,
         output_config: outputNode.configYaml || "",
         buffer_id: data.bufferId,
+        is_ready: data.isReady,
+        flow_state: data.flowState,
         processors: processors
       };
 

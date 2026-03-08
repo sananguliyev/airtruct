@@ -35,6 +35,8 @@ type Stream struct {
 	OutputConfig    []byte       `json:"output_config" gorm:"not null"`
 	BufferID        *int64       `json:"buffer_id"`
 	IsCurrent       bool         `json:"is_current" gorm:"default:true"`
+	IsReady         bool         `json:"is_ready" gorm:"default:false"`
+	FlowState       []byte       `json:"flow_state"`
 	Status          StreamStatus `json:"status" gorm:"not null"`
 	CreatedAt       time.Time    `json:"created_at" gorm:"not null"`
 	UpdatedAt       *time.Time   `json:"updated_at"`
@@ -64,6 +66,8 @@ func (s *Stream) ToProto() *pb.Stream {
 		OutputConfig:    string(s.OutputConfig),
 		BufferId:        s.BufferID,
 		IsCurrent:       s.IsCurrent,
+		IsReady:         s.IsReady,
+		FlowState:       string(s.FlowState),
 		Status:          string(s.Status),
 		CreatedAt:       timestamppb.New(s.CreatedAt),
 		UpdatedAt:       updatedAt,
@@ -96,6 +100,8 @@ func (s *Stream) FromProto(p *pb.Stream) {
 	s.OutputConfig = []byte(p.OutputConfig)
 	s.BufferID = p.BufferId
 	s.IsCurrent = p.GetIsCurrent()
+	s.IsReady = p.GetIsReady()
+	s.FlowState = []byte(p.GetFlowState())
 	s.Status = StreamStatus(p.GetStatus())
 	s.CreatedAt = p.CreatedAt.AsTime()
 	s.UpdatedAt = &updatedAt
@@ -219,7 +225,7 @@ func (r *streamRepository) ListAllActiveAndNonAssigned() ([]Stream, error) {
 		Preload("Processors").
 		Preload("Caches").
 		Preload("Buffer").
-		Where("is_current = true AND status = ?", StreamStatusActive).
+		Where("is_current = true AND is_ready = true AND status = ?", StreamStatusActive).
 		Where(
 			"NOT EXISTS (?)",
 			r.db.

@@ -26,6 +26,8 @@ CREATE TABLE IF NOT EXISTS streams (
     output_config blob NOT NULL,
     buffer_id integer,
     is_current numeric DEFAULT true,
+    is_ready numeric DEFAULT false,
+    flow_state blob,
     status text NOT NULL,
     created_at datetime NOT NULL,
     updated_at datetime

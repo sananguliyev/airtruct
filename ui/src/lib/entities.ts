@@ -32,6 +32,8 @@ export type Stream = {
   createdAt: string;
   is_http_server: boolean;
   is_mcp_tool: boolean;
+  is_ready: boolean;
+  flow_state?: string;
 
   // Legacy fields for backward compatibility
   inputLabel?: string;
