@@ -61,6 +61,8 @@ import { ProcessorNode } from "./nodes/processor-node";
 import { OutputNode } from "./nodes/output-node";
 import { CatchGroupNode } from "./nodes/catch-group-node";
 import { ChildProcessorNode } from "./nodes/child-processor-node";
+import { BrokerGroupNode } from "./nodes/broker-group-node";
+import { ChildOutputNode } from "./nodes/child-output-node";
 import { PipelineEdge } from "./edges/pipeline-edge";
 
 // --- Exported types (unchanged for compatibility) ---
@@ -104,9 +106,13 @@ export interface StreamFlowNodeData extends Record<string, unknown> {
   nodeId: string;
   isGroup?: boolean;
   childCount?: number;
+  brokerPattern?: string;
   onAddAndConnect?: (sourceNodeId: string, sourceType: string) => void;
   onAddBefore?: (targetNodeId: string) => void;
   onAddChildProcessor?: (groupId: string) => void;
+  onAddChildOutput?: (groupId: string) => void;
+  childIndex?: number;
+  parentBrokerPattern?: string;
 }
 
 type ValidationResult = { valid: boolean; error?: string } | null;
@@ -151,6 +157,8 @@ const nodeTypes = {
   outputNode: OutputNode,
   catchGroupNode: CatchGroupNode,
   childProcessorNode: ChildProcessorNode,
+  brokerGroupNode: BrokerGroupNode,
+  childOutputNode: ChildOutputNode,
 };
 
 const edgeTypes = {
@@ -160,18 +168,82 @@ const edgeTypes = {
 const NODE_SPACING_X = 350;
 const NODE_Y = 200;
 
-// Catch group layout (vertical)
-const CATCH_GROUP_WIDTH = 210;
-const CATCH_CHILD_NODE_WIDTH = 150;
-const CATCH_CHILD_NODE_HEIGHT = 55;
-const CATCH_CHILD_GAP_Y = 40;
-const CATCH_CHILD_X = 25;
+// Shared child node dimensions
+const GROUP_WIDTH = 220;
+const CHILD_NODE_WIDTH = 160;
+const CHILD_NODE_HEIGHT = 72;
+const CHILD_GAP_Y = 35;
+const CHILD_X = Math.round((GROUP_WIDTH - CHILD_NODE_WIDTH) / 2);
+const GROUP_BOTTOM_PAD = 50;
+
+// Catch group layout
 const CATCH_CHILD_Y_START = 68;
 const CATCH_GROUP_MIN_HEIGHT = 140;
 
 function calcCatchGroupHeight(childCount: number): number {
   if (childCount === 0) return CATCH_GROUP_MIN_HEIGHT;
-  return CATCH_CHILD_Y_START + childCount * CATCH_CHILD_NODE_HEIGHT + (childCount - 1) * CATCH_CHILD_GAP_Y + 48;
+  return CATCH_CHILD_Y_START + childCount * CHILD_NODE_HEIGHT + (childCount - 1) * CHILD_GAP_Y + GROUP_BOTTOM_PAD;
+}
+
+// Broker group layout (taller header due to pattern line)
+const BROKER_CHILD_Y_START = 96;
+const BROKER_GROUP_MIN_HEIGHT = 170;
+
+function calcBrokerGroupHeight(childCount: number): number {
+  if (childCount === 0) return BROKER_GROUP_MIN_HEIGHT;
+  return BROKER_CHILD_Y_START + childCount * CHILD_NODE_HEIGHT + (childCount - 1) * CHILD_GAP_Y + GROUP_BOTTOM_PAD;
+}
+
+function isBrokerSequential(pattern: string | undefined): boolean {
+  return pattern === "fan_out_sequential" || pattern === "fan_out_sequential_fail_fast";
+}
+
+function makeInternalEdgeData(): Record<string, unknown> {
+  return { internal: true };
+}
+
+// Re-snap child positions and fix internal edges for groups
+function reSnapChildren(flowNodes: Node[], flowEdges: Edge[]): void {
+  const groupNodes = flowNodes.filter((n) => n.type === "catchGroupNode" || n.type === "brokerGroupNode");
+  for (const group of groupNodes) {
+    const isBroker = group.type === "brokerGroupNode";
+    const yStart = isBroker ? BROKER_CHILD_Y_START : CATCH_CHILD_Y_START;
+    const children = flowNodes
+      .filter((n) => n.parentId === group.id)
+      .sort((a, b) => a.position.y - b.position.y);
+    const pattern = isBroker ? (group.data as StreamFlowNodeData)?.brokerPattern : undefined;
+    children.forEach((child, i) => {
+      child.position = { x: CHILD_X, y: yStart + i * (CHILD_NODE_HEIGHT + CHILD_GAP_Y) };
+      if (isBroker) {
+        child.data = { ...child.data, childIndex: i, parentBrokerPattern: pattern };
+      }
+    });
+    const calcHeight = isBroker ? calcBrokerGroupHeight : calcCatchGroupHeight;
+    group.style = { ...group.style, width: GROUP_WIDTH, height: calcHeight(children.length) };
+
+    // Fix internal edges: remove all, then re-add if sequential
+    const childIds = new Set(children.map((c) => c.id));
+    // Remove existing internal edges for this group
+    for (let i = flowEdges.length - 1; i >= 0; i--) {
+      if ((flowEdges[i].data as any)?.internal && (childIds.has(flowEdges[i].source) || childIds.has(flowEdges[i].target))) {
+        flowEdges.splice(i, 1);
+      }
+    }
+    // Re-add if catch (always sequential) or broker with sequential pattern
+    const shouldChain = !isBroker || isBrokerSequential(pattern);
+    if (shouldChain && children.length > 1) {
+      const edgeData = isBroker ? makeInternalEdgeData() : { internal: true };
+      for (let i = 0; i < children.length - 1; i++) {
+        flowEdges.push({
+          id: `e-internal-${children[i].id}-${children[i + 1].id}`,
+          source: children[i].id,
+          target: children[i + 1].id,
+          type: "pipeline",
+          data: edgeData,
+        });
+      }
+    }
+  }
 }
 
 function toFlowNodeType(type: "input" | "processor" | "output"): string {
@@ -225,7 +297,10 @@ function StreamBuilderContent({
       try {
         const parsed = JSON.parse(initialData.flowState);
         if (parsed.nodes && parsed.edges) {
-          return [parsed.nodes as Node[], parsed.edges as Edge[]];
+          const restoredNodes = parsed.nodes as Node[];
+          const restoredEdges = parsed.edges as Edge[];
+          reSnapChildren(restoredNodes, restoredEdges);
+          return [restoredNodes, restoredEdges];
         }
       } catch {}
     }
@@ -273,7 +348,7 @@ function StreamBuilderContent({
           id,
           type: "catchGroupNode",
           position: { x: xPos, y: NODE_Y - 25 },
-          style: { width: CATCH_GROUP_WIDTH, height: groupHeight },
+          style: { width: GROUP_WIDTH, height: groupHeight },
           data: { ...nd, nodeId: id, isGroup: true, childCount, configYaml: "" },
         });
 
@@ -290,8 +365,8 @@ function StreamBuilderContent({
             id: childId,
             type: "childProcessorNode",
             position: {
-              x: CATCH_CHILD_X,
-              y: CATCH_CHILD_Y_START + i * (CATCH_CHILD_NODE_HEIGHT + CATCH_CHILD_GAP_Y),
+              x: CHILD_X,
+              y: CATCH_CHILD_Y_START + i * (CHILD_NODE_HEIGHT + CHILD_GAP_Y),
             },
             parentId: id,
             extent: "parent" as const,
@@ -348,19 +423,103 @@ function StreamBuilderContent({
 
     for (const nd of outputNodes) {
       const id = uuidv4();
-      flowNodes.push({
-        id,
-        type: "outputNode",
-        position: { x: xPos, y: NODE_Y },
-        data: { ...nd, nodeId: id },
-      });
-      if (prevNodeId) {
-        flowEdges.push({
-          id: `e-${prevNodeId}-${id}`,
-          source: prevNodeId,
-          target: id,
-          type: "pipeline",
+
+      if (nd.componentId === "broker") {
+        // Parse broker config to extract children and pattern
+        let brokerConfig: any = {};
+        let childConfigs: any[] = [];
+        let brokerPattern = "fan_out";
+        if (nd.configYaml?.trim()) {
+          try {
+            brokerConfig = yaml.load(nd.configYaml) || {};
+            if (Array.isArray(brokerConfig.outputs)) childConfigs = brokerConfig.outputs;
+            if (brokerConfig.pattern) brokerPattern = brokerConfig.pattern;
+          } catch {}
+        }
+
+        const childCount = childConfigs.length;
+        const groupHeight = calcBrokerGroupHeight(childCount);
+
+        // Build group configYaml without outputs (those are in children)
+        const groupConfig: any = {};
+        if (brokerConfig.copies) groupConfig.copies = brokerConfig.copies;
+        if (brokerConfig.batching) groupConfig.batching = brokerConfig.batching;
+        const groupConfigYaml = Object.keys(groupConfig).length > 0
+          ? yaml.dump(groupConfig, { lineWidth: -1, noRefs: true })
+          : "";
+
+        flowNodes.push({
+          id,
+          type: "brokerGroupNode",
+          position: { x: xPos, y: NODE_Y - 25 },
+          style: { width: GROUP_WIDTH, height: groupHeight },
+          data: { ...nd, nodeId: id, isGroup: true, childCount, configYaml: groupConfigYaml, brokerPattern },
         });
+
+        let prevChildId: string | null = null;
+        childConfigs.forEach((outputObj, i) => {
+          const componentName = Object.keys(outputObj).find((k) => k !== "label") || Object.keys(outputObj)[0];
+          const config = outputObj[componentName];
+          const childLabel = outputObj.label as string | undefined;
+          const schema = allComponentSchemas.output.find(
+            (o) => o.component === componentName || o.id === componentName
+          );
+          const childId = uuidv4();
+          flowNodes.push({
+            id: childId,
+            type: "childOutputNode",
+            position: {
+              x: CHILD_X,
+              y: BROKER_CHILD_Y_START + i * (CHILD_NODE_HEIGHT + CHILD_GAP_Y),
+            },
+            parentId: id,
+            extent: "parent" as const,
+            data: {
+              label: childLabel || schema?.id || componentName,
+              type: "output",
+              componentId: schema?.id || componentName,
+              component: componentName,
+              configYaml: typeof config === "string" ? config : (config && Object.keys(config).length > 0 ? yaml.dump(config, { lineWidth: -1, noRefs: true }) : ""),
+              nodeId: childId,
+              childIndex: i,
+              parentBrokerPattern: brokerPattern,
+            },
+          });
+          if (prevChildId && isBrokerSequential(brokerPattern)) {
+            flowEdges.push({
+              id: `e-internal-${prevChildId}-${childId}`,
+              source: prevChildId,
+              target: childId,
+              type: "pipeline",
+              data: makeInternalEdgeData(),
+            });
+          }
+          prevChildId = childId;
+        });
+
+        if (prevNodeId) {
+          flowEdges.push({
+            id: `e-${prevNodeId}-${id}`,
+            source: prevNodeId,
+            target: id,
+            type: "pipeline",
+          });
+        }
+      } else {
+        flowNodes.push({
+          id,
+          type: "outputNode",
+          position: { x: xPos, y: NODE_Y },
+          data: { ...nd, nodeId: id },
+        });
+        if (prevNodeId) {
+          flowEdges.push({
+            id: `e-${prevNodeId}-${id}`,
+            source: prevNodeId,
+            target: id,
+            type: "pipeline",
+          });
+        }
       }
     }
 
@@ -539,8 +698,8 @@ function StreamBuilderContent({
         id: newId,
         type: "childProcessorNode",
         position: {
-          x: CATCH_CHILD_X,
-          y: CATCH_CHILD_Y_START + childCount * (CATCH_CHILD_NODE_HEIGHT + CATCH_CHILD_GAP_Y),
+          x: CHILD_X,
+          y: CATCH_CHILD_Y_START + childCount * (CHILD_NODE_HEIGHT + CHILD_GAP_Y),
         },
         parentId: groupId,
         extent: "parent" as const,
@@ -559,7 +718,7 @@ function StreamBuilderContent({
       setNodes((nds) => [
         ...nds.map((n) =>
           n.id === groupId
-            ? { ...n, style: { ...n.style, width: CATCH_GROUP_WIDTH, height: newHeight }, data: { ...n.data, childCount: childCount + 1 } }
+            ? { ...n, style: { ...n.style, width: GROUP_WIDTH, height: newHeight }, data: { ...n.data, childCount: childCount + 1 } }
             : n
         ),
         newChild,
@@ -586,14 +745,82 @@ function StreamBuilderContent({
     [nodes, setNodes, setEdges, scheduleAutoFit]
   );
 
+  const handleAddChildOutput = useCallback(
+    (groupId: string) => {
+      const groupNode = nodes.find((n) => n.id === groupId);
+      if (!groupNode) return;
+
+      const existingChildren = nodes.filter((n) => n.parentId === groupId);
+      const childCount = existingChildren.length;
+      const newId = uuidv4();
+      const label = `broker_output_${childCount + 1}`;
+
+      const newChild: Node = {
+        id: newId,
+        type: "childOutputNode",
+        position: {
+          x: CHILD_X,
+          y: BROKER_CHILD_Y_START + childCount * (CHILD_NODE_HEIGHT + CHILD_GAP_Y),
+        },
+        parentId: groupId,
+        extent: "parent" as const,
+        data: {
+          label,
+          type: "output",
+          componentId: "",
+          component: "",
+          configYaml: "",
+          nodeId: newId,
+          childIndex: childCount,
+          parentBrokerPattern: (groupNode.data as StreamFlowNodeData).brokerPattern || "fan_out",
+        } satisfies Partial<StreamFlowNodeData>,
+      };
+
+      const newHeight = calcBrokerGroupHeight(childCount + 1);
+
+      setNodes((nds) => [
+        ...nds.map((n) =>
+          n.id === groupId
+            ? { ...n, style: { ...n.style, width: GROUP_WIDTH, height: newHeight }, data: { ...n.data, childCount: childCount + 1 } }
+            : n
+        ),
+        newChild,
+      ]);
+
+      const pattern = (groupNode.data as StreamFlowNodeData).brokerPattern;
+      if (childCount > 0 && isBrokerSequential(pattern)) {
+        const lastChild = existingChildren.sort((a, b) => a.position.y - b.position.y)[childCount - 1];
+        setEdges((eds) => [
+          ...eds,
+          {
+            id: `e-internal-${lastChild.id}-${newId}`,
+            source: lastChild.id,
+            target: newId,
+            type: "pipeline",
+            data: makeInternalEdgeData(),
+          },
+        ]);
+      }
+
+      setSelectedNodeId(newId);
+      setEditingNodeId(newId);
+      scheduleAutoFit();
+    },
+    [nodes, setNodes, setEdges, scheduleAutoFit]
+  );
+
   const handleChildDragStop = useCallback(
     (_event: React.MouseEvent, node: Node) => {
       if (!node.parentId) return;
       const groupId = node.parentId;
+      const groupNode = nodes.find((n) => n.id === groupId);
+      if (!groupNode) return;
+      const isBroker = (groupNode.data as StreamFlowNodeData).componentId === "broker";
+      const childYStart = isBroker ? BROKER_CHILD_Y_START : CATCH_CHILD_Y_START;
+
       const siblings = nodes
         .filter((n) => n.parentId === groupId)
         .sort((a, b) => a.position.y - b.position.y);
-      if (siblings.length <= 1) return;
 
       // Snap all children to grid positions based on current y-order
       setNodes((nds) => {
@@ -605,12 +832,19 @@ function StreamBuilderContent({
           if (idx >= 0) {
             return {
               ...n,
-              position: { x: CATCH_CHILD_X, y: CATCH_CHILD_Y_START + idx * (CATCH_CHILD_NODE_HEIGHT + CATCH_CHILD_GAP_Y) },
+              position: { x: CHILD_X, y: childYStart + idx * (CHILD_NODE_HEIGHT + CHILD_GAP_Y) },
+              ...(isBroker ? { data: { ...n.data, childIndex: idx } } : {}),
             };
           }
           return n;
         });
       });
+
+      if (siblings.length <= 1) return;
+
+      // For broker groups with non-sequential patterns, skip internal edges
+      const brokerPattern = isBroker ? (groupNode.data as StreamFlowNodeData).brokerPattern : undefined;
+      const shouldChain = !isBroker || isBrokerSequential(brokerPattern);
 
       // Rebuild internal edges in new order
       const childIds = new Set(siblings.map((s) => s.id));
@@ -618,13 +852,14 @@ function StreamBuilderContent({
         const kept = eds.filter(
           (e) => !((e.data as any)?.internal && (childIds.has(e.source) || childIds.has(e.target)))
         );
+        if (!shouldChain) return kept;
         const sorted = [...siblings];
-        // Re-sort using current (dragged) positions from nodes state
         sorted.sort((a, b) => {
           const na = nodes.find((n) => n.id === a.id);
           const nb = nodes.find((n) => n.id === b.id);
           return (na?.position.y ?? 0) - (nb?.position.y ?? 0);
         });
+        const edgeData = isBroker ? makeInternalEdgeData() : { internal: true };
         const newEdges: Edge[] = [];
         for (let i = 0; i < sorted.length - 1; i++) {
           newEdges.push({
@@ -632,7 +867,7 @@ function StreamBuilderContent({
             source: sorted[i].id,
             target: sorted[i + 1].id,
             type: "pipeline",
-            data: { internal: true },
+            data: edgeData,
           });
         }
         return [...kept, ...newEdges];
@@ -641,7 +876,7 @@ function StreamBuilderContent({
     [nodes, setNodes, setEdges]
   );
 
-  // Inject callbacks into node data
+  // Inject callbacks into node data and compute child extent dynamically
   const nodesWithCallbacks = useMemo(() => {
     return nodes.map((n) => ({
       ...n,
@@ -651,9 +886,10 @@ function StreamBuilderContent({
         onAddAndConnect: handleAddAndConnect,
         onAddBefore: handleAddBefore,
         onAddChildProcessor: handleAddChildProcessor,
+        onAddChildOutput: handleAddChildOutput,
       },
     }));
-  }, [nodes, handleAddAndConnect, handleAddBefore, handleAddChildProcessor]);
+  }, [nodes, handleAddAndConnect, handleAddBefore, handleAddChildProcessor, handleAddChildOutput]);
 
   const edgesWithCallbacks = useMemo(() => {
     return edges.map((e) => ({
@@ -837,11 +1073,19 @@ function StreamBuilderContent({
 
   const childFilteredSchemas = useMemo(() => {
     if (!editingNode?.isGroupChild) return allComponentSchemas;
+    const parentNode = nodes.find((n) => n.id === nodes.find((cn) => cn.id === editingNode.id)?.parentId);
+    const isBrokerChild = parentNode && (parentNode.data as StreamFlowNodeData).componentId === "broker";
+    if (isBrokerChild) {
+      return {
+        ...allComponentSchemas,
+        output: allComponentSchemas.output.filter((o) => o.id !== "broker"),
+      };
+    }
     return {
       ...allComponentSchemas,
       processor: allComponentSchemas.processor.filter((p) => p.id !== "catch"),
     };
-  }, [allComponentSchemas, editingNode?.isGroupChild]);
+  }, [allComponentSchemas, editingNode?.isGroupChild, editingNode?.id, nodes]);
 
   const isMcpServer = useMemo(
     () => nodes.some((n) => (n.data as StreamFlowNodeData).type === "input" && (n.data as StreamFlowNodeData).componentId === "mcp_tool"),
@@ -870,7 +1114,7 @@ function StreamBuilderContent({
               ? {
                   ...n,
                   type: "catchGroupNode",
-                  style: { width: CATCH_GROUP_WIDTH, height: CATCH_GROUP_MIN_HEIGHT },
+                  style: { width: GROUP_WIDTH, height: CATCH_GROUP_MIN_HEIGHT },
                   position: { ...n.position, y: n.position.y - 25 },
                   data: { ...n.data, isGroup: true, childCount: 0, configYaml: "" },
                 }
@@ -891,6 +1135,39 @@ function StreamBuilderContent({
                   style: undefined,
                   position: { ...n.position, y: n.position.y + 25 },
                   data: { ...n.data, isGroup: false, childCount: undefined },
+                }
+              : n
+          );
+        }
+
+        // Transform to broker group when output component changes to "broker"
+        if (data.componentId === "broker" && prevComponentId !== "broker" && data.type === "output") {
+          updated = updated.map((n) =>
+            n.id === nodeId
+              ? {
+                  ...n,
+                  type: "brokerGroupNode",
+                  style: { width: GROUP_WIDTH, height: BROKER_GROUP_MIN_HEIGHT },
+                  position: { ...n.position, y: n.position.y - 25 },
+                  data: { ...n.data, isGroup: true, childCount: 0, configYaml: "", brokerPattern: "fan_out" },
+                }
+              : n
+          );
+        }
+
+        // Transform back from broker group when component changes away from "broker"
+        if (prevComponentId === "broker" && data.componentId !== "broker" && data.type === "output") {
+          const childIds = updated.filter((n) => n.parentId === nodeId).map((n) => n.id);
+          updated = updated.filter((n) => n.parentId !== nodeId);
+          setEdges((eds) => eds.filter((e) => !childIds.includes(e.source) && !childIds.includes(e.target)));
+          updated = updated.map((n) =>
+            n.id === nodeId
+              ? {
+                  ...n,
+                  type: "outputNode",
+                  style: undefined,
+                  position: { ...n.position, y: n.position.y + 25 },
+                  data: { ...n.data, isGroup: false, childCount: undefined, brokerPattern: undefined },
                 }
               : n
           );
@@ -942,22 +1219,27 @@ function StreamBuilderContent({
       if (!nodeToDelete) return;
 
       if (nodeToDelete.parentId) {
-        // Deleting a child processor inside a group
+        // Deleting a child inside a group
         const groupId = nodeToDelete.parentId;
+        const groupNode = nodes.find((n) => n.id === groupId);
+        const isBroker = groupNode && (groupNode.data as StreamFlowNodeData).componentId === "broker";
+        const childYStart = isBroker ? BROKER_CHILD_Y_START : CATCH_CHILD_Y_START;
+        const calcHeight = isBroker ? calcBrokerGroupHeight : calcCatchGroupHeight;
 
         // Remove old internal edges touching this node, rebuild chain for remaining siblings
+        const brokerPattern = isBroker ? (groupNode?.data as StreamFlowNodeData)?.brokerPattern : undefined;
+        const shouldChain = !isBroker || isBrokerSequential(brokerPattern);
         setEdges((eds) => {
           const cleaned = eds.filter((e) => e.source !== nodeId && e.target !== nodeId);
-          // Get remaining siblings in order
           const remainingSiblings = nodes
             .filter((n) => n.parentId === groupId && n.id !== nodeId)
             .sort((a, b) => a.position.y - b.position.y);
-          // Remove all internal edges for this group
           const sibIds = new Set(remainingSiblings.map((s) => s.id));
           const kept = cleaned.filter(
             (e) => !((e.data as any)?.internal && (sibIds.has(e.source) || sibIds.has(e.target)))
           );
-          // Rebuild chain
+          if (!shouldChain) return kept;
+          const edgeData = isBroker ? makeInternalEdgeData() : { internal: true };
           const newEdges: Edge[] = [];
           for (let i = 0; i < remainingSiblings.length - 1; i++) {
             newEdges.push({
@@ -965,7 +1247,7 @@ function StreamBuilderContent({
               source: remainingSiblings[i].id,
               target: remainingSiblings[i + 1].id,
               type: "pipeline",
-              data: { internal: true },
+              data: edgeData,
             });
           }
           return [...kept, ...newEdges];
@@ -974,15 +1256,15 @@ function StreamBuilderContent({
         setNodes((nds) => {
           const remaining = nds.filter((n) => n.id !== nodeId);
           const siblings = remaining.filter((n) => n.parentId === groupId).sort((a, b) => a.position.y - b.position.y);
-          const newHeight = calcCatchGroupHeight(siblings.length);
+          const newHeight = calcHeight(siblings.length);
 
           return remaining.map((n) => {
             if (n.id === groupId) {
-              return { ...n, style: { ...n.style, width: CATCH_GROUP_WIDTH, height: newHeight }, data: { ...n.data, childCount: siblings.length } };
+              return { ...n, style: { ...n.style, width: GROUP_WIDTH, height: newHeight }, data: { ...n.data, childCount: siblings.length } };
             }
             const sibIdx = siblings.findIndex((s) => s.id === n.id);
             if (sibIdx >= 0) {
-              return { ...n, position: { x: CATCH_CHILD_X, y: CATCH_CHILD_Y_START + sibIdx * (CATCH_CHILD_NODE_HEIGHT + CATCH_CHILD_GAP_Y) } };
+              return { ...n, position: { x: CHILD_X, y: childYStart + sibIdx * (CHILD_NODE_HEIGHT + CHILD_GAP_Y) } };
             }
             return n;
           });
@@ -1141,6 +1423,52 @@ function StreamBuilderContent({
     [nodes, allComponentSchemas]
   );
 
+  const serializeBrokerGroup = useCallback(
+    (groupNode: Node): StreamNodeData => {
+      const d = groupNode.data as StreamFlowNodeData;
+      const children = nodes.filter((cn) => cn.parentId === groupNode.id).sort((a, b) => a.position.y - b.position.y);
+
+      // Build outputs array from children
+      const outputsList = children.map((child) => {
+        const cd = child.data as StreamFlowNodeData;
+        const comp = allComponentSchemas.output.find((c) => c.id === cd.componentId);
+        const componentName = comp?.component || cd.componentId || "";
+        const entry: any = {};
+        if (comp?.schema?.flat) {
+          entry[componentName] = cd.configYaml?.trim() || "";
+        } else {
+          let config: any = {};
+          if (cd.configYaml?.trim()) { try { config = yaml.load(cd.configYaml) || {}; } catch {} }
+          entry[componentName] = config;
+        }
+        if (cd.label) {
+          entry.label = cd.label;
+        }
+        return entry;
+      });
+
+      // Build broker config with pattern + outputs
+      const brokerConfig: any = {};
+      if (d.brokerPattern) brokerConfig.pattern = d.brokerPattern;
+
+      // Parse any extra config from group's configYaml (copies, batching)
+      if (d.configYaml?.trim()) {
+        try {
+          const extra = yaml.load(d.configYaml) as any;
+          if (extra && typeof extra === "object") {
+            Object.assign(brokerConfig, extra);
+          }
+        } catch {}
+      }
+
+      brokerConfig.outputs = outputsList;
+
+      const brokerYaml = yaml.dump(brokerConfig, { lineWidth: -1, noRefs: true, quotingType: '"', forceQuotes: false });
+      return { label: d.label, type: "output", componentId: "broker", component: "broker", configYaml: brokerYaml };
+    },
+    [nodes, allComponentSchemas]
+  );
+
   const handleValidate = useCallback(async () => {
     if (!onValidate) return;
 
@@ -1172,6 +1500,7 @@ function StreamBuilderContent({
         .map((n) => {
           const d = n.data as StreamFlowNodeData;
           if (d.isGroup && d.componentId === "catch") return serializeCatchGroup(n);
+          if (d.isGroup && d.componentId === "broker") return serializeBrokerGroup(n);
           return { label: d.label, type: d.type, componentId: d.componentId, component: d.component, configYaml: d.configYaml } as StreamNodeData;
         });
       const result = await onValidate({ name, status, bufferId, nodes: nodeDataList });
@@ -1185,7 +1514,7 @@ function StreamBuilderContent({
     } finally {
       setIsValidating(false);
     }
-  }, [onValidate, name, status, bufferId, nodes, addToast, serializeCatchGroup, findDisconnectedNodes, setNodes]);
+  }, [onValidate, name, status, bufferId, nodes, addToast, serializeCatchGroup, serializeBrokerGroup, findDisconnectedNodes, setNodes]);
 
   const handleTrySubmit = useCallback(async () => {
     if (!onTry) return;
@@ -1259,6 +1588,7 @@ function StreamBuilderContent({
       if (n.parentId) continue;
       const d = n.data as StreamFlowNodeData;
       if (d.isGroup) {
+        const groupType = d.componentId === "broker" ? "Broker Output" : "Catch Processor";
         const children = nodes.filter((cn) => cn.parentId === n.id);
         for (const child of children) {
           const cd = child.data as StreamFlowNodeData;
@@ -1269,8 +1599,8 @@ function StreamBuilderContent({
             const errorMessage = validation.error || `Missing required fields: ${validation.missingFields.join(", ")}`;
             addToast({
               id: `validation-${child.id}`,
-              title: "Catch Processor Validation Error",
-              description: `"${cd.label}" in catch "${d.label}" - ${errorMessage}`,
+              title: `${groupType} Validation Error`,
+              description: `"${cd.label}" in ${d.componentId} "${d.label}" - ${errorMessage}`,
               variant: "warning",
             });
           }
@@ -1323,11 +1653,15 @@ function StreamBuilderContent({
 
     if (outputNode) {
       const outputD = outputNode.data as StreamFlowNodeData;
-      orderedNodes.push({ label: outputD.label, type: outputD.type, componentId: outputD.componentId, component: outputD.component, configYaml: outputD.configYaml });
+      if (outputD.isGroup && outputD.componentId === "broker") {
+        orderedNodes.push(serializeBrokerGroup(outputNode));
+      } else {
+        orderedNodes.push({ label: outputD.label, type: outputD.type, componentId: outputD.componentId, component: outputD.component, configYaml: outputD.configYaml });
+      }
     }
 
     onSave({ name, status, bufferId, nodes: orderedNodes, flowState, isReady });
-  }, [name, status, bufferId, nodes, edges, onSave, addToast, findDisconnectedNodes, validateRequiredFields, setNodes, serializeCatchGroup]);
+  }, [name, status, bufferId, nodes, edges, onSave, addToast, findDisconnectedNodes, validateRequiredFields, setNodes, serializeCatchGroup, serializeBrokerGroup]);
 
   const hasInput = nodes.some((n) => (n.data as StreamFlowNodeData).type === "input");
   const hasOutput = nodes.some((n) => (n.data as StreamFlowNodeData).type === "output");
@@ -1448,7 +1782,9 @@ function StreamBuilderContent({
           <DialogHeader>
             <DialogTitle>
               {editingNode?.isGroup
-                ? "Catch Group Configuration"
+                ? editingNode.data.componentId === "broker"
+                  ? "Broker Output Configuration"
+                  : "Catch Group Configuration"
                 : `Configure ${editingNode?.data.type ? editingNode.data.type.charAt(0).toUpperCase() + editingNode.data.type.slice(1) : ""} Node`}
             </DialogTitle>
             <DialogDescription>
@@ -1469,19 +1805,176 @@ function StreamBuilderContent({
                         handleUpdateNode(editingNode.id, { ...editingNode.data, label: val });
                       }
                     }}
-                    placeholder="catch label"
+                    placeholder={editingNode.data.componentId === "broker" ? "broker label" : "catch label"}
                   />
                 </div>
+                {editingNode.data.componentId === "broker" && (() => {
+                  const currentPattern = (nodes.find((n) => n.id === editingNode.id)?.data as StreamFlowNodeData)?.brokerPattern || "fan_out";
+                  const patternDescriptions: Record<string, string> = {
+                    fan_out: "Sends each message to all outputs in parallel. If an output applies back-pressure, it blocks other outputs from receiving new messages until it catches up.",
+                    fan_out_fail_fast: "Sends each message to all outputs in parallel. Unlike fan_out, a failing output does not block other outputs and the message is abandoned immediately.",
+                    fan_out_sequential: "Sends each message to all outputs one by one in the order they are listed. Each output must acknowledge the message before it is sent to the next.",
+                    fan_out_sequential_fail_fast: "Sends each message to all outputs one by one in order. Unlike fan_out_sequential, a failing output causes the message to be abandoned immediately.",
+                    round_robin: "Distributes messages across outputs by alternating between them in a round-robin fashion. Each message goes to exactly one output.",
+                    greedy: "Sends each message to the first available output that is ready to accept it. Useful when outputs have varying throughput.",
+                  };
+                  const groupNode = nodes.find((n) => n.id === editingNode.id);
+                  const groupData = groupNode?.data as StreamFlowNodeData | undefined;
+                  let batchingConfig: any = {};
+                  if (groupData?.configYaml?.trim()) {
+                    try {
+                      const parsed = yaml.load(groupData.configYaml) as any;
+                      if (parsed?.batching) batchingConfig = parsed.batching;
+                    } catch {}
+                  }
+                  const updateBatching = (field: string, value: any) => {
+                    setNodes((nds) => nds.map((n) => {
+                      if (n.id !== editingNode.id) return n;
+                      let existing: any = {};
+                      if ((n.data as StreamFlowNodeData).configYaml?.trim()) {
+                        try { existing = yaml.load((n.data as StreamFlowNodeData).configYaml!) as any || {}; } catch {}
+                      }
+                      const batching = { ...(existing.batching || {}), [field]: value };
+                      // Remove empty/default values
+                      if (batching[field] === 0 || batching[field] === "" || batching[field] === undefined) delete batching[field];
+                      const newConfig = { ...existing, batching: Object.keys(batching).length > 0 ? batching : undefined };
+                      if (!newConfig.batching) delete newConfig.batching;
+                      const configYaml = Object.keys(newConfig).length > 0
+                        ? yaml.dump(newConfig, { lineWidth: -1, noRefs: true })
+                        : "";
+                      return { ...n, data: { ...n.data, configYaml } };
+                    }));
+                  };
+                  return (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="broker-pattern">Pattern</Label>
+                        <Select
+                          value={currentPattern}
+                          onValueChange={(val) => {
+                            setNodes((nds) => nds.map((n) =>
+                              n.id === editingNode.id
+                                ? { ...n, data: { ...n.data, brokerPattern: val } }
+                                : n.parentId === editingNode.id
+                                  ? { ...n, data: { ...n.data, parentBrokerPattern: val } }
+                                  : n
+                            ));
+                            // Add or remove internal edges based on pattern
+                            const children = nodes
+                              .filter((n) => n.parentId === editingNode.id)
+                              .sort((a, b) => a.position.y - b.position.y);
+                            const childIds = new Set(children.map((c) => c.id));
+                            setEdges((eds) => {
+                              const kept = eds.filter(
+                                (e) => !((e.data as any)?.internal && (childIds.has(e.source) || childIds.has(e.target)))
+                              );
+                              if (!isBrokerSequential(val) || children.length <= 1) return kept;
+                              const newEdges: Edge[] = [];
+                              for (let i = 0; i < children.length - 1; i++) {
+                                newEdges.push({
+                                  id: `e-internal-${children[i].id}-${children[i + 1].id}`,
+                                  source: children[i].id,
+                                  target: children[i + 1].id,
+                                  type: "pipeline",
+                                  data: makeInternalEdgeData(),
+                                });
+                              }
+                              return [...kept, ...newEdges];
+                            });
+                          }}
+                        >
+                          <SelectTrigger id="broker-pattern">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="fan_out">fan_out</SelectItem>
+                            <SelectItem value="fan_out_fail_fast">fan_out_fail_fast</SelectItem>
+                            <SelectItem value="fan_out_sequential">fan_out_sequential</SelectItem>
+                            <SelectItem value="fan_out_sequential_fail_fast">fan_out_sequential_fail_fast</SelectItem>
+                            <SelectItem value="round_robin">round_robin</SelectItem>
+                            <SelectItem value="greedy">greedy</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">{patternDescriptions[currentPattern]}</p>
+                      </div>
+                      <div className="space-y-3 border rounded-md p-3">
+                        <p className="text-sm font-medium">Batching</p>
+                        <p className="text-xs text-muted-foreground">Configure how messages are batched before being sent to outputs.</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <Label htmlFor="batch-count" className="text-xs">Count</Label>
+                            <Input
+                              id="batch-count"
+                              type="number"
+                              min={0}
+                              placeholder="0"
+                              value={batchingConfig.count || ""}
+                              onChange={(e) => updateBatching("count", e.target.value ? parseInt(e.target.value) : 0)}
+                            />
+                            <p className="text-[10px] text-muted-foreground">Flush after this many messages. 0 to disable.</p>
+                          </div>
+                          <div className="space-y-1">
+                            <Label htmlFor="batch-byte-size" className="text-xs">Byte Size</Label>
+                            <Input
+                              id="batch-byte-size"
+                              type="number"
+                              min={0}
+                              placeholder="0"
+                              value={batchingConfig.byte_size || ""}
+                              onChange={(e) => updateBatching("byte_size", e.target.value ? parseInt(e.target.value) : 0)}
+                            />
+                            <p className="text-[10px] text-muted-foreground">Flush after this many bytes. 0 to disable.</p>
+                          </div>
+                          <div className="space-y-1">
+                            <Label htmlFor="batch-period" className="text-xs">Period</Label>
+                            <Input
+                              id="batch-period"
+                              placeholder="e.g. 500ms, 1s"
+                              value={batchingConfig.period || ""}
+                              onChange={(e) => updateBatching("period", e.target.value)}
+                            />
+                            <p className="text-[10px] text-muted-foreground">Flush after this time regardless of size.</p>
+                          </div>
+                          <div className="space-y-1">
+                            <Label htmlFor="batch-jitter" className="text-xs">Jitter</Label>
+                            <Input
+                              id="batch-jitter"
+                              type="number"
+                              min={0}
+                              step={0.1}
+                              placeholder="0"
+                              value={batchingConfig.jitter || ""}
+                              onChange={(e) => updateBatching("jitter", e.target.value ? parseFloat(e.target.value) : 0)}
+                            />
+                            <p className="text-[10px] text-muted-foreground">Random delay factor for flush intervals.</p>
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <Label htmlFor="batch-check" className="text-xs">Check</Label>
+                          <Input
+                            id="batch-check"
+                            placeholder="Bloblang query"
+                            value={batchingConfig.check || ""}
+                            onChange={(e) => updateBatching("check", e.target.value)}
+                          />
+                          <p className="text-[10px] text-muted-foreground">A Bloblang query returning a boolean to decide if a message should end the batch.</p>
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
                 <p className="text-sm text-muted-foreground">
-                  Use the <strong>+ Add</strong> button inside the group on the canvas to add child processors.
-                  Click on a child processor to configure it.
+                  {editingNode.data.componentId === "broker"
+                    ? <>Use the <strong>+ Add</strong> button inside the group on the canvas to add child outputs. Click on a child output to configure it.</>
+                    : <>Use the <strong>+ Add</strong> button inside the group on the canvas to add child processors. Click on a child processor to configure it.</>
+                  }
                 </p>
                 <Button
                   variant="destructive"
                   className="w-full"
                   onClick={() => { handleDeleteNode(editingNode.id); setEditingNodeId(null); }}
                 >
-                  Delete Catch Group
+                  {editingNode.data.componentId === "broker" ? "Delete Broker Group" : "Delete Catch Group"}
                 </Button>
               </div>
             ) : (

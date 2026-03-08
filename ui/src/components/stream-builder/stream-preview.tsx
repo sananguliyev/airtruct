@@ -22,6 +22,8 @@ import { ProcessorNode } from "./nodes/processor-node";
 import { OutputNode } from "./nodes/output-node";
 import { CatchGroupNode } from "./nodes/catch-group-node";
 import { ChildProcessorNode } from "./nodes/child-processor-node";
+import { BrokerGroupNode } from "./nodes/broker-group-node";
+import { ChildOutputNode } from "./nodes/child-output-node";
 import { PipelineEdge } from "./edges/pipeline-edge";
 
 const nodeTypes = {
@@ -30,6 +32,8 @@ const nodeTypes = {
   outputNode: OutputNode,
   catchGroupNode: CatchGroupNode,
   childProcessorNode: ChildProcessorNode,
+  brokerGroupNode: BrokerGroupNode,
+  childOutputNode: ChildOutputNode,
 };
 
 const edgeTypes = {
@@ -38,17 +42,27 @@ const edgeTypes = {
 
 const NODE_SPACING_X = 350;
 const NODE_Y = 200;
-const CATCH_GROUP_WIDTH = 210;
-const CATCH_CHILD_NODE_WIDTH = 150;
-const CATCH_CHILD_NODE_HEIGHT = 55;
-const CATCH_CHILD_GAP_Y = 40;
-const CATCH_CHILD_X = 25;
+const GROUP_WIDTH = 220;
+const CHILD_NODE_WIDTH = 160;
+const CHILD_NODE_HEIGHT = 72;
+const CHILD_GAP_Y = 35;
+const CHILD_X = Math.round((GROUP_WIDTH - CHILD_NODE_WIDTH) / 2);
+const GROUP_BOTTOM_PAD = 50;
+
 const CATCH_CHILD_Y_START = 68;
 const CATCH_GROUP_MIN_HEIGHT = 140;
 
 function calcCatchGroupHeight(childCount: number): number {
   if (childCount === 0) return CATCH_GROUP_MIN_HEIGHT;
-  return CATCH_CHILD_Y_START + childCount * CATCH_CHILD_NODE_HEIGHT + (childCount - 1) * CATCH_CHILD_GAP_Y + 48;
+  return CATCH_CHILD_Y_START + childCount * CHILD_NODE_HEIGHT + (childCount - 1) * CHILD_GAP_Y + GROUP_BOTTOM_PAD;
+}
+
+const BROKER_CHILD_Y_START = 96;
+const BROKER_GROUP_MIN_HEIGHT = 170;
+
+function calcBrokerGroupHeight(childCount: number): number {
+  if (childCount === 0) return BROKER_GROUP_MIN_HEIGHT;
+  return BROKER_CHILD_Y_START + childCount * CHILD_NODE_HEIGHT + (childCount - 1) * CHILD_GAP_Y + GROUP_BOTTOM_PAD;
 }
 
 const transformComponentSchemas = (): AllComponentSchemas => {
@@ -154,7 +168,7 @@ function StreamPreviewContent({ stream }: StreamPreviewProps) {
             id,
             type: "catchGroupNode",
             position: { x: xPos, y: NODE_Y - 25 },
-            style: { width: CATCH_GROUP_WIDTH, height: groupHeight },
+            style: { width: GROUP_WIDTH, height: groupHeight },
             data: {
               label: proc.label || "catch",
               type: "processor",
@@ -181,8 +195,8 @@ function StreamPreviewContent({ stream }: StreamPreviewProps) {
               id: childId,
               type: "childProcessorNode",
               position: {
-                x: CATCH_CHILD_X,
-                y: CATCH_CHILD_Y_START + i * (CATCH_CHILD_NODE_HEIGHT + CATCH_CHILD_GAP_Y),
+                x: CHILD_X,
+                y: CATCH_CHILD_Y_START + i * (CHILD_NODE_HEIGHT + CHILD_GAP_Y),
               },
               parentId: id,
               extent: "parent" as const,
@@ -253,27 +267,120 @@ function StreamPreviewContent({ stream }: StreamPreviewProps) {
     }
 
     const outputId = uuidv4();
-    flowNodes.push({
-      id: outputId,
-      type: "outputNode",
-      position: { x: xPos, y: NODE_Y },
-      data: {
-        label: stream.output_label || "Output",
-        type: "output",
-        componentId: stream.output_component,
-        component: getComponentDisplayName(stream.output_component, "output"),
-        configYaml: stream.output_config,
-        nodeId: outputId,
-        readOnly: true,
-      },
-    });
-    if (prevNodeId) {
-      flowEdges.push({
-        id: `e-${prevNodeId}-${outputId}`,
-        source: prevNodeId,
-        target: outputId,
-        type: "pipeline",
+
+    if (stream.output_component === "broker") {
+      let brokerConfig: any = {};
+      let childConfigs: any[] = [];
+      let brokerPattern = "fan_out";
+      if (stream.output_config?.trim()) {
+        try {
+          brokerConfig = yaml.load(stream.output_config) || {};
+          if (Array.isArray(brokerConfig.outputs)) childConfigs = brokerConfig.outputs;
+          if (brokerConfig.pattern) brokerPattern = brokerConfig.pattern;
+        } catch {}
+      }
+
+      const childCount = childConfigs.length;
+      const groupHeight = calcBrokerGroupHeight(childCount);
+
+      flowNodes.push({
+        id: outputId,
+        type: "brokerGroupNode",
+        position: { x: xPos, y: NODE_Y - 25 },
+        style: { width: GROUP_WIDTH, height: groupHeight },
+        data: {
+          label: stream.output_label || "broker",
+          type: "output",
+          componentId: "broker",
+          component: "broker",
+          nodeId: outputId,
+          isGroup: true,
+          childCount,
+          configYaml: "",
+          brokerPattern,
+          readOnly: true,
+        },
       });
+
+      let prevChildId: string | null = null;
+      childConfigs.forEach((outputObj, i) => {
+        const componentName = Object.keys(outputObj).find((k) => k !== "label") || Object.keys(outputObj)[0];
+        const config = outputObj[componentName];
+        const childLabel = outputObj.label as string | undefined;
+        const schema = componentSchemas.output.find(
+          (o) => o.component === componentName || o.id === componentName
+        );
+        const childId = uuidv4();
+        flowNodes.push({
+          id: childId,
+          type: "childOutputNode",
+          position: {
+            x: CHILD_X,
+            y: BROKER_CHILD_Y_START + i * (CHILD_NODE_HEIGHT + CHILD_GAP_Y),
+          },
+          parentId: outputId,
+          extent: "parent" as const,
+          data: {
+            label: childLabel || schema?.id || componentName,
+            type: "output",
+            componentId: schema?.id || componentName,
+            component: componentName,
+            configYaml:
+              typeof config === "string"
+                ? config
+                : config && Object.keys(config).length > 0
+                  ? yaml.dump(config, { lineWidth: -1, noRefs: true })
+                  : "",
+            nodeId: childId,
+            readOnly: true,
+            childIndex: i,
+            parentBrokerPattern: brokerPattern,
+          },
+        });
+        const showEdges = brokerPattern === "fan_out_sequential" || brokerPattern === "fan_out_sequential_fail_fast";
+        if (prevChildId && showEdges) {
+          flowEdges.push({
+            id: `e-internal-${prevChildId}-${childId}`,
+            source: prevChildId,
+            target: childId,
+            type: "pipeline",
+            data: { internal: true },
+          });
+        }
+        prevChildId = childId;
+      });
+
+      if (prevNodeId) {
+        flowEdges.push({
+          id: `e-${prevNodeId}-${outputId}`,
+          source: prevNodeId,
+          target: outputId,
+          type: "pipeline",
+        });
+      }
+    } else {
+      flowNodes.push({
+        id: outputId,
+        type: "outputNode",
+        position: { x: xPos, y: NODE_Y },
+        data: {
+          label: stream.output_label || "Output",
+          type: "output",
+          componentId: stream.output_component,
+          component: getComponentDisplayName(stream.output_component, "output"),
+          configYaml: stream.output_config,
+          nodeId: outputId,
+          readOnly: true,
+        },
+      });
+      if (prevNodeId) {
+        flowEdges.push({
+          id: `e-${prevNodeId}-${outputId}`,
+          source: prevNodeId,
+          target: outputId,
+          type: "pipeline",
+        });
+      }
     }
 
     return { nodes: flowNodes, edges: flowEdges };
