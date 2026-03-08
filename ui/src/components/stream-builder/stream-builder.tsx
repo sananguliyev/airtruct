@@ -48,14 +48,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/toast";
 import { fetchBuffers } from "@/lib/api";
@@ -129,12 +123,15 @@ interface StreamBuilderProps {
     status: string;
     bufferId?: number;
     nodes: StreamNodeData[];
+    flowState?: string;
   };
   onSave: (data: {
     name: string;
     status: string;
     bufferId?: number;
     nodes: StreamNodeData[];
+    flowState: string;
+    isReady: boolean;
   }) => void;
   onValidate?: (data: {
     name: string;
@@ -198,6 +195,9 @@ function StreamBuilderContent({
   const [bufferId, setBufferId] = useState<number | undefined>(initialData?.bufferId);
   const [availableBuffers, setAvailableBuffers] = useState<Buffer[]>([]);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; nodeId: string } | null>(null);
+  const [deleteConfirmNodeId, setDeleteConfirmNodeId] = useState<string | null>(null);
   const [isValidating, setIsValidating] = useState(false);
   const [tryDialogOpen, setTryDialogOpen] = useState(false);
   const [tryMessages, setTryMessages] = useState<string[]>([""]);
@@ -219,8 +219,17 @@ function StreamBuilderContent({
     return () => observer.disconnect();
   }, []);
 
-  // Build initial nodes and edges from initialData
+  // Build initial nodes and edges from initialData (prefer saved flowState)
   const [initialFlowNodes, initialFlowEdges] = useMemo(() => {
+    if (initialData?.flowState) {
+      try {
+        const parsed = JSON.parse(initialData.flowState);
+        if (parsed.nodes && parsed.edges) {
+          return [parsed.nodes as Node[], parsed.edges as Edge[]];
+        }
+      } catch {}
+    }
+
     if (!initialData?.nodes || initialData.nodes.length === 0) return [[], []];
 
     const inputNodes = initialData.nodes.filter((n) => n.type === "input");
@@ -449,6 +458,7 @@ function StreamBuilderContent({
         return newEdges;
       });
       setSelectedNodeId(newId);
+      setEditingNodeId(newId);
       scheduleAutoFit();
     },
     [nodes, setNodes, setEdges, scheduleAutoFit]
@@ -509,6 +519,7 @@ function StreamBuilderContent({
         return newEdges;
       });
       setSelectedNodeId(newId);
+      setEditingNodeId(newId);
       scheduleAutoFit();
     },
     [nodes, setNodes, setEdges, scheduleAutoFit]
@@ -569,6 +580,7 @@ function StreamBuilderContent({
       }
 
       setSelectedNodeId(newId);
+      setEditingNodeId(newId);
       scheduleAutoFit();
     },
     [nodes, setNodes, setEdges, scheduleAutoFit]
@@ -740,6 +752,7 @@ function StreamBuilderContent({
 
       setNodes((nds) => [...nds, newNode]);
       setSelectedNodeId(newId);
+      setEditingNodeId(newId);
       scheduleAutoFit();
     },
     [nodes, setNodes, addToast, scheduleAutoFit]
@@ -747,14 +760,27 @@ function StreamBuilderContent({
 
   const handleNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
     setSelectedNodeId(node.id);
+    setContextMenu(null);
+  }, []);
+
+  const handleNodeDoubleClick = useCallback((_event: React.MouseEvent, node: Node) => {
+    setSelectedNodeId(node.id);
+    setEditingNodeId(node.id);
+  }, []);
+
+  const handleNodeContextMenu = useCallback((event: React.MouseEvent, node: Node) => {
+    event.preventDefault();
+    setSelectedNodeId(node.id);
+    setContextMenu({ x: event.clientX, y: event.clientY, nodeId: node.id });
   }, []);
 
   const handlePaneClick = useCallback(() => {
     setSelectedNodeId(null);
+    setContextMenu(null);
   }, []);
 
-  const selectedNode = useMemo(() => {
-    const n = nodes.find((n) => n.id === selectedNodeId);
+  const editingNode = useMemo(() => {
+    const n = nodes.find((n) => n.id === editingNodeId);
     if (!n) return null;
     const d = n.data as StreamFlowNodeData;
     return {
@@ -769,15 +795,53 @@ function StreamBuilderContent({
       isGroup: d.isGroup === true,
       isGroupChild: !!n.parentId,
     };
-  }, [nodes, selectedNodeId]);
+  }, [nodes, editingNodeId]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (editingNodeId || tryDialogOpen || deleteConfirmNodeId) return;
+      if (!selectedNodeId) return;
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
+
+      if (e.key === "e" || e.key === "E") {
+        e.preventDefault();
+        setEditingNodeId(selectedNodeId);
+      } else if (e.key === "Delete" || e.key === "Backspace") {
+        e.preventDefault();
+        setDeleteConfirmNodeId(selectedNodeId);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedNodeId, editingNodeId, tryDialogOpen, deleteConfirmNodeId]);
+
+  useEffect(() => {
+    if (!contextMenu) return;
+    const close = (e: Event) => {
+      // Don't close if clicking inside the context menu itself
+      const target = e.target as HTMLElement;
+      if (target.closest("[data-context-menu]")) return;
+      setContextMenu(null);
+    };
+    // Use setTimeout to avoid the current event from immediately closing the menu
+    const timeoutId = setTimeout(() => {
+      window.addEventListener("click", close);
+      window.addEventListener("contextmenu", close);
+    }, 0);
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener("click", close);
+      window.removeEventListener("contextmenu", close);
+    };
+  }, [contextMenu]);
 
   const childFilteredSchemas = useMemo(() => {
-    if (!selectedNode?.isGroupChild) return allComponentSchemas;
+    if (!editingNode?.isGroupChild) return allComponentSchemas;
     return {
       ...allComponentSchemas,
       processor: allComponentSchemas.processor.filter((p) => p.id !== "catch"),
     };
-  }, [allComponentSchemas, selectedNode?.isGroupChild]);
+  }, [allComponentSchemas, editingNode?.isGroupChild]);
 
   const isMcpServer = useMemo(
     () => nodes.some((n) => (n.data as StreamFlowNodeData).type === "input" && (n.data as StreamFlowNodeData).componentId === "mcp_tool"),
@@ -932,8 +996,9 @@ function StreamBuilderContent({
       }
 
       if (selectedNodeId === nodeId) setSelectedNodeId(null);
+      if (editingNodeId === nodeId) setEditingNodeId(null);
     },
-    [nodes, edges, setNodes, setEdges, selectedNodeId]
+    [nodes, edges, setNodes, setEdges, selectedNodeId, editingNodeId]
   );
 
   const validateRequiredFields = useCallback(
@@ -1078,6 +1143,28 @@ function StreamBuilderContent({
 
   const handleValidate = useCallback(async () => {
     if (!onValidate) return;
+
+    const inputNode = nodes.find((n) => (n.data as StreamFlowNodeData).type === "input");
+    const outputNode = nodes.find((n) => (n.data as StreamFlowNodeData).type === "output");
+
+    if (!inputNode || !outputNode) {
+      addToast({ id: "validate-err", title: "Invalid", description: "Stream must have both an input and output node.", variant: "error", duration: 5000 });
+      return;
+    }
+
+    const disconnected = findDisconnectedNodes();
+    if (disconnected.size > 0) {
+      setNodes((nds) =>
+        nds.map((n) =>
+          disconnected.has(n.id)
+            ? { ...n, data: { ...n.data, disconnected: true } }
+            : { ...n, data: { ...n.data, disconnected: false } }
+        )
+      );
+      addToast({ id: "validate-err", title: "Invalid", description: `${disconnected.size} node(s) are not connected to the pipeline.`, variant: "error", duration: 5000 });
+      return;
+    }
+
     setIsValidating(true);
     try {
       const nodeDataList = nodes
@@ -1098,7 +1185,7 @@ function StreamBuilderContent({
     } finally {
       setIsValidating(false);
     }
-  }, [onValidate, name, status, bufferId, nodes, addToast, serializeCatchGroup]);
+  }, [onValidate, name, status, bufferId, nodes, addToast, serializeCatchGroup, findDisconnectedNodes, setNodes]);
 
   const handleTrySubmit = useCallback(async () => {
     if (!onTry) return;
@@ -1138,17 +1225,19 @@ function StreamBuilderContent({
     const inputNode = nodes.find((n) => (n.data as StreamFlowNodeData).type === "input");
     const outputNode = nodes.find((n) => (n.data as StreamFlowNodeData).type === "output");
 
-    if (!inputNode) {
-      addToast({ id: "input-req", title: "Validation Error", description: "An input node is required.", variant: "warning" });
-      return;
-    }
-    if (!outputNode) {
-      addToast({ id: "output-req", title: "Validation Error", description: "An output node is required.", variant: "warning" });
-      return;
+    // Serialize flow state for persistence
+    const flowState = JSON.stringify({ nodes, edges });
+
+    // Determine if stream is ready (fully connected and configured)
+    let isReady = true;
+
+    if (!inputNode || !outputNode) {
+      isReady = false;
     }
 
     const disconnected = findDisconnectedNodes();
     if (disconnected.size > 0) {
+      isReady = false;
       setNodes((nds) =>
         nds.map((n) =>
           disconnected.has(n.id)
@@ -1159,25 +1248,24 @@ function StreamBuilderContent({
       addToast({
         id: "disconnected",
         title: "Disconnected Nodes",
-        description: `${disconnected.size} node(s) are not connected to the pipeline. Connect all nodes before saving.`,
+        description: `${disconnected.size} node(s) are not connected. Stream will be saved as not ready.`,
         variant: "warning",
         duration: 5000,
       });
-      return;
     }
 
     // Validate top-level nodes (skip children — they're validated via their group)
     for (const n of nodes) {
-      if (n.parentId) continue; // child node
+      if (n.parentId) continue;
       const d = n.data as StreamFlowNodeData;
       if (d.isGroup) {
-        // Validate each child processor in the group
         const children = nodes.filter((cn) => cn.parentId === n.id);
         for (const child of children) {
           const cd = child.data as StreamFlowNodeData;
           const childData: StreamNodeData = { label: cd.label, type: cd.type, componentId: cd.componentId, component: cd.component, configYaml: cd.configYaml };
           const validation = validateRequiredFields(childData);
           if (!validation.isValid) {
+            isReady = false;
             const errorMessage = validation.error || `Missing required fields: ${validation.missingFields.join(", ")}`;
             addToast({
               id: `validation-${child.id}`,
@@ -1185,7 +1273,6 @@ function StreamBuilderContent({
               description: `"${cd.label}" in catch "${d.label}" - ${errorMessage}`,
               variant: "warning",
             });
-            return;
           }
         }
         continue;
@@ -1193,6 +1280,7 @@ function StreamBuilderContent({
       const nodeData: StreamNodeData = { label: d.label, type: d.type, componentId: d.componentId, component: d.component, configYaml: d.configYaml };
       const validation = validateRequiredFields(nodeData);
       if (!validation.isValid) {
+        isReady = false;
         const errorMessage = validation.error || `Missing required fields: ${validation.missingFields.join(", ")}`;
         addToast({
           id: `validation-${n.id}`,
@@ -1200,40 +1288,45 @@ function StreamBuilderContent({
           description: `"${d.label}" - ${errorMessage}`,
           variant: "warning",
         });
-        return;
       }
     }
 
     // Build ordered node data: input, processors in edge-order, output
     const orderedNodes: StreamNodeData[] = [];
 
-    const inputD = inputNode.data as StreamFlowNodeData;
-    orderedNodes.push({ label: inputD.label, type: inputD.type, componentId: inputD.componentId, component: inputD.component, configYaml: inputD.configYaml });
-
-    // Walk edges from input to output (external edges only)
-    const adj = new Map<string, string>();
-    for (const e of edges) {
-      if ((e.data as any)?.internal) continue;
-      adj.set(e.source, e.target);
+    if (inputNode) {
+      const inputD = inputNode.data as StreamFlowNodeData;
+      orderedNodes.push({ label: inputD.label, type: inputD.type, componentId: inputD.componentId, component: inputD.component, configYaml: inputD.configYaml });
     }
-    let current = adj.get(inputNode.id);
-    while (current && current !== outputNode.id) {
-      const node = nodes.find((n) => n.id === current);
-      if (node) {
-        const d = node.data as StreamFlowNodeData;
-        if (d.isGroup && d.componentId === "catch") {
-          orderedNodes.push(serializeCatchGroup(node));
-        } else {
-          orderedNodes.push({ label: d.label, type: d.type, componentId: d.componentId, component: d.component, configYaml: d.configYaml });
-        }
+
+    if (inputNode && outputNode) {
+      // Walk edges from input to output (external edges only)
+      const adj = new Map<string, string>();
+      for (const e of edges) {
+        if ((e.data as any)?.internal) continue;
+        adj.set(e.source, e.target);
       }
-      current = adj.get(current!);
+      let current = adj.get(inputNode.id);
+      while (current && current !== outputNode.id) {
+        const node = nodes.find((n) => n.id === current);
+        if (node) {
+          const d = node.data as StreamFlowNodeData;
+          if (d.isGroup && d.componentId === "catch") {
+            orderedNodes.push(serializeCatchGroup(node));
+          } else {
+            orderedNodes.push({ label: d.label, type: d.type, componentId: d.componentId, component: d.component, configYaml: d.configYaml });
+          }
+        }
+        current = adj.get(current!);
+      }
     }
 
-    const outputD = outputNode.data as StreamFlowNodeData;
-    orderedNodes.push({ label: outputD.label, type: outputD.type, componentId: outputD.componentId, component: outputD.component, configYaml: outputD.configYaml });
+    if (outputNode) {
+      const outputD = outputNode.data as StreamFlowNodeData;
+      orderedNodes.push({ label: outputD.label, type: outputD.type, componentId: outputD.componentId, component: outputD.component, configYaml: outputD.configYaml });
+    }
 
-    onSave({ name, status, bufferId, nodes: orderedNodes });
+    onSave({ name, status, bufferId, nodes: orderedNodes, flowState, isReady });
   }, [name, status, bufferId, nodes, edges, onSave, addToast, findDisconnectedNodes, validateRequiredFields, setNodes, serializeCatchGroup]);
 
   const hasInput = nodes.some((n) => (n.data as StreamFlowNodeData).type === "input");
@@ -1301,12 +1394,15 @@ function StreamBuilderContent({
           onConnect={onConnect}
           onNodeDragStop={handleChildDragStop}
           onNodeClick={handleNodeClick}
+          onNodeDoubleClick={handleNodeDoubleClick}
+          onNodeContextMenu={handleNodeContextMenu}
           onPaneClick={handlePaneClick}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           isValidConnection={isValidConnection}
           fitView
           colorMode={colorMode}
+          deleteKeyCode={null}
           defaultEdgeOptions={{ type: "pipeline" }}
           proOptions={{ hideAttribution: true }}
         >
@@ -1346,26 +1442,31 @@ function StreamBuilderContent({
         </ReactFlow>
       </div>
 
-      {/* Config drawer */}
-      <Sheet open={!!selectedNodeId} onOpenChange={(open) => { if (!open) setSelectedNodeId(null); }}>
-        <SheetContent side="right" className="w-[420px] sm:max-w-[420px] overflow-y-auto p-0">
-          <SheetHeader className="sr-only">
-            <SheetTitle>Node Configuration</SheetTitle>
-            <SheetDescription>Configure the selected node</SheetDescription>
-          </SheetHeader>
-          <div className="p-6 h-full">
-            {selectedNode?.isGroup ? (
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Catch Group</h3>
+      {/* Config modal */}
+      <Dialog open={!!editingNodeId} onOpenChange={(open: boolean) => { if (!open) setEditingNodeId(null); }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>
+              {editingNode?.isGroup
+                ? "Catch Group Configuration"
+                : `Configure ${editingNode?.data.type ? editingNode.data.type.charAt(0).toUpperCase() + editingNode.data.type.slice(1) : ""} Node`}
+            </DialogTitle>
+            <DialogDescription>
+              Changes are applied automatically. Close this dialog and use the Save button to persist.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            {editingNode?.isGroup ? (
+              <div className="space-y-4 p-1">
                 <div className="space-y-2">
                   <Label htmlFor="group-label">Label</Label>
                   <Input
                     id="group-label"
-                    value={selectedNode.data.label}
+                    value={editingNode.data.label}
                     onChange={(e) => {
                       const val = e.target.value;
                       if (/^[a-z0-9_-]*$/.test(val)) {
-                        handleUpdateNode(selectedNode.id, { ...selectedNode.data, label: val });
+                        handleUpdateNode(editingNode.id, { ...editingNode.data, label: val });
                       }
                     }}
                     placeholder="catch label"
@@ -1378,26 +1479,85 @@ function StreamBuilderContent({
                 <Button
                   variant="destructive"
                   className="w-full"
-                  onClick={() => handleDeleteNode(selectedNode.id)}
+                  onClick={() => { handleDeleteNode(editingNode.id); setEditingNodeId(null); }}
                 >
                   Delete Catch Group
                 </Button>
               </div>
             ) : (
               <NodeConfigPanel
-                key={selectedNodeId || "none"}
-                allComponentSchemas={selectedNode?.isGroupChild ? childFilteredSchemas : allComponentSchemas}
-                selectedNode={selectedNode}
+                key={editingNodeId || "none"}
+                allComponentSchemas={editingNode?.isGroupChild ? childFilteredSchemas : allComponentSchemas}
+                selectedNode={editingNode}
                 onUpdateNode={handleUpdateNode}
-                onDeleteNode={handleDeleteNode}
+                onDeleteNode={(id) => { handleDeleteNode(id); setEditingNodeId(null); }}
                 lockedComponentId={
-                  selectedNode?.data.type === "output" && isMcpServer ? "sync_response" : undefined
+                  editingNode?.data.type === "output" && isMcpServer ? "sync_response" : undefined
                 }
               />
             )}
           </div>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={!!deleteConfirmNodeId} onOpenChange={(open: boolean) => { if (!open) setDeleteConfirmNodeId(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete Node</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this node? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setDeleteConfirmNodeId(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (deleteConfirmNodeId) {
+                  handleDeleteNode(deleteConfirmNodeId);
+                  setEditingNodeId(null);
+                }
+                setDeleteConfirmNodeId(null);
+              }}
+            >
+              Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Context menu */}
+      {contextMenu && (
+        <div
+          data-context-menu
+          className="fixed z-50 min-w-[140px] rounded-md border bg-popover p-1 shadow-md"
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+        >
+          <button
+            type="button"
+            className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground"
+            onClick={() => {
+              setEditingNodeId(contextMenu.nodeId);
+              setContextMenu(null);
+            }}
+          >
+            Edit <span className="ml-auto text-xs text-muted-foreground">E</span>
+          </button>
+          <button
+            type="button"
+            className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-destructive hover:bg-destructive hover:text-destructive-foreground"
+            onClick={() => {
+              setDeleteConfirmNodeId(contextMenu.nodeId);
+              setContextMenu(null);
+            }}
+          >
+            Delete <span className="ml-auto text-xs text-muted-foreground">Del</span>
+          </button>
+        </div>
+      )}
 
       {/* Try Stream Dialog */}
       <Dialog open={tryDialogOpen} onOpenChange={(open) => { if (!open) setTryDialogOpen(false); }}>

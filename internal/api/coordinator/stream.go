@@ -96,7 +96,9 @@ func (c *CoordinatorAPI) CreateStream(_ context.Context, in *pb.Stream) (*pb.Str
 			Config:    []byte(processor.GetConfig()),
 		}
 	}
-	if stream.Status == persistence.StreamStatusActive {
+	if !stream.IsReady {
+		stream.Status = persistence.StreamStatusPaused
+	} else if stream.Status == persistence.StreamStatusActive {
 		if validationErr := validateStreamConfig(*stream); validationErr != nil {
 			return nil, status.Error(codes.InvalidArgument,
 				"Stream configuration is invalid. Set status to \"paused\" to save without running.\n\n"+validationErr.Error())
@@ -314,7 +316,9 @@ func (c *CoordinatorAPI) UpdateStream(_ context.Context, in *pb.Stream) (*pb.Str
 	}
 	newStream.ParentID = stream.ParentID
 
-	if newStream.Status == persistence.StreamStatusActive {
+	if !newStream.IsReady {
+		newStream.Status = persistence.StreamStatusPaused
+	} else if newStream.Status == persistence.StreamStatusActive {
 		if validationErr := validateStreamConfig(*newStream); validationErr != nil {
 			return nil, status.Error(codes.InvalidArgument,
 				"Stream configuration is invalid. Set status to \"paused\" to save without running.\n\n"+validationErr.Error())

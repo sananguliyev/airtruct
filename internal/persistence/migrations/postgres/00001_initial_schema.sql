@@ -26,6 +26,8 @@ CREATE TABLE IF NOT EXISTS streams (
     output_config bytea NOT NULL,
     buffer_id bigint,
     is_current boolean DEFAULT true,
+    is_ready boolean DEFAULT false,
+    flow_state bytea,
     status text NOT NULL,
     created_at timestamptz NOT NULL,
     updated_at timestamptz

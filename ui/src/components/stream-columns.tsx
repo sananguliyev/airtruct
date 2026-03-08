@@ -43,7 +43,7 @@ export const columns = () => [
   {
     key: "status" as keyof Stream,
     title: "Status",
-    render: (value: string) => {
+    render: (value: string, record: Stream) => {
       const colorMap: Record<string, string> = {
         active: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
         completed:
@@ -53,9 +53,16 @@ export const columns = () => [
         failed: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
       };
       return (
-        <Badge className={colorMap[value] || ""} variant="outline">
-          {value}
-        </Badge>
+        <span className="flex items-center gap-1.5">
+          <Badge className={colorMap[value] || ""} variant="outline">
+            {value}
+          </Badge>
+          {!record.is_ready && (
+            <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300" variant="outline">
+              draft
+            </Badge>
+          )}
+        </span>
       );
     },
   },

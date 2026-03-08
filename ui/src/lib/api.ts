@@ -95,6 +95,8 @@ export async function fetchStreams(): Promise<Stream[]> {
       createdAt: new Date(stream.created_at).toLocaleString(),
       is_http_server: stream.is_http_server || false,
       is_mcp_tool: stream.is_mcp_tool || false,
+      is_ready: stream.is_ready || false,
+      flow_state: stream.flow_state || undefined,
     }));
   } catch (error) {
     console.error("Error fetching streams:", error);
@@ -135,6 +137,8 @@ export async function fetchStream(id: string): Promise<Stream> {
       createdAt: new Date(data.data.created_at).toLocaleString(),
       is_http_server: data.data.is_http_server || false,
       is_mcp_tool: data.data.is_mcp_tool || false,
+      is_ready: data.data.is_ready || false,
+      flow_state: data.data.flow_state || undefined,
     };
   } catch (error) {
     console.error("Error fetching stream:", error);
@@ -201,6 +205,8 @@ export async function createStream(stream: {
   output_label: string;
   output_config: string;
   buffer_id?: number;
+  is_ready?: boolean;
+  flow_state?: string;
   processors: Array<{
     label: string;
     component: string;
@@ -222,6 +228,8 @@ export async function createStream(stream: {
           output_label: stream.output_label,
           output_config: stream.output_config,
           buffer_id: stream.buffer_id || undefined,
+          is_ready: stream.is_ready ?? true,
+          flow_state: stream.flow_state || "",
           processors: stream.processors.map((processor) => ({
             label: processor.label,
             component: processor.component,
@@ -257,6 +265,8 @@ export async function createStream(stream: {
       createdAt: new Date(data.data.created_at).toLocaleString(),
       is_http_server: data.data.is_http_server || false,
       is_mcp_tool: data.data.is_mcp_tool || false,
+      is_ready: data.data.is_ready || false,
+      flow_state: data.data.flow_state || undefined,
     };
   } catch (error) {
     console.error("Error creating stream:", error);
@@ -276,6 +286,8 @@ export async function updateStream(
     output_label: string;
     output_config: string;
     buffer_id?: number;
+    is_ready?: boolean;
+    flow_state?: string;
     processors: Array<{
       label: string;
       component: string;
@@ -298,6 +310,8 @@ export async function updateStream(
           output_label: stream.output_label,
           output_config: stream.output_config,
           buffer_id: stream.buffer_id || undefined,
+          is_ready: stream.is_ready ?? true,
+          flow_state: stream.flow_state || "",
           processors: stream.processors.map((processor) => ({
             label: processor.label,
             component: processor.component,
@@ -333,6 +347,8 @@ export async function updateStream(
       createdAt: new Date(data.data.created_at).toLocaleString(),
       is_http_server: data.data.is_http_server || false,
       is_mcp_tool: data.data.is_mcp_tool || false,
+      is_ready: data.data.is_ready || false,
+      flow_state: data.data.flow_state || undefined,
     };
   } catch (error) {
     console.error("Error updating stream:", error);
@@ -415,6 +431,8 @@ export async function updateStreamStatus(
       createdAt: new Date(data.data.created_at).toLocaleString(),
       is_http_server: data.data.input_component === "http_server",
       is_mcp_tool: data.data.input_component === "mcp_tool",
+      is_ready: data.data.is_ready || false,
+      flow_state: data.data.flow_state || undefined,
     };
   } catch (error) {
     console.error("Error updating stream status:", error);
