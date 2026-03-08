@@ -23,7 +23,9 @@ import { OutputNode } from "./nodes/output-node";
 import { CatchGroupNode } from "./nodes/catch-group-node";
 import { ChildProcessorNode } from "./nodes/child-processor-node";
 import { BrokerGroupNode } from "./nodes/broker-group-node";
+import { BrokerInputGroupNode } from "./nodes/broker-input-group-node";
 import { ChildOutputNode } from "./nodes/child-output-node";
+import { ChildInputNode } from "./nodes/child-input-node";
 import { PipelineEdge } from "./edges/pipeline-edge";
 
 const nodeTypes = {
@@ -33,7 +35,9 @@ const nodeTypes = {
   catchGroupNode: CatchGroupNode,
   childProcessorNode: ChildProcessorNode,
   brokerGroupNode: BrokerGroupNode,
+  brokerInputGroupNode: BrokerInputGroupNode,
   childOutputNode: ChildOutputNode,
+  childInputNode: ChildInputNode,
 };
 
 const edgeTypes = {
@@ -63,6 +67,14 @@ const BROKER_GROUP_MIN_HEIGHT = 170;
 function calcBrokerGroupHeight(childCount: number): number {
   if (childCount === 0) return BROKER_GROUP_MIN_HEIGHT;
   return BROKER_CHILD_Y_START + childCount * CHILD_NODE_HEIGHT + (childCount - 1) * CHILD_GAP_Y + GROUP_BOTTOM_PAD;
+}
+
+const BROKER_INPUT_CHILD_Y_START = 68;
+const BROKER_INPUT_GROUP_MIN_HEIGHT = 140;
+
+function calcBrokerInputGroupHeight(childCount: number): number {
+  if (childCount === 0) return BROKER_INPUT_GROUP_MIN_HEIGHT;
+  return BROKER_INPUT_CHILD_Y_START + childCount * CHILD_NODE_HEIGHT + (childCount - 1) * CHILD_GAP_Y + GROUP_BOTTOM_PAD;
 }
 
 const transformComponentSchemas = (): AllComponentSchemas => {
@@ -131,20 +143,87 @@ function StreamPreviewContent({ stream }: StreamPreviewProps) {
     let prevNodeId: string | null = null;
 
     const inputId = uuidv4();
-    flowNodes.push({
-      id: inputId,
-      type: "inputNode",
-      position: { x: xPos, y: NODE_Y },
-      data: {
-        label: stream.input_label || "Input",
-        type: "input",
-        componentId: stream.input_component,
-        component: getComponentDisplayName(stream.input_component, "input"),
-        configYaml: stream.input_config,
-        nodeId: inputId,
-        readOnly: true,
-      },
-    });
+
+    if (stream.input_component === "broker") {
+      let childConfigs: any[] = [];
+      if (stream.input_config?.trim()) {
+        try {
+          const brokerConfig = yaml.load(stream.input_config) as any;
+          if (brokerConfig && Array.isArray(brokerConfig.inputs)) childConfigs = brokerConfig.inputs;
+        } catch {}
+      }
+
+      const childCount = childConfigs.length;
+      const groupHeight = calcBrokerInputGroupHeight(childCount);
+
+      flowNodes.push({
+        id: inputId,
+        type: "brokerInputGroupNode",
+        position: { x: xPos, y: NODE_Y - 25 },
+        style: { width: GROUP_WIDTH, height: groupHeight },
+        data: {
+          label: stream.input_label || "broker",
+          type: "input",
+          componentId: "broker",
+          component: "broker",
+          nodeId: inputId,
+          isGroup: true,
+          childCount,
+          configYaml: "",
+          readOnly: true,
+        },
+      });
+
+      childConfigs.forEach((inputObj, i) => {
+        const componentName = Object.keys(inputObj).find((k) => k !== "label") || Object.keys(inputObj)[0];
+        const config = inputObj[componentName];
+        const childLabel = inputObj.label as string | undefined;
+        const schema = componentSchemas.input.find(
+          (o) => o.component === componentName || o.id === componentName
+        );
+        const childId = uuidv4();
+        flowNodes.push({
+          id: childId,
+          type: "childInputNode",
+          position: {
+            x: CHILD_X,
+            y: BROKER_INPUT_CHILD_Y_START + i * (CHILD_NODE_HEIGHT + CHILD_GAP_Y),
+          },
+          parentId: inputId,
+          extent: "parent" as const,
+          data: {
+            label: childLabel || schema?.id || componentName,
+            type: "input",
+            componentId: schema?.id || componentName,
+            component: componentName,
+            configYaml:
+              typeof config === "string"
+                ? config
+                : config && Object.keys(config).length > 0
+                  ? yaml.dump(config, { lineWidth: -1, noRefs: true })
+                  : "",
+            nodeId: childId,
+            readOnly: true,
+          },
+        });
+      });
+    } else {
+      flowNodes.push({
+        id: inputId,
+        type: "inputNode",
+        position: { x: xPos, y: NODE_Y },
+        data: {
+          label: stream.input_label || "Input",
+          type: "input",
+          componentId: stream.input_component,
+          component: getComponentDisplayName(stream.input_component, "input"),
+          configYaml: stream.input_config,
+          nodeId: inputId,
+          readOnly: true,
+        },
+      });
+    }
+
     prevNodeId = inputId;
     xPos += NODE_SPACING_X;
 

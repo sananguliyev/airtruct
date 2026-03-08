@@ -62,7 +62,9 @@ import { OutputNode } from "./nodes/output-node";
 import { CatchGroupNode } from "./nodes/catch-group-node";
 import { ChildProcessorNode } from "./nodes/child-processor-node";
 import { BrokerGroupNode } from "./nodes/broker-group-node";
+import { BrokerInputGroupNode } from "./nodes/broker-input-group-node";
 import { ChildOutputNode } from "./nodes/child-output-node";
+import { ChildInputNode } from "./nodes/child-input-node";
 import { PipelineEdge } from "./edges/pipeline-edge";
 
 // --- Exported types (unchanged for compatibility) ---
@@ -111,6 +113,7 @@ export interface StreamFlowNodeData extends Record<string, unknown> {
   onAddBefore?: (targetNodeId: string) => void;
   onAddChildProcessor?: (groupId: string) => void;
   onAddChildOutput?: (groupId: string) => void;
+  onAddChildInput?: (groupId: string) => void;
   childIndex?: number;
   parentBrokerPattern?: string;
 }
@@ -158,7 +161,9 @@ const nodeTypes = {
   catchGroupNode: CatchGroupNode,
   childProcessorNode: ChildProcessorNode,
   brokerGroupNode: BrokerGroupNode,
+  brokerInputGroupNode: BrokerInputGroupNode,
   childOutputNode: ChildOutputNode,
+  childInputNode: ChildInputNode,
 };
 
 const edgeTypes = {
@@ -185,13 +190,22 @@ function calcCatchGroupHeight(childCount: number): number {
   return CATCH_CHILD_Y_START + childCount * CHILD_NODE_HEIGHT + (childCount - 1) * CHILD_GAP_Y + GROUP_BOTTOM_PAD;
 }
 
-// Broker group layout (taller header due to pattern line)
+// Broker output group layout (taller header due to pattern line)
 const BROKER_CHILD_Y_START = 96;
 const BROKER_GROUP_MIN_HEIGHT = 170;
 
 function calcBrokerGroupHeight(childCount: number): number {
   if (childCount === 0) return BROKER_GROUP_MIN_HEIGHT;
   return BROKER_CHILD_Y_START + childCount * CHILD_NODE_HEIGHT + (childCount - 1) * CHILD_GAP_Y + GROUP_BOTTOM_PAD;
+}
+
+// Broker input group layout (simpler header, no pattern)
+const BROKER_INPUT_CHILD_Y_START = 68;
+const BROKER_INPUT_GROUP_MIN_HEIGHT = 140;
+
+function calcBrokerInputGroupHeight(childCount: number): number {
+  if (childCount === 0) return BROKER_INPUT_GROUP_MIN_HEIGHT;
+  return BROKER_INPUT_CHILD_Y_START + childCount * CHILD_NODE_HEIGHT + (childCount - 1) * CHILD_GAP_Y + GROUP_BOTTOM_PAD;
 }
 
 function isBrokerSequential(pattern: string | undefined): boolean {
@@ -204,35 +218,36 @@ function makeInternalEdgeData(): Record<string, unknown> {
 
 // Re-snap child positions and fix internal edges for groups
 function reSnapChildren(flowNodes: Node[], flowEdges: Edge[]): void {
-  const groupNodes = flowNodes.filter((n) => n.type === "catchGroupNode" || n.type === "brokerGroupNode");
+  const groupNodes = flowNodes.filter((n) => n.type === "catchGroupNode" || n.type === "brokerGroupNode" || n.type === "brokerInputGroupNode");
   for (const group of groupNodes) {
-    const isBroker = group.type === "brokerGroupNode";
-    const yStart = isBroker ? BROKER_CHILD_Y_START : CATCH_CHILD_Y_START;
+    const isBrokerOutput = group.type === "brokerGroupNode";
+    const isBrokerInput = group.type === "brokerInputGroupNode";
+    const yStart = isBrokerOutput ? BROKER_CHILD_Y_START : isBrokerInput ? BROKER_INPUT_CHILD_Y_START : CATCH_CHILD_Y_START;
     const children = flowNodes
       .filter((n) => n.parentId === group.id)
       .sort((a, b) => a.position.y - b.position.y);
-    const pattern = isBroker ? (group.data as StreamFlowNodeData)?.brokerPattern : undefined;
+    const pattern = isBrokerOutput ? (group.data as StreamFlowNodeData)?.brokerPattern : undefined;
     children.forEach((child, i) => {
       child.position = { x: CHILD_X, y: yStart + i * (CHILD_NODE_HEIGHT + CHILD_GAP_Y) };
-      if (isBroker) {
+      if (isBrokerOutput) {
         child.data = { ...child.data, childIndex: i, parentBrokerPattern: pattern };
       }
     });
-    const calcHeight = isBroker ? calcBrokerGroupHeight : calcCatchGroupHeight;
+    const calcHeight = isBrokerOutput ? calcBrokerGroupHeight : isBrokerInput ? calcBrokerInputGroupHeight : calcCatchGroupHeight;
     group.style = { ...group.style, width: GROUP_WIDTH, height: calcHeight(children.length) };
 
     // Fix internal edges: remove all, then re-add if sequential
     const childIds = new Set(children.map((c) => c.id));
-    // Remove existing internal edges for this group
     for (let i = flowEdges.length - 1; i >= 0; i--) {
       if ((flowEdges[i].data as any)?.internal && (childIds.has(flowEdges[i].source) || childIds.has(flowEdges[i].target))) {
         flowEdges.splice(i, 1);
       }
     }
-    // Re-add if catch (always sequential) or broker with sequential pattern
-    const shouldChain = !isBroker || isBrokerSequential(pattern);
+    // Re-add if catch (always sequential) or broker output with sequential pattern
+    // Broker input groups never have internal edges (all inputs merge in parallel)
+    const shouldChain = isBrokerInput ? false : isBrokerOutput ? isBrokerSequential(pattern) : true;
     if (shouldChain && children.length > 1) {
-      const edgeData = isBroker ? makeInternalEdgeData() : { internal: true };
+      const edgeData = { internal: true };
       for (let i = 0; i < children.length - 1; i++) {
         flowEdges.push({
           id: `e-internal-${children[i].id}-${children[i + 1].id}`,
@@ -318,12 +333,68 @@ function StreamBuilderContent({
 
     for (const nd of inputNodes) {
       const id = uuidv4();
-      flowNodes.push({
-        id,
-        type: "inputNode",
-        position: { x: xPos, y: NODE_Y },
-        data: { ...nd, nodeId: id },
-      });
+
+      if (nd.componentId === "broker") {
+        let childConfigs: any[] = [];
+        let groupConfigYaml = "";
+        if (nd.configYaml?.trim()) {
+          try {
+            const parsed = yaml.load(nd.configYaml) as any;
+            if (parsed && Array.isArray(parsed.inputs)) childConfigs = parsed.inputs;
+            const { inputs: _inputs, ...rest } = parsed || {};
+            if (Object.keys(rest).length > 0) {
+              groupConfigYaml = yaml.dump(rest, { lineWidth: -1, noRefs: true });
+            }
+          } catch {}
+        }
+
+        const childCount = childConfigs.length;
+        const groupHeight = calcBrokerInputGroupHeight(childCount);
+
+        flowNodes.push({
+          id,
+          type: "brokerInputGroupNode",
+          position: { x: xPos, y: NODE_Y - 25 },
+          style: { width: GROUP_WIDTH, height: groupHeight },
+          data: { ...nd, nodeId: id, isGroup: true, childCount, configYaml: groupConfigYaml },
+        });
+
+        childConfigs.forEach((inputObj, i) => {
+          const componentName = Object.keys(inputObj).find((k) => k !== "label") || Object.keys(inputObj)[0];
+          const config = inputObj[componentName];
+          const childLabel = inputObj.label as string | undefined;
+          const schema = allComponentSchemas.input.find(
+            (o) => o.component === componentName || o.id === componentName
+          );
+          const childId = uuidv4();
+          flowNodes.push({
+            id: childId,
+            type: "childInputNode",
+            position: {
+              x: CHILD_X,
+              y: BROKER_INPUT_CHILD_Y_START + i * (CHILD_NODE_HEIGHT + CHILD_GAP_Y),
+            },
+            parentId: id,
+            extent: "parent" as const,
+            data: {
+              label: childLabel || schema?.id || componentName,
+              type: "input",
+              componentId: schema?.id || componentName,
+              component: componentName,
+              configYaml: typeof config === "string" ? config : (config && Object.keys(config).length > 0 ? yaml.dump(config, { lineWidth: -1, noRefs: true }) : ""),
+              nodeId: childId,
+            },
+          });
+        });
+      } else {
+        flowNodes.push({
+          id,
+          type: "inputNode",
+          position: { x: xPos, y: NODE_Y },
+          data: { ...nd, nodeId: id },
+        });
+      }
+
       prevNodeId = id;
       xPos += NODE_SPACING_X;
     }
@@ -809,14 +880,63 @@ function StreamBuilderContent({
     [nodes, setNodes, setEdges, scheduleAutoFit]
   );
 
+  const handleAddChildInput = useCallback(
+    (groupId: string) => {
+      const groupNode = nodes.find((n) => n.id === groupId);
+      if (!groupNode) return;
+
+      const existingChildren = nodes.filter((n) => n.parentId === groupId);
+      const childCount = existingChildren.length;
+      const newId = uuidv4();
+      const label = `broker_input_${childCount + 1}`;
+
+      const newChild: Node = {
+        id: newId,
+        type: "childInputNode",
+        position: {
+          x: CHILD_X,
+          y: BROKER_INPUT_CHILD_Y_START + childCount * (CHILD_NODE_HEIGHT + CHILD_GAP_Y),
+        },
+        parentId: groupId,
+        extent: "parent" as const,
+        data: {
+          label,
+          type: "input",
+          componentId: "",
+          component: "",
+          configYaml: "",
+          nodeId: newId,
+        } satisfies Partial<StreamFlowNodeData>,
+      };
+
+      const newHeight = calcBrokerInputGroupHeight(childCount + 1);
+
+      setNodes((nds) => [
+        ...nds.map((n) =>
+          n.id === groupId
+            ? { ...n, style: { ...n.style, width: GROUP_WIDTH, height: newHeight }, data: { ...n.data, childCount: childCount + 1 } }
+            : n
+        ),
+        newChild,
+      ]);
+
+      setSelectedNodeId(newId);
+      setEditingNodeId(newId);
+      scheduleAutoFit();
+    },
+    [nodes, setNodes, scheduleAutoFit]
+  );
+
   const handleChildDragStop = useCallback(
     (_event: React.MouseEvent, node: Node) => {
       if (!node.parentId) return;
       const groupId = node.parentId;
       const groupNode = nodes.find((n) => n.id === groupId);
       if (!groupNode) return;
-      const isBroker = (groupNode.data as StreamFlowNodeData).componentId === "broker";
-      const childYStart = isBroker ? BROKER_CHILD_Y_START : CATCH_CHILD_Y_START;
+      const isBrokerOutput = groupNode.type === "brokerGroupNode";
+      const isBrokerInput = groupNode.type === "brokerInputGroupNode";
+      const isBroker = isBrokerOutput || isBrokerInput;
+      const childYStart = isBrokerOutput ? BROKER_CHILD_Y_START : isBrokerInput ? BROKER_INPUT_CHILD_Y_START : CATCH_CHILD_Y_START;
 
       const siblings = nodes
         .filter((n) => n.parentId === groupId)
@@ -833,7 +953,7 @@ function StreamBuilderContent({
             return {
               ...n,
               position: { x: CHILD_X, y: childYStart + idx * (CHILD_NODE_HEIGHT + CHILD_GAP_Y) },
-              ...(isBroker ? { data: { ...n.data, childIndex: idx } } : {}),
+              ...(isBrokerOutput ? { data: { ...n.data, childIndex: idx } } : {}),
             };
           }
           return n;
@@ -842,9 +962,9 @@ function StreamBuilderContent({
 
       if (siblings.length <= 1) return;
 
-      // For broker groups with non-sequential patterns, skip internal edges
-      const brokerPattern = isBroker ? (groupNode.data as StreamFlowNodeData).brokerPattern : undefined;
-      const shouldChain = !isBroker || isBrokerSequential(brokerPattern);
+      // Broker input: never chain. Broker output: only if sequential. Catch: always chain.
+      const brokerPattern = isBrokerOutput ? (groupNode.data as StreamFlowNodeData).brokerPattern : undefined;
+      const shouldChain = isBrokerInput ? false : isBrokerOutput ? isBrokerSequential(brokerPattern) : true;
 
       // Rebuild internal edges in new order
       const childIds = new Set(siblings.map((s) => s.id));
@@ -887,9 +1007,10 @@ function StreamBuilderContent({
         onAddBefore: handleAddBefore,
         onAddChildProcessor: handleAddChildProcessor,
         onAddChildOutput: handleAddChildOutput,
+        onAddChildInput: handleAddChildInput,
       },
     }));
-  }, [nodes, handleAddAndConnect, handleAddBefore, handleAddChildProcessor, handleAddChildOutput]);
+  }, [nodes, handleAddAndConnect, handleAddBefore, handleAddChildProcessor, handleAddChildOutput, handleAddChildInput]);
 
   const edgesWithCallbacks = useMemo(() => {
     return edges.map((e) => ({
@@ -1076,6 +1197,13 @@ function StreamBuilderContent({
     const parentNode = nodes.find((n) => n.id === nodes.find((cn) => cn.id === editingNode.id)?.parentId);
     const isBrokerChild = parentNode && (parentNode.data as StreamFlowNodeData).componentId === "broker";
     if (isBrokerChild) {
+      const parentType = (parentNode.data as StreamFlowNodeData).type;
+      if (parentType === "input") {
+        return {
+          ...allComponentSchemas,
+          input: allComponentSchemas.input.filter((o) => o.id !== "broker"),
+        };
+      }
       return {
         ...allComponentSchemas,
         output: allComponentSchemas.output.filter((o) => o.id !== "broker"),
@@ -1173,6 +1301,39 @@ function StreamBuilderContent({
           );
         }
 
+        // Transform to broker input group when input component changes to "broker"
+        if (data.componentId === "broker" && prevComponentId !== "broker" && data.type === "input") {
+          updated = updated.map((n) =>
+            n.id === nodeId
+              ? {
+                  ...n,
+                  type: "brokerInputGroupNode",
+                  style: { width: GROUP_WIDTH, height: BROKER_INPUT_GROUP_MIN_HEIGHT },
+                  position: { ...n.position, y: n.position.y - 25 },
+                  data: { ...n.data, isGroup: true, childCount: 0, configYaml: "" },
+                }
+              : n
+          );
+        }
+
+        // Transform back from broker input group when component changes away from "broker"
+        if (prevComponentId === "broker" && data.componentId !== "broker" && data.type === "input") {
+          const childIds = updated.filter((n) => n.parentId === nodeId).map((n) => n.id);
+          updated = updated.filter((n) => n.parentId !== nodeId);
+          setEdges((eds) => eds.filter((e) => !childIds.includes(e.source) && !childIds.includes(e.target)));
+          updated = updated.map((n) =>
+            n.id === nodeId
+              ? {
+                  ...n,
+                  type: "inputNode",
+                  style: undefined,
+                  position: { ...n.position, y: n.position.y + 25 },
+                  data: { ...n.data, isGroup: false, childCount: undefined },
+                }
+              : n
+          );
+        }
+
         if (data.type === "input" && data.componentId === "mcp_tool") {
           const outputNode = updated.find((n) => (n.data as StreamFlowNodeData).type === "output");
           if (outputNode) {
@@ -1222,13 +1383,14 @@ function StreamBuilderContent({
         // Deleting a child inside a group
         const groupId = nodeToDelete.parentId;
         const groupNode = nodes.find((n) => n.id === groupId);
-        const isBroker = groupNode && (groupNode.data as StreamFlowNodeData).componentId === "broker";
-        const childYStart = isBroker ? BROKER_CHILD_Y_START : CATCH_CHILD_Y_START;
-        const calcHeight = isBroker ? calcBrokerGroupHeight : calcCatchGroupHeight;
+        const isBrokerOutput = groupNode?.type === "brokerGroupNode";
+        const isBrokerInput = groupNode?.type === "brokerInputGroupNode";
+        const childYStart = isBrokerOutput ? BROKER_CHILD_Y_START : isBrokerInput ? BROKER_INPUT_CHILD_Y_START : CATCH_CHILD_Y_START;
+        const calcHeight = isBrokerOutput ? calcBrokerGroupHeight : isBrokerInput ? calcBrokerInputGroupHeight : calcCatchGroupHeight;
 
         // Remove old internal edges touching this node, rebuild chain for remaining siblings
-        const brokerPattern = isBroker ? (groupNode?.data as StreamFlowNodeData)?.brokerPattern : undefined;
-        const shouldChain = !isBroker || isBrokerSequential(brokerPattern);
+        const brokerPattern = isBrokerOutput ? (groupNode?.data as StreamFlowNodeData)?.brokerPattern : undefined;
+        const shouldChain = isBrokerInput ? false : isBrokerOutput ? isBrokerSequential(brokerPattern) : true;
         setEdges((eds) => {
           const cleaned = eds.filter((e) => e.source !== nodeId && e.target !== nodeId);
           const remainingSiblings = nodes
@@ -1239,7 +1401,7 @@ function StreamBuilderContent({
             (e) => !((e.data as any)?.internal && (sibIds.has(e.source) || sibIds.has(e.target)))
           );
           if (!shouldChain) return kept;
-          const edgeData = isBroker ? makeInternalEdgeData() : { internal: true };
+          const edgeData = { internal: true };
           const newEdges: Edge[] = [];
           for (let i = 0; i < remainingSiblings.length - 1; i++) {
             newEdges.push({
@@ -1469,6 +1631,48 @@ function StreamBuilderContent({
     [nodes, allComponentSchemas]
   );
 
+  const serializeBrokerInputGroup = useCallback(
+    (groupNode: Node): StreamNodeData => {
+      const d = groupNode.data as StreamFlowNodeData;
+      const children = nodes.filter((cn) => cn.parentId === groupNode.id).sort((a, b) => a.position.y - b.position.y);
+
+      const inputsList = children.map((child) => {
+        const cd = child.data as StreamFlowNodeData;
+        const comp = allComponentSchemas.input.find((c) => c.id === cd.componentId);
+        const componentName = comp?.component || cd.componentId || "";
+        const entry: any = {};
+        if (comp?.schema?.flat) {
+          entry[componentName] = cd.configYaml?.trim() || "";
+        } else {
+          let config: any = {};
+          if (cd.configYaml?.trim()) { try { config = yaml.load(cd.configYaml) || {}; } catch {} }
+          entry[componentName] = config;
+        }
+        if (cd.label) {
+          entry.label = cd.label;
+        }
+        return entry;
+      });
+
+      const brokerConfig: any = {};
+
+      if (d.configYaml?.trim()) {
+        try {
+          const extra = yaml.load(d.configYaml) as any;
+          if (extra && typeof extra === "object") {
+            Object.assign(brokerConfig, extra);
+          }
+        } catch {}
+      }
+
+      brokerConfig.inputs = inputsList;
+
+      const brokerYaml = yaml.dump(brokerConfig, { lineWidth: -1, noRefs: true, quotingType: '"', forceQuotes: false });
+      return { label: d.label, type: "input", componentId: "broker", component: "broker", configYaml: brokerYaml };
+    },
+    [nodes, allComponentSchemas]
+  );
+
   const handleValidate = useCallback(async () => {
     if (!onValidate) return;
 
@@ -1500,7 +1704,8 @@ function StreamBuilderContent({
         .map((n) => {
           const d = n.data as StreamFlowNodeData;
           if (d.isGroup && d.componentId === "catch") return serializeCatchGroup(n);
-          if (d.isGroup && d.componentId === "broker") return serializeBrokerGroup(n);
+          if (d.isGroup && d.componentId === "broker" && d.type === "output") return serializeBrokerGroup(n);
+          if (d.isGroup && d.componentId === "broker" && d.type === "input") return serializeBrokerInputGroup(n);
           return { label: d.label, type: d.type, componentId: d.componentId, component: d.component, configYaml: d.configYaml } as StreamNodeData;
         });
       const result = await onValidate({ name, status, bufferId, nodes: nodeDataList });
@@ -1514,7 +1719,7 @@ function StreamBuilderContent({
     } finally {
       setIsValidating(false);
     }
-  }, [onValidate, name, status, bufferId, nodes, addToast, serializeCatchGroup, serializeBrokerGroup, findDisconnectedNodes, setNodes]);
+  }, [onValidate, name, status, bufferId, nodes, addToast, serializeCatchGroup, serializeBrokerGroup, serializeBrokerInputGroup, findDisconnectedNodes, setNodes]);
 
   const handleTrySubmit = useCallback(async () => {
     if (!onTry) return;
@@ -1588,7 +1793,7 @@ function StreamBuilderContent({
       if (n.parentId) continue;
       const d = n.data as StreamFlowNodeData;
       if (d.isGroup) {
-        const groupType = d.componentId === "broker" ? "Broker Output" : "Catch Processor";
+        const groupType = d.componentId === "broker" ? (d.type === "input" ? "Broker Input" : "Broker Output") : "Catch Processor";
         const children = nodes.filter((cn) => cn.parentId === n.id);
         for (const child of children) {
           const cd = child.data as StreamFlowNodeData;
@@ -1626,7 +1831,11 @@ function StreamBuilderContent({
 
     if (inputNode) {
       const inputD = inputNode.data as StreamFlowNodeData;
-      orderedNodes.push({ label: inputD.label, type: inputD.type, componentId: inputD.componentId, component: inputD.component, configYaml: inputD.configYaml });
+      if (inputD.isGroup && inputD.componentId === "broker") {
+        orderedNodes.push(serializeBrokerInputGroup(inputNode));
+      } else {
+        orderedNodes.push({ label: inputD.label, type: inputD.type, componentId: inputD.componentId, component: inputD.component, configYaml: inputD.configYaml });
+      }
     }
 
     if (inputNode && outputNode) {
@@ -1661,7 +1870,7 @@ function StreamBuilderContent({
     }
 
     onSave({ name, status, bufferId, nodes: orderedNodes, flowState, isReady });
-  }, [name, status, bufferId, nodes, edges, onSave, addToast, findDisconnectedNodes, validateRequiredFields, setNodes, serializeCatchGroup, serializeBrokerGroup]);
+  }, [name, status, bufferId, nodes, edges, onSave, addToast, findDisconnectedNodes, validateRequiredFields, setNodes, serializeCatchGroup, serializeBrokerGroup, serializeBrokerInputGroup]);
 
   const hasInput = nodes.some((n) => (n.data as StreamFlowNodeData).type === "input");
   const hasOutput = nodes.some((n) => (n.data as StreamFlowNodeData).type === "output");
@@ -1783,7 +1992,7 @@ function StreamBuilderContent({
             <DialogTitle>
               {editingNode?.isGroup
                 ? editingNode.data.componentId === "broker"
-                  ? "Broker Output Configuration"
+                  ? editingNode.data.type === "input" ? "Broker Input Configuration" : "Broker Output Configuration"
                   : "Catch Group Configuration"
                 : `Configure ${editingNode?.data.type ? editingNode.data.type.charAt(0).toUpperCase() + editingNode.data.type.slice(1) : ""} Node`}
             </DialogTitle>
@@ -1808,7 +2017,7 @@ function StreamBuilderContent({
                     placeholder={editingNode.data.componentId === "broker" ? "broker label" : "catch label"}
                   />
                 </div>
-                {editingNode.data.componentId === "broker" && (() => {
+                {editingNode.data.componentId === "broker" && editingNode.data.type === "output" && (() => {
                   const currentPattern = (nodes.find((n) => n.id === editingNode.id)?.data as StreamFlowNodeData)?.brokerPattern || "fan_out";
                   const patternDescriptions: Record<string, string> = {
                     fan_out: "Sends each message to all outputs in parallel. If an output applies back-pressure, it blocks other outputs from receiving new messages until it catches up.",
@@ -1963,10 +2172,82 @@ function StreamBuilderContent({
                     </>
                   );
                 })()}
+                {editingNode.data.componentId === "broker" && editingNode.data.type === "input" && (() => {
+                  let currentConfig: any = {};
+                  const configYaml = (nodes.find((n) => n.id === editingNode.id)?.data as StreamFlowNodeData)?.configYaml;
+                  if (configYaml?.trim()) { try { currentConfig = yaml.load(configYaml) || {}; } catch {} }
+
+                  const updateInputBrokerConfig = (field: string, value: any) => {
+                    setNodes((nds) => nds.map((n) => {
+                      if (n.id !== editingNode.id) return n;
+                      const d = n.data as StreamFlowNodeData;
+                      let config: any = {};
+                      if (d.configYaml?.trim()) { try { config = yaml.load(d.configYaml) || {}; } catch {} }
+                      if (field.startsWith("batching.")) {
+                        const batchField = field.split(".")[1];
+                        if (!config.batching) config.batching = {};
+                        if (value === "" || value === 0) { delete config.batching[batchField]; }
+                        else { config.batching[batchField] = value; }
+                        if (Object.keys(config.batching).length === 0) delete config.batching;
+                      } else {
+                        if (value === "" || value === 0 || value === 1) { delete config[field]; }
+                        else { config[field] = value; }
+                      }
+                      const newYaml = Object.keys(config).length > 0 ? yaml.dump(config, { lineWidth: -1, noRefs: true }) : "";
+                      return { ...n, data: { ...n.data, configYaml: newYaml } };
+                    }));
+                  };
+
+                  const batchingConfig = currentConfig.batching || {};
+
+                  return (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="input-broker-copies" className="text-xs">Copies</Label>
+                        <Input
+                          id="input-broker-copies"
+                          type="number"
+                          min={1}
+                          placeholder="1"
+                          value={currentConfig.copies || ""}
+                          onChange={(e) => updateInputBrokerConfig("copies", e.target.value ? parseInt(e.target.value) : 1)}
+                        />
+                        <p className="text-[10px] text-muted-foreground">Number of copies of each configured input to spawn.</p>
+                      </div>
+                      <div className="space-y-2 border rounded-md p-3">
+                        <span className="text-xs font-medium">Batching</span>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <Label htmlFor="ib-batch-count" className="text-xs">Count</Label>
+                            <Input id="ib-batch-count" type="number" min={0} placeholder="0" value={batchingConfig.count || ""} onChange={(e) => updateInputBrokerConfig("batching.count", e.target.value ? parseInt(e.target.value) : 0)} />
+                          </div>
+                          <div className="space-y-1">
+                            <Label htmlFor="ib-batch-byte-size" className="text-xs">Byte Size</Label>
+                            <Input id="ib-batch-byte-size" type="number" min={0} placeholder="0" value={batchingConfig.byte_size || ""} onChange={(e) => updateInputBrokerConfig("batching.byte_size", e.target.value ? parseInt(e.target.value) : 0)} />
+                          </div>
+                          <div className="space-y-1">
+                            <Label htmlFor="ib-batch-period" className="text-xs">Period</Label>
+                            <Input id="ib-batch-period" placeholder="e.g. 1s" value={batchingConfig.period || ""} onChange={(e) => updateInputBrokerConfig("batching.period", e.target.value)} />
+                          </div>
+                          <div className="space-y-1">
+                            <Label htmlFor="ib-batch-jitter" className="text-xs">Jitter</Label>
+                            <Input id="ib-batch-jitter" type="number" min={0} step={0.1} placeholder="0" value={batchingConfig.jitter || ""} onChange={(e) => updateInputBrokerConfig("batching.jitter", e.target.value ? parseFloat(e.target.value) : 0)} />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <Label htmlFor="ib-batch-check" className="text-xs">Check</Label>
+                          <Input id="ib-batch-check" placeholder="Bloblang query" value={batchingConfig.check || ""} onChange={(e) => updateInputBrokerConfig("batching.check", e.target.value)} />
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
                 <p className="text-sm text-muted-foreground">
-                  {editingNode.data.componentId === "broker"
-                    ? <>Use the <strong>+ Add</strong> button inside the group on the canvas to add child outputs. Click on a child output to configure it.</>
-                    : <>Use the <strong>+ Add</strong> button inside the group on the canvas to add child processors. Click on a child processor to configure it.</>
+                  {editingNode.data.componentId === "broker" && editingNode.data.type === "input"
+                    ? <>Use the <strong>+ Add</strong> button inside the group on the canvas to add child inputs. Click on a child input to configure it.</>
+                    : editingNode.data.componentId === "broker"
+                      ? <>Use the <strong>+ Add</strong> button inside the group on the canvas to add child outputs. Click on a child output to configure it.</>
+                      : <>Use the <strong>+ Add</strong> button inside the group on the canvas to add child processors. Click on a child processor to configure it.</>
                   }
                 </p>
                 <Button
@@ -1974,7 +2255,7 @@ function StreamBuilderContent({
                   className="w-full"
                   onClick={() => { handleDeleteNode(editingNode.id); setEditingNodeId(null); }}
                 >
-                  {editingNode.data.componentId === "broker" ? "Delete Broker Group" : "Delete Catch Group"}
+                  {editingNode.data.componentId === "broker" ? (editingNode.data.type === "input" ? "Delete Broker Input Group" : "Delete Broker Output Group") : "Delete Catch Group"}
                 </Button>
               </div>
             ) : (
