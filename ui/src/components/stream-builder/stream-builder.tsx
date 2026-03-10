@@ -405,6 +405,28 @@ function toFlowNodeType(type: "input" | "processor" | "output"): string {
   return "outputNode";
 }
 
+function resolveFlowNodeType(
+  baseType: "input" | "processor" | "output",
+  componentId: string
+): { nodeType: string; style?: Record<string, unknown>; extraData: Record<string, unknown>; yOffset: number } {
+  if (componentId === "catch" && baseType === "processor") {
+    return { nodeType: "catchGroupNode", style: { width: GROUP_WIDTH, height: CATCH_GROUP_MIN_HEIGHT }, extraData: { isGroup: true, childCount: 0 }, yOffset: -25 };
+  }
+  if (componentId === "switch" && baseType === "processor") {
+    return { nodeType: "switchProcessorGroupNode", extraData: { isGroup: false, childCount: 0 }, yOffset: 0 };
+  }
+  if (componentId === "switch" && baseType === "output") {
+    return { nodeType: "switchGroupNode", style: { width: GROUP_WIDTH, height: SWITCH_GROUP_MIN_HEIGHT }, extraData: { isGroup: true, childCount: 0 }, yOffset: -25 };
+  }
+  if (componentId === "broker" && baseType === "output") {
+    return { nodeType: "brokerGroupNode", style: { width: GROUP_WIDTH, height: BROKER_GROUP_MIN_HEIGHT }, extraData: { isGroup: true, childCount: 0, brokerPattern: "fan_out" }, yOffset: -25 };
+  }
+  if (componentId === "broker" && baseType === "input") {
+    return { nodeType: "brokerInputGroupNode", style: { width: GROUP_WIDTH, height: BROKER_INPUT_GROUP_MIN_HEIGHT }, extraData: { isGroup: true, childCount: 0 }, yOffset: -25 };
+  }
+  return { nodeType: toFlowNodeType(baseType), extraData: {}, yOffset: 0 };
+}
+
 function StreamBuilderContent({
   allComponentSchemas,
   initialData,
@@ -423,6 +445,33 @@ function StreamBuilderContent({
   const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; nodeId: string } | null>(null);
   const [deleteConfirmNodeId, setDeleteConfirmNodeId] = useState<string | null>(null);
+  const [pendingNode, setPendingNode] = useState<{
+    kind:
+      | "addAndConnect"    // + button on right side of a node
+      | "addBefore"        // + button on left side of a node
+      | "childProcessor"   // + in catch group
+      | "childOutput"      // + in broker group
+      | "childInput"       // + in broker input group
+      | "childCase"        // + in switch group
+      | "topLevel";        // toolbar buttons
+    // Context for each kind
+    sourceNodeId?: string;       // addAndConnect
+    targetNodeId?: string;       // addBefore
+    groupId?: string;            // child* and childCase
+    topLevelType?: "input" | "processor" | "output";  // topLevel
+    isProcessorSwitch?: boolean; // childCase
+    // Form fields
+    label: string;
+    componentId: string;
+    component: string;
+    // Case-specific fields
+    caseCheck?: string;
+    caseFallthrough?: boolean;
+    caseContinue?: boolean;
+    defaultExists?: boolean;
+    // Available components for the picker
+    availableComponents: Array<{ id: string; name: string; component: string }>;
+  } | null>(null);
   const [isValidating, setIsValidating] = useState(false);
   const [tryDialogOpen, setTryDialogOpen] = useState(false);
   const [tryMessages, setTryMessages] = useState<string[]>([""]);
@@ -958,23 +1007,144 @@ function StreamBuilderContent({
     setTimeout(() => fitView({ padding: 0.2, duration: 300 }), 50);
   }, [fitView]);
 
+  // --- All add handlers now open the pending modal instead of adding immediately ---
+
   const handleAddAndConnect = useCallback(
     (sourceNodeId: string, _sourceType: string) => {
       const sourceNode = nodes.find((n) => n.id === sourceNodeId);
       if (!sourceNode) return;
+      // Determine available components: switch case chain processors get filtered list
+      const isCaseChain = sourceNode.type === "switchCaseStartNode" || !!(sourceNode.data as any).switchCaseId;
+      const available = isCaseChain
+        ? allComponentSchemas.processor.filter((p) => p.id !== "switch" && p.id !== "catch")
+        : allComponentSchemas.processor;
+      const count = nodes.filter((n) => (n.data as StreamFlowNodeData).type === "processor").length + 1;
+      setPendingNode({
+        kind: "addAndConnect",
+        sourceNodeId,
+        label: `new_processor_${count}`,
+        componentId: "",
+        component: "",
+        availableComponents: available,
+      });
+    },
+    [nodes, allComponentSchemas]
+  );
+
+  const handleAddBefore = useCallback(
+    (targetNodeId: string) => {
+      const count = nodes.filter((n) => (n.data as StreamFlowNodeData).type === "processor").length + 1;
+      setPendingNode({
+        kind: "addBefore",
+        targetNodeId,
+        label: `new_processor_${count}`,
+        componentId: "",
+        component: "",
+        availableComponents: allComponentSchemas.processor,
+      });
+    },
+    [nodes, allComponentSchemas]
+  );
+
+  const handleAddChildProcessor = useCallback(
+    (groupId: string) => {
+      const existingChildren = nodes.filter((n) => n.parentId === groupId);
+      const available = allComponentSchemas.processor.filter((p) => p.id !== "catch");
+      setPendingNode({
+        kind: "childProcessor",
+        groupId,
+        label: `catch_proc_${existingChildren.length + 1}`,
+        componentId: "",
+        component: "",
+        availableComponents: available,
+      });
+    },
+    [nodes, allComponentSchemas]
+  );
+
+  const handleAddChildOutput = useCallback(
+    (groupId: string) => {
+      const existingChildren = nodes.filter((n) => n.parentId === groupId);
+      const available = allComponentSchemas.output.filter((o) => o.id !== "broker" && o.id !== "switch");
+      setPendingNode({
+        kind: "childOutput",
+        groupId,
+        label: `broker_output_${existingChildren.length + 1}`,
+        componentId: "",
+        component: "",
+        availableComponents: available,
+      });
+    },
+    [nodes, allComponentSchemas]
+  );
+
+  const handleAddChildInput = useCallback(
+    (groupId: string) => {
+      const existingChildren = nodes.filter((n) => n.parentId === groupId);
+      const available = allComponentSchemas.input.filter((i) => i.id !== "broker");
+      setPendingNode({
+        kind: "childInput",
+        groupId,
+        label: `broker_input_${existingChildren.length + 1}`,
+        componentId: "",
+        component: "",
+        availableComponents: available,
+      });
+    },
+    [nodes, allComponentSchemas]
+  );
+
+  const handleAddChildCase = useCallback(
+    (groupId: string) => {
+      const groupNode = nodes.find((n) => n.id === groupId);
+      if (!groupNode) return;
+
+      const isProcessorSwitch = groupNode.type === "switchProcessorGroupNode";
+      let defaultExists: boolean;
+      if (isProcessorSwitch) {
+        const existingCaseStarts = nodes.filter(
+          (n) => n.type === "switchCaseStartNode" && (n.data as any).switchId === groupId
+        );
+        defaultExists = existingCaseStarts.some((n) => !(n.data as any).caseCheck);
+      } else {
+        const existingChildren = nodes.filter((n) => n.parentId === groupId);
+        defaultExists = existingChildren.some((n) => !(n.data as any).caseCheck);
+      }
+
+      setPendingNode({
+        kind: "childCase",
+        groupId,
+        isProcessorSwitch,
+        label: "",
+        componentId: "",
+        component: "",
+        caseCheck: "",
+        caseFallthrough: false,
+        caseContinue: false,
+        defaultExists,
+        availableComponents: [],
+      });
+    },
+    [nodes]
+  );
+
+  // --- Unified confirm handler that dispatches to actual creation logic ---
+  const handleConfirmAddNode = useCallback(() => {
+    if (!pendingNode) return;
+    const { kind, label, componentId, component } = pendingNode;
+
+    if (kind === "addAndConnect") {
+      const sourceNodeId = pendingNode.sourceNodeId!;
+      const sourceNode = nodes.find((n) => n.id === sourceNodeId);
+      if (!sourceNode) { setPendingNode(null); return; }
 
       const newId = uuidv4();
-      const label = `new_processor_${nodes.filter((n) => (n.data as StreamFlowNodeData).type === "processor").length + 1}`;
-
-      // Determine if this is a switch case chain
       const isCaseStart = sourceNode.type === "switchCaseStartNode";
       const sourceCaseId = isCaseStart
         ? sourceNode.id
         : (sourceNode.data as any).switchCaseId as string | undefined;
 
-      // Special handling: adding after a switch node (convergence)
       if (sourceNode.type === "switchProcessorGroupNode") {
-        // Find all case chain end nodes
         const caseStarts = nodes.filter(
           (n) => n.type === "switchCaseStartNode" && (n.data as any).switchId === sourceNodeId
         );
@@ -992,15 +1162,16 @@ function StreamBuilderContent({
         }
         if (chainEndIds.length === 0) chainEndIds.push(sourceNodeId);
 
-        // Find the max X of all chain end nodes
         const maxEndX = Math.max(...chainEndIds.map((id) => nodes.find((n) => n.id === id)?.position.x || 0), sourceNode.position.x);
         const insertX = maxEndX + NODE_SPACING_X;
 
+        const resolved = resolveFlowNodeType("processor", componentId);
         const newNode: Node = {
           id: newId,
-          type: "processorNode",
-          position: { x: insertX, y: sourceNode.position.y },
-          data: { label, type: "processor", componentId: "", component: "", configYaml: "", nodeId: newId },
+          type: resolved.nodeType,
+          position: { x: insertX, y: sourceNode.position.y + resolved.yOffset },
+          ...(resolved.style ? { style: resolved.style } : {}),
+          data: { label, type: "processor", componentId, component, configYaml: "", nodeId: newId, ...resolved.extraData },
         };
 
         setNodes((nds) => [
@@ -1014,14 +1185,12 @@ function StreamBuilderContent({
         ]);
 
         setEdges((eds) => {
-          // Find existing convergence target (what case chain ends currently connect to)
           const existingTargetId = chainEndIds.reduce<string | undefined>((found, endId) => {
             if (found) return found;
             const outEdge = eds.find((e) => e.source === endId && !(e.data as any)?.switchCase);
             return outEdge?.target;
           }, undefined);
 
-          // Remove old convergence edges
           let filtered = eds.filter((e) => {
             if (chainEndIds.includes(e.source) && !(e.data as any)?.switchCase && !(e.data as any)?.internal) {
               const target = nodes.find((n) => n.id === e.target);
@@ -1030,7 +1199,6 @@ function StreamBuilderContent({
             return true;
           });
 
-          // Add edges from chain ends to new node
           const newEdges: Edge[] = chainEndIds.map((endId) => ({
             id: `e-${endId}-${newId}`,
             source: endId,
@@ -1038,9 +1206,7 @@ function StreamBuilderContent({
             type: "pipeline",
           }));
 
-          // If there was an existing target, connect new node to it
           if (existingTargetId) {
-            // Remove old convergence edges to the existing target
             filtered = filtered.filter((e) => !(chainEndIds.includes(e.source) && e.target === existingTargetId));
             newEdges.push({ id: `e-${newId}-${existingTargetId}`, source: newId, target: existingTargetId, type: "pipeline" });
           }
@@ -1050,23 +1216,21 @@ function StreamBuilderContent({
 
         setSelectedNodeId(newId);
         setEditingNodeId(newId);
+        setPendingNode(null);
         scheduleAutoFit();
         return;
       }
 
       const insertX = sourceNode.position.x + NODE_SPACING_X;
-
+      const resolved = resolveFlowNodeType("processor", componentId);
       const newNode: Node = {
         id: newId,
-        type: "processorNode",
-        position: { x: insertX, y: sourceNode.position.y },
+        type: resolved.nodeType,
+        position: { x: insertX, y: sourceNode.position.y + resolved.yOffset },
+        ...(resolved.style ? { style: resolved.style } : {}),
         data: {
-          label,
-          type: "processor",
-          componentId: "",
-          component: "",
-          configYaml: "",
-          nodeId: newId,
+          label, type: "processor", componentId, component, configYaml: "", nodeId: newId,
+          ...resolved.extraData,
           ...(sourceCaseId ? { switchCaseId: sourceCaseId } : {}),
         } satisfies Partial<StreamFlowNodeData>,
       };
@@ -1081,57 +1245,34 @@ function StreamBuilderContent({
       ]);
       setEdges((eds) => {
         const existingOutgoing = eds.find((e) => e.source === sourceNodeId && !(e.data as any)?.switchCase);
-        const filtered = existingOutgoing
-          ? eds.filter((e) => e.id !== existingOutgoing.id)
-          : eds;
-
+        const filtered = existingOutgoing ? eds.filter((e) => e.id !== existingOutgoing.id) : eds;
         const newEdges = [
           ...filtered,
           { id: `e-${sourceNodeId}-${newId}`, source: sourceNodeId, target: newId, type: "pipeline" } as Edge,
         ];
-
         if (existingOutgoing) {
-          newEdges.push({
-            id: `e-${newId}-${existingOutgoing.target}`,
-            source: newId,
-            target: existingOutgoing.target,
-            type: "pipeline",
-          } as Edge);
+          newEdges.push({ id: `e-${newId}-${existingOutgoing.target}`, source: newId, target: existingOutgoing.target, type: "pipeline" } as Edge);
         }
-
         return newEdges;
       });
+
       setSelectedNodeId(newId);
       setEditingNodeId(newId);
-      scheduleAutoFit();
-    },
-    [nodes, edges, setNodes, setEdges, scheduleAutoFit]
-  );
-
-  const handleAddBefore = useCallback(
-    (targetNodeId: string) => {
+    } else if (kind === "addBefore") {
+      const targetNodeId = pendingNode.targetNodeId!;
       const targetNode = nodes.find((n) => n.id === targetNodeId);
-      if (!targetNode) return;
+      if (!targetNode) { setPendingNode(null); return; }
 
       const newId = uuidv4();
       const insertX = targetNode.position.x;
-      const label = `new_processor_${nodes.filter((n) => (n.data as StreamFlowNodeData).type === "processor").length + 1}`;
-
+      const resolved = resolveFlowNodeType("processor", componentId);
       const newNode: Node = {
-        id: newId,
-        type: "processorNode",
-        position: { x: insertX, y: targetNode.position.y },
-        data: {
-          label,
-          type: "processor",
-          componentId: "",
-          component: "",
-          configYaml: "",
-          nodeId: newId,
-        } satisfies Partial<StreamFlowNodeData>,
+        id: newId, type: resolved.nodeType,
+        position: { x: insertX, y: targetNode.position.y + resolved.yOffset },
+        ...(resolved.style ? { style: resolved.style } : {}),
+        data: { label, type: "processor", componentId, component, configYaml: "", nodeId: newId, ...resolved.extraData } satisfies Partial<StreamFlowNodeData>,
       };
 
-      // Shift target and all top-level nodes at or right of insertX further right
       setNodes((nds) => [
         ...nds.map((n) =>
           !n.parentId && n.position.x >= insertX
@@ -1143,129 +1284,77 @@ function StreamBuilderContent({
       setEdges((eds) => {
         const incomingEdges = eds.filter((e) => e.target === targetNodeId);
         const filtered = eds.filter((e) => e.target !== targetNodeId);
-
         const newEdges = [
           ...filtered,
           { id: `e-${newId}-${targetNodeId}`, source: newId, target: targetNodeId, type: "pipeline" } as Edge,
         ];
-
         for (const incoming of incomingEdges) {
-          newEdges.push({
-            id: `e-${incoming.source}-${newId}`,
-            source: incoming.source,
-            target: newId,
-            type: "pipeline",
-          } as Edge);
+          newEdges.push({ id: `e-${incoming.source}-${newId}`, source: incoming.source, target: newId, type: "pipeline" } as Edge);
         }
-
         return newEdges;
       });
+
       setSelectedNodeId(newId);
       setEditingNodeId(newId);
-      scheduleAutoFit();
-    },
-    [nodes, setNodes, setEdges, scheduleAutoFit]
-  );
-
-  const handleAddChildProcessor = useCallback(
-    (groupId: string) => {
+    } else if (kind === "childProcessor") {
+      const groupId = pendingNode.groupId!;
       const groupNode = nodes.find((n) => n.id === groupId);
-      if (!groupNode) return;
+      if (!groupNode) { setPendingNode(null); return; }
 
       const existingChildren = nodes.filter((n) => n.parentId === groupId);
       const childCount = existingChildren.length;
       const newId = uuidv4();
-      const label = `catch_proc_${childCount + 1}`;
 
       const newChild: Node = {
-        id: newId,
-        type: "childProcessorNode",
-        position: {
-          x: CHILD_X,
-          y: CATCH_CHILD_Y_START + childCount * (CHILD_NODE_HEIGHT + CHILD_GAP_Y),
-        },
-        parentId: groupId,
-        extent: "parent" as const,
-        data: {
-          label,
-          type: "processor",
-          componentId: "",
-          component: "",
-          configYaml: "",
-          nodeId: newId,
-        } satisfies Partial<StreamFlowNodeData>,
+        id: newId, type: "childProcessorNode",
+        position: { x: CHILD_X, y: CATCH_CHILD_Y_START + childCount * (CHILD_NODE_HEIGHT + CHILD_GAP_Y) },
+        parentId: groupId, extent: "parent" as const,
+        data: { label, type: "processor", componentId, component, configYaml: "", nodeId: newId } satisfies Partial<StreamFlowNodeData>,
       };
 
       const newHeight = calcCatchGroupHeight(childCount + 1);
-
       setNodes((nds) => [
-        ...nds.map((n) =>
-          n.id === groupId
-            ? { ...n, style: { ...n.style, width: GROUP_WIDTH, height: newHeight }, data: { ...n.data, childCount: childCount + 1 } }
-            : n
+        ...nds.map((n) => n.id === groupId
+          ? { ...n, style: { ...n.style, width: GROUP_WIDTH, height: newHeight }, data: { ...n.data, childCount: childCount + 1 } }
+          : n
         ),
         newChild,
       ]);
 
       if (childCount > 0) {
         const lastChild = existingChildren.sort((a, b) => a.position.y - b.position.y)[childCount - 1];
-        setEdges((eds) => [
-          ...eds,
-          {
-            id: `e-internal-${lastChild.id}-${newId}`,
-            source: lastChild.id,
-            target: newId,
-            type: "pipeline",
-            data: { internal: true },
-          },
-        ]);
+        setEdges((eds) => [...eds, {
+          id: `e-internal-${lastChild.id}-${newId}`, source: lastChild.id, target: newId, type: "pipeline", data: { internal: true },
+        }]);
       }
 
       setSelectedNodeId(newId);
       setEditingNodeId(newId);
-      scheduleAutoFit();
-    },
-    [nodes, setNodes, setEdges, scheduleAutoFit]
-  );
-
-  const handleAddChildOutput = useCallback(
-    (groupId: string) => {
+    } else if (kind === "childOutput") {
+      const groupId = pendingNode.groupId!;
       const groupNode = nodes.find((n) => n.id === groupId);
-      if (!groupNode) return;
+      if (!groupNode) { setPendingNode(null); return; }
 
       const existingChildren = nodes.filter((n) => n.parentId === groupId);
       const childCount = existingChildren.length;
       const newId = uuidv4();
-      const label = `broker_output_${childCount + 1}`;
 
       const newChild: Node = {
-        id: newId,
-        type: "childOutputNode",
-        position: {
-          x: CHILD_X,
-          y: BROKER_CHILD_Y_START + childCount * (CHILD_NODE_HEIGHT + CHILD_GAP_Y),
-        },
-        parentId: groupId,
-        extent: "parent" as const,
+        id: newId, type: "childOutputNode",
+        position: { x: CHILD_X, y: BROKER_CHILD_Y_START + childCount * (CHILD_NODE_HEIGHT + CHILD_GAP_Y) },
+        parentId: groupId, extent: "parent" as const,
         data: {
-          label,
-          type: "output",
-          componentId: "",
-          component: "",
-          configYaml: "",
-          nodeId: newId,
+          label, type: "output", componentId, component, configYaml: "", nodeId: newId,
           childIndex: childCount,
           parentBrokerPattern: (groupNode.data as StreamFlowNodeData).brokerPattern || "fan_out",
         } satisfies Partial<StreamFlowNodeData>,
       };
 
       const newHeight = calcBrokerGroupHeight(childCount + 1);
-
       setNodes((nds) => [
-        ...nds.map((n) =>
-          n.id === groupId
-            ? { ...n, style: { ...n.style, width: GROUP_WIDTH, height: newHeight }, data: { ...n.data, childCount: childCount + 1 } }
-            : n
+        ...nds.map((n) => n.id === groupId
+          ? { ...n, style: { ...n.style, width: GROUP_WIDTH, height: newHeight }, data: { ...n.data, childCount: childCount + 1 } }
+          : n
         ),
         newChild,
       ]);
@@ -1273,84 +1362,49 @@ function StreamBuilderContent({
       const pattern = (groupNode.data as StreamFlowNodeData).brokerPattern;
       if (childCount > 0 && isBrokerSequential(pattern)) {
         const lastChild = existingChildren.sort((a, b) => a.position.y - b.position.y)[childCount - 1];
-        setEdges((eds) => [
-          ...eds,
-          {
-            id: `e-internal-${lastChild.id}-${newId}`,
-            source: lastChild.id,
-            target: newId,
-            type: "pipeline",
-            data: makeInternalEdgeData(),
-          },
-        ]);
+        setEdges((eds) => [...eds, {
+          id: `e-internal-${lastChild.id}-${newId}`, source: lastChild.id, target: newId, type: "pipeline", data: makeInternalEdgeData(),
+        }]);
       }
 
       setSelectedNodeId(newId);
       setEditingNodeId(newId);
-      scheduleAutoFit();
-    },
-    [nodes, setNodes, setEdges, scheduleAutoFit]
-  );
-
-  const handleAddChildInput = useCallback(
-    (groupId: string) => {
+    } else if (kind === "childInput") {
+      const groupId = pendingNode.groupId!;
       const groupNode = nodes.find((n) => n.id === groupId);
-      if (!groupNode) return;
+      if (!groupNode) { setPendingNode(null); return; }
 
       const existingChildren = nodes.filter((n) => n.parentId === groupId);
       const childCount = existingChildren.length;
       const newId = uuidv4();
-      const label = `broker_input_${childCount + 1}`;
 
       const newChild: Node = {
-        id: newId,
-        type: "childInputNode",
-        position: {
-          x: CHILD_X,
-          y: BROKER_INPUT_CHILD_Y_START + childCount * (CHILD_NODE_HEIGHT + CHILD_GAP_Y),
-        },
-        parentId: groupId,
-        extent: "parent" as const,
-        data: {
-          label,
-          type: "input",
-          componentId: "",
-          component: "",
-          configYaml: "",
-          nodeId: newId,
-        } satisfies Partial<StreamFlowNodeData>,
+        id: newId, type: "childInputNode",
+        position: { x: CHILD_X, y: BROKER_INPUT_CHILD_Y_START + childCount * (CHILD_NODE_HEIGHT + CHILD_GAP_Y) },
+        parentId: groupId, extent: "parent" as const,
+        data: { label, type: "input", componentId, component, configYaml: "", nodeId: newId } satisfies Partial<StreamFlowNodeData>,
       };
 
       const newHeight = calcBrokerInputGroupHeight(childCount + 1);
-
       setNodes((nds) => [
-        ...nds.map((n) =>
-          n.id === groupId
-            ? { ...n, style: { ...n.style, width: GROUP_WIDTH, height: newHeight }, data: { ...n.data, childCount: childCount + 1 } }
-            : n
+        ...nds.map((n) => n.id === groupId
+          ? { ...n, style: { ...n.style, width: GROUP_WIDTH, height: newHeight }, data: { ...n.data, childCount: childCount + 1 } }
+          : n
         ),
         newChild,
       ]);
 
       setSelectedNodeId(newId);
       setEditingNodeId(newId);
-      scheduleAutoFit();
-    },
-    [nodes, setNodes, scheduleAutoFit]
-  );
-
-  const handleAddChildCase = useCallback(
-    (groupId: string) => {
+    } else if (kind === "childCase") {
+      const groupId = pendingNode.groupId!;
       const groupNode = nodes.find((n) => n.id === groupId);
-      if (!groupNode) return;
+      if (!groupNode) { setPendingNode(null); return; }
 
-      const isProcessorSwitch = groupNode.type === "switchProcessorGroupNode";
-      const existingChildren = nodes.filter((n) => n.parentId === groupId);
-      const childCount = existingChildren.length;
+      const { caseCheck, caseFallthrough, caseContinue, isProcessorSwitch } = pendingNode;
       const newId = uuidv4();
 
       if (isProcessorSwitch) {
-        // Decision tree: create a switchCaseStartNode connected via edge
         const existingCaseStarts = nodes.filter(
           (n) => n.type === "switchCaseStartNode" && (n.data as any).switchId === groupId
         );
@@ -1358,24 +1412,14 @@ function StreamBuilderContent({
         const positions = layoutSwitchCases(groupNode.position.x, groupNode.position.y, caseCount);
 
         const newCase: Node = {
-          id: newId,
-          type: "switchCaseStartNode",
-          position: positions[caseCount - 1],
+          id: newId, type: "switchCaseStartNode", position: positions[caseCount - 1],
           data: {
-            label: `case_${caseCount}`,
-            type: "processor",
-            componentId: "case",
-            component: "case",
-            configYaml: "",
-            nodeId: newId,
-            isCaseStart: true,
-            caseCheck: "",
-            caseFallthrough: false,
-            switchId: groupId,
+            label: `case_${caseCount}`, type: "processor", componentId: "case", component: "case",
+            configYaml: "", nodeId: newId, isCaseStart: true,
+            caseCheck, caseFallthrough, switchId: groupId,
           },
         };
 
-        // Re-layout existing case starts
         setNodes((nds) => {
           let updated = nds.map((n) => {
             if (n.id === groupId) return { ...n, data: { ...n.data, childCount: caseCount } };
@@ -1386,40 +1430,29 @@ function StreamBuilderContent({
           return [...updated, newCase];
         });
 
-        // Add edge from switch to new case
         setEdges((eds) => [
           ...eds,
           { id: `e-${groupId}-${newId}`, source: groupId, target: newId, type: "pipeline", data: { switchCase: true } },
         ]);
       } else {
-        // Output switch: create flat childCaseNode
+        const existingChildren = nodes.filter((n) => n.parentId === groupId);
+        const childCount = existingChildren.length;
+
         const newChild: Node = {
-          id: newId,
-          type: "childCaseNode",
-          position: {
-            x: CHILD_X,
-            y: SWITCH_CHILD_Y_START + childCount * (CHILD_NODE_HEIGHT + CHILD_GAP_Y),
-          },
-          parentId: groupId,
-          extent: "parent" as const,
+          id: newId, type: "childCaseNode",
+          position: { x: CHILD_X, y: SWITCH_CHILD_Y_START + childCount * (CHILD_NODE_HEIGHT + CHILD_GAP_Y) },
+          parentId: groupId, extent: "parent" as const,
           data: {
-            label: `case_${childCount + 1}`,
-            type: "output",
-            componentId: "",
-            component: "",
-            configYaml: "",
-            nodeId: newId,
-            caseCheck: "",
-            caseContinue: false,
+            label: `case_${childCount + 1}`, type: "output", componentId: "", component: "",
+            configYaml: "", nodeId: newId, caseCheck, caseContinue,
           },
         };
 
         const newHeight = calcSwitchGroupHeight(childCount + 1);
         setNodes((nds) => [
-          ...nds.map((n) =>
-            n.id === groupId
-              ? { ...n, style: { ...n.style, width: GROUP_WIDTH, height: newHeight }, data: { ...n.data, childCount: childCount + 1 } }
-              : n
+          ...nds.map((n) => n.id === groupId
+            ? { ...n, style: { ...n.style, width: GROUP_WIDTH, height: newHeight }, data: { ...n.data, childCount: childCount + 1 } }
+            : n
           ),
           newChild,
         ]);
@@ -1427,10 +1460,43 @@ function StreamBuilderContent({
 
       setSelectedNodeId(newId);
       setEditingNodeId(newId);
-      scheduleAutoFit();
-    },
-    [nodes, setNodes, scheduleAutoFit]
-  );
+    } else if (kind === "topLevel") {
+      const type = pendingNode.topLevelType!;
+      const newId = uuidv4();
+      let xPos = 50;
+
+      if (type === "input") {
+        xPos = 0;
+      } else if (type === "output") {
+        xPos = Math.max(...nodes.map((n) => n.position.x), 0) + NODE_SPACING_X;
+      } else {
+        const center = screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+        xPos = center.x - 90;
+      }
+
+      const yOffset = type === "processor"
+        ? (() => {
+            const center = screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+            return center.y - NODE_Y;
+          })()
+        : nodes.filter((n) => Math.abs(n.position.x - xPos) < 100).length * 100;
+
+      const resolved = resolveFlowNodeType(type, componentId);
+      const newNode: Node = {
+        id: newId, type: resolved.nodeType,
+        position: { x: xPos, y: NODE_Y + yOffset + resolved.yOffset },
+        ...(resolved.style ? { style: resolved.style } : {}),
+        data: { label, type, componentId, component, configYaml: "", nodeId: newId, ...resolved.extraData } satisfies Partial<StreamFlowNodeData>,
+      };
+
+      setNodes((nds) => [...nds, newNode]);
+      setSelectedNodeId(newId);
+      setEditingNodeId(newId);
+    }
+
+    setPendingNode(null);
+    scheduleAutoFit();
+  }, [pendingNode, nodes, edges, setNodes, setEdges, scheduleAutoFit, screenToFlowPosition]);
 
   // handleAddCaseProcessor is no longer needed — case processors are added via handleAddAndConnect from case start nodes
 
@@ -1676,48 +1742,21 @@ function StreamBuilderContent({
         return;
       }
 
-      const newId = uuidv4();
-      let xPos = 50;
-      let label = `new_${type}`;
+      const label = type === "processor"
+        ? `new_processor_${existingOfType.length + 1}`
+        : `new_${type}`;
+      const available = allComponentSchemas[type === "processor" ? "processor" : type === "input" ? "input" : "output"];
 
-      if (type === "input") {
-        xPos = 0;
-      } else if (type === "output") {
-        xPos = Math.max(...nodes.map((n) => n.position.x), 0) + NODE_SPACING_X;
-      } else {
-        label = `new_processor_${existingOfType.length + 1}`;
-        // Position at viewport center so the new node is visible
-        const center = screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
-        xPos = center.x - 90;
-      }
-
-      const yOffset = type === "processor"
-        ? (() => {
-            const center = screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
-            return center.y - NODE_Y;
-          })()
-        : nodes.filter((n) => Math.abs(n.position.x - xPos) < 100).length * 100;
-
-      const newNode: Node = {
-        id: newId,
-        type: toFlowNodeType(type),
-        position: { x: xPos, y: NODE_Y + yOffset },
-        data: {
-          label,
-          type,
-          componentId: "",
-          component: "",
-          configYaml: "",
-          nodeId: newId,
-        } satisfies Partial<StreamFlowNodeData>,
-      };
-
-      setNodes((nds) => [...nds, newNode]);
-      setSelectedNodeId(newId);
-      setEditingNodeId(newId);
-      scheduleAutoFit();
+      setPendingNode({
+        kind: "topLevel",
+        topLevelType: type,
+        label,
+        componentId: "",
+        component: "",
+        availableComponents: available,
+      });
     },
-    [nodes, setNodes, addToast, scheduleAutoFit]
+    [nodes, addToast, allComponentSchemas]
   );
 
   const handleNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
@@ -1754,7 +1793,7 @@ function StreamBuilderContent({
         component: d.component,
         configYaml: d.configYaml,
       } as StreamNodeData,
-      isGroup: d.isGroup === true || (d as any).isCaseStart === true,
+      isGroup: d.isGroup === true || (d as any).isCaseStart === true || n.type === "switchProcessorGroupNode",
       isGroupChild: !!n.parentId,
       isSwitchCaseProc: !!(d as any).switchCaseId,
     };
@@ -1762,7 +1801,7 @@ function StreamBuilderContent({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (editingNodeId || tryDialogOpen || deleteConfirmNodeId) return;
+      if (editingNodeId || tryDialogOpen || deleteConfirmNodeId || pendingNode) return;
       if (!selectedNodeId) return;
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
 
@@ -1776,7 +1815,7 @@ function StreamBuilderContent({
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedNodeId, editingNodeId, tryDialogOpen, deleteConfirmNodeId]);
+  }, [selectedNodeId, editingNodeId, tryDialogOpen, deleteConfirmNodeId, pendingNode]);
 
   useEffect(() => {
     if (!contextMenu) return;
@@ -2935,6 +2974,16 @@ function StreamBuilderContent({
                 </div>
                 {editingNode.data.componentId === "case" && (() => {
                   const nd = nodes.find((n) => n.id === editingNode.id)?.data as StreamFlowNodeData | undefined;
+                  const editNode = nodes.find((n) => n.id === editingNode.id);
+                  const switchId = (editNode?.data as any)?.switchId;
+                  const siblingDefaultExists = switchId
+                    ? nodes.some(
+                        (n) => n.id !== editingNode.id && n.type === "switchCaseStartNode" && (n.data as any).switchId === switchId && !(n.data as any).caseCheck
+                      )
+                    : editNode?.parentId && nodes.some(
+                        (n) => n.id !== editingNode.id && n.parentId === editNode.parentId && !(n.data as any).caseCheck
+                      );
+                  const isCurrentDefault = !(nd as any)?.caseCheck;
                   return (
                     <>
                       <div className="space-y-1">
@@ -2944,14 +2993,20 @@ function StreamBuilderContent({
                           placeholder='e.g. this.type == "foo"'
                           value={(nd as any)?.caseCheck || ""}
                           onChange={(e) => {
+                            const newVal = e.target.value;
+                            if (!newVal && siblingDefaultExists) return;
                             setNodes((nds) => nds.map((n) =>
                               n.id === editingNode.id
-                                ? { ...n, data: { ...n.data, caseCheck: e.target.value } }
+                                ? { ...n, data: { ...n.data, caseCheck: newVal } }
                                 : n
                             ));
                           }}
                         />
-                        <p className="text-[10px] text-muted-foreground">Bloblang condition. Leave empty for the default case.</p>
+                        {siblingDefaultExists && !isCurrentDefault ? (
+                          <p className="text-[10px] text-amber-500">A default case already exists.</p>
+                        ) : (
+                          <p className="text-[10px] text-muted-foreground">Bloblang condition. Leave empty for the default case.</p>
+                        )}
                       </div>
                       <div className="flex items-center justify-between">
                         <div>
@@ -3280,6 +3335,10 @@ function StreamBuilderContent({
                   const parentNode = editNode?.parentId ? nodes.find((n) => n.id === editNode.parentId) : null;
                   if (!parentNode || parentNode.type !== "switchGroupNode") return null;
                   const nd = editNode!.data as StreamFlowNodeData;
+                  const siblingDefaultExists = nodes.some(
+                    (n) => n.id !== editingNode.id && n.parentId === editNode!.parentId && !(n.data as any).caseCheck
+                  );
+                  const isCurrentDefault = !(nd as any).caseCheck;
                   return (
                     <div className="space-y-3 mb-4 p-3 rounded-md border bg-muted/30">
                       <div className="space-y-1">
@@ -3289,14 +3348,20 @@ function StreamBuilderContent({
                           placeholder='e.g. this.type == "foo"'
                           value={(nd as any).caseCheck || ""}
                           onChange={(e) => {
+                            const newVal = e.target.value;
+                            if (!newVal && siblingDefaultExists) return;
                             setNodes((nds) => nds.map((n) =>
                               n.id === editingNode.id
-                                ? { ...n, data: { ...n.data, caseCheck: e.target.value } }
+                                ? { ...n, data: { ...n.data, caseCheck: newVal } }
                                 : n
                             ));
                           }}
                         />
-                        <p className="text-[10px] text-muted-foreground">Bloblang condition. Leave empty for the default case.</p>
+                        {siblingDefaultExists && !isCurrentDefault ? (
+                          <p className="text-[10px] text-amber-500">A default case already exists.</p>
+                        ) : (
+                          <p className="text-[10px] text-muted-foreground">Bloblang condition. Leave empty for the default case.</p>
+                        )}
                       </div>
                       <div className="flex items-center justify-between">
                         <div>
@@ -3362,6 +3427,138 @@ function StreamBuilderContent({
               Delete
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add node confirmation dialog */}
+      <Dialog open={!!pendingNode} onOpenChange={(open: boolean) => { if (!open) setPendingNode(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>
+              {pendingNode?.kind === "childCase" ? "Add Switch Case"
+                : pendingNode?.kind === "childProcessor" ? "Add Catch Processor"
+                : pendingNode?.kind === "childOutput" ? "Add Broker Output"
+                : pendingNode?.kind === "childInput" ? "Add Broker Input"
+                : pendingNode?.kind === "topLevel" ? `Add ${(pendingNode.topLevelType || "").charAt(0).toUpperCase() + (pendingNode.topLevelType || "").slice(1)}`
+                : "Add Processor"}
+            </DialogTitle>
+            <DialogDescription>
+              Configure the new node before adding it to the flow.
+            </DialogDescription>
+          </DialogHeader>
+          {pendingNode && (() => {
+            const isCase = pendingNode.kind === "childCase";
+            const hasComponents = pendingNode.availableComponents.length > 0;
+            const isDefault = isCase && !pendingNode.caseCheck;
+            const defaultConflict = isDefault && !!pendingNode.defaultExists;
+            const needsComponent = hasComponents && !pendingNode.componentId;
+            return (
+              <div className="space-y-4 mt-2">
+                {/* Label */}
+                {!isCase && (
+                  <div className="space-y-1">
+                    <Label htmlFor="pending-label" className="text-xs font-medium">Label</Label>
+                    <Input
+                      id="pending-label"
+                      value={pendingNode.label}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (/^[a-z0-9_-]*$/.test(val)) {
+                          setPendingNode({ ...pendingNode, label: val });
+                        }
+                      }}
+                      placeholder="Node label (e.g., my_kafka_input)"
+                    />
+                  </div>
+                )}
+
+                {/* Component selector */}
+                {hasComponents && (
+                  <div className="space-y-1">
+                    <Label htmlFor="pending-component" className="text-xs font-medium">Component</Label>
+                    <Select
+                      value={pendingNode.componentId || ""}
+                      onValueChange={(val) => {
+                        const comp = pendingNode.availableComponents.find((c) => c.id === val);
+                        setPendingNode({
+                          ...pendingNode,
+                          componentId: val,
+                          component: comp ? (comp.name === comp.component ? comp.component : `${comp.name} (${comp.component})`) : "",
+                        });
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select component" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {pendingNode.availableComponents.map((comp) => (
+                          <SelectItem key={comp.id} value={comp.id}>
+                            {comp.name === comp.component ? comp.component : `${comp.name} (${comp.component})`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {/* Case-specific: check condition */}
+                {isCase && (
+                  <>
+                    <div className="space-y-1">
+                      <Label htmlFor="pending-case-check" className="text-xs font-medium">Check Condition</Label>
+                      <Input
+                        id="pending-case-check"
+                        placeholder='e.g. this.type == "foo"'
+                        value={pendingNode.caseCheck || ""}
+                        onChange={(e) => setPendingNode({ ...pendingNode, caseCheck: e.target.value })}
+                      />
+                      {defaultConflict ? (
+                        <p className="text-[10px] text-destructive">A default case already exists. Provide a condition or remove the existing default first.</p>
+                      ) : (
+                        <p className="text-[10px] text-muted-foreground">Bloblang condition. Leave empty for the default case.</p>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label htmlFor="pending-case-flag" className="text-xs font-medium">
+                          {pendingNode.isProcessorSwitch ? "Fallthrough" : "Continue"}
+                        </Label>
+                        <p className="text-[10px] text-muted-foreground">
+                          {pendingNode.isProcessorSwitch ? "Also execute subsequent cases." : "Also evaluate subsequent cases."}
+                        </p>
+                      </div>
+                      <input
+                        id="pending-case-flag"
+                        type="checkbox"
+                        checked={pendingNode.isProcessorSwitch ? pendingNode.caseFallthrough : pendingNode.caseContinue}
+                        onChange={(e) =>
+                          setPendingNode({
+                            ...pendingNode,
+                            ...(pendingNode.isProcessorSwitch
+                              ? { caseFallthrough: e.target.checked }
+                              : { caseContinue: e.target.checked }),
+                          })
+                        }
+                        className="h-4 w-4 rounded border-gray-300"
+                      />
+                    </div>
+                  </>
+                )}
+
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setPendingNode(null)}>
+                    Cancel
+                  </Button>
+                  <Button
+                    disabled={defaultConflict || needsComponent}
+                    onClick={handleConfirmAddNode}
+                  >
+                    Add to Flow
+                  </Button>
+                </div>
+              </div>
+            );
+          })()}
         </DialogContent>
       </Dialog>
 
