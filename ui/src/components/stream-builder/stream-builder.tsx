@@ -405,6 +405,25 @@ function toFlowNodeType(type: "input" | "processor" | "output"): string {
   return "outputNode";
 }
 
+function sortCasesDefaultLast(a: Node, b: Node): number {
+  const aDefault = !(a.data as any).caseCheck;
+  const bDefault = !(b.data as any).caseCheck;
+  if (aDefault && !bDefault) return 1;
+  if (!aDefault && bDefault) return -1;
+  return a.position.y - b.position.y;
+}
+
+function insertCaseBeforeDefault(existing: Node[], newCase: Node): Node[] {
+  const sorted = [...existing].sort(sortCasesDefaultLast);
+  const defaultIdx = sorted.findIndex((n) => !(n.data as any).caseCheck);
+  if (defaultIdx >= 0) {
+    sorted.splice(defaultIdx, 0, newCase);
+  } else {
+    sorted.push(newCase);
+  }
+  return sorted;
+}
+
 function resolveFlowNodeType(
   baseType: "input" | "processor" | "output",
   componentId: string
@@ -1412,7 +1431,7 @@ function StreamBuilderContent({
         const positions = layoutSwitchCases(groupNode.position.x, groupNode.position.y, caseCount);
 
         const newCase: Node = {
-          id: newId, type: "switchCaseStartNode", position: positions[caseCount - 1],
+          id: newId, type: "switchCaseStartNode", position: { x: 0, y: 0 },
           data: {
             label: `case_${caseCount}`, type: "processor", componentId: "case", component: "case",
             configYaml: "", nodeId: newId, isCaseStart: true,
@@ -1420,14 +1439,16 @@ function StreamBuilderContent({
           },
         };
 
+        const allCases = insertCaseBeforeDefault(existingCaseStarts, newCase);
+
         setNodes((nds) => {
           let updated = nds.map((n) => {
             if (n.id === groupId) return { ...n, data: { ...n.data, childCount: caseCount } };
-            const caseIdx = existingCaseStarts.findIndex((c) => c.id === n.id);
+            const caseIdx = allCases.findIndex((c) => c.id === n.id);
             if (caseIdx >= 0) return { ...n, position: positions[caseIdx] };
             return n;
           });
-          return [...updated, newCase];
+          return [...updated, { ...newCase, position: positions[allCases.findIndex((c) => c.id === newId)] }];
         });
 
         setEdges((eds) => [
@@ -1440,7 +1461,7 @@ function StreamBuilderContent({
 
         const newChild: Node = {
           id: newId, type: "childCaseNode",
-          position: { x: CHILD_X, y: SWITCH_CHILD_Y_START + childCount * (CHILD_NODE_HEIGHT + CHILD_GAP_Y) },
+          position: { x: CHILD_X, y: 0 },
           parentId: groupId, extent: "parent" as const,
           data: {
             label: `case_${childCount + 1}`, type: "output", componentId: "", component: "",
@@ -1448,13 +1469,17 @@ function StreamBuilderContent({
           },
         };
 
+        const allChildren = insertCaseBeforeDefault(existingChildren, newChild);
+
         const newHeight = calcSwitchGroupHeight(childCount + 1);
         setNodes((nds) => [
-          ...nds.map((n) => n.id === groupId
-            ? { ...n, style: { ...n.style, width: GROUP_WIDTH, height: newHeight }, data: { ...n.data, childCount: childCount + 1 } }
-            : n
-          ),
-          newChild,
+          ...nds.map((n) => {
+            if (n.id === groupId) return { ...n, style: { ...n.style, width: GROUP_WIDTH, height: newHeight }, data: { ...n.data, childCount: childCount + 1 } };
+            const idx = allChildren.findIndex((c) => c.id === n.id);
+            if (idx >= 0) return { ...n, position: { x: CHILD_X, y: SWITCH_CHILD_Y_START + idx * (CHILD_NODE_HEIGHT + CHILD_GAP_Y) } };
+            return n;
+          }),
+          { ...newChild, position: { x: CHILD_X, y: SWITCH_CHILD_Y_START + allChildren.findIndex((c) => c.id === newId) * (CHILD_NODE_HEIGHT + CHILD_GAP_Y) } },
         ]);
       }
 
@@ -1513,10 +1538,11 @@ function StreamBuilderContent({
       const isSwitchOutput = groupNode.type === "switchGroupNode";
       const childYStart = isBrokerOutput ? BROKER_CHILD_Y_START : isSwitchOutput ? SWITCH_CHILD_Y_START : isBrokerInput ? BROKER_INPUT_CHILD_Y_START : CATCH_CHILD_Y_START;
 
-      const siblings = nodes.filter((n) => n.parentId === groupId).sort((a, b) => a.position.y - b.position.y);
+      const sortFn = isSwitchOutput ? sortCasesDefaultLast : (a: Node, b: Node) => a.position.y - b.position.y;
+      const siblings = nodes.filter((n) => n.parentId === groupId).sort(sortFn);
 
       setNodes((nds) => {
-        const sorted = nds.filter((n) => n.parentId === groupId).sort((a, b) => a.position.y - b.position.y);
+        const sorted = nds.filter((n) => n.parentId === groupId).sort(sortFn);
         return nds.map((n) => {
           const idx = sorted.findIndex((s) => s.id === n.id);
           if (idx >= 0) {
@@ -2126,7 +2152,7 @@ function StreamBuilderContent({
               (n) => n.type === "switchCaseStartNode" && (n.data as any).switchId === switchId
             );
             const positions = layoutSwitchCases(switchNode.position.x, switchNode.position.y, remainingCases.length);
-            const sorted = remainingCases.sort((a, b) => a.position.y - b.position.y);
+            const sorted = remainingCases.sort(sortCasesDefaultLast);
             return updated.map((n) => {
               if (n.id === switchId) return { ...n, data: { ...n.data, childCount: remainingCases.length } };
               const idx = sorted.findIndex((s) => s.id === n.id);
@@ -2473,7 +2499,7 @@ function StreamBuilderContent({
   const serializeSwitchGroup = useCallback(
     (groupNode: Node): StreamNodeData => {
       const d = groupNode.data as StreamFlowNodeData;
-      const children = nodes.filter((cn) => cn.parentId === groupNode.id).sort((a, b) => a.position.y - b.position.y);
+      const children = nodes.filter((cn) => cn.parentId === groupNode.id).sort(sortCasesDefaultLast);
 
       const casesList = children.map((child) => {
         const cd = child.data as StreamFlowNodeData;
@@ -2520,7 +2546,7 @@ function StreamBuilderContent({
       // Find case start nodes connected via edges
       const caseStarts = nodes
         .filter((n) => n.type === "switchCaseStartNode" && (n.data as any).switchId === switchNode.id)
-        .sort((a, b) => a.position.y - b.position.y);
+        .sort(sortCasesDefaultLast);
 
       const casesList = caseStarts.map((caseNode) => {
         const cd = caseNode.data as StreamFlowNodeData;

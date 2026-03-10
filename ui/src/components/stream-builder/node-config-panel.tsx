@@ -202,7 +202,7 @@ export function NodeConfigPanel({
           </div>
         </div>
 
-        {nodeData.componentId && (
+        {nodeData.componentId && Object.keys(getComponentSchema(nodeData.componentId, nodeData.type).properties || {}).length > 0 && (
           <div className="flex flex-col flex-1 min-h-0 mt-4">
             <Label htmlFor="yaml-config" className="mb-2">Component Configuration</Label>
             <div className="flex-1 min-h-0 overflow-y-auto">
