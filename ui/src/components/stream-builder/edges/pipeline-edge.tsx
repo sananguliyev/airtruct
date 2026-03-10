@@ -47,8 +47,22 @@ export const PipelineEdge = memo(({
             : { strokeDasharray: "6 3", animation: "dashmove 0.5s linear infinite" }),
         }}
       />
-      {onDelete && !isInternal && (
-        <EdgeLabelRenderer>
+      <EdgeLabelRenderer>
+        {typeof data?.edgeLabel === "string" && (
+          <div
+            style={{
+              position: "absolute",
+              transform: `translate(-50%, -100%) translate(${labelX}px,${labelY - 4}px)`,
+              pointerEvents: "none",
+            }}
+            className="nodrag nopan"
+          >
+            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-300 border border-violet-200 dark:border-violet-800 whitespace-nowrap">
+              {data.edgeLabel as string}
+            </span>
+          </div>
+        )}
+        {onDelete && !isInternal && (
           <div
             style={{
               position: "absolute",
@@ -66,8 +80,8 @@ export const PipelineEdge = memo(({
               <X className="h-3 w-3" />
             </button>
           </div>
-        </EdgeLabelRenderer>
-      )}
+        )}
+      </EdgeLabelRenderer>
     </>
   );
 });
