@@ -5,7 +5,7 @@ import {
   getBezierPath,
   type EdgeProps,
 } from "@xyflow/react";
-import { X } from "lucide-react";
+import { X, GitBranch } from "lucide-react";
 
 export const PipelineEdge = memo(({
   id,
@@ -30,6 +30,8 @@ export const PipelineEdge = memo(({
 
   const onDelete = data?.onDeleteEdge as ((id: string) => void) | undefined;
   const isInternal = data?.internal as boolean;
+  const onEditCaseNode = data?.onEditCaseNode as ((nodeId: string) => void) | undefined;
+  const caseTargetId = data?.switchCase ? (data.caseTargetId as string | undefined) : undefined;
 
   return (
     <>
@@ -53,11 +55,19 @@ export const PipelineEdge = memo(({
             style={{
               position: "absolute",
               transform: `translate(-50%, -100%) translate(${labelX}px,${labelY - 4}px)`,
-              pointerEvents: "none",
+              pointerEvents: onEditCaseNode && caseTargetId ? "all" : "none",
+              cursor: onEditCaseNode && caseTargetId ? "pointer" : "default",
             }}
             className="nodrag nopan"
+            onDoubleClick={onEditCaseNode && caseTargetId ? () => onEditCaseNode(caseTargetId) : undefined}
+            title={onEditCaseNode && caseTargetId ? "Double-click to edit case" : undefined}
           >
-            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-300 border border-violet-200 dark:border-violet-800 whitespace-nowrap">
+            <span className={`inline-flex items-center gap-1 text-[9px] font-mono px-1.5 py-0.5 rounded border whitespace-nowrap ${
+              data.edgeLabelColor === "amber"
+                ? "bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-300 border-amber-200 dark:border-amber-800"
+                : "bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-300 border-violet-200 dark:border-violet-800"
+            }`}>
+              <GitBranch className="h-2.5 w-2.5 shrink-0" />
               {data.edgeLabel as string}
             </span>
           </div>

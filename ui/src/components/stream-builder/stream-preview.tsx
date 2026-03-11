@@ -27,6 +27,8 @@ import { BrokerInputGroupNode } from "./nodes/broker-input-group-node";
 import { ChildOutputNode } from "./nodes/child-output-node";
 import { ChildInputNode } from "./nodes/child-input-node";
 import { SwitchGroupNode } from "./nodes/switch-group-node";
+import { SwitchProcessorGroupNode } from "./nodes/switch-processor-group-node";
+import { SwitchCaseStartNode } from "./nodes/switch-case-start-node";
 import { ChildCaseNode } from "./nodes/child-case-node";
 import { PipelineEdge } from "./edges/pipeline-edge";
 
@@ -41,6 +43,8 @@ const nodeTypes = {
   childOutputNode: ChildOutputNode,
   childInputNode: ChildInputNode,
   switchGroupNode: SwitchGroupNode,
+  switchProcessorGroupNode: SwitchProcessorGroupNode,
+  switchCaseStartNode: SwitchCaseStartNode,
   childCaseNode: ChildCaseNode,
 };
 
@@ -544,26 +548,27 @@ function StreamPreviewContent({ stream }: StreamPreviewProps) {
       }
 
       const childCount = caseConfigs.length;
-      const groupHeight = calcSwitchGroupHeight(childCount);
+      const CASE_SPACING_Y = 120;
+      const CASE_X_OFFSET = 250;
 
       flowNodes.push({
         id: outputId,
-        type: "switchGroupNode",
-        position: { x: xPos, y: NODE_Y - 25 },
-        style: { width: GROUP_WIDTH, height: groupHeight },
+        type: "switchProcessorGroupNode",
+        position: { x: xPos, y: NODE_Y },
         data: {
           label: stream.output_label || "switch",
           type: "output",
           componentId: "switch",
           component: "switch",
           nodeId: outputId,
-          isGroup: true,
+          isGroup: false,
           childCount,
           configYaml: "",
           readOnly: true,
         },
       });
 
+      const startY = NODE_Y - ((childCount - 1) * CASE_SPACING_Y) / 2;
       caseConfigs.forEach((caseObj, i) => {
         const check = caseObj.check || "";
         const cont = caseObj.continue === true;
@@ -577,13 +582,11 @@ function StreamPreviewContent({ stream }: StreamPreviewProps) {
         const childId = uuidv4();
         flowNodes.push({
           id: childId,
-          type: "childCaseNode",
+          type: "switchCaseStartNode",
           position: {
-            x: CHILD_X,
-            y: SWITCH_CHILD_Y_START + i * (CHILD_NODE_HEIGHT + CHILD_GAP_Y),
+            x: xPos + CASE_X_OFFSET,
+            y: startY + i * CASE_SPACING_Y,
           },
-          parentId: outputId,
-          extent: "parent" as const,
           data: {
             label: childLabel || schema?.id || componentName || "Output",
             type: "output",
@@ -597,9 +600,21 @@ function StreamPreviewContent({ stream }: StreamPreviewProps) {
                   : "",
             nodeId: childId,
             readOnly: true,
+            isCaseStart: true,
+            switchId: outputId,
             caseCheck: check,
             caseContinue: cont,
           },
+        });
+        const caseLabel = check
+          ? (cont ? `${check} →` : check)
+          : (cont ? "default →" : "default");
+        flowEdges.push({
+          id: `e-${outputId}-${childId}`,
+          source: outputId,
+          target: childId,
+          type: "pipeline",
+          data: { switchCase: true, edgeLabel: caseLabel, edgeLabelColor: "amber" },
         });
       });
 
