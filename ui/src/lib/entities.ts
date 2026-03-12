@@ -98,3 +98,34 @@ export type StreamEvent = {
   meta: Record<string, any>;
   created_at: string;
 };
+
+export type StreamStatusCount = {
+  status: string;
+  count: number;
+};
+
+export type ComponentCount = {
+  component: string;
+  count: number;
+};
+
+export type TimeSeriesPoint = {
+  timestamp: string;
+  input_events: number;
+  output_events: number;
+  error_events: number;
+};
+
+export type Analytics = {
+  total_streams: number;
+  streams_by_status: StreamStatusCount[];
+  total_input_events: number;
+  total_output_events: number;
+  total_processor_errors: number;
+  active_workers: number;
+  total_events: number;
+  error_events: number;
+  events_over_time: TimeSeriesPoint[];
+  top_input_components: ComponentCount[];
+  top_output_components: ComponentCount[];
+};

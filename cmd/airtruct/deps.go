@@ -6,6 +6,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	"github.com/sananguliyev/airtruct/internal/analytics"
 	"github.com/sananguliyev/airtruct/internal/api"
 	"github.com/sananguliyev/airtruct/internal/api/coordinator"
 	"github.com/sananguliyev/airtruct/internal/auth"
@@ -47,7 +48,8 @@ func InitializeCoordinatorCommand(httpPort, grpcPort uint32) *cli.CoordinatorCLI
 	streamRateLimitRepository := persistence.NewStreamRateLimitRepository(db)
 	fileRepository := persistence.NewFileRepository(db)
 	rateLimiterEngine := ratelimiter.NewEngine(rateLimitRepository, rateLimitStateRepository)
-	coordinatorAPI := coordinator.NewCoordinatorAPI(eventRepository, streamRepository, streamCacheRepository, streamRateLimitRepository, streamBufferRepository, workerRepository, workerStreamRepository, secretRepository, cacheRepository, bufferRepository, rateLimitRepository, fileRepository, rateLimiterEngine, aesgcm)
+	analyticsProvider := analytics.NewLocalProvider(db)
+	coordinatorAPI := coordinator.NewCoordinatorAPI(eventRepository, streamRepository, streamCacheRepository, streamRateLimitRepository, streamBufferRepository, workerRepository, workerStreamRepository, secretRepository, cacheRepository, bufferRepository, rateLimitRepository, fileRepository, rateLimiterEngine, aesgcm, analyticsProvider)
 	coordinatorExecutor := executor.NewCoordinatorExecutor(workerRepository, streamRepository, streamCacheRepository, streamRateLimitRepository, workerStreamRepository, fileRepository)
 	mcpHandler := mcppkg.NewMCPHandler(streamRepository, coordinatorExecutor)
 	coordinatorCLI := cli.NewCoordinatorCLI(coordinatorAPI, coordinatorExecutor, rateLimiterEngine, authManager, mcpHandler, httpPort, grpcPort)
