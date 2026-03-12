@@ -125,6 +125,36 @@ message MetricsRequest {
   map<string, uint64> output_events_by_component = 7;
 }
 
+message GetAnalyticsRequest {}
+
+message GetAnalyticsResponse {
+  message StreamStatusCount {
+    string status = 1;
+    int64 count = 2;
+  }
+  message ComponentCount {
+    string component = 1;
+    int64 count = 2;
+  }
+  message TimeSeriesPoint {
+    string timestamp = 1;
+    int64 input_events = 2 [json_name = "input_events"];
+    int64 output_events = 3 [json_name = "output_events"];
+    int64 error_events = 4 [json_name = "error_events"];
+  }
+  int64 total_streams = 1 [json_name = "total_streams"];
+  repeated StreamStatusCount streams_by_status = 2 [json_name = "streams_by_status"];
+  uint64 total_input_events = 3 [json_name = "total_input_events"];
+  uint64 total_output_events = 4 [json_name = "total_output_events"];
+  uint64 total_processor_errors = 5 [json_name = "total_processor_errors"];
+  int64 active_workers = 6 [json_name = "active_workers"];
+  int64 total_events = 7 [json_name = "total_events"];
+  int64 error_events = 8 [json_name = "error_events"];
+  repeated TimeSeriesPoint events_over_time = 9 [json_name = "events_over_time"];
+  repeated ComponentCount top_input_components = 10 [json_name = "top_input_components"];
+  repeated ComponentCount top_output_components = 11 [json_name = "top_output_components"];
+}
+
 message SecretRequest {
   string key = 1;
   string value = 2;
@@ -345,4 +375,9 @@ service Coordinator {
   }
   rpc IngestEvents(stream Event) returns (stream google.protobuf.Empty);
   rpc IngestMetrics(MetricsRequest) returns (google.protobuf.Empty) {}
+
+  // Analytics methods
+  rpc GetAnalytics(GetAnalyticsRequest) returns (GetAnalyticsResponse) {
+    option (google.api.http) = {get: "/v0/analytics"};
+  }
 }

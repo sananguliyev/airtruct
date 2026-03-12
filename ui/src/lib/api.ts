@@ -6,6 +6,7 @@ import {
   Cache,
   RateLimit,
   FileEntry,
+  Analytics,
 } from "./entities";
 import * as yaml from "js-yaml";
 
@@ -1193,6 +1194,59 @@ export async function deleteFile(id: string): Promise<void> {
     }
   } catch (error) {
     console.error("Error deleting file:", error);
+    throw error;
+  }
+}
+
+export async function fetchAnalytics(): Promise<Analytics> {
+  try {
+    const response = await handleResponse(
+      await fetch(`${API_BASE_URL}/analytics`, {
+        headers: getAuthHeaders(),
+      }),
+    );
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    const num = (v: unknown): number => Number(v) || 0;
+    return {
+      total_streams: num(data.total_streams),
+      streams_by_status: (data.streams_by_status ?? []).map(
+        (s: { status: string; count: unknown }) => ({
+          status: s.status,
+          count: num(s.count),
+        }),
+      ),
+      total_input_events: num(data.total_input_events),
+      total_output_events: num(data.total_output_events),
+      total_processor_errors: num(data.total_processor_errors),
+      active_workers: num(data.active_workers),
+      total_events: num(data.total_events),
+      error_events: num(data.error_events),
+      events_over_time: (data.events_over_time ?? []).map(
+        (pt: { timestamp: string; input_events: unknown; output_events: unknown; error_events: unknown }) => ({
+          timestamp: pt.timestamp,
+          input_events: num(pt.input_events),
+          output_events: num(pt.output_events),
+          error_events: num(pt.error_events),
+        }),
+      ),
+      top_input_components: (data.top_input_components ?? []).map(
+        (c: { component: string; count: unknown }) => ({
+          component: c.component,
+          count: num(c.count),
+        }),
+      ),
+      top_output_components: (data.top_output_components ?? []).map(
+        (c: { component: string; count: unknown }) => ({
+          component: c.component,
+          count: num(c.count),
+        }),
+      ),
+    };
+  } catch (error) {
+    console.error("Error fetching analytics:", error);
     throw error;
   }
 }

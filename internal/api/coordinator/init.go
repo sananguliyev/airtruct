@@ -1,6 +1,7 @@
 package coordinator
 
 import (
+	"github.com/sananguliyev/airtruct/internal/analytics"
 	pb "github.com/sananguliyev/airtruct/internal/protogen"
 
 	"github.com/sananguliyev/airtruct/internal/persistence"
@@ -24,6 +25,7 @@ type CoordinatorAPI struct {
 	fileRepo            persistence.FileRepository
 	rateLimiterEngine   *ratelimiter.Engine
 	aesgcm              *vault.AESGCM
+	analyticsProvider   analytics.Provider
 }
 
 func NewCoordinatorAPI(
@@ -41,6 +43,7 @@ func NewCoordinatorAPI(
 	fileRepo persistence.FileRepository,
 	rateLimiterEngine *ratelimiter.Engine,
 	aesgcm *vault.AESGCM,
+	analyticsProvider analytics.Provider,
 ) *CoordinatorAPI {
 	return &CoordinatorAPI{
 		eventRepo:           eventRepo,
@@ -57,5 +60,6 @@ func NewCoordinatorAPI(
 		fileRepo:            fileRepo,
 		rateLimiterEngine:   rateLimiterEngine,
 		aesgcm:              aesgcm,
+		analyticsProvider:   analyticsProvider,
 	}
 }

@@ -1963,6 +1963,360 @@ var _ interface {
 	ErrorName() string
 } = MetricsRequestValidationError{}
 
+// Validate checks the field values on GetAnalyticsRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetAnalyticsRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetAnalyticsRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetAnalyticsRequestMultiError, or nil if none found.
+func (m *GetAnalyticsRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetAnalyticsRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if len(errors) > 0 {
+		return GetAnalyticsRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetAnalyticsRequestMultiError is an error wrapping multiple validation
+// errors returned by GetAnalyticsRequest.ValidateAll() if the designated
+// constraints aren't met.
+type GetAnalyticsRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetAnalyticsRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetAnalyticsRequestMultiError) AllErrors() []error { return m }
+
+// GetAnalyticsRequestValidationError is the validation error returned by
+// GetAnalyticsRequest.Validate if the designated constraints aren't met.
+type GetAnalyticsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetAnalyticsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetAnalyticsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetAnalyticsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetAnalyticsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetAnalyticsRequestValidationError) ErrorName() string {
+	return "GetAnalyticsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetAnalyticsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetAnalyticsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetAnalyticsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetAnalyticsRequestValidationError{}
+
+// Validate checks the field values on GetAnalyticsResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetAnalyticsResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetAnalyticsResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetAnalyticsResponseMultiError, or nil if none found.
+func (m *GetAnalyticsResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetAnalyticsResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for TotalStreams
+
+	for idx, item := range m.GetStreamsByStatus() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, GetAnalyticsResponseValidationError{
+						field:  fmt.Sprintf("StreamsByStatus[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, GetAnalyticsResponseValidationError{
+						field:  fmt.Sprintf("StreamsByStatus[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetAnalyticsResponseValidationError{
+					field:  fmt.Sprintf("StreamsByStatus[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for TotalInputEvents
+
+	// no validation rules for TotalOutputEvents
+
+	// no validation rules for TotalProcessorErrors
+
+	// no validation rules for ActiveWorkers
+
+	// no validation rules for TotalEvents
+
+	// no validation rules for ErrorEvents
+
+	for idx, item := range m.GetEventsOverTime() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, GetAnalyticsResponseValidationError{
+						field:  fmt.Sprintf("EventsOverTime[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, GetAnalyticsResponseValidationError{
+						field:  fmt.Sprintf("EventsOverTime[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetAnalyticsResponseValidationError{
+					field:  fmt.Sprintf("EventsOverTime[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	for idx, item := range m.GetTopInputComponents() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, GetAnalyticsResponseValidationError{
+						field:  fmt.Sprintf("TopInputComponents[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, GetAnalyticsResponseValidationError{
+						field:  fmt.Sprintf("TopInputComponents[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetAnalyticsResponseValidationError{
+					field:  fmt.Sprintf("TopInputComponents[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	for idx, item := range m.GetTopOutputComponents() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, GetAnalyticsResponseValidationError{
+						field:  fmt.Sprintf("TopOutputComponents[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, GetAnalyticsResponseValidationError{
+						field:  fmt.Sprintf("TopOutputComponents[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetAnalyticsResponseValidationError{
+					field:  fmt.Sprintf("TopOutputComponents[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return GetAnalyticsResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetAnalyticsResponseMultiError is an error wrapping multiple validation
+// errors returned by GetAnalyticsResponse.ValidateAll() if the designated
+// constraints aren't met.
+type GetAnalyticsResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetAnalyticsResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetAnalyticsResponseMultiError) AllErrors() []error { return m }
+
+// GetAnalyticsResponseValidationError is the validation error returned by
+// GetAnalyticsResponse.Validate if the designated constraints aren't met.
+type GetAnalyticsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetAnalyticsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetAnalyticsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetAnalyticsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetAnalyticsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetAnalyticsResponseValidationError) ErrorName() string {
+	return "GetAnalyticsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetAnalyticsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetAnalyticsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetAnalyticsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetAnalyticsResponseValidationError{}
+
 // Validate checks the field values on SecretRequest with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
@@ -4120,3 +4474,335 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListWorkersResponse_WorkerValidationError{}
+
+// Validate checks the field values on GetAnalyticsResponse_StreamStatusCount
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the first error encountered is returned, or nil if
+// there are no violations.
+func (m *GetAnalyticsResponse_StreamStatusCount) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on
+// GetAnalyticsResponse_StreamStatusCount with the rules defined in the proto
+// definition for this message. If any rules are violated, the result is a
+// list of violation errors wrapped in
+// GetAnalyticsResponse_StreamStatusCountMultiError, or nil if none found.
+func (m *GetAnalyticsResponse_StreamStatusCount) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetAnalyticsResponse_StreamStatusCount) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Status
+
+	// no validation rules for Count
+
+	if len(errors) > 0 {
+		return GetAnalyticsResponse_StreamStatusCountMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetAnalyticsResponse_StreamStatusCountMultiError is an error wrapping
+// multiple validation errors returned by
+// GetAnalyticsResponse_StreamStatusCount.ValidateAll() if the designated
+// constraints aren't met.
+type GetAnalyticsResponse_StreamStatusCountMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetAnalyticsResponse_StreamStatusCountMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetAnalyticsResponse_StreamStatusCountMultiError) AllErrors() []error { return m }
+
+// GetAnalyticsResponse_StreamStatusCountValidationError is the validation
+// error returned by GetAnalyticsResponse_StreamStatusCount.Validate if the
+// designated constraints aren't met.
+type GetAnalyticsResponse_StreamStatusCountValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetAnalyticsResponse_StreamStatusCountValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetAnalyticsResponse_StreamStatusCountValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetAnalyticsResponse_StreamStatusCountValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetAnalyticsResponse_StreamStatusCountValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetAnalyticsResponse_StreamStatusCountValidationError) ErrorName() string {
+	return "GetAnalyticsResponse_StreamStatusCountValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetAnalyticsResponse_StreamStatusCountValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetAnalyticsResponse_StreamStatusCount.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetAnalyticsResponse_StreamStatusCountValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetAnalyticsResponse_StreamStatusCountValidationError{}
+
+// Validate checks the field values on GetAnalyticsResponse_ComponentCount with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *GetAnalyticsResponse_ComponentCount) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetAnalyticsResponse_ComponentCount
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the result is a list of violation errors wrapped in
+// GetAnalyticsResponse_ComponentCountMultiError, or nil if none found.
+func (m *GetAnalyticsResponse_ComponentCount) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetAnalyticsResponse_ComponentCount) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Component
+
+	// no validation rules for Count
+
+	if len(errors) > 0 {
+		return GetAnalyticsResponse_ComponentCountMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetAnalyticsResponse_ComponentCountMultiError is an error wrapping multiple
+// validation errors returned by
+// GetAnalyticsResponse_ComponentCount.ValidateAll() if the designated
+// constraints aren't met.
+type GetAnalyticsResponse_ComponentCountMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetAnalyticsResponse_ComponentCountMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetAnalyticsResponse_ComponentCountMultiError) AllErrors() []error { return m }
+
+// GetAnalyticsResponse_ComponentCountValidationError is the validation error
+// returned by GetAnalyticsResponse_ComponentCount.Validate if the designated
+// constraints aren't met.
+type GetAnalyticsResponse_ComponentCountValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetAnalyticsResponse_ComponentCountValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetAnalyticsResponse_ComponentCountValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetAnalyticsResponse_ComponentCountValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetAnalyticsResponse_ComponentCountValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetAnalyticsResponse_ComponentCountValidationError) ErrorName() string {
+	return "GetAnalyticsResponse_ComponentCountValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetAnalyticsResponse_ComponentCountValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetAnalyticsResponse_ComponentCount.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetAnalyticsResponse_ComponentCountValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetAnalyticsResponse_ComponentCountValidationError{}
+
+// Validate checks the field values on GetAnalyticsResponse_TimeSeriesPoint
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the first error encountered is returned, or nil if
+// there are no violations.
+func (m *GetAnalyticsResponse_TimeSeriesPoint) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetAnalyticsResponse_TimeSeriesPoint
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the result is a list of violation errors wrapped in
+// GetAnalyticsResponse_TimeSeriesPointMultiError, or nil if none found.
+func (m *GetAnalyticsResponse_TimeSeriesPoint) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetAnalyticsResponse_TimeSeriesPoint) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Timestamp
+
+	// no validation rules for InputEvents
+
+	// no validation rules for OutputEvents
+
+	// no validation rules for ErrorEvents
+
+	if len(errors) > 0 {
+		return GetAnalyticsResponse_TimeSeriesPointMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetAnalyticsResponse_TimeSeriesPointMultiError is an error wrapping multiple
+// validation errors returned by
+// GetAnalyticsResponse_TimeSeriesPoint.ValidateAll() if the designated
+// constraints aren't met.
+type GetAnalyticsResponse_TimeSeriesPointMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetAnalyticsResponse_TimeSeriesPointMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetAnalyticsResponse_TimeSeriesPointMultiError) AllErrors() []error { return m }
+
+// GetAnalyticsResponse_TimeSeriesPointValidationError is the validation error
+// returned by GetAnalyticsResponse_TimeSeriesPoint.Validate if the designated
+// constraints aren't met.
+type GetAnalyticsResponse_TimeSeriesPointValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetAnalyticsResponse_TimeSeriesPointValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetAnalyticsResponse_TimeSeriesPointValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetAnalyticsResponse_TimeSeriesPointValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetAnalyticsResponse_TimeSeriesPointValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetAnalyticsResponse_TimeSeriesPointValidationError) ErrorName() string {
+	return "GetAnalyticsResponse_TimeSeriesPointValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetAnalyticsResponse_TimeSeriesPointValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetAnalyticsResponse_TimeSeriesPoint.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetAnalyticsResponse_TimeSeriesPointValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetAnalyticsResponse_TimeSeriesPointValidationError{}
