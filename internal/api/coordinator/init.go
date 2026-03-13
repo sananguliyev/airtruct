@@ -9,6 +9,11 @@ import (
 	"github.com/sananguliyev/airtruct/internal/vault"
 )
 
+type StreamWorkerMap interface {
+	SetStreamWorker(streamID int64, workerID string, workerStreamID int64)
+	RemoveStream(streamID int64)
+}
+
 type CoordinatorAPI struct {
 	pb.UnimplementedCoordinatorServer
 	eventRepo           persistence.EventRepository
@@ -26,6 +31,7 @@ type CoordinatorAPI struct {
 	rateLimiterEngine   *ratelimiter.Engine
 	aesgcm              *vault.AESGCM
 	analyticsProvider   analytics.Provider
+	streamWorkerMap     StreamWorkerMap
 }
 
 func NewCoordinatorAPI(
@@ -44,6 +50,7 @@ func NewCoordinatorAPI(
 	rateLimiterEngine *ratelimiter.Engine,
 	aesgcm *vault.AESGCM,
 	analyticsProvider analytics.Provider,
+	streamWorkerMap StreamWorkerMap,
 ) *CoordinatorAPI {
 	return &CoordinatorAPI{
 		eventRepo:           eventRepo,
@@ -61,5 +68,6 @@ func NewCoordinatorAPI(
 		rateLimiterEngine:   rateLimiterEngine,
 		aesgcm:              aesgcm,
 		analyticsProvider:   analyticsProvider,
+		streamWorkerMap:     streamWorkerMap,
 	}
 }
