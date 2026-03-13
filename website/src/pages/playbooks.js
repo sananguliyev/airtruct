@@ -24,6 +24,13 @@ const playbooks = [
     href: "/playbooks/mcp-tool",
     tags: ["mcp", "ai", "tools"],
   },
+  {
+    title: "Customer Support Agent",
+    description:
+      "Build an AI support agent with three MCP tools that look up orders, find customer history, and draft replies.",
+    href: "/playbooks/customer-support-agent",
+    tags: ["mcp", "ai", "sqlite", "sql", "agent"],
+  },
 ];
 
 export default function Playbooks() {
