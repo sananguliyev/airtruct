@@ -128,11 +128,6 @@ func (s *streamAssigner) assignStreamToWorker(ctx context.Context, worker persis
 		return err
 	}
 
-	s.streamWorkerMap.SetStreamWorker(stream.ID, worker.ID, workerStream.ID)
-	if stream.ParentID != nil {
-		s.streamWorkerMap.SetStreamWorker(*stream.ParentID, worker.ID, workerStream.ID)
-	}
-
 	log.Info().
 		Str("worker_id", worker.ID).
 		Int64("stream_id", stream.ID).

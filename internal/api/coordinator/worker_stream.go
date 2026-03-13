@@ -23,14 +23,31 @@ func (c *CoordinatorAPI) UpdateWorkerStreamStatus(_ context.Context, in *pb.Work
 		return nil, status.Error(codes.NotFound, "worker stream not found")
 	}
 
-	if err = c.workerStreamRepo.UpdateStatus(in.GetWorkerStreamId(), persistence.WorkerStreamStatus(in.GetStatus().String())); err != nil {
-		log.Error().Err(err).Str("target_status", string(persistence.StreamStatusCompleted)).Msg("Failed to update worker stream")
+	newStatus := persistence.WorkerStreamStatus(in.GetStatus().String())
+
+	if err = c.workerStreamRepo.UpdateStatus(in.GetWorkerStreamId(), newStatus); err != nil {
+		log.Error().Err(err).Str("target_status", string(newStatus)).Msg("Failed to update worker stream")
 		return nil, status.Error(codes.Internal, "Failed to update worker stream status")
 	}
 
-	if persistence.WorkerStreamStatus(in.GetStatus().String()) == persistence.WorkerStreamStatusCompleted {
+	switch newStatus {
+	case persistence.WorkerStreamStatusRunning:
+		c.streamWorkerMap.SetStreamWorker(workerStream.StreamID, workerStream.WorkerID, workerStream.ID)
+		if workerStream.Stream.ParentID != nil {
+			c.streamWorkerMap.SetStreamWorker(*workerStream.Stream.ParentID, workerStream.WorkerID, workerStream.ID)
+		}
+	case persistence.WorkerStreamStatusFailed, persistence.WorkerStreamStatusStopped:
+		c.streamWorkerMap.RemoveStream(workerStream.StreamID)
+		if workerStream.Stream.ParentID != nil {
+			c.streamWorkerMap.RemoveStream(*workerStream.Stream.ParentID)
+		}
+	case persistence.WorkerStreamStatusCompleted:
+		c.streamWorkerMap.RemoveStream(workerStream.StreamID)
+		if workerStream.Stream.ParentID != nil {
+			c.streamWorkerMap.RemoveStream(*workerStream.Stream.ParentID)
+		}
 		if err = c.streamRepo.UpdateStatus(workerStream.StreamID, persistence.StreamStatusCompleted); err != nil {
-			log.Error().Err(err).Str("target_status", string(persistence.StreamStatusCompleted)).Msg("Failed to update worker stream")
+			log.Error().Err(err).Str("target_status", string(persistence.StreamStatusCompleted)).Msg("Failed to update stream status")
 			return nil, status.Error(codes.Internal, "Failed to update worker stream status")
 		}
 	}
