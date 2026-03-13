@@ -13,6 +13,7 @@ import (
 	"github.com/sananguliyev/airtruct/internal/cli"
 	"github.com/sananguliyev/airtruct/internal/config"
 	"github.com/sananguliyev/airtruct/internal/executor"
+	executorcoordinator "github.com/sananguliyev/airtruct/internal/executor/coordinator"
 	mcppkg "github.com/sananguliyev/airtruct/internal/mcp"
 	"github.com/sananguliyev/airtruct/internal/persistence"
 	"github.com/sananguliyev/airtruct/internal/ratelimiter"
@@ -49,8 +50,9 @@ func InitializeCoordinatorCommand(httpPort, grpcPort uint32) *cli.CoordinatorCLI
 	fileRepository := persistence.NewFileRepository(db)
 	rateLimiterEngine := ratelimiter.NewEngine(rateLimitRepository, rateLimitStateRepository)
 	analyticsProvider := analytics.NewLocalProvider(db)
-	coordinatorAPI := coordinator.NewCoordinatorAPI(eventRepository, streamRepository, streamCacheRepository, streamRateLimitRepository, streamBufferRepository, workerRepository, workerStreamRepository, secretRepository, cacheRepository, bufferRepository, rateLimitRepository, fileRepository, rateLimiterEngine, aesgcm, analyticsProvider)
-	coordinatorExecutor := executor.NewCoordinatorExecutor(workerRepository, streamRepository, streamCacheRepository, streamRateLimitRepository, workerStreamRepository, fileRepository)
+	streamWorkerMap := executorcoordinator.NewStreamWorkerMap()
+	coordinatorAPI := coordinator.NewCoordinatorAPI(eventRepository, streamRepository, streamCacheRepository, streamRateLimitRepository, streamBufferRepository, workerRepository, workerStreamRepository, secretRepository, cacheRepository, bufferRepository, rateLimitRepository, fileRepository, rateLimiterEngine, aesgcm, analyticsProvider, streamWorkerMap)
+	coordinatorExecutor := executor.NewCoordinatorExecutor(workerRepository, streamRepository, streamCacheRepository, streamRateLimitRepository, workerStreamRepository, fileRepository, streamWorkerMap)
 	mcpHandler := mcppkg.NewMCPHandler(streamRepository, coordinatorExecutor)
 	coordinatorCLI := cli.NewCoordinatorCLI(coordinatorAPI, coordinatorExecutor, rateLimiterEngine, authManager, mcpHandler, httpPort, grpcPort)
 	return coordinatorCLI

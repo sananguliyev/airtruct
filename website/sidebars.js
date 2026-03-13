@@ -56,6 +56,9 @@ const sidebars = {
             "components/processors/switch",
             "components/processors/schema-registry-decode",
             "components/processors/http-client",
+            "components/processors/sql-raw",
+            "components/processors/sql-select",
+            "components/processors/sql-insert",
           ],
         },
         {

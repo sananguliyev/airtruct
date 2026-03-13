@@ -221,6 +221,8 @@ func (r *streamRepository) ListAllByStatuses(statuses ...StreamStatus) ([]Stream
 func (r *streamRepository) ListAllActiveAndNonAssigned() ([]Stream, error) {
 	var streams []Stream
 
+	recentCutoff := time.Now().Add(-30 * time.Second)
+
 	err := r.db.
 		Preload("Processors").
 		Preload("Caches").
@@ -231,8 +233,9 @@ func (r *streamRepository) ListAllActiveAndNonAssigned() ([]Stream, error) {
 			r.db.
 				Model(&WorkerStream{}).Select("1").
 				Where(
-					"worker_streams.stream_id = streams.id AND worker_streams.status IN ?",
+					"worker_streams.stream_id = streams.id AND (worker_streams.status IN ? OR worker_streams.created_at > ?)",
 					[]WorkerStreamStatus{WorkerStreamStatusWaiting, WorkerStreamStatusRunning, WorkerStreamStatusCompleted},
+					recentCutoff,
 				),
 		).
 		Find(&streams).Error

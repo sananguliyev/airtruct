@@ -40,12 +40,16 @@ func (c *WorkerCLI) Run(ctx context.Context) {
 	grpcServer := grpc.NewServer()
 	pb.RegisterWorkerServer(grpcServer, c.api)
 
+	grpcReady := make(chan struct{})
+
 	g.Go(func() error {
 		log.Info().Uint32("port", c.grpcPort).Msg("starting worker GRPC server")
 		errCh := make(chan error, 1)
 		go func() {
 			errCh <- grpcServer.Serve(lis)
 		}()
+
+		close(grpcReady)
 
 		select {
 		case err := <-errCh:
@@ -60,6 +64,8 @@ func (c *WorkerCLI) Run(ctx context.Context) {
 	})
 
 	g.Go(func() error {
+		<-grpcReady
+
 		if err := c.executor.JoinToCoordinator(ctx); err != nil {
 			log.Error().Err(err).Msg("Failed to register with coordinator")
 		}
