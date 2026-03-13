@@ -340,6 +340,10 @@ func (c *CoordinatorAPI) UpdateStream(_ context.Context, in *pb.Stream) (*pb.Str
 					log.Error().Err(err).Int64("worker_stream_id", ws.ID).Msg("Failed to stop worker stream")
 				} else {
 					log.Info().Int64("stream_id", stream.ID).Int64("worker_stream_id", ws.ID).Str("worker_id", ws.WorkerID).Msg("Stopped worker stream due to stream update")
+					c.streamWorkerMap.RemoveStream(ws.StreamID)
+					if ws.Stream.ParentID != nil {
+						c.streamWorkerMap.RemoveStream(*ws.Stream.ParentID)
+					}
 				}
 			}
 		}

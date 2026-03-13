@@ -16,7 +16,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const tryStreamTimeout = 10 * time.Second
+const tryStreamTimeout = 60 * time.Second
 
 type TryMessage struct {
 	Content string `json:"content"`
@@ -169,7 +169,7 @@ func TryStream(ctx context.Context, processors []persistence.StreamProcessor, me
 		}
 	}
 
-	// Wait for all outputs to arrive, or a timeout if processors filter/delete messages.
+	// Wait for all outputs to arrive, the stream to exit, or the timeout.
 	select {
 	case <-outputsCh:
 	case <-time.After(3 * time.Second):

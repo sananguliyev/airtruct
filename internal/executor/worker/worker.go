@@ -30,8 +30,8 @@ type workerExecutor struct {
 	telemetryManager      TelemetryManager
 }
 
-func NewWorkerExecutor(grpcConn *grpc.ClientConn, grpcPort uint32, vaultProvider vault.VaultProvider) WorkerExecutor {
-	coordinatorConnection := NewCoordinatorConnection(grpcConn, grpcPort)
+func NewWorkerExecutor(ctx context.Context, grpcConn *grpc.ClientConn, grpcPort uint32, vaultProvider vault.VaultProvider) WorkerExecutor {
+	coordinatorConnection := NewCoordinatorConnection(ctx, grpcConn, grpcPort)
 
 	streamManager := NewStreamManager(coordinatorConnection, vaultProvider)
 

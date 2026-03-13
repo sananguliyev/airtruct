@@ -9,6 +9,7 @@ type StreamWorkerMap interface {
 	GetStreamWorkerStream(streamID int64) (int64, bool)
 	SetStreamWorker(streamID int64, workerID string, workerStreamID int64)
 	RemoveStream(streamID int64)
+	RemoveStreamIfMatches(streamID int64, workerStreamID int64)
 }
 
 type streamWorkerMap struct {
@@ -54,4 +55,14 @@ func (m *streamWorkerMap) RemoveStream(streamID int64) {
 
 	delete(m.streamWorker, streamID)
 	delete(m.streamWorkerStream, streamID)
+}
+
+func (m *streamWorkerMap) RemoveStreamIfMatches(streamID int64, workerStreamID int64) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if currentWSID, exists := m.streamWorkerStream[streamID]; exists && currentWSID == workerStreamID {
+		delete(m.streamWorker, streamID)
+		delete(m.streamWorkerStream, streamID)
+	}
 }

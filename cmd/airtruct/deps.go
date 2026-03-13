@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+
 	"github.com/rs/zerolog/log"
 	_ "github.com/warpstreamlabs/bento/public/components/all"
 	"google.golang.org/grpc"
@@ -58,7 +60,7 @@ func InitializeCoordinatorCommand(httpPort, grpcPort uint32) *cli.CoordinatorCLI
 	return coordinatorCLI
 }
 
-func InitializeWorkerCommand(discoveryUri string, grpcPort uint32) *cli.WorkerCLI {
+func InitializeWorkerCommand(ctx context.Context, discoveryUri string, grpcPort uint32) *cli.WorkerCLI {
 	secretConfig := config.NewSecretConfig()
 
 	grpcConn, err := grpc.NewClient(discoveryUri, grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -67,7 +69,7 @@ func InitializeWorkerCommand(discoveryUri string, grpcPort uint32) *cli.WorkerCL
 	}
 
 	vaultProvider := vault.NewLocalProvider(secretConfig, grpcConn)
-	workerExecutor := executor.NewWorkerExecutor(grpcConn, grpcPort, vaultProvider)
+	workerExecutor := executor.NewWorkerExecutor(ctx, grpcConn, grpcPort, vaultProvider)
 	workerAPI := api.NewWorkerAPI(workerExecutor)
 	workerCLI := cli.NewWorkerCLI(workerAPI, workerExecutor, grpcPort)
 	return workerCLI

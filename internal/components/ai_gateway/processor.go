@@ -170,10 +170,22 @@ func (p *Processor) Process(ctx context.Context, msg *service.Message) (service.
 		Temperature:  p.temperature,
 	}
 
+	p.logger.Debugf("AI gateway request: model=%s, prompt_len=%d, system_prompt_len=%d, max_tokens=%d, temperature=%f",
+		chatReq.Model, len(chatReq.Prompt), len(chatReq.SystemPrompt), chatReq.MaxTokens, chatReq.Temperature)
+	p.logger.Tracef("AI gateway prompt: %s", chatReq.Prompt)
+	p.logger.Tracef("AI gateway system_prompt: %s", chatReq.SystemPrompt)
+
 	chatResp, err := p.provider.Chat(ctx, chatReq)
 	if err != nil {
 		return nil, fmt.Errorf("AI chat request failed: %w", err)
 	}
+
+	p.logger.Debugf("AI gateway response: model=%s, finish_reason=%s, content_len=%d, input_tokens=%d, output_tokens=%d",
+		chatResp.Model, chatResp.FinishReason, len(chatResp.Content), chatResp.Usage.InputTokens, chatResp.Usage.OutputTokens)
+	if chatResp.Content == "" {
+		p.logger.Warnf("AI gateway returned empty content: finish_reason=%s, model=%s", chatResp.FinishReason, chatResp.Model)
+	}
+	p.logger.Tracef("AI gateway response content: %s", chatResp.Content)
 
 	responseObj := map[string]any{
 		"content":       chatResp.Content,
