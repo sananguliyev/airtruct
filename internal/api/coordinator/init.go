@@ -12,6 +12,7 @@ import (
 type StreamWorkerMap interface {
 	SetStreamWorker(streamID int64, workerID string, workerStreamID int64)
 	RemoveStream(streamID int64)
+	RemoveStreamIfMatches(streamID int64, workerStreamID int64)
 }
 
 type CoordinatorAPI struct {

@@ -37,14 +37,14 @@ func (c *CoordinatorAPI) UpdateWorkerStreamStatus(_ context.Context, in *pb.Work
 			c.streamWorkerMap.SetStreamWorker(*workerStream.Stream.ParentID, workerStream.WorkerID, workerStream.ID)
 		}
 	case persistence.WorkerStreamStatusFailed, persistence.WorkerStreamStatusStopped:
-		c.streamWorkerMap.RemoveStream(workerStream.StreamID)
+		c.streamWorkerMap.RemoveStreamIfMatches(workerStream.StreamID, workerStream.ID)
 		if workerStream.Stream.ParentID != nil {
-			c.streamWorkerMap.RemoveStream(*workerStream.Stream.ParentID)
+			c.streamWorkerMap.RemoveStreamIfMatches(*workerStream.Stream.ParentID, workerStream.ID)
 		}
 	case persistence.WorkerStreamStatusCompleted:
-		c.streamWorkerMap.RemoveStream(workerStream.StreamID)
+		c.streamWorkerMap.RemoveStreamIfMatches(workerStream.StreamID, workerStream.ID)
 		if workerStream.Stream.ParentID != nil {
-			c.streamWorkerMap.RemoveStream(*workerStream.Stream.ParentID)
+			c.streamWorkerMap.RemoveStreamIfMatches(*workerStream.Stream.ParentID, workerStream.ID)
 		}
 		if err = c.streamRepo.UpdateStatus(workerStream.StreamID, persistence.StreamStatusCompleted); err != nil {
 			log.Error().Err(err).Str("target_status", string(persistence.StreamStatusCompleted)).Msg("Failed to update stream status")
