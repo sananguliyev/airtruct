@@ -15,3 +15,6 @@ Processors transform, validate, or route messages within a pipeline. They are ap
 | [Switch](/docs/components/processors/switch) | Conditional processing based on message content |
 | [Schema Registry Decode](/docs/components/processors/schema-registry-decode) | Decodes Avro messages via Schema Registry |
 | [HTTP Client](/docs/components/processors/http-client) | Sends a message as an HTTP request and replaces it with the response |
+| [SQL Raw](/docs/components/processors/sql-raw) | Runs an arbitrary SQL query against a database |
+| [SQL Select](/docs/components/processors/sql-select) | Runs a SELECT query and replaces the message with the rows returned |
+| [SQL Insert](/docs/components/processors/sql-insert) | Inserts a row into an SQL database for each message |
