@@ -1,5 +1,5 @@
 ---
-sidebar_position: 1
+description: Set up a streaming pipeline from Kafka to PostgreSQL with Avro schema decoding.
 ---
 
 # Kafka to PostgreSQL
@@ -13,15 +13,50 @@ This guide walks through setting up a complete streaming pipeline from Kafka to 
 
 ## 1. Start the Development Environment
 
+Create a `docker-compose.yml` with Redpanda (Kafka-compatible), Schema Registry, and PostgreSQL:
+
+```yaml
+version: '3.8'
+services:
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:v24.3.9
+    command:
+      - redpanda start
+      - --smp 1
+      - --overprovisioned
+      - --node-id 0
+      - --kafka-addr PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
+      - --advertise-kafka-addr PLAINTEXT://redpanda:29092,OUTSIDE://localhost:9092
+      - --pandaproxy-addr 0.0.0.0:8082
+      - --advertise-pandaproxy-addr localhost:8082
+    ports:
+      - "8081:8081"
+      - "8082:8082"
+      - "9092:9092"
+      - "29092:29092"
+
+  postgres:
+    image: postgres:17.2-alpine
+    environment:
+      POSTGRES_DB: mydb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+```
+
 ```bash
-cd examples/kafka-to-psql
 docker-compose up -d
 ```
 
 This starts:
 - **Redpanda** (Kafka-compatible) on `localhost:9092`
 - **Schema Registry** on `localhost:8081`
-- **Redpanda Console** on `http://localhost:18080`
 - **PostgreSQL** on `localhost:5432`
 
 ## 2. Create the PostgreSQL Table
@@ -88,15 +123,45 @@ Click **Save** and then **Start** the stream.
 
 ## 6. Send Test Data
 
-Install dependencies and run the test producer:
+The example below uses Python, but any Kafka producer that writes Confluent-framed Avro will work — use whatever language or tool fits your stack.
+
+Install the Python dependencies:
 
 ```bash
 pip install confluent-kafka fastavro requests
-cd examples/kafka-to-psql
-python produce_event.py
 ```
 
-The script sends sample events for `user_signup`, `button_click`, and `purchase_completed`.
+Then run a quick test producer:
+
+```python
+import io, struct, json, random, requests
+from confluent_kafka import Producer
+from fastavro import parse_schema, schemaless_writer
+
+SCHEMA_REGISTRY_URL = "http://localhost:8081"
+TOPIC = "application-events"
+
+# Fetch schema
+resp = requests.get(f"{SCHEMA_REGISTRY_URL}/subjects/{TOPIC}-value/versions/latest")
+schema_id = resp.json()["id"]
+parsed = parse_schema(json.loads(resp.json()["schema"]))
+
+# Produce sample events
+producer = Producer({"bootstrap.servers": "localhost:9092"})
+for event in [
+    {"event_type": "user_signup",        "user_id": "user_42",  "message": "New premium signup"},
+    {"event_type": "button_click",       "user_id": "user_99",  "message": "Clicked checkout on cart page"},
+    {"event_type": "purchase_completed", "user_id": "user_77",  "message": "Order #12345 — $49.99 USD"},
+]:
+    buf = io.BytesIO()
+    buf.write(struct.pack("b", 0))          # magic byte
+    buf.write(struct.pack(">I", schema_id)) # schema ID
+    schemaless_writer(buf, parsed, event)
+    producer.produce(TOPIC, value=buf.getvalue())
+
+producer.flush()
+print("Done - 3 events sent.")
+```
 
 ## 7. Verify
 

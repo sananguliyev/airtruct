@@ -62,7 +62,7 @@ When an AI assistant calls a tool, the MCP server:
 3. The stream processes the request through its processors
 4. Returns the result with optional status code (via `meta status_code`) to the AI client
 
-See the [MCP Tool component](/docs/components/inputs/mcp-tool) and [MCP Tool Integration guide](/docs/guides/mcp-tool) for details on creating and connecting MCP tools.
+See the [MCP Tool component](/docs/components/inputs/mcp-tool) and [MCP Tool Integration playbook](/playbooks/mcp-tool) for details on creating and connecting MCP tools.
 
 ## Deployment
 

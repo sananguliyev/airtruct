@@ -10,5 +10,5 @@ Decodes Avro-encoded messages using a Confluent Schema Registry.
 Supports authentication: **Basic Auth**, **OAuth**, and **JWT**.
 
 :::tip
-This processor is commonly paired with the [Kafka](/docs/components/inputs/kafka) input for Avro-encoded topic consumption. See the [Kafka to PostgreSQL](/docs/guides/kafka-to-postgresql) guide for a complete example.
+This processor is commonly paired with the [Kafka](/docs/components/inputs/kafka) input for Avro-encoded topic consumption. See the [Kafka to PostgreSQL](/playbooks/kafka-to-postgresql) playbook for a complete example.
 :::

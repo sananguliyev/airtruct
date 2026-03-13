@@ -21,6 +21,20 @@ const config = {
 
   themes: ["@docusaurus/theme-mermaid"],
 
+  plugins: [
+    [
+      "@docusaurus/plugin-content-docs",
+      {
+        id: "playbooks",
+        path: "playbooks",
+        routeBasePath: "playbooks",
+        sidebarPath: "./playbooks-sidebars.js",
+        editUrl:
+          "https://github.com/sananguliyev/airtruct/tree/main/website/",
+      },
+    ],
+  ],
+
   i18n: {
     defaultLocale: "en",
     locales: ["en"],
@@ -61,9 +75,21 @@ const config = {
             label: "Docs",
           },
           {
-            href: "https://github.com/sananguliyev/airtruct",
-            label: "GitHub",
+            to: "/playbooks",
+            label: "Playbooks",
+            position: "left",
+          },
+          {
+            href: "https://github.com/sananguliyev/airtruct/releases/latest",
             position: "right",
+            className: "navbar-download-link",
+            "aria-label": "Download",
+          },
+          {
+            href: "https://github.com/sananguliyev/airtruct",
+            position: "right",
+            className: "navbar-github-link",
+            "aria-label": "GitHub repository",
           },
         ],
       },

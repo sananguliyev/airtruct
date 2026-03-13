@@ -6,7 +6,7 @@
 
 Airtruct is an open-source data pipeline tool — a lightweight, self-hosted alternative to Airbyte and Fivetran. Build and manage streams visually with a pipeline builder UI, transform data with the built-in Bloblang DSL, and scale horizontally with a simple coordinator & worker architecture. **Expose streams as MCP tools** for AI assistants like Claude, Cursor, and other MCP-compatible clients. Single binary, no Docker or JVM required.
 
-**[Documentation](https://airtruct.com/)** | **[Guides](https://airtruct.com/docs/guides/kafka-to-postgresql)**
+**[Documentation](https://airtruct.com/)** | **[Playbooks](https://airtruct.com/playbooks)**
 
 ## Quick Start
 
@@ -44,10 +44,11 @@ See the [Configuration docs](https://airtruct.com/docs/getting-started/configura
 - **Single Binary** — No Docker, JVM, or external dependencies required
 - **Self-hosted** — Full control over your data and infrastructure
 
-## Examples
+## Playbooks
 
-- [Kafka to PostgreSQL](examples/kafka-to-psql/) — Stream events from Kafka through Avro schema decoding into PostgreSQL.
-- [MCP Tool Integration](https://airtruct.com/docs/guides/mcp-tool) — Expose streams as tools for AI assistants.
+- [Kafka to PostgreSQL](https://airtruct.com/playbooks/kafka-to-postgresql) — Stream events from Kafka through Avro schema decoding into PostgreSQL.
+- [HTTP Webhooks](https://airtruct.com/playbooks/http-webhooks) — Accept webhook data over HTTP and store it in a database.
+- [MCP Tool Integration](https://airtruct.com/playbooks/mcp-tool) — Expose streams as tools for AI assistants.
 
 ## Contributing
 
