@@ -30,9 +30,9 @@ type workerExecutor struct {
 	worker worker.WorkerExecutor
 }
 
-func NewWorkerExecutor(grpcConn *grpc.ClientConn, grpcPort uint32, vaultProvider vault.VaultProvider) WorkerExecutor {
+func NewWorkerExecutor(ctx context.Context, grpcConn *grpc.ClientConn, grpcPort uint32, vaultProvider vault.VaultProvider) WorkerExecutor {
 	return &workerExecutor{
-		worker: worker.NewWorkerExecutor(grpcConn, grpcPort, vaultProvider),
+		worker: worker.NewWorkerExecutor(ctx, grpcConn, grpcPort, vaultProvider),
 	}
 }
 

@@ -37,7 +37,7 @@ type coordinatorConnection struct {
 	joined            bool
 }
 
-func NewCoordinatorConnection(grpcConn *grpc.ClientConn, grpcPort uint32) CoordinatorConnection {
+func NewCoordinatorConnection(ctx context.Context, grpcConn *grpc.ClientConn, grpcPort uint32) CoordinatorConnection {
 	coordinatorGRPCClient := pb.NewCoordinatorClient(grpcConn)
 
 	connection := &coordinatorConnection{
@@ -47,22 +47,27 @@ func NewCoordinatorConnection(grpcConn *grpc.ClientConn, grpcPort uint32) Coordi
 		joined:            false,
 	}
 
-	go connection.monitorConnection()
+	go connection.monitorConnection(ctx)
 
 	return connection
 }
 
-func (c *coordinatorConnection) monitorConnection() {
+func (c *coordinatorConnection) monitorConnection(ctx context.Context) {
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
-	for range ticker.C {
-		state := c.grpcConn.GetState()
-		if state == connectivity.TransientFailure || state == connectivity.Shutdown {
-			log.Warn().Str("state", state.String()).Msg("gRPC connection is down")
-			c.mu.Lock()
-			c.joined = false
-			c.mu.Unlock()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			state := c.grpcConn.GetState()
+			if state == connectivity.TransientFailure || state == connectivity.Shutdown {
+				log.Warn().Str("state", state.String()).Msg("gRPC connection is down")
+				c.mu.Lock()
+				c.joined = false
+				c.mu.Unlock()
+			}
 		}
 	}
 }

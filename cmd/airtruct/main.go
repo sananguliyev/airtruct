@@ -101,7 +101,7 @@ func main() {
 				return nil
 			} else {
 				log.Info().Msg("starting worker")
-				workerCLI := InitializeWorkerCommand(ctx.String("discovery-uri"), uint32(ctx.Uint("grpc-port")))
+				workerCLI := InitializeWorkerCommand(cCtx, ctx.String("discovery-uri"), uint32(ctx.Uint("grpc-port")))
 				workerCLI.Run(cCtx)
 				return nil
 			}
