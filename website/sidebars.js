@@ -82,11 +82,8 @@ const sidebars = {
       type: "category",
       label: "Guides",
       items: [
-        "guides/kafka-to-postgresql",
-        "guides/http-webhooks",
         "guides/scaling-workers",
         "guides/keycloak-authentication",
-        "guides/mcp-tool",
       ],
     },
     {

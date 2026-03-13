@@ -1,5 +1,5 @@
 ---
-sidebar_position: 2
+description: Accept webhook data over HTTP and store it in a database with validation.
 ---
 
 # HTTP Webhooks
@@ -44,13 +44,15 @@ Click **Save** and then **Start** the stream.
 
 ## Test It
 
-Once the stream is running, send a test webhook:
+Once the stream is running, send a test webhook. All HTTP Server streams are exposed under `/ingest/{stream-id}` followed by the configured path:
 
 ```bash
-curl -X POST http://localhost:8080/webhooks/events \
+curl -X POST http://localhost:8080/ingest/{stream-id}/webhooks/events \
   -H "Content-Type: application/json" \
   -d '{"type": "payment.completed", "amount": 99.99, "currency": "USD"}'
 ```
+
+Replace `{stream-id}` with the actual stream ID shown in the Airtruct UI.
 
 ## Returning Custom Responses
 

@@ -1,5 +1,5 @@
 ---
-sidebar_position: 5
+description: Expose Airtruct streams as tools for AI assistants via Model Context Protocol.
 ---
 
 # MCP Tool Integration

@@ -70,4 +70,4 @@ Open `http://localhost:8080` in your browser. You'll see the Airtruct console.
 
 - Learn about [Streams](/docs/concepts/streams) and how they work.
 - See all available [Components](/docs/concepts/components).
-- Try the [Kafka to PostgreSQL](/docs/guides/kafka-to-postgresql) tutorial for a real-world example.
+- Try the [Kafka to PostgreSQL](/playbooks/kafka-to-postgresql) playbook for a real-world example.
