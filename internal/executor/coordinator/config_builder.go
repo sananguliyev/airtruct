@@ -160,6 +160,7 @@ func (b *configBuilder) buildInputConfig(stream persistence.Stream) (map[string]
 		input["http_server"] = map[string]any{
 			"path":          "/",
 			"allowed_verbs": []string{"POST"},
+			"timeout":       "60s",
 			"sync_response": map[string]any{
 				"status": `${! metadata("status_code").or("200") }`,
 			},
