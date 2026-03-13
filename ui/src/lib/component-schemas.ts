@@ -1495,6 +1495,290 @@ export const componentSchemas = {
         },
       },
     },
+    sql_raw: {
+      title: "SQL Raw",
+      description:
+        "Runs an arbitrary SQL query against a database and replaces the message with the result.",
+      properties: {
+        driver: {
+          type: "select",
+          title: "Driver",
+          description: "A database driver to use.",
+          options: [
+            "mysql",
+            "postgres",
+            "clickhouse",
+            "mssql",
+            "sqlite",
+            "oracle",
+            "snowflake",
+            "trino",
+            "gocosmos",
+            "spanner",
+          ],
+          required: true,
+        },
+        dsn: {
+          type: "input",
+          title: "DSN",
+          description: "A Data Source Name to identify the target database.",
+          required: true,
+        },
+        query: {
+          type: "code",
+          title: "Query",
+          description:
+            "The query to execute. Placeholder arguments are populated with the args_mapping field.",
+          required: true,
+        },
+        unsafe_dynamic_query: {
+          type: "bool",
+          title: "Unsafe Dynamic Query",
+          description:
+            "Whether to enable interpolation functions in the query. WARNING: may be susceptible to SQL injection attacks.",
+          default: false,
+        },
+        args_mapping: {
+          type: "code",
+          title: "Args Mapping",
+          description:
+            "A Bloblang mapping which should evaluate to an array of values matching placeholder arguments in the query.",
+        },
+        exec_only: {
+          type: "bool",
+          title: "Exec Only",
+          description:
+            "Whether the query result should be discarded. When set to true the message contents will remain unchanged. This is useful for INSERT, UPDATE, or DELETE statements.",
+          default: false,
+        },
+        init_statement: {
+          type: "code",
+          title: "Init Statement",
+          description:
+            "An optional SQL statement to execute immediately upon the first connection to the target database. This is a useful way to initialize tables.",
+        },
+        conn_max_idle_time: {
+          type: "input",
+          title: "Conn Max Idle Time",
+          description:
+            "An optional maximum amount of time a connection may be idle. Expired connections may be closed lazily before reuse. If empty connections are not closed due to idle time.",
+        },
+        conn_max_life_time: {
+          type: "input",
+          title: "Conn Max Life Time",
+          description:
+            "An optional maximum amount of time a connection may be reused. Expired connections may be closed lazily before reuse. If empty connections are not closed due to their age.",
+        },
+        conn_max_idle: {
+          type: "number",
+          title: "Conn Max Idle",
+          description:
+            "An optional maximum number of connections in the idle connection pool. If conn_max_open is greater than 0 but less than the new conn_max_idle, then the new conn_max_idle will be reduced to match the conn_max_open limit. If 0 no idle connections are retained.",
+          default: 2,
+        },
+        conn_max_open: {
+          type: "number",
+          title: "Conn Max Open",
+          description:
+            "An optional maximum number of open connections to the database. If 0 there is no limit on the number of open connections.",
+          default: 0,
+        },
+      },
+    },
+    sql_select: {
+      title: "SQL Select",
+      description:
+        "Runs a select query against a database and replaces the message with the rows returned.",
+      properties: {
+        driver: {
+          type: "select",
+          title: "Driver",
+          description: "A database driver to use.",
+          options: [
+            "mysql",
+            "postgres",
+            "clickhouse",
+            "mssql",
+            "sqlite",
+            "oracle",
+            "snowflake",
+            "trino",
+            "gocosmos",
+            "spanner",
+          ],
+          required: true,
+        },
+        dsn: {
+          type: "input",
+          title: "DSN",
+          description: "A Data Source Name to identify the target database.",
+          required: true,
+        },
+        table: {
+          type: "input",
+          title: "Table",
+          description: "The table to query.",
+          required: true,
+        },
+        columns: {
+          type: "array",
+          title: "Columns",
+          description: "A list of columns to query.",
+          required: true,
+          default: [],
+        },
+        where: {
+          type: "code",
+          title: "Where",
+          description:
+            "An optional where clause to add. Placeholder arguments are populated with the args_mapping field.",
+        },
+        args_mapping: {
+          type: "code",
+          title: "Args Mapping",
+          description:
+            "A Bloblang mapping which should evaluate to an array of values matching in size to the number of placeholder arguments in the where clause.",
+        },
+        prefix: {
+          type: "input",
+          title: "Prefix",
+          description:
+            "An optional prefix to prepend to the query (before SELECT).",
+        },
+        suffix: {
+          type: "input",
+          title: "Suffix",
+          description: "An optional suffix to append to the select query.",
+        },
+        init_statement: {
+          type: "code",
+          title: "Init Statement",
+          description:
+            "An optional SQL statement to execute immediately upon the first connection to the target database.",
+        },
+        conn_max_idle_time: {
+          type: "input",
+          title: "Conn Max Idle Time",
+          description:
+            "An optional maximum amount of time a connection may be idle.",
+        },
+        conn_max_life_time: {
+          type: "input",
+          title: "Conn Max Life Time",
+          description:
+            "An optional maximum amount of time a connection may be reused.",
+        },
+        conn_max_idle: {
+          type: "number",
+          title: "Conn Max Idle",
+          description:
+            "An optional maximum number of connections in the idle connection pool.",
+          default: 2,
+        },
+        conn_max_open: {
+          type: "number",
+          title: "Conn Max Open",
+          description:
+            "An optional maximum number of open connections to the database. If 0 there is no limit.",
+          default: 0,
+        },
+      },
+    },
+    sql_insert: {
+      title: "SQL Insert",
+      description:
+        "Inserts a row into an SQL database for each message.",
+      properties: {
+        driver: {
+          type: "select",
+          title: "Driver",
+          description: "A database driver to use.",
+          options: [
+            "mysql",
+            "postgres",
+            "clickhouse",
+            "mssql",
+            "sqlite",
+            "oracle",
+            "snowflake",
+            "trino",
+            "gocosmos",
+            "spanner",
+          ],
+          required: true,
+        },
+        dsn: {
+          type: "input",
+          title: "DSN",
+          description: "A Data Source Name to identify the target database.",
+          required: true,
+        },
+        table: {
+          type: "input",
+          title: "Table",
+          description: "The table to insert into.",
+          required: true,
+        },
+        columns: {
+          type: "array",
+          title: "Columns",
+          description: "A list of columns to insert.",
+          required: true,
+          default: [],
+        },
+        args_mapping: {
+          type: "code",
+          title: "Args Mapping",
+          description:
+            "A Bloblang mapping which should evaluate to an array of values matching in size to the number of columns specified.",
+          required: true,
+        },
+        prefix: {
+          type: "input",
+          title: "Prefix",
+          description:
+            "An optional prefix to prepend to the insert query (before INSERT).",
+        },
+        suffix: {
+          type: "code",
+          title: "Suffix",
+          description:
+            "An optional suffix to add to the insert query. For example: ON CONFLICT (name) DO NOTHING for PostgreSQL.",
+        },
+        init_statement: {
+          type: "code",
+          title: "Init Statement",
+          description:
+            "An optional SQL statement to execute immediately upon the first connection to the target database.",
+        },
+        conn_max_idle_time: {
+          type: "input",
+          title: "Conn Max Idle Time",
+          description:
+            "An optional maximum amount of time a connection may be idle.",
+        },
+        conn_max_life_time: {
+          type: "input",
+          title: "Conn Max Life Time",
+          description:
+            "An optional maximum amount of time a connection may be reused.",
+        },
+        conn_max_idle: {
+          type: "number",
+          title: "Conn Max Idle",
+          description:
+            "An optional maximum number of connections in the idle connection pool.",
+          default: 2,
+        },
+        conn_max_open: {
+          type: "number",
+          title: "Conn Max Open",
+          description:
+            "An optional maximum number of open connections to the database. If 0 there is no limit.",
+          default: 0,
+        },
+      },
+    },
   },
   output: {
     http_client: {
@@ -2870,6 +3154,9 @@ export const componentLists = {
     "schema_registry_decode",
     "sync_response",
     "http",
+    "sql_raw",
+    "sql_select",
+    "sql_insert",
   ],
   output: [
     "http_client",
