@@ -33,25 +33,21 @@ nfpms:
     package_name: airtruct
     vendor: sananguliyev
     homepage: https://github.com/sananguliyev/airtruct
-    maintainer: Sanan Guliyev <sanan@airtruct.io>
+    maintainer: Sanan Guliyev <sanan@airtruct.com>
     description: Self-hosted ETL platform for data integration
     license: Apache-2.0
     formats: [deb, rpm, apk]
     bindir: /usr/bin
-brews:
+homebrew_casks:
   - ids: [airtruct]
     repository:
       owner: sananguliyev
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
-    directory: Formula
+    directory: Casks
     homepage: https://github.com/sananguliyev/airtruct
     description: Self-hosted ETL platform for data integration
-    license: Apache-2.0
-    install: |
-      bin.install "airtruct"
-    test: |
-      system "#{bin}/airtruct", "--version"
+    binaries: [airtruct]
 dist: target/dist
 release:
   github:

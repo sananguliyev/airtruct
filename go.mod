@@ -9,7 +9,6 @@ require (
 	github.com/rs/zerolog v1.33.0
 	github.com/urfave/cli/v2 v2.27.7
 	github.com/warpstreamlabs/bento v1.15.0
-	gorm.io/driver/sqlite v1.5.6
 )
 
 require (
@@ -207,7 +206,6 @@ require (
 	github.com/matoous/go-nanoid/v2 v2.0.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.27 // indirect
 	github.com/microsoft/gocosmos v1.1.1 // indirect
 	github.com/minio/highwayhash v1.0.3 // indirect
@@ -328,6 +326,7 @@ require (
 require (
 	github.com/anthropics/anthropic-sdk-go v1.26.0
 	github.com/bold-commerce/go-shopify/v4 v4.7.0
+	github.com/glebarez/sqlite v1.11.0
 	github.com/go-mysql-org/go-mysql v1.13.0
 	github.com/mark3labs/mcp-go v0.44.0
 	github.com/openai/openai-go/v3 v3.22.0
@@ -379,6 +378,7 @@ require (
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.36.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.9.0 // indirect
+	github.com/glebarez/go-sqlite v1.21.2 // indirect
 	github.com/go-errors/errors v1.5.1 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.3 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect

@@ -7,7 +7,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/sananguliyev/airtruct/internal/persistence"
-	"gorm.io/driver/sqlite"
+	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
 )
 
