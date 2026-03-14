@@ -6,17 +6,63 @@ sidebar_position: 1
 
 Airtruct runs as a single binary with no external dependencies. Choose the method that works best for you.
 
+## Homebrew (macOS / Linux)
+
+```bash
+brew install sananguliyev/tap/airtruct
+```
+
+## Install Script
+
+Download and install the latest release automatically:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/sananguliyev/airtruct/main/install.sh | sh
+```
+
+To install a specific version:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/sananguliyev/airtruct/main/install.sh | sh -s 0.1.0
+```
+
+## Linux Packages
+
+### Debian / Ubuntu
+
+```bash
+curl -LO https://github.com/sananguliyev/airtruct/releases/latest/download/airtruct_<version>_linux_amd64.deb
+sudo dpkg -i airtruct_<version>_linux_amd64.deb
+```
+
+### RHEL / Fedora / CentOS
+
+```bash
+curl -LO https://github.com/sananguliyev/airtruct/releases/latest/download/airtruct_<version>_linux_amd64.rpm
+sudo rpm -i airtruct_<version>_linux_amd64.rpm
+```
+
+### Alpine
+
+```bash
+curl -LO https://github.com/sananguliyev/airtruct/releases/latest/download/airtruct_<version>_linux_amd64.apk
+sudo apk add --allow-untrusted airtruct_<version>_linux_amd64.apk
+```
+
+Replace `<version>` with the desired release version (e.g. `0.1.0`). Packages are available for `amd64`, `arm64`, and `armv7` architectures.
+
 ## Download Binary
 
 1. Go to the [Releases page](https://github.com/sananguliyev/airtruct/releases).
-2. Download the appropriate binary for your operating system (Linux, macOS, or Windows).
-3. Make it executable (Linux/macOS):
+2. Download the appropriate archive for your operating system (Linux, macOS, or Windows).
+3. Extract and make it executable (Linux/macOS):
 
 ```bash
+tar -xzf airtruct_<version>_<os>_<arch>.tar.gz
 chmod +x airtruct
 ```
 
-On Windows, run the `.exe` file directly.
+On Windows, extract the `.zip` and run the `.exe` file directly.
 
 ## Docker Compose
 
@@ -35,7 +81,7 @@ See [Configuration](/docs/getting-started/configuration) for PostgreSQL setup wi
 ## Verify Installation
 
 ```bash
-./airtruct --help
+airtruct --help
 ```
 
 ## Next Steps
