@@ -10,16 +10,34 @@ Airtruct is an open-source data pipeline tool — a lightweight, self-hosted alt
 
 ## Quick Start
 
-**Download** the latest binary from the [Releases page](https://github.com/sananguliyev/airtruct/releases), then:
+### Install
 
 ```bash
-chmod +x airtruct
+# Homebrew (macOS / Linux)
+brew install sananguliyev/tap/airtruct
 
+# Or install script
+curl -fsSL https://raw.githubusercontent.com/sananguliyev/airtruct/main/install.sh | sh
+
+# Or Debian/Ubuntu
+curl -LO https://github.com/sananguliyev/airtruct/releases/latest/download/airtruct_<version>_linux_amd64.deb
+sudo dpkg -i airtruct_<version>_linux_amd64.deb
+
+# Or RHEL/Fedora
+curl -LO https://github.com/sananguliyev/airtruct/releases/latest/download/airtruct_<version>_linux_amd64.rpm
+sudo rpm -i airtruct_<version>_linux_amd64.rpm
+```
+
+See the [Installation docs](https://airtruct.com/docs/getting-started/installation) for all options including Alpine, Windows, and manual binary download.
+
+### Run
+
+```bash
 # Start coordinator
-./airtruct -role coordinator -grpc-port 50000
+airtruct -role coordinator -grpc-port 50000
 
 # Start worker (in a separate terminal)
-./airtruct -role worker -grpc-port 50001
+airtruct -role worker -grpc-port 50001
 ```
 
 Open **http://localhost:8080** and start building pipelines.
