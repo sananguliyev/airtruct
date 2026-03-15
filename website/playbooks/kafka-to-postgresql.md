@@ -8,7 +8,7 @@ This guide walks through setting up a complete streaming pipeline from Kafka to 
 
 ## Prerequisites
 
-- Docker and Docker Compose installed
+- Docker installed
 - Airtruct coordinator and worker running ([Installation](/docs/getting-started/installation))
 
 ## 1. Start the Development Environment
@@ -16,7 +16,6 @@ This guide walks through setting up a complete streaming pipeline from Kafka to 
 Create a `docker-compose.yml` with Redpanda (Kafka-compatible), Schema Registry, and PostgreSQL:
 
 ```yaml
-version: '3.8'
 services:
   redpanda:
     image: docker.redpanda.com/redpandadata/redpanda:v24.3.9
@@ -51,7 +50,7 @@ services:
 ```
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 This starts:
@@ -173,5 +172,5 @@ docker exec -it postgres psql -U postgres -d mydb \
 ## Cleanup
 
 ```bash
-docker-compose down -v
+docker compose down -v
 ```

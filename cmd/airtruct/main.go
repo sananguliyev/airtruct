@@ -14,6 +14,11 @@ import (
 	_ "github.com/warpstreamlabs/bento/public/components/all"
 )
 
+var (
+	Version   = "dev"
+	DateBuilt = "unknown"
+)
+
 const (
 	RoleCoordinator = "coordinator"
 	RoleWorker      = "worker"
@@ -24,7 +29,7 @@ func main() {
 		Name:    "run",
 		Usage:   "Run the airtruct server",
 		Suggest: true,
-		Version: "v0.0.1",
+		Version: Version,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:    "config",
@@ -53,11 +58,11 @@ func main() {
 				Value:   8080,
 			}),
 			altsrc.NewUintFlag(&cli.UintFlag{
-				Name:     "grpc-port",
-				Aliases:  []string{"gp"},
-				Usage:    "grpc port of the node",
-				EnvVars:  []string{"GRPC_PORT"},
-				Required: true,
+				Name:    "grpc-port",
+				Aliases: []string{"gp"},
+				Usage:   "grpc port of the node",
+				EnvVars: []string{"GRPC_PORT"},
+				Value:   50000,
 			}),
 			altsrc.NewBoolFlag(&cli.BoolFlag{
 				Name:    "debug",
@@ -65,6 +70,92 @@ func main() {
 				Usage:   "debug mode",
 				EnvVars: []string{"DEBUG_MODE"},
 				Value:   false,
+			}),
+			// Database
+			altsrc.NewStringFlag(&cli.StringFlag{
+				Name:    "database.driver",
+				Usage:   "database driver (sqlite or postgres)",
+				EnvVars: []string{"DATABASE_DRIVER"},
+				Value:   "sqlite",
+			}),
+			altsrc.NewStringFlag(&cli.StringFlag{
+				Name:    "database.uri",
+				Usage:   "database connection URI",
+				EnvVars: []string{"DATABASE_URI"},
+			}),
+			// Secret
+			altsrc.NewStringFlag(&cli.StringFlag{
+				Name:    "secret.key",
+				Usage:   "encryption key (must be exactly 32 bytes)",
+				EnvVars: []string{"SECRET_KEY"},
+			}),
+			// Auth
+			altsrc.NewStringFlag(&cli.StringFlag{
+				Name:    "auth.type",
+				Usage:   "authentication type (none, basic, or oauth2)",
+				EnvVars: []string{"AUTH_TYPE"},
+				Value:   "none",
+			}),
+			altsrc.NewStringFlag(&cli.StringFlag{
+				Name:    "auth.basic-username",
+				Usage:   "basic auth username",
+				EnvVars: []string{"AUTH_BASIC_USERNAME"},
+			}),
+			altsrc.NewStringFlag(&cli.StringFlag{
+				Name:    "auth.basic-password",
+				Usage:   "basic auth password",
+				EnvVars: []string{"AUTH_BASIC_PASSWORD"},
+			}),
+			altsrc.NewStringFlag(&cli.StringFlag{
+				Name:    "auth.oauth2-client-id",
+				Usage:   "OAuth2 client ID",
+				EnvVars: []string{"AUTH_OAUTH2_CLIENT_ID"},
+			}),
+			altsrc.NewStringFlag(&cli.StringFlag{
+				Name:    "auth.oauth2-client-secret",
+				Usage:   "OAuth2 client secret",
+				EnvVars: []string{"AUTH_OAUTH2_CLIENT_SECRET"},
+			}),
+			altsrc.NewStringFlag(&cli.StringFlag{
+				Name:    "auth.oauth2-authorization-url",
+				Usage:   "OAuth2 authorization endpoint",
+				EnvVars: []string{"AUTH_OAUTH2_AUTHORIZATION_URL"},
+			}),
+			altsrc.NewStringFlag(&cli.StringFlag{
+				Name:    "auth.oauth2-token-url",
+				Usage:   "OAuth2 token endpoint",
+				EnvVars: []string{"AUTH_OAUTH2_TOKEN_URL"},
+			}),
+			altsrc.NewStringFlag(&cli.StringFlag{
+				Name:    "auth.oauth2-redirect-url",
+				Usage:   "OAuth2 redirect/callback URL",
+				EnvVars: []string{"AUTH_OAUTH2_REDIRECT_URL"},
+			}),
+			altsrc.NewStringFlag(&cli.StringFlag{
+				Name:    "auth.oauth2-scopes",
+				Usage:   "OAuth2 scopes (comma-separated)",
+				EnvVars: []string{"AUTH_OAUTH2_SCOPES"},
+			}),
+			altsrc.NewStringFlag(&cli.StringFlag{
+				Name:    "auth.oauth2-user-info-url",
+				Usage:   "OAuth2 user info endpoint",
+				EnvVars: []string{"AUTH_OAUTH2_USER_INFO_URL"},
+			}),
+			altsrc.NewStringFlag(&cli.StringFlag{
+				Name:    "auth.oauth2-allowed-users",
+				Usage:   "OAuth2 allowed users (comma-separated)",
+				EnvVars: []string{"AUTH_OAUTH2_ALLOWED_USERS"},
+			}),
+			altsrc.NewStringFlag(&cli.StringFlag{
+				Name:    "auth.oauth2-allowed-domains",
+				Usage:   "OAuth2 allowed domains (comma-separated)",
+				EnvVars: []string{"AUTH_OAUTH2_ALLOWED_DOMAINS"},
+			}),
+			altsrc.NewStringFlag(&cli.StringFlag{
+				Name:    "auth.oauth2-session-cookie-name",
+				Usage:   "OAuth2 session cookie name",
+				EnvVars: []string{"AUTH_OAUTH2_SESSION_COOKIE_NAME"},
+				Value:   "airtruct_session",
 			}),
 		},
 		Before: func(ctx *cli.Context) error {
@@ -82,10 +173,17 @@ func main() {
 				log.Info().Msg("Successfully loaded configuration from file")
 			}
 
-			// Validate role after potentially loading from config or env vars
 			role := ctx.String("role")
 			if role != RoleCoordinator && role != RoleWorker {
 				return fmt.Errorf("invalid role: %s. Must be '%s' or '%s'", role, RoleCoordinator, RoleWorker)
+			}
+
+			if ctx.String("secret.key") == "" {
+				return fmt.Errorf("secret.key is required (set via YAML, SECRET_KEY env, or --secret.key flag)")
+			}
+
+			if role == RoleCoordinator && ctx.String("database.uri") == "" {
+				return fmt.Errorf("database.uri is required for coordinator (set via YAML, DATABASE_URI env, or --database.uri flag)")
 			}
 
 			return nil
@@ -96,12 +194,12 @@ func main() {
 			setLogLevel(ctx.Bool("debug"))
 			if ctx.String("role") == RoleCoordinator {
 				log.Info().Msg("starting coordinator")
-				coordinatorCLI := InitializeCoordinatorCommand(uint32(ctx.Uint("http-port")), uint32(ctx.Uint("grpc-port")))
+				coordinatorCLI := InitializeCoordinatorCommand(ctx)
 				coordinatorCLI.Run(cCtx)
 				return nil
 			} else {
 				log.Info().Msg("starting worker")
-				workerCLI := InitializeWorkerCommand(cCtx, ctx.String("discovery-uri"), uint32(ctx.Uint("grpc-port")))
+				workerCLI := InitializeWorkerCommand(cCtx, ctx)
 				workerCLI.Run(cCtx)
 				return nil
 			}

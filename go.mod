@@ -5,7 +5,6 @@ go 1.25
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.2.1
-	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/rs/zerolog v1.33.0
 	github.com/urfave/cli/v2 v2.27.7
 	github.com/warpstreamlabs/bento v1.15.0
@@ -320,20 +319,20 @@ require (
 	modernc.org/libc v1.66.3 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
-	modernc.org/sqlite v1.38.2 // indirect
+	modernc.org/sqlite v1.38.2
 )
 
 require (
 	github.com/anthropics/anthropic-sdk-go v1.26.0
 	github.com/bold-commerce/go-shopify/v4 v4.7.0
-	github.com/glebarez/sqlite v1.11.0
 	github.com/go-mysql-org/go-mysql v1.13.0
 	github.com/mark3labs/mcp-go v0.44.0
 	github.com/openai/openai-go/v3 v3.22.0
 	github.com/rakyll/statik v0.1.7
 	github.com/rs/cors v1.11.1
 	gorm.io/driver/postgres v1.6.0
-	gorm.io/gorm v1.25.11
+	gorm.io/driver/sqlite v1.6.0
+	gorm.io/gorm v1.30.0
 )
 
 require (
@@ -378,7 +377,6 @@ require (
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.36.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.9.0 // indirect
-	github.com/glebarez/go-sqlite v1.21.2 // indirect
 	github.com/go-errors/errors v1.5.1 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.3 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
@@ -405,6 +403,7 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/asmfmt v1.3.2 // indirect
 	github.com/knights-analytics/hugot v0.4.3 // indirect
+	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/minio/asm2plan9s v0.0.0-20200509001527-cdd76441f9d8 // indirect
 	github.com/minio/c2goasm v0.0.0-20190812172519-36a3d3bbc4f3 // indirect
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect

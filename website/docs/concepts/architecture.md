@@ -71,6 +71,6 @@ Since Airtruct is a single binary, deployment is straightforward:
 - **Single machine**: Run coordinator and worker(s) as separate processes with different gRPC ports.
 - **Multiple machines**: Run the coordinator on one host and workers on others, pointing workers to the coordinator's address via `-discovery-uri`.
 - **Kubernetes**: Deploy coordinator as a Deployment/Service and workers as a **StatefulSet**. StatefulSets give each worker pod a stable hostname (e.g., `airtruct-worker-0`, `airtruct-worker-1`), which prevents stale worker registrations that occur with Deployments where pods get random names on every restart.
-- **Docker Compose**: Use the included `docker-compose.yml` for local development.
+- **Docker**: Use `docker run` commands to run the coordinator and workers as containers. See [Installation](/docs/getting-started/installation#docker) for details.
 
-No Docker, JVM, or external dependencies are required.
+No JVM or external dependencies are required. Docker can be used for containerized deployments (Kubernetes, Docker Compose, etc.) but is not a hard dependency — unlike tools such as Airbyte, Airtruct runs natively as a single binary.

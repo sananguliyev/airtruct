@@ -1,13 +1,15 @@
 package persistence
 
 import (
+	"database/sql"
+
 	configstruct "github.com/sananguliyev/airtruct/internal/config"
 	"github.com/sananguliyev/airtruct/internal/logger"
 	"github.com/sananguliyev/airtruct/internal/persistence/migrations"
 
 	"github.com/rs/zerolog/log"
 	"gorm.io/driver/postgres"
-	"github.com/glebarez/sqlite"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -26,7 +28,12 @@ func NewGormDB(config *configstruct.DatabaseConfig) *gorm.DB {
 
 	switch config.Driver {
 	case configstruct.DatabaseTypeSQLite:
-		db, err = gorm.Open(sqlite.Open(config.URI), gormConfig)
+		sqlDB, sqlErr := sql.Open("sqlite", config.URI)
+		if sqlErr != nil {
+			log.Fatal().Err(sqlErr).Msg("Failed to open SQLite connection")
+			return nil
+		}
+		db, err = gorm.Open(sqlite.New(sqlite.Config{Conn: sqlDB}), gormConfig)
 		dialect = "sqlite"
 	case configstruct.DatabaseTypePostgres:
 		db, err = gorm.Open(postgres.Open(config.URI), gormConfig)

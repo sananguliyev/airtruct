@@ -6,77 +6,53 @@ sidebar_position: 1
 
 Airtruct runs as a single binary with no external dependencies. Choose the method that works best for you.
 
-## Homebrew (macOS / Linux)
-
-```bash
-brew install sananguliyev/tap/airtruct
-```
-
 ## Install Script
 
 Download and install the latest release automatically:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/sananguliyev/airtruct/main/install.sh | sh
+curl -Lsf https://airtruct.com/sh/install | bash
 ```
 
 To install a specific version:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/sananguliyev/airtruct/main/install.sh | sh -s 0.1.0
+curl -Lsf https://airtruct.com/sh/install | bash -s -- 0.2.0
 ```
 
-## Linux Packages
+## Docker
 
-### Debian / Ubuntu
+Pull the latest official image:
 
 ```bash
-curl -LO https://github.com/sananguliyev/airtruct/releases/latest/download/airtruct_<version>_linux_amd64.deb
-sudo dpkg -i airtruct_<version>_linux_amd64.deb
+docker pull ghcr.io/sananguliyev/airtruct
 ```
 
-### RHEL / Fedora / CentOS
+Run the coordinator and worker:
 
 ```bash
-curl -LO https://github.com/sananguliyev/airtruct/releases/latest/download/airtruct_<version>_linux_amd64.rpm
-sudo rpm -i airtruct_<version>_linux_amd64.rpm
-```
+# Start coordinator
+docker run -d --name airtruct-coordinator \
+  -p 8080:8080 -p 50000:50000 \
+  -e DATABASE_DRIVER=sqlite \
+  -e DATABASE_URI="file:/data/airtruct.sqlite?_foreign_keys=1&mode=rwc" \
+  -e SECRET_KEY="this_is_a_32_byte_key_for_AES!!!" \
+  -v airtruct-data:/data \
+  ghcr.io/sananguliyev/airtruct -role coordinator -grpc-port 50000
 
-### Alpine
-
-```bash
-curl -LO https://github.com/sananguliyev/airtruct/releases/latest/download/airtruct_<version>_linux_amd64.apk
-sudo apk add --allow-untrusted airtruct_<version>_linux_amd64.apk
-```
-
-Replace `<version>` with the desired release version (e.g. `0.1.0`). Packages are available for `amd64`, `arm64`, and `armv7` architectures.
-
-## Download Binary
-
-1. Go to the [Releases page](https://github.com/sananguliyev/airtruct/releases).
-2. Download the appropriate archive for your operating system (Linux, macOS, or Windows).
-3. Extract and make it executable (Linux/macOS):
-
-```bash
-tar -xzf airtruct_<version>_<os>_<arch>.tar.gz
-chmod +x airtruct
-```
-
-On Windows, extract the `.zip` and run the `.exe` file directly.
-
-## Docker Compose
-
-If you prefer Docker, use the included `docker-compose.yml`:
-
-```bash
-git clone https://github.com/sananguliyev/airtruct.git
-cd airtruct
-docker-compose up
+# Start worker
+docker run -d --name airtruct-worker \
+  -e DATABASE_DRIVER=sqlite \
+  -e DATABASE_URI="file:/data/airtruct.sqlite?_foreign_keys=1&mode=rwc" \
+  -e SECRET_KEY="this_is_a_32_byte_key_for_AES!!!" \
+  -v airtruct-data:/data \
+  ghcr.io/sananguliyev/airtruct -role worker -grpc-port 50001 \
+  -coordinator-address airtruct-coordinator:50000
 ```
 
 The coordinator will be available at `http://localhost:8080`.
 
-See [Configuration](/docs/getting-started/configuration) for PostgreSQL setup with Docker Compose.
+See [Configuration](/docs/getting-started/configuration) for all environment variables including PostgreSQL and authentication.
 
 ## Verify Installation
 
