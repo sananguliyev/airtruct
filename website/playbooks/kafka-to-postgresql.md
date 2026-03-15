@@ -13,7 +13,7 @@ This guide walks through setting up a complete streaming pipeline from Kafka to 
 
 ## 1. Start the Development Environment
 
-Create a `docker compose.yml` with Redpanda (Kafka-compatible), Schema Registry, and PostgreSQL:
+Create a `docker-compose.yml` with Redpanda (Kafka-compatible), Schema Registry, and PostgreSQL:
 
 ```yaml
 services:

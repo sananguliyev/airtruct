@@ -5,7 +5,6 @@ go 1.25
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.2.1
-	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/rs/zerolog v1.33.0
 	github.com/urfave/cli/v2 v2.27.7
 	github.com/warpstreamlabs/bento v1.15.0

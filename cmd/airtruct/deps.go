@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
+	"os"
+	"strings"
 
 	"github.com/rs/zerolog/log"
+	"github.com/urfave/cli/v2"
 	_ "github.com/warpstreamlabs/bento/public/components/all"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -12,7 +15,7 @@ import (
 	"github.com/sananguliyev/airtruct/internal/api"
 	"github.com/sananguliyev/airtruct/internal/api/coordinator"
 	"github.com/sananguliyev/airtruct/internal/auth"
-	"github.com/sananguliyev/airtruct/internal/cli"
+	intcli "github.com/sananguliyev/airtruct/internal/cli"
 	"github.com/sananguliyev/airtruct/internal/config"
 	"github.com/sananguliyev/airtruct/internal/executor"
 	executorcoordinator "github.com/sananguliyev/airtruct/internal/executor/coordinator"
@@ -22,11 +25,71 @@ import (
 	"github.com/sananguliyev/airtruct/internal/vault"
 )
 
-func InitializeCoordinatorCommand(httpPort, grpcPort uint32) *cli.CoordinatorCLI {
-	databaseConfig := config.NewDatabaseConfig()
+func expandStr(ctx *cli.Context, name string) string {
+	return os.Expand(ctx.String(name), expandVar)
+}
+
+func expandVar(key string) string {
+	if idx := strings.Index(key, ":-"); idx != -1 {
+		if val, ok := os.LookupEnv(key[:idx]); ok {
+			return val
+		}
+		return key[idx+2:]
+	}
+	return os.Getenv(key)
+}
+
+func buildDatabaseConfig(ctx *cli.Context) *config.DatabaseConfig {
+	return &config.DatabaseConfig{
+		Driver: expandStr(ctx, "database.driver"),
+		URI:    expandStr(ctx, "database.uri"),
+	}
+}
+
+func buildSecretConfig(ctx *cli.Context) *config.SecretConfig {
+	return &config.SecretConfig{
+		Provider: config.SecretProviderLocal,
+		Key:      expandStr(ctx, "secret.key"),
+	}
+}
+
+func buildAuthConfig(ctx *cli.Context) *config.AuthConfig {
+	return &config.AuthConfig{
+		Type:                    config.AuthType(expandStr(ctx, "auth.type")),
+		BasicUsername:           expandStr(ctx, "auth.basic-username"),
+		BasicPassword:           expandStr(ctx, "auth.basic-password"),
+		OAuth2ClientID:          expandStr(ctx, "auth.oauth2-client-id"),
+		OAuth2ClientSecret:      expandStr(ctx, "auth.oauth2-client-secret"),
+		OAuth2AuthorizationURL:  expandStr(ctx, "auth.oauth2-authorization-url"),
+		OAuth2TokenURL:          expandStr(ctx, "auth.oauth2-token-url"),
+		OAuth2RedirectURL:       expandStr(ctx, "auth.oauth2-redirect-url"),
+		OAuth2Scopes:            splitComma(expandStr(ctx, "auth.oauth2-scopes")),
+		OAuth2UserInfoURL:       expandStr(ctx, "auth.oauth2-user-info-url"),
+		OAuth2AllowedUsers:      splitComma(expandStr(ctx, "auth.oauth2-allowed-users")),
+		OAuth2AllowedDomains:    splitComma(expandStr(ctx, "auth.oauth2-allowed-domains")),
+		OAuth2SessionCookieName: expandStr(ctx, "auth.oauth2-session-cookie-name"),
+	}
+}
+
+func splitComma(s string) []string {
+	if s == "" {
+		return nil
+	}
+	parts := strings.Split(s, ",")
+	result := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if trimmed := strings.TrimSpace(p); trimmed != "" {
+			result = append(result, trimmed)
+		}
+	}
+	return result
+}
+
+func InitializeCoordinatorCommand(ctx *cli.Context) *intcli.CoordinatorCLI {
+	databaseConfig := buildDatabaseConfig(ctx)
 	db := persistence.NewGormDB(databaseConfig)
-	secretConfig := config.NewSecretConfig()
-	authConfig := config.NewAuthConfig()
+	secretConfig := buildSecretConfig(ctx)
+	authConfig := buildAuthConfig(ctx)
 	authManager, err := auth.NewManager(authConfig, secretConfig.Key)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to create auth manager")
@@ -56,21 +119,25 @@ func InitializeCoordinatorCommand(httpPort, grpcPort uint32) *cli.CoordinatorCLI
 	coordinatorAPI := coordinator.NewCoordinatorAPI(eventRepository, streamRepository, streamCacheRepository, streamRateLimitRepository, streamBufferRepository, workerRepository, workerStreamRepository, secretRepository, cacheRepository, bufferRepository, rateLimitRepository, fileRepository, rateLimiterEngine, aesgcm, analyticsProvider, streamWorkerMap)
 	coordinatorExecutor := executor.NewCoordinatorExecutor(workerRepository, streamRepository, streamCacheRepository, streamRateLimitRepository, workerStreamRepository, fileRepository, streamWorkerMap)
 	mcpHandler := mcppkg.NewMCPHandler(streamRepository, coordinatorExecutor)
-	coordinatorCLI := cli.NewCoordinatorCLI(coordinatorAPI, coordinatorExecutor, rateLimiterEngine, authManager, mcpHandler, httpPort, grpcPort)
+	httpPort := uint32(ctx.Uint("http-port"))
+	grpcPort := uint32(ctx.Uint("grpc-port"))
+	coordinatorCLI := intcli.NewCoordinatorCLI(coordinatorAPI, coordinatorExecutor, rateLimiterEngine, authManager, mcpHandler, httpPort, grpcPort)
 	return coordinatorCLI
 }
 
-func InitializeWorkerCommand(ctx context.Context, discoveryUri string, grpcPort uint32) *cli.WorkerCLI {
-	secretConfig := config.NewSecretConfig()
+func InitializeWorkerCommand(appCtx context.Context, ctx *cli.Context) *intcli.WorkerCLI {
+	secretConfig := buildSecretConfig(ctx)
 
+	discoveryUri := ctx.String("discovery-uri")
 	grpcConn, err := grpc.NewClient(discoveryUri, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to create grpc client")
 	}
 
+	grpcPort := uint32(ctx.Uint("grpc-port"))
 	vaultProvider := vault.NewLocalProvider(secretConfig, grpcConn)
-	workerExecutor := executor.NewWorkerExecutor(ctx, grpcConn, grpcPort, vaultProvider)
+	workerExecutor := executor.NewWorkerExecutor(appCtx, grpcConn, grpcPort, vaultProvider)
 	workerAPI := api.NewWorkerAPI(workerExecutor)
-	workerCLI := cli.NewWorkerCLI(workerAPI, workerExecutor, grpcPort)
+	workerCLI := intcli.NewWorkerCLI(workerAPI, workerExecutor, grpcPort)
 	return workerCLI
 }
