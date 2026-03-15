@@ -1,4 +1,4 @@
-.PHONY: check-env protoc ui-deps statik build run-coordinator run-worker run-ui docker-up docker-down docker-logs docker-restart docker-build
+.PHONY: check-env protoc ui-deps statik build run-coordinator run-worker run-ui
 
 check-env:
 	@if [ ! -f .env ]; then \
@@ -41,17 +41,3 @@ run-ui:
 run-website:
 	pnpm --prefix website start
 
-docker-up: check-env
-	docker-compose up -d
-
-docker-down:
-	docker-compose down
-
-docker-logs:
-	docker-compose logs -f
-
-docker-restart:
-	docker-compose restart
-
-docker-build:
-	docker-compose build

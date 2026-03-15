@@ -13,22 +13,10 @@ Airtruct is an open-source data pipeline tool — a lightweight, self-hosted alt
 ### Install
 
 ```bash
-# Homebrew (macOS / Linux)
-brew install sananguliyev/tap/airtruct
-
-# Or install script
-curl -fsSL https://raw.githubusercontent.com/sananguliyev/airtruct/main/install.sh | sh
-
-# Or Debian/Ubuntu
-curl -LO https://github.com/sananguliyev/airtruct/releases/latest/download/airtruct_<version>_linux_amd64.deb
-sudo dpkg -i airtruct_<version>_linux_amd64.deb
-
-# Or RHEL/Fedora
-curl -LO https://github.com/sananguliyev/airtruct/releases/latest/download/airtruct_<version>_linux_amd64.rpm
-sudo rpm -i airtruct_<version>_linux_amd64.rpm
+curl -Lsf https://airtruct.com/sh/install | bash
 ```
 
-See the [Installation docs](https://airtruct.com/docs/getting-started/installation) for all options including Alpine, Windows, and manual binary download.
+See the [Installation docs](https://airtruct.com/docs/getting-started/installation) for more options.
 
 ### Run
 
@@ -42,15 +30,13 @@ airtruct -role worker -grpc-port 50001
 
 Open **http://localhost:8080** and start building pipelines.
 
-### Docker Compose
+### Docker
 
 ```bash
-git clone https://github.com/sananguliyev/airtruct.git
-cd airtruct
-docker-compose up
+docker pull ghcr.io/sananguliyev/airtruct
 ```
 
-See the [Configuration docs](https://airtruct.com/docs/getting-started/configuration) for database setup (SQLite, PostgreSQL) and other options.
+See the [Installation docs](https://airtruct.com/docs/getting-started/installation) for Docker run commands and the [Configuration docs](https://airtruct.com/docs/getting-started/configuration) for database setup.
 
 ## Features
 

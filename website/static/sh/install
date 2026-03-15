@@ -1,0 +1,145 @@
+#!/usr/bin/env bash
+#
+# Installs Airtruct the quick way.
+#
+# Requires curl, grep, cut, tar, uname, chmod, mv, rm.
+
+[[ $- = *i* ]] && echo "Don't source this script!" && return 10
+
+header() {
+	cat 1>&2 <<EOF
+Airtruct Installer
+
+Website: https://airtruct.com
+Repo:    https://github.com/sananguliyev/airtruct
+
+EOF
+}
+
+check_cmd() {
+	command -v "$1" > /dev/null 2>&1
+}
+
+check_tools() {
+	Tools=("curl" "grep" "cut" "tar" "uname" "chmod" "mv" "rm")
+
+	for tool in ${Tools[*]}; do
+		if ! check_cmd $tool; then
+			echo "Aborted, missing $tool, sorry!"
+			exit 6
+		fi
+	done
+}
+
+install_airtruct()
+{
+	trap 'echo -e "Aborted, error $? in command: $BASH_COMMAND"; trap ERR; exit 1' ERR
+
+	if [[ "$#" -eq 2 ]]; then
+		airtruct_tag="v$1"
+		airtruct_version="$1"
+		airtruct_install_path="$2"
+	elif [[ "$#" -eq 1 ]]; then
+		airtruct_tag="v$1"
+		airtruct_version=$1
+		airtruct_install_path="/usr/local/bin"
+	elif [[ "$#" -eq 0 ]]; then
+		airtruct_tag=$(curl -s https://api.github.com/repos/sananguliyev/airtruct/releases/latest | grep 'tag_name' | cut -d\" -f4)
+		airtruct_version=$(echo ${airtruct_tag} | cut -c2-)
+		airtruct_install_path="/usr/local/bin"
+	else
+		echo "Too many arguments."
+		exit 1
+	fi
+
+	airtruct_os="unsupported"
+	airtruct_arch="unknown"
+	airtruct_arm=""
+
+	header
+	check_tools
+
+	if [[ -n "$PREFIX" ]]; then
+		airtruct_install_path="$PREFIX/bin"
+	fi
+
+	if [[ ! -d $airtruct_install_path ]]; then
+		airtruct_install_path="/usr/bin"
+	fi
+
+	((EUID)) && sudo_cmd="sudo"
+
+	#########################
+	# Which OS and version? #
+	#########################
+
+	airtruct_bin="airtruct"
+	airtruct_dl_ext=".tar.gz"
+
+	unamem="$(uname -m)"
+	if [[ $unamem == *aarch64* ]]; then
+		airtruct_arch="arm64"
+	elif [[ $unamem == *arm64* ]]; then
+		airtruct_arch="arm64"
+	elif [[ $unamem == *64* ]]; then
+		airtruct_arch="amd64"
+	elif [[ $unamem == *armv7l* ]]; then
+		airtruct_arch="armv7"
+	else
+		echo "Aborted, unsupported or unknown architecture: $unamem"
+		return 2
+	fi
+
+	unameu="$(tr '[:lower:]' '[:upper:]' <<<$(uname))"
+	if [[ $unameu == *DARWIN* ]]; then
+		airtruct_os="darwin"
+	elif [[ $unameu == *LINUX* ]]; then
+		airtruct_os="linux"
+	elif [[ $unameu == *WIN* || $unameu == MSYS* ]]; then
+		sudo_cmd=""
+		airtruct_os="windows"
+		airtruct_bin=$airtruct_bin.exe
+		airtruct_dl_ext=".zip"
+	else
+		echo "Aborted, unsupported or unknown os: $unameu"
+		return 6
+	fi
+
+	########################
+	# Download and extract #
+	########################
+
+	echo "Downloading Airtruct for ${airtruct_os}/${airtruct_arch}${airtruct_arm}..."
+
+	airtruct_file="airtruct_${airtruct_os}_${airtruct_arch}${airtruct_arm}${airtruct_dl_ext}"
+	airtruct_url="https://github.com/sananguliyev/airtruct/releases/download/${airtruct_tag}/airtruct_${airtruct_version}_${airtruct_os}_${airtruct_arch}${airtruct_arm}.tar.gz"
+
+	dl="/tmp/$airtruct_file"
+	rm -rf -- "$dl"
+
+	curl -fsSL "$airtruct_url" -o "$dl"
+
+	echo "Extracting..."
+	case "$airtruct_file" in
+		*.tar.gz) tar -xzf "$dl" -C "$PREFIX/tmp/" "$airtruct_bin" ;;
+	esac
+	chmod +x "$PREFIX/tmp/$airtruct_bin"
+
+	echo "Putting airtruct in $airtruct_install_path (may require password)"
+	if [ -n "$sudo_cmd" ] && [ -n "$(find "$airtruct_install_path" -prune -user "$(id -u)")" ]; then
+		sudo_cmd=""
+	fi
+	$sudo_cmd mv "$PREFIX/tmp/$airtruct_bin" "$airtruct_install_path/$airtruct_bin"
+	$sudo_cmd rm -- "$dl"
+
+	$airtruct_install_path/$airtruct_bin --version
+	if ! check_cmd airtruct; then
+		echo "Do not forget to add $airtruct_install_path to your PATH!"
+	fi
+
+	echo "Successfully installed"
+	trap ERR
+	return 0
+}
+
+install_airtruct $@

@@ -4,22 +4,33 @@ sidebar_position: 4
 
 # Keycloak Authentication
 
-This guide walks through setting up Airtruct with Keycloak as an OAuth2/OIDC identity provider. Airtruct ships with a pre-configured Keycloak realm for quick setup using Docker Compose.
+This guide walks through setting up Airtruct with Keycloak as an OAuth2/OIDC identity provider.
 
 ## Prerequisites
 
-- Docker and Docker Compose installed
+- Docker installed
 - Airtruct running or ready to start
 
 ## Start Keycloak
 
-Airtruct's Docker Compose includes a Keycloak profile with a pre-configured `airtruct` realm and client.
+Run Keycloak with Docker:
 
 ```bash
-docker-compose --profile keycloak up -d
+docker run -d --name keycloak \
+  -p 8090:8080 \
+  -e KEYCLOAK_ADMIN=admin \
+  -e KEYCLOAK_ADMIN_PASSWORD=admin \
+  -e KC_DB=dev-file \
+  -e KC_HOSTNAME=localhost \
+  -e KC_HOSTNAME_PORT=8090 \
+  -e KC_HOSTNAME_STRICT=false \
+  -e KC_HTTP_ENABLED=true \
+  quay.io/keycloak/keycloak:latest start-dev
 ```
 
 Keycloak will be available at `http://localhost:8090` with admin credentials `admin` / `admin`.
+
+Create an `airtruct` realm and client in the Keycloak admin console before proceeding.
 
 ## Configure Airtruct
 

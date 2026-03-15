@@ -14,6 +14,11 @@ import (
 	_ "github.com/warpstreamlabs/bento/public/components/all"
 )
 
+var (
+	Version   = "dev"
+	DateBuilt = "unknown"
+)
+
 const (
 	RoleCoordinator = "coordinator"
 	RoleWorker      = "worker"
@@ -24,7 +29,7 @@ func main() {
 		Name:    "run",
 		Usage:   "Run the airtruct server",
 		Suggest: true,
-		Version: "v0.0.1",
+		Version: Version,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:    "config",
