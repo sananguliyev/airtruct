@@ -6,13 +6,20 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"database/sql"
+
 	"github.com/sananguliyev/airtruct/internal/persistence"
-	"github.com/glebarez/sqlite"
+	_ "modernc.org/sqlite"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
 func setupTestDB(t *testing.T) *gorm.DB {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	sqlDB, err := sql.Open("sqlite", ":memory:")
+	if err != nil {
+		t.Fatalf("failed to open sqlite connection: %v", err)
+	}
+	db, err := gorm.Open(sqlite.New(sqlite.Config{Conn: sqlDB}), &gorm.Config{})
 	if err != nil {
 		t.Fatalf("failed to open test database: %v", err)
 	}
