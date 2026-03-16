@@ -33,7 +33,12 @@ func NewGormDB(config *configstruct.DatabaseConfig) *gorm.DB {
 			log.Fatal().Err(sqlErr).Msg("Failed to open SQLite connection")
 			return nil
 		}
+		sqlDB.SetMaxOpenConns(1)
 		db, err = gorm.Open(sqlite.New(sqlite.Config{Conn: sqlDB}), gormConfig)
+		if err == nil {
+			db.Exec("PRAGMA journal_mode=WAL")
+			db.Exec("PRAGMA busy_timeout=5000")
+		}
 		dialect = "sqlite"
 	case configstruct.DatabaseTypePostgres:
 		db, err = gorm.Open(postgres.Open(config.URI), gormConfig)
