@@ -1,6 +1,5 @@
 {
   "name": "airtruct",
-  "version": "0.2.1",
   "private": true,
   "scripts": {
     "dev": "vite",
