@@ -196,21 +196,19 @@ func main() {
 				log.Info().Msg("starting coordinator")
 				coordinatorCLI := InitializeCoordinatorCommand(ctx)
 				coordinatorCLI.Run(cCtx)
-				return nil
 			} else {
 				log.Info().Msg("starting worker")
 				workerCLI := InitializeWorkerCommand(cCtx, ctx)
 				workerCLI.Run(cCtx)
-				return nil
 			}
+			log.Info().Msg("shutting node down")
+			return nil
 		},
 	}
 
 	if err := app.Run(os.Args); err != nil {
-		log.Fatal().Err(err).Msg("unable to start airturct")
+		log.Fatal().Err(err).Msg("unable to start airtruct")
 	}
-
-	log.Info().Msg("shutting node down")
 }
 
 func setLogLevel(debug bool) {
