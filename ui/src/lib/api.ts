@@ -394,6 +394,9 @@ export async function updateStreamStatus(
           output_component: stream.output_component,
           output_label: stream.output_label,
           output_config: stream.output_config,
+          buffer_id: stream.buffer_id || undefined,
+          is_ready: stream.is_ready,
+          flow_state: stream.flow_state,
           processors: stream.processors.map((p) => ({
             label: p.label,
             component: p.component,

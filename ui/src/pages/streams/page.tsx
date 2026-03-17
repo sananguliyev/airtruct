@@ -50,6 +50,16 @@ export default function StreamsPage() {
   };
 
   const handleStatusUpdate = async (stream: Stream, newStatus: string) => {
+    if (newStatus === "active" && !stream.is_ready) {
+      addToast({
+        id: "stream-not-ready",
+        title: "Cannot start stream",
+        description: `${stream.name} is a draft. Open the stream builder and complete the configuration before starting.`,
+        variant: "error",
+      });
+      return;
+    }
+
     try {
       const updatedStream = await updateStreamStatus(stream.id, newStatus);
 
