@@ -550,7 +550,7 @@ export const componentSchemas = {
     broker: {
       title: "Broker",
       description:
-        "Allows you to combine multiple inputs into a single stream using a range of input brokers.",
+        "Allows you to combine multiple inputs into a single flow using a range of input brokers.",
       properties: {
         copies: {
           type: "number",

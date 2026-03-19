@@ -261,7 +261,7 @@ export default function Home() {
                       <span className="text-sm font-medium">{c.component}</span>
                     </div>
                     <span className="text-sm text-muted-foreground">
-                      {c.count} {c.count === 1 ? "stream" : "streams"}
+                      {c.count} {c.count === 1 ? "flow" : "flows"}
                     </span>
                   </div>
                 ))}
@@ -287,7 +287,7 @@ export default function Home() {
                       <span className="text-sm font-medium">{c.component}</span>
                     </div>
                     <span className="text-sm text-muted-foreground">
-                      {c.count} {c.count === 1 ? "stream" : "streams"}
+                      {c.count} {c.count === 1 ? "flow" : "flows"}
                     </span>
                   </div>
                 ))}
