@@ -93,7 +93,7 @@ function FlowTypeSelector({ onSelect }: { onSelect: (type: FlowType) => void }) 
           </div>
           <h2 className="text-lg font-semibold mb-2">MCP Tool</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Build a tool for AI assistants. Define parameters and connect to any API, database, or service — instantly callable by Claude, Cursor, and AI agents.
+            Build a tool for AI assistants. Define parameters and connect to any API, database, or service - instantly callable by Claude, Cursor, and AI agents.
           </p>
           <ArrowRight className="absolute top-8 right-6 h-5 w-5 text-muted-foreground/40 group-hover:text-primary transition-colors" />
         </button>
