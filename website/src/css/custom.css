@@ -26,6 +26,17 @@
   font-weight: 700;
 }
 
+/* Hide navbar on landing page */
+.navbar--hidden-landing {
+  display: none !important;
+}
+
+/* Footer on landing page */
+.footer--dark {
+  background: #111827;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
 .navbar-github-link::before {
   content: "";
   width: 24px;

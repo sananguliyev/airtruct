@@ -3,8 +3,8 @@
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: "Airtruct",
-  tagline: "ETL Pipelines, Made Simple — scale as you need, without the hassle.",
-  favicon: "img/favicon.svg",
+  tagline: "The fastest way to build tools for AI assistants.",
+  favicon: "img/favicon.png",
 
   url: "https://airtruct.com",
   baseUrl: "/",
@@ -64,8 +64,8 @@ const config = {
         title: "airtruct",
         logo: {
           alt: "Airtruct Logo",
-          src: "img/logo.svg",
-          srcDark: "img/logo-dark.svg",
+          src: "img/mascot-small.png",
+          srcDark: "img/mascot-small.png",
         },
         items: [
           {
