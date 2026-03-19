@@ -10,7 +10,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
-import { useTheme } from "next-themes";
 import { EditorProps } from "../types";
 
 export interface PropertyItem {
@@ -32,9 +31,6 @@ export function PropertyListEditor({
   updateValue,
   previewMode = false,
 }: PropertyListEditorProps) {
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
-
   const items: PropertyItem[] = Array.isArray(value) ? value : [];
 
   const addItem = () => {
@@ -51,22 +47,21 @@ export function PropertyListEditor({
     updateValue(items.filter((_, i) => i !== index));
   };
 
-  const inputClassName = `h-6 text-xs p-1 bg-background border-border text-foreground font-mono ${isDark ? "text-green-400" : "text-green-600"}`;
-
   if (items.length === 0) {
     return (
-      <div className="flex items-center space-x-2">
-        <span className="text-muted-foreground text-sm font-mono">No parameters</span>
-        {!previewMode && (
+      <div>
+        {!previewMode ? (
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={addItem}
-            className="h-5 w-auto px-2 text-green-400 hover:text-green-300 text-xs"
+            className="h-7 text-xs"
           >
             <Plus className="h-3 w-3 mr-1" />
             Add parameter
           </Button>
+        ) : (
+          <span className="text-sm text-muted-foreground">No parameters</span>
         )}
       </div>
     );
@@ -77,44 +72,46 @@ export function PropertyListEditor({
       {items.map((item, index) => (
         <div
           key={index}
-          className="flex items-start gap-2 p-2 rounded border border-border bg-muted/30"
+          className="flex items-start gap-3 p-3 rounded-lg border bg-muted/30"
         >
-          <div className="flex-1 grid grid-cols-[1fr_100px] gap-2">
-            <Input
-              value={item.name}
-              onChange={(e) => updateItem(index, "name", e.target.value)}
-              placeholder="Parameter name"
-              className={inputClassName}
-              disabled={previewMode}
-            />
-            <Select
-              value={item.type || "string"}
-              onValueChange={(val) => updateItem(index, "type", val)}
-              disabled={previewMode}
-            >
-              <SelectTrigger className={`h-6 text-xs font-mono ${isDark ? "text-green-400" : "text-green-600"}`}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PROPERTY_TYPES.map((t) => (
-                  <SelectItem key={t} value={t}>
-                    {t}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex-1 space-y-2">
+            <div className="grid grid-cols-[1fr_120px] gap-2">
+              <Input
+                value={item.name}
+                onChange={(e) => updateItem(index, "name", e.target.value)}
+                placeholder="Parameter name"
+                className="h-8 text-sm"
+                disabled={previewMode}
+              />
+              <Select
+                value={item.type || "string"}
+                onValueChange={(val) => updateItem(index, "type", val)}
+                disabled={previewMode}
+              >
+                <SelectTrigger className="h-8 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PROPERTY_TYPES.map((t) => (
+                    <SelectItem key={t} value={t}>
+                      {t}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <Input
               value={item.description || ""}
               onChange={(e) => updateItem(index, "description", e.target.value)}
               placeholder="Description"
-              className={`${inputClassName} col-span-2`}
+              className="h-8 text-sm"
               disabled={previewMode}
             />
-            <div className="flex items-center space-x-1.5 col-span-2">
+            <div className="flex items-center gap-2">
               <Checkbox
                 checked={item.required || false}
                 onCheckedChange={(checked) => updateItem(index, "required", !!checked)}
-                className="h-3.5 w-3.5"
+                className="h-4 w-4"
                 disabled={previewMode}
               />
               <span className="text-xs text-muted-foreground">Required</span>
@@ -125,19 +122,19 @@ export function PropertyListEditor({
               variant="ghost"
               size="sm"
               onClick={() => removeItem(index)}
-              className="h-5 w-5 p-0 text-red-400 hover:text-red-300 mt-0.5"
+              className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
             >
-              <Trash2 className="h-3 w-3" />
+              <Trash2 className="h-4 w-4" />
             </Button>
           )}
         </div>
       ))}
       {!previewMode && (
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
           onClick={addItem}
-          className="h-5 w-auto px-2 text-green-400 hover:text-green-300 text-xs"
+          className="h-7 text-xs"
         >
           <Plus className="h-3 w-3 mr-1" />
           Add parameter

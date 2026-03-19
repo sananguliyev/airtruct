@@ -1,5 +1,6 @@
 import React from "react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { EditorProps, FieldSchema } from "../types";
 import { getDefaultValue } from "../utils/defaults";
 import { KeyValueEditor } from "./key-value-editor";
@@ -11,11 +12,11 @@ interface ObjectEditorProps extends EditorProps {
   fieldSchema: FieldSchema;
 }
 
-export function ObjectEditor({ 
-  value, 
-  updateValue, 
-  fieldSchema, 
-  previewMode = false 
+export function ObjectEditor({
+  value,
+  updateValue,
+  fieldSchema,
+  previewMode = false
 }: ObjectEditorProps) {
   if (fieldSchema.properties) {
     const updateNestedValue = (propKey: string, propValue: any) => {
@@ -24,39 +25,37 @@ export function ObjectEditor({
     };
 
     return (
-      <div className="space-y-1 ml-4 border-l border-gray-600 pl-2">
+      <div className="space-y-3 pl-4 border-l-2 border-border">
         {Object.entries(fieldSchema.properties).map(([propKey, propSchema]) => {
           const propValue = value[propKey] ?? getDefaultValue(propSchema);
           const isEnabled = value.hasOwnProperty(propKey);
 
-          // In preview mode, hide non-enabled nested properties
           if (previewMode && !isEnabled) return null;
 
           return (
-            <div key={propKey} className="flex items-center space-x-2">
-              {!previewMode && (
-                <Checkbox
-                  checked={isEnabled}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      updateNestedValue(propKey, getDefaultValue(propSchema));
-                    } else {
-                      const newValue = { ...value };
-                      delete newValue[propKey];
-                      updateValue(newValue);
-                    }
-                  }}
-                  className="h-3 w-3"
-                />
-              )}
-              <span 
-                className="text-xs text-gray-400 font-mono min-w-0"
-                style={{ color: isEnabled ? '#9ca3af' : '#6b7280' }}
-              >
-                {propKey}:
-              </span>
+            <div key={propKey} className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                {!previewMode && (
+                  <Checkbox
+                    checked={isEnabled}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        updateNestedValue(propKey, getDefaultValue(propSchema));
+                      } else {
+                        const newValue = { ...value };
+                        delete newValue[propKey];
+                        updateValue(newValue);
+                      }
+                    }}
+                    className="h-4 w-4"
+                  />
+                )}
+                <Label className={`text-sm ${isEnabled ? "text-foreground" : "text-muted-foreground"}`}>
+                  {propSchema.title || propKey}
+                </Label>
+              </div>
               {isEnabled && (
-                <div className="flex-1 min-w-0">
+                <div className={!previewMode ? "pl-6" : ""}>
                   <NestedPropertyInput
                     propKey={propKey}
                     propSchema={propSchema}
@@ -74,4 +73,4 @@ export function ObjectEditor({
   }
 
   return <KeyValueEditor value={value} updateValue={updateValue} previewMode={previewMode} />;
-} 
+}
