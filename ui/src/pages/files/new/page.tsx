@@ -74,7 +74,7 @@ export default function FileNewPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Create New File</h1>
         <p className="text-muted-foreground">
-          Create a file that can be referenced by stream components.
+          Create a file that can be referenced by flow components.
         </p>
       </div>
 

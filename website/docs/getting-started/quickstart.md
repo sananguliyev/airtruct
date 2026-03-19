@@ -42,12 +42,12 @@ In a separate terminal:
 
 The worker automatically discovers and registers with the coordinator.
 
-## 4. Create Your First Stream
+## 4. Create Your First Flow
 
 Open `http://localhost:8080` in your browser. You'll see the Airtruct console.
 
-1. Click **Create New Stream**.
-2. Give it a name (e.g., `my-first-stream`).
+1. Click **Create New Flow**.
+2. Give it a name (e.g., `my-first-flow`).
 3. Configure an **input** — select **Generate** to produce test messages:
 
 | Field | Value |
@@ -64,10 +64,10 @@ Open `http://localhost:8080` in your browser. You'll see the Airtruct console.
 
 5. Configure an **output** — select **HTTP Client** to send data somewhere, or use **Drop** to discard (useful for testing).
 
-6. Click **Start** to run the stream.
+6. Click **Start** to run the flow.
 
 ## Next Steps
 
-- Learn about [Streams](/docs/concepts/streams) and how they work.
+- Learn about [Flows](/docs/concepts/flows) and how they work.
 - See all available [Components](/docs/concepts/components).
 - Try the [Kafka to PostgreSQL](/playbooks/kafka-to-postgresql) playbook for a real-world example.

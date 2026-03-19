@@ -14,37 +14,37 @@ type WorkerExecutor interface {
 	JoinToCoordinator(context.Context) error
 	LeaveCoordinator(context.Context) error
 	SendHeartbeat(context.Context) error
-	AddStreamToQueue(ctx context.Context, workerStreamID int64, config string, files []*pb.StreamFile) error
-	FetchWorkerStreamStatus(ctx context.Context, workerStreamID int64) (*persistence.WorkerStreamStatus, error)
-	DeleteWorkerStream(ctx context.Context, workerStreamID int64) error
+	AddFlowToQueue(ctx context.Context, workerFlowID int64, config string, files []*pb.FlowFile) error
+	FetchWorkerFlowStatus(ctx context.Context, workerFlowID int64) (*persistence.WorkerFlowStatus, error)
+	DeleteWorkerFlow(ctx context.Context, workerFlowID int64) error
 	ShipLogs(context.Context)
 	ShipMetrics(context.Context)
-	ConsumeStreamQueue(context.Context)
-	IngestData(ctx context.Context, workerStreamID int64, method, path, contentType string, payload []byte) (*IngestResult, error)
+	ConsumeFlowQueue(context.Context)
+	IngestData(ctx context.Context, workerFlowID int64, method, path, contentType string, payload []byte) (*IngestResult, error)
 }
 
 type workerExecutor struct {
 	coordinatorConnection CoordinatorConnection
-	streamManager         StreamManager
-	streamQueue           StreamQueue
+	flowManager         FlowManager
+	flowQueue           FlowQueue
 	telemetryManager      TelemetryManager
 }
 
 func NewWorkerExecutor(ctx context.Context, grpcConn *grpc.ClientConn, grpcPort uint32, vaultProvider vault.VaultProvider) WorkerExecutor {
 	coordinatorConnection := NewCoordinatorConnection(ctx, grpcConn, grpcPort)
 
-	streamManager := NewStreamManager(coordinatorConnection, vaultProvider)
+	flowManager := NewFlowManager(coordinatorConnection, vaultProvider)
 
-	coordinatorConnection.SetStreamManager(streamManager)
+	coordinatorConnection.SetFlowManager(flowManager)
 
-	streamQueue := NewStreamQueue(streamManager)
+	flowQueue := NewFlowQueue(flowManager)
 
-	telemetryManager := NewTelemetryManager(coordinatorConnection, streamManager)
+	telemetryManager := NewTelemetryManager(coordinatorConnection, flowManager)
 
 	return &workerExecutor{
 		coordinatorConnection: coordinatorConnection,
-		streamManager:         streamManager,
-		streamQueue:           streamQueue,
+		flowManager:         flowManager,
+		flowQueue:           flowQueue,
 		telemetryManager:      telemetryManager,
 	}
 }
@@ -61,16 +61,16 @@ func (e *workerExecutor) SendHeartbeat(ctx context.Context) error {
 	return e.coordinatorConnection.SendHeartbeat(ctx)
 }
 
-func (e *workerExecutor) AddStreamToQueue(ctx context.Context, workerStreamID int64, config string, files []*pb.StreamFile) error {
-	return e.streamQueue.AddStreamToQueue(workerStreamID, config, files)
+func (e *workerExecutor) AddFlowToQueue(ctx context.Context, workerFlowID int64, config string, files []*pb.FlowFile) error {
+	return e.flowQueue.AddFlowToQueue(workerFlowID, config, files)
 }
 
-func (e *workerExecutor) FetchWorkerStreamStatus(ctx context.Context, workerStreamID int64) (*persistence.WorkerStreamStatus, error) {
-	return e.streamManager.GetStreamStatus(workerStreamID)
+func (e *workerExecutor) FetchWorkerFlowStatus(ctx context.Context, workerFlowID int64) (*persistence.WorkerFlowStatus, error) {
+	return e.flowManager.GetFlowStatus(workerFlowID)
 }
 
-func (e *workerExecutor) DeleteWorkerStream(ctx context.Context, workerStreamID int64) error {
-	return e.streamManager.DeleteStream(workerStreamID)
+func (e *workerExecutor) DeleteWorkerFlow(ctx context.Context, workerFlowID int64) error {
+	return e.flowManager.DeleteFlow(workerFlowID)
 }
 
 func (e *workerExecutor) ShipLogs(ctx context.Context) {
@@ -81,10 +81,10 @@ func (e *workerExecutor) ShipMetrics(ctx context.Context) {
 	e.telemetryManager.ShipMetrics(ctx)
 }
 
-func (e *workerExecutor) ConsumeStreamQueue(ctx context.Context) {
-	e.streamQueue.ConsumeStreamQueue(ctx)
+func (e *workerExecutor) ConsumeFlowQueue(ctx context.Context) {
+	e.flowQueue.ConsumeFlowQueue(ctx)
 }
 
-func (e *workerExecutor) IngestData(ctx context.Context, workerStreamID int64, method, path, contentType string, payload []byte) (*IngestResult, error) {
-	return e.streamManager.IngestData(workerStreamID, method, path, contentType, payload)
+func (e *workerExecutor) IngestData(ctx context.Context, workerFlowID int64, method, path, contentType string, payload []byte) (*IngestResult, error) {
+	return e.flowManager.IngestData(workerFlowID, method, path, contentType, payload)
 }

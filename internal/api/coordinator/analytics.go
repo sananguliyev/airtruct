@@ -19,7 +19,7 @@ func (s *CoordinatorAPI) GetAnalytics(_ context.Context, _ *pb.GetAnalyticsReque
 	}
 
 	resp := &pb.GetAnalyticsResponse{
-		TotalStreams:         result.TotalStreams,
+		TotalFlows:         result.TotalFlows,
 		TotalInputEvents:    result.TotalInputEvents,
 		TotalOutputEvents:   result.TotalOutputEvents,
 		TotalProcessorErrors: result.TotalProcessorErrors,
@@ -28,9 +28,9 @@ func (s *CoordinatorAPI) GetAnalytics(_ context.Context, _ *pb.GetAnalyticsReque
 		ErrorEvents:         result.ErrorEvents,
 	}
 
-	resp.StreamsByStatus = make([]*pb.GetAnalyticsResponse_StreamStatusCount, len(result.StreamsByStatus))
-	for i, s := range result.StreamsByStatus {
-		resp.StreamsByStatus[i] = &pb.GetAnalyticsResponse_StreamStatusCount{
+	resp.FlowsByStatus = make([]*pb.GetAnalyticsResponse_FlowStatusCount, len(result.FlowsByStatus))
+	for i, s := range result.FlowsByStatus {
+		resp.FlowsByStatus[i] = &pb.GetAnalyticsResponse_FlowStatusCount{
 			Status: s.Status,
 			Count:  s.Count,
 		}

@@ -25,12 +25,12 @@ type Worker struct {
 	LastHeartbeat time.Time    `json:"last_heartbeat"`
 	Status        WorkerStatus `json:"status"`
 
-	RunningStreamCount int `gorm:"-" json:"running_stream_count"`
+	RunningFlowCount int `gorm:"-" json:"running_flow_count"`
 }
 
 type WorkerRepository interface {
 	FindAllByStatuses(...WorkerStatus) ([]Worker, error)
-	FindAllActiveWithRunningStreamCount() ([]Worker, error)
+	FindAllActiveWithRunningFlowCount() ([]Worker, error)
 	FindByID(id string) (*Worker, error)
 	FindActiveWithStaleHeartbeat() ([]Worker, error)
 	AddOrActivate(worker *Worker) error
@@ -58,18 +58,18 @@ func (r *workerRepository) FindAllByStatuses(statuses ...WorkerStatus) ([]Worker
 	return workers, nil
 }
 
-func (r *workerRepository) FindAllActiveWithRunningStreamCount() ([]Worker, error) {
+func (r *workerRepository) FindAllActiveWithRunningFlowCount() ([]Worker, error) {
 	var workers []Worker
 
-	// Subquery to count running streams for each worker.
-	subQuery := r.db.Model(&WorkerStream{}).
-		Select("worker_id, COUNT(stream_id) as running_stream_count").
-		Where("status = ?", WorkerStreamStatusRunning).
+	// Subquery to count running flows for each worker.
+	subQuery := r.db.Model(&WorkerFlow{}).
+		Select("worker_id, COUNT(flow_id) as running_flow_count").
+		Where("status = ?", WorkerFlowStatusRunning).
 		Group("worker_id")
 
 	// Main query to find workers and join the subquery result.
 	err := r.db.Model(&Worker{}).
-		Select("workers.*, COALESCE(running_stream_count, 0) as RunningStreamCount").
+		Select("workers.*, COALESCE(running_flow_count, 0) as RunningFlowCount").
 		Joins("LEFT JOIN (?) as s ON workers.id = s.worker_id", subQuery).
 		Where("status = ?", WorkerStatusActive).
 		Find(&workers).

@@ -23,51 +23,51 @@ func NewWorkerAPI(workerExecutor executor.WorkerExecutor) *WorkerAPI {
 	}
 }
 
-func (a *WorkerAPI) AssignStream(ctx context.Context, in *pb.AssignStreamRequest) (*pb.CommonResponse, error) {
+func (a *WorkerAPI) AssignFlow(ctx context.Context, in *pb.AssignFlowRequest) (*pb.CommonResponse, error) {
 	log.Debug().
-		Int64("worker_stream_id", in.GetWorkerStreamId()).
+		Int64("worker_flow_id", in.GetWorkerFlowId()).
 		Str("config", in.GetConfig()).
-		Msg("Starting stream for processing")
+		Msg("Starting flow for processing")
 
-	err := a.workerExecutor.AddStreamToQueue(ctx, in.GetWorkerStreamId(), in.GetConfig(), in.GetFiles())
+	err := a.workerExecutor.AddFlowToQueue(ctx, in.GetWorkerFlowId(), in.GetConfig(), in.GetFiles())
 	if err != nil {
-		log.Error().Err(err).Int64("worker_stream_id", in.GetWorkerStreamId()).Msg("Failed to queue stream")
-		return nil, status.Error(codes.Internal, "Failed to queue stream")
+		log.Error().Err(err).Int64("worker_flow_id", in.GetWorkerFlowId()).Msg("Failed to queue flow")
+		return nil, status.Error(codes.Internal, "Failed to queue flow")
 	}
 
-	return &pb.CommonResponse{Message: "Stream queued for processing"}, nil
+	return &pb.CommonResponse{Message: "Flow queued for processing"}, nil
 }
 
-func (a *WorkerAPI) FetchStream(ctx context.Context, in *pb.FetchStreamRequest) (*pb.FetchStreamResponse, error) {
+func (a *WorkerAPI) FetchFlow(ctx context.Context, in *pb.FetchFlowRequest) (*pb.FetchFlowResponse, error) {
 	log.Debug().
-		Int64("worker_stream_id", in.GetWorkerStreamId()).
-		Msg("Fetching stream for processing")
+		Int64("worker_flow_id", in.GetWorkerFlowId()).
+		Msg("Fetching flow for processing")
 
-	streamStatus, err := a.workerExecutor.FetchWorkerStreamStatus(ctx, in.GetWorkerStreamId())
+	flowStatus, err := a.workerExecutor.FetchWorkerFlowStatus(ctx, in.GetWorkerFlowId())
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to fetch stream")
-		return nil, status.Error(codes.Internal, "Failed to fetch stream")
-	} else if streamStatus == nil {
-		return nil, status.Error(codes.NotFound, "Stream not found in worker")
+		log.Error().Err(err).Msg("Failed to fetch flow")
+		return nil, status.Error(codes.Internal, "Failed to fetch flow")
+	} else if flowStatus == nil {
+		return nil, status.Error(codes.NotFound, "Flow not found in worker")
 	}
-	return &pb.FetchStreamResponse{
-		Status: pb.WorkerStreamStatus(pb.WorkerStreamStatus_value[string(*streamStatus)]),
+	return &pb.FetchFlowResponse{
+		Status: pb.WorkerFlowStatus(pb.WorkerFlowStatus_value[string(*flowStatus)]),
 	}, nil
 }
 
-func (a *WorkerAPI) CompleteStream(ctx context.Context, in *pb.CompleteStreamRequest) (*pb.CommonResponse, error) {
+func (a *WorkerAPI) CompleteFlow(ctx context.Context, in *pb.CompleteFlowRequest) (*pb.CommonResponse, error) {
 	var err error
 
 	log.Debug().
-		Int64("worker_stream_id", in.GetWorkerStreamId()).
-		Msg("Starting stream for processing")
+		Int64("worker_flow_id", in.GetWorkerFlowId()).
+		Msg("Starting flow for processing")
 
-	if err = a.workerExecutor.DeleteWorkerStream(ctx, in.GetWorkerStreamId()); err != nil {
-		log.Error().Err(err).Int64("worker_stream_id", in.GetWorkerStreamId()).Msg("Failed to delete worker stream")
-		return nil, status.Error(codes.Internal, "Failed to delete stream in worker")
+	if err = a.workerExecutor.DeleteWorkerFlow(ctx, in.GetWorkerFlowId()); err != nil {
+		log.Error().Err(err).Int64("worker_flow_id", in.GetWorkerFlowId()).Msg("Failed to delete worker flow")
+		return nil, status.Error(codes.Internal, "Failed to delete flow in worker")
 	}
 
-	return &pb.CommonResponse{Message: "Worker Stream has been deleted successfully"}, nil
+	return &pb.CommonResponse{Message: "Worker Flow has been deleted successfully"}, nil
 }
 
 func (a *WorkerAPI) HealthCheck(_ context.Context, _ *emptypb.Empty) (*pb.CommonResponse, error) {
@@ -79,12 +79,12 @@ func (a *WorkerAPI) HealthCheck(_ context.Context, _ *emptypb.Empty) (*pb.Common
 func (a *WorkerAPI) Ingest(ctx context.Context, in *pb.IngestRequest) (*pb.IngestResponse, error) {
 
 	log.Debug().
-		Int64("worker_stream_id", in.GetWorkerStreamId()).
+		Int64("worker_flow_id", in.GetWorkerFlowId()).
 		Bytes("data", in.GetPayload()).
 		Msg("Ingesting data")
 	ingestResult, err := a.workerExecutor.IngestData(
 		ctx,
-		in.GetWorkerStreamId(),
+		in.GetWorkerFlowId(),
 		in.GetMethod(),
 		in.GetPath(),
 		in.GetContentType(),
@@ -93,7 +93,7 @@ func (a *WorkerAPI) Ingest(ctx context.Context, in *pb.IngestRequest) (*pb.Inges
 	if err != nil {
 		log.Error().
 			Err(err).
-			Int64("worker_stream_id", in.GetWorkerStreamId()).
+			Int64("worker_flow_id", in.GetWorkerFlowId()).
 			Msg("Failed to ingest data")
 		return nil, status.Errorf(codes.Internal, "Failed to ingest data: %v", err)
 	}

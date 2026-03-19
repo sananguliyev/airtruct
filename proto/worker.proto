@@ -8,31 +8,31 @@ package protorender;
 
 option go_package = "github.com/sananguliyev/airtruct/internal/protogen";
 
-message StreamFile {
+message FlowFile {
   string key = 1;
   bytes content = 2;
 }
 
-message AssignStreamRequest {
-  int64 worker_stream_id = 1;
+message AssignFlowRequest {
+  int64 worker_flow_id = 1;
   string config = 2;
-  repeated StreamFile files = 3;
+  repeated FlowFile files = 3;
 }
 
-message FetchStreamRequest {
-  int64 worker_stream_id = 1;
+message FetchFlowRequest {
+  int64 worker_flow_id = 1;
 }
 
-message FetchStreamResponse {
-  WorkerStreamStatus status = 1;
+message FetchFlowResponse {
+  WorkerFlowStatus status = 1;
 }
 
-message CompleteStreamRequest {
-  int64 worker_stream_id = 1;
+message CompleteFlowRequest {
+  int64 worker_flow_id = 1;
 }
 
 message IngestRequest {
-  int64 worker_stream_id = 1;
+  int64 worker_flow_id = 1;
   string method = 2;
   string path = 3;
   string content_type = 4;
@@ -46,8 +46,8 @@ message IngestResponse {
 
 service Worker {
   rpc HealthCheck(google.protobuf.Empty) returns (CommonResponse) {}
-  rpc AssignStream(AssignStreamRequest) returns (CommonResponse) {}
-  rpc FetchStream(FetchStreamRequest) returns (FetchStreamResponse) {}
-  rpc CompleteStream(CompleteStreamRequest) returns (CommonResponse) {}
+  rpc AssignFlow(AssignFlowRequest) returns (CommonResponse) {}
+  rpc FetchFlow(FetchFlowRequest) returns (FetchFlowResponse) {}
+  rpc CompleteFlow(CompleteFlowRequest) returns (CommonResponse) {}
   rpc Ingest(IngestRequest) returns (IngestResponse) {}
 }

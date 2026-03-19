@@ -100,7 +100,7 @@ export default function FileEditPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Edit File</h1>
         <p className="text-muted-foreground">
-          Update the file content. Changes will take effect for new stream
+          Update the file content. Changes will take effect for new flow
           assignments.
         </p>
       </div>
@@ -125,7 +125,7 @@ export default function FileEditPage() {
                 required
               />
               <p className="text-xs text-muted-foreground">
-                Reference this file in stream configs as{" "}
+                Reference this file in flow configs as{" "}
                 <code className="bg-muted px-1 py-0.5 rounded">
                   airtruct://{formData.key || "your/file/path"}
                 </code>

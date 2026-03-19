@@ -24,26 +24,26 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type WorkerStreamStatus int32
+type WorkerFlowStatus int32
 
 const (
-	WorkerStreamStatus_waiting   WorkerStreamStatus = 0
-	WorkerStreamStatus_running   WorkerStreamStatus = 1
-	WorkerStreamStatus_stopped   WorkerStreamStatus = 2
-	WorkerStreamStatus_completed WorkerStreamStatus = 3
-	WorkerStreamStatus_failed    WorkerStreamStatus = 4
+	WorkerFlowStatus_waiting   WorkerFlowStatus = 0
+	WorkerFlowStatus_running   WorkerFlowStatus = 1
+	WorkerFlowStatus_stopped   WorkerFlowStatus = 2
+	WorkerFlowStatus_completed WorkerFlowStatus = 3
+	WorkerFlowStatus_failed    WorkerFlowStatus = 4
 )
 
-// Enum value maps for WorkerStreamStatus.
+// Enum value maps for WorkerFlowStatus.
 var (
-	WorkerStreamStatus_name = map[int32]string{
+	WorkerFlowStatus_name = map[int32]string{
 		0: "waiting",
 		1: "running",
 		2: "stopped",
 		3: "completed",
 		4: "failed",
 	}
-	WorkerStreamStatus_value = map[string]int32{
+	WorkerFlowStatus_value = map[string]int32{
 		"waiting":   0,
 		"running":   1,
 		"stopped":   2,
@@ -52,30 +52,30 @@ var (
 	}
 )
 
-func (x WorkerStreamStatus) Enum() *WorkerStreamStatus {
-	p := new(WorkerStreamStatus)
+func (x WorkerFlowStatus) Enum() *WorkerFlowStatus {
+	p := new(WorkerFlowStatus)
 	*p = x
 	return p
 }
 
-func (x WorkerStreamStatus) String() string {
+func (x WorkerFlowStatus) String() string {
 	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
 }
 
-func (WorkerStreamStatus) Descriptor() protoreflect.EnumDescriptor {
+func (WorkerFlowStatus) Descriptor() protoreflect.EnumDescriptor {
 	return file_common_proto_enumTypes[0].Descriptor()
 }
 
-func (WorkerStreamStatus) Type() protoreflect.EnumType {
+func (WorkerFlowStatus) Type() protoreflect.EnumType {
 	return &file_common_proto_enumTypes[0]
 }
 
-func (x WorkerStreamStatus) Number() protoreflect.EnumNumber {
+func (x WorkerFlowStatus) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use WorkerStreamStatus.Descriptor instead.
-func (WorkerStreamStatus) EnumDescriptor() ([]byte, []int) {
+// Deprecated: Use WorkerFlowStatus.Descriptor instead.
+func (WorkerFlowStatus) EnumDescriptor() ([]byte, []int) {
 	return file_common_proto_rawDescGZIP(), []int{0}
 }
 
@@ -123,7 +123,7 @@ func (x *CommonResponse) GetMessage() string {
 	return ""
 }
 
-type Stream struct {
+type Flow struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	Id              int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	ParentId        *int64                 `protobuf:"varint,2,opt,name=parent_id,proto3,oneof" json:"parent_id,omitempty"`
@@ -138,30 +138,30 @@ type Stream struct {
 	Status          string                 `protobuf:"bytes,11,opt,name=status,proto3" json:"status,omitempty"`
 	CreatedAt       *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=created_at,proto3" json:"created_at,omitempty"`
 	UpdatedAt       *timestamppb.Timestamp `protobuf:"bytes,13,opt,name=updated_at,proto3,oneof" json:"updated_at,omitempty"`
-	Processors      []*Stream_Processor    `protobuf:"bytes,14,rep,name=processors,proto3" json:"processors,omitempty"`
+	Processors      []*Flow_Processor      `protobuf:"bytes,14,rep,name=processors,proto3" json:"processors,omitempty"`
 	IsHttpServer    bool                   `protobuf:"varint,15,opt,name=is_http_server,proto3" json:"is_http_server,omitempty"`
 	BufferId        *int64                 `protobuf:"varint,16,opt,name=buffer_id,proto3,oneof" json:"buffer_id,omitempty"`
 	IsMcpTool       bool                   `protobuf:"varint,17,opt,name=is_mcp_tool,proto3" json:"is_mcp_tool,omitempty"`
 	IsReady         bool                   `protobuf:"varint,18,opt,name=is_ready,proto3" json:"is_ready,omitempty"`
-	FlowState       string                 `protobuf:"bytes,19,opt,name=flow_state,proto3" json:"flow_state,omitempty"`
+	BuilderState    string                 `protobuf:"bytes,19,opt,name=builder_state,proto3" json:"builder_state,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
 
-func (x *Stream) Reset() {
-	*x = Stream{}
+func (x *Flow) Reset() {
+	*x = Flow{}
 	mi := &file_common_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *Stream) String() string {
+func (x *Flow) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Stream) ProtoMessage() {}
+func (*Flow) ProtoMessage() {}
 
-func (x *Stream) ProtoReflect() protoreflect.Message {
+func (x *Flow) ProtoReflect() protoreflect.Message {
 	mi := &file_common_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -173,140 +173,140 @@ func (x *Stream) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Stream.ProtoReflect.Descriptor instead.
-func (*Stream) Descriptor() ([]byte, []int) {
+// Deprecated: Use Flow.ProtoReflect.Descriptor instead.
+func (*Flow) Descriptor() ([]byte, []int) {
 	return file_common_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *Stream) GetId() int64 {
+func (x *Flow) GetId() int64 {
 	if x != nil {
 		return x.Id
 	}
 	return 0
 }
 
-func (x *Stream) GetParentId() int64 {
+func (x *Flow) GetParentId() int64 {
 	if x != nil && x.ParentId != nil {
 		return *x.ParentId
 	}
 	return 0
 }
 
-func (x *Stream) GetName() string {
+func (x *Flow) GetName() string {
 	if x != nil {
 		return x.Name
 	}
 	return ""
 }
 
-func (x *Stream) GetInputConfig() string {
+func (x *Flow) GetInputConfig() string {
 	if x != nil {
 		return x.InputConfig
 	}
 	return ""
 }
 
-func (x *Stream) GetInputLabel() string {
+func (x *Flow) GetInputLabel() string {
 	if x != nil {
 		return x.InputLabel
 	}
 	return ""
 }
 
-func (x *Stream) GetInputComponent() string {
+func (x *Flow) GetInputComponent() string {
 	if x != nil {
 		return x.InputComponent
 	}
 	return ""
 }
 
-func (x *Stream) GetOutputConfig() string {
+func (x *Flow) GetOutputConfig() string {
 	if x != nil {
 		return x.OutputConfig
 	}
 	return ""
 }
 
-func (x *Stream) GetOutputLabel() string {
+func (x *Flow) GetOutputLabel() string {
 	if x != nil {
 		return x.OutputLabel
 	}
 	return ""
 }
 
-func (x *Stream) GetOutputComponent() string {
+func (x *Flow) GetOutputComponent() string {
 	if x != nil {
 		return x.OutputComponent
 	}
 	return ""
 }
 
-func (x *Stream) GetIsCurrent() bool {
+func (x *Flow) GetIsCurrent() bool {
 	if x != nil {
 		return x.IsCurrent
 	}
 	return false
 }
 
-func (x *Stream) GetStatus() string {
+func (x *Flow) GetStatus() string {
 	if x != nil {
 		return x.Status
 	}
 	return ""
 }
 
-func (x *Stream) GetCreatedAt() *timestamppb.Timestamp {
+func (x *Flow) GetCreatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.CreatedAt
 	}
 	return nil
 }
 
-func (x *Stream) GetUpdatedAt() *timestamppb.Timestamp {
+func (x *Flow) GetUpdatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.UpdatedAt
 	}
 	return nil
 }
 
-func (x *Stream) GetProcessors() []*Stream_Processor {
+func (x *Flow) GetProcessors() []*Flow_Processor {
 	if x != nil {
 		return x.Processors
 	}
 	return nil
 }
 
-func (x *Stream) GetIsHttpServer() bool {
+func (x *Flow) GetIsHttpServer() bool {
 	if x != nil {
 		return x.IsHttpServer
 	}
 	return false
 }
 
-func (x *Stream) GetBufferId() int64 {
+func (x *Flow) GetBufferId() int64 {
 	if x != nil && x.BufferId != nil {
 		return *x.BufferId
 	}
 	return 0
 }
 
-func (x *Stream) GetIsMcpTool() bool {
+func (x *Flow) GetIsMcpTool() bool {
 	if x != nil {
 		return x.IsMcpTool
 	}
 	return false
 }
 
-func (x *Stream) GetIsReady() bool {
+func (x *Flow) GetIsReady() bool {
 	if x != nil {
 		return x.IsReady
 	}
 	return false
 }
 
-func (x *Stream) GetFlowState() string {
+func (x *Flow) GetBuilderState() string {
 	if x != nil {
-		return x.FlowState
+		return x.BuilderState
 	}
 	return ""
 }
@@ -907,7 +907,7 @@ func (x *RateLimitCheckResponse) GetResetAt() int64 {
 	return 0
 }
 
-type Stream_Processor struct {
+type Flow_Processor struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Label         string                 `protobuf:"bytes,1,opt,name=label,proto3" json:"label,omitempty"`
 	Component     string                 `protobuf:"bytes,2,opt,name=component,proto3" json:"component,omitempty"`
@@ -916,20 +916,20 @@ type Stream_Processor struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *Stream_Processor) Reset() {
-	*x = Stream_Processor{}
+func (x *Flow_Processor) Reset() {
+	*x = Flow_Processor{}
 	mi := &file_common_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *Stream_Processor) String() string {
+func (x *Flow_Processor) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Stream_Processor) ProtoMessage() {}
+func (*Flow_Processor) ProtoMessage() {}
 
-func (x *Stream_Processor) ProtoReflect() protoreflect.Message {
+func (x *Flow_Processor) ProtoReflect() protoreflect.Message {
 	mi := &file_common_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -941,26 +941,26 @@ func (x *Stream_Processor) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Stream_Processor.ProtoReflect.Descriptor instead.
-func (*Stream_Processor) Descriptor() ([]byte, []int) {
+// Deprecated: Use Flow_Processor.ProtoReflect.Descriptor instead.
+func (*Flow_Processor) Descriptor() ([]byte, []int) {
 	return file_common_proto_rawDescGZIP(), []int{1, 0}
 }
 
-func (x *Stream_Processor) GetLabel() string {
+func (x *Flow_Processor) GetLabel() string {
 	if x != nil {
 		return x.Label
 	}
 	return ""
 }
 
-func (x *Stream_Processor) GetComponent() string {
+func (x *Flow_Processor) GetComponent() string {
 	if x != nil {
 		return x.Component
 	}
 	return ""
 }
 
-func (x *Stream_Processor) GetConfig() string {
+func (x *Flow_Processor) GetConfig() string {
 	if x != nil {
 		return x.Config
 	}
@@ -990,8 +990,8 @@ const file_common_proto_rawDesc = "" +
 	"\n" +
 	"\fcommon.proto\x12\vprotorender\x1a google/protobuf/descriptor.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x17validate/validate.proto\"*\n" +
 	"\x0eCommonResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage\"\xe5\a\n" +
-	"\x06Stream\x12\x0e\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\"\xe7\a\n" +
+	"\x04Flow\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12!\n" +
 	"\tparent_id\x18\x02 \x01(\x03H\x00R\tparent_id\x88\x01\x01\x12\x1d\n" +
 	"\x04name\x18\x03 \x01(\tB\t\xfaB\x06r\x04\x10\x01\x18dR\x04name\x12\"\n" +
@@ -1011,17 +1011,15 @@ const file_common_proto_rawDesc = "" +
 	"created_at\x12?\n" +
 	"\n" +
 	"updated_at\x18\r \x01(\v2\x1a.google.protobuf.TimestampH\x01R\n" +
-	"updated_at\x88\x01\x01\x12=\n" +
+	"updated_at\x88\x01\x01\x12;\n" +
 	"\n" +
-	"processors\x18\x0e \x03(\v2\x1d.protorender.Stream.ProcessorR\n" +
+	"processors\x18\x0e \x03(\v2\x1b.protorender.Flow.ProcessorR\n" +
 	"processors\x12&\n" +
 	"\x0eis_http_server\x18\x0f \x01(\bR\x0eis_http_server\x12!\n" +
 	"\tbuffer_id\x18\x10 \x01(\x03H\x02R\tbuffer_id\x88\x01\x01\x12 \n" +
 	"\vis_mcp_tool\x18\x11 \x01(\bR\vis_mcp_tool\x12\x1a\n" +
-	"\bis_ready\x18\x12 \x01(\bR\bis_ready\x12\x1e\n" +
-	"\n" +
-	"flow_state\x18\x13 \x01(\tR\n" +
-	"flow_state\x1au\n" +
+	"\bis_ready\x18\x12 \x01(\bR\bis_ready\x12$\n" +
+	"\rbuilder_state\x18\x13 \x01(\tR\rbuilder_state\x1au\n" +
 	"\tProcessor\x122\n" +
 	"\x05label\x18\x01 \x01(\tB\x1c\xfaB\x19r\x17\x10\x01\x18d2\x11^[a-zA-Z0-9 _-]+$R\x05label\x12\x1c\n" +
 	"\tcomponent\x18\x02 \x01(\tR\tcomponent\x12\x16\n" +
@@ -1119,8 +1117,8 @@ const file_common_proto_rawDesc = "" +
 	"\x0eretry_after_ms\x18\x02 \x01(\x03R\fretryAfterMs\x12\x1c\n" +
 	"\tremaining\x18\x03 \x01(\x03R\tremaining\x12\x14\n" +
 	"\x05limit\x18\x04 \x01(\x03R\x05limit\x12\x19\n" +
-	"\breset_at\x18\x05 \x01(\x03R\aresetAt*\x98\x01\n" +
-	"\x12WorkerStreamStatus\x12\x18\n" +
+	"\breset_at\x18\x05 \x01(\x03R\aresetAt*\x96\x01\n" +
+	"\x10WorkerFlowStatus\x12\x18\n" +
 	"\awaiting\x10\x00\x1a\v\x92\x82\x19\awaiting\x12\x18\n" +
 	"\arunning\x10\x01\x1a\v\x92\x82\x19\arunning\x12\x18\n" +
 	"\astopped\x10\x02\x1a\v\x92\x82\x19\astopped\x12\x1c\n" +
@@ -1144,9 +1142,9 @@ func file_common_proto_rawDescGZIP() []byte {
 var file_common_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_common_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_common_proto_goTypes = []any{
-	(WorkerStreamStatus)(0),               // 0: protorender.WorkerStreamStatus
+	(WorkerFlowStatus)(0),                 // 0: protorender.WorkerFlowStatus
 	(*CommonResponse)(nil),                // 1: protorender.CommonResponse
-	(*Stream)(nil),                        // 2: protorender.Stream
+	(*Flow)(nil),                          // 2: protorender.Flow
 	(*Secret)(nil),                        // 3: protorender.Secret
 	(*Cache)(nil),                         // 4: protorender.Cache
 	(*Buffer)(nil),                        // 5: protorender.Buffer
@@ -1154,14 +1152,14 @@ var file_common_proto_goTypes = []any{
 	(*File)(nil),                          // 7: protorender.File
 	(*RateLimitCheckRequest)(nil),         // 8: protorender.RateLimitCheckRequest
 	(*RateLimitCheckResponse)(nil),        // 9: protorender.RateLimitCheckResponse
-	(*Stream_Processor)(nil),              // 10: protorender.Stream.Processor
+	(*Flow_Processor)(nil),                // 10: protorender.Flow.Processor
 	(*timestamppb.Timestamp)(nil),         // 11: google.protobuf.Timestamp
 	(*descriptorpb.EnumValueOptions)(nil), // 12: google.protobuf.EnumValueOptions
 }
 var file_common_proto_depIdxs = []int32{
-	11, // 0: protorender.Stream.created_at:type_name -> google.protobuf.Timestamp
-	11, // 1: protorender.Stream.updated_at:type_name -> google.protobuf.Timestamp
-	10, // 2: protorender.Stream.processors:type_name -> protorender.Stream.Processor
+	11, // 0: protorender.Flow.created_at:type_name -> google.protobuf.Timestamp
+	11, // 1: protorender.Flow.updated_at:type_name -> google.protobuf.Timestamp
+	10, // 2: protorender.Flow.processors:type_name -> protorender.Flow.Processor
 	11, // 3: protorender.Secret.created_at:type_name -> google.protobuf.Timestamp
 	11, // 4: protorender.Cache.created_at:type_name -> google.protobuf.Timestamp
 	11, // 5: protorender.Cache.updated_at:type_name -> google.protobuf.Timestamp

@@ -17,22 +17,22 @@ type CoordinatorConnection interface {
 	JoinToCoordinator(ctx context.Context) error
 	LeaveCoordinator(ctx context.Context) error
 	SendHeartbeat(ctx context.Context) error
-	SetStreamManager(streamManager any)
+	SetFlowManager(flowManager any)
 	GetClient() pb.CoordinatorClient
-	UpdateWorkerStreamStatus(ctx context.Context, workerStreamID int64, status pb.WorkerStreamStatus) error
-	IngestMetrics(ctx context.Context, workerStreamID int64, inputEvents, processorErrors, outputEvents uint64) error
+	UpdateWorkerFlowStatus(ctx context.Context, workerFlowID int64, status pb.WorkerFlowStatus) error
+	IngestMetrics(ctx context.Context, workerFlowID int64, inputEvents, processorErrors, outputEvents uint64) error
 }
 
-type streamManagerInterface interface {
-	GetRunningStreamIDs() []int64
-	StopStream(workerStreamID int64) error
+type flowManagerInterface interface {
+	GetRunningFlowIDs() []int64
+	StopFlow(workerFlowID int64) error
 }
 
 type coordinatorConnection struct {
 	mu                sync.Mutex
 	grpcConn          *grpc.ClientConn
 	coordinatorClient pb.CoordinatorClient
-	streamManager     streamManagerInterface
+	flowManager     flowManagerInterface
 	grpcPort          uint32
 	joined            bool
 }
@@ -122,11 +122,11 @@ func (c *coordinatorConnection) LeaveCoordinator(ctx context.Context) error {
 	return nil
 }
 
-func (c *coordinatorConnection) SetStreamManager(streamManager any) {
+func (c *coordinatorConnection) SetFlowManager(flowManager any) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if sm, ok := streamManager.(streamManagerInterface); ok {
-		c.streamManager = sm
+	if sm, ok := flowManager.(flowManagerInterface); ok {
+		c.flowManager = sm
 	}
 }
 
@@ -143,16 +143,16 @@ func (c *coordinatorConnection) SendHeartbeat(ctx context.Context) error {
 		return nil
 	}
 
-	var runningStreamIDs []int64
-	if c.streamManager != nil {
-		runningStreamIDs = c.streamManager.GetRunningStreamIDs()
+	var runningFlowIDs []int64
+	if c.flowManager != nil {
+		runningFlowIDs = c.flowManager.GetRunningFlowIDs()
 	}
 	c.mu.Unlock()
 
 	resp, err := c.coordinatorClient.Heartbeat(ctx, &pb.HeartbeatRequest{
 		Id:                     hostname,
 		Port:                   c.grpcPort,
-		RunningWorkerStreamIds: runningStreamIDs,
+		RunningWorkerFlowIds: runningFlowIDs,
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to send heartbeat to coordinator")
@@ -162,20 +162,20 @@ func (c *coordinatorConnection) SendHeartbeat(ctx context.Context) error {
 		return err
 	}
 
-	for _, workerStreamID := range resp.ExpiredLeaseWorkerStreamIds {
-		log.Warn().Int64("worker_stream_id", workerStreamID).Msg("Lease expired - stopping stream")
-		if c.streamManager != nil {
-			if err := c.streamManager.StopStream(workerStreamID); err != nil {
-				log.Error().Err(err).Int64("worker_stream_id", workerStreamID).Msg("Failed to stop expired stream")
+	for _, workerFlowID := range resp.ExpiredLeaseWorkerFlowIds {
+		log.Warn().Int64("worker_flow_id", workerFlowID).Msg("Lease expired - stopping stream")
+		if c.flowManager != nil {
+			if err := c.flowManager.StopFlow(workerFlowID); err != nil {
+				log.Error().Err(err).Int64("worker_flow_id", workerFlowID).Msg("Failed to stop expired flow")
 			}
 		}
 	}
 
 	log.Debug().
 		Str("worker_id", hostname).
-		Int("running_streams", len(runningStreamIDs)).
-		Int("renewed", len(resp.RenewedLeaseWorkerStreamIds)).
-		Int("expired", len(resp.ExpiredLeaseWorkerStreamIds)).
+		Int("running_streams", len(runningFlowIDs)).
+		Int("renewed", len(resp.RenewedLeaseWorkerFlowIds)).
+		Int("expired", len(resp.ExpiredLeaseWorkerFlowIds)).
 		Msg("Heartbeat sent")
 
 	return nil
@@ -185,11 +185,11 @@ func (c *coordinatorConnection) GetClient() pb.CoordinatorClient {
 	return c.coordinatorClient
 }
 
-func (c *coordinatorConnection) UpdateWorkerStreamStatus(ctx context.Context, workerStreamID int64, status pb.WorkerStreamStatus) error {
-	resp, err := c.coordinatorClient.UpdateWorkerStreamStatus(
+func (c *coordinatorConnection) UpdateWorkerFlowStatus(ctx context.Context, workerFlowID int64, status pb.WorkerFlowStatus) error {
+	resp, err := c.coordinatorClient.UpdateWorkerFlowStatus(
 		ctx,
-		&pb.WorkerStreamStatusRequest{
-			WorkerStreamId: workerStreamID,
+		&pb.WorkerFlowStatusRequest{
+			WorkerFlowId: workerFlowID,
 			Status:         status,
 		},
 	)
@@ -198,16 +198,16 @@ func (c *coordinatorConnection) UpdateWorkerStreamStatus(ctx context.Context, wo
 	}
 
 	log.Info().
-		Int64("worker_stream_id", workerStreamID).
+		Int64("worker_flow_id", workerFlowID).
 		Str("coordinator_response", resp.Message).
-		Msg("Updated worker stream status")
+		Msg("Updated worker flow status")
 
 	return nil
 }
 
-func (c *coordinatorConnection) IngestMetrics(ctx context.Context, workerStreamID int64, inputEvents, processorErrors, outputEvents uint64) error {
+func (c *coordinatorConnection) IngestMetrics(ctx context.Context, workerFlowID int64, inputEvents, processorErrors, outputEvents uint64) error {
 	_, err := c.coordinatorClient.IngestMetrics(ctx, &pb.MetricsRequest{
-		WorkerStreamId:  workerStreamID,
+		WorkerFlowId:  workerFlowID,
 		InputEvents:     inputEvents,
 		ProcessorErrors: processorErrors,
 		OutputEvents:    outputEvents,

@@ -75,11 +75,11 @@ func local_request_Coordinator_ListWorkers_0(ctx context.Context, marshaler runt
 	return msg, metadata, err
 }
 
-var filter_Coordinator_ListStreams_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+var filter_Coordinator_ListFlows_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 
-func request_Coordinator_ListStreams_0(ctx context.Context, marshaler runtime.Marshaler, client CoordinatorClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_Coordinator_ListFlows_0(ctx context.Context, marshaler runtime.Marshaler, client CoordinatorClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq ListStreamsRequest
+		protoReq ListFlowsRequest
 		metadata runtime.ServerMetadata
 	)
 	if req.Body != nil {
@@ -88,31 +88,31 @@ func request_Coordinator_ListStreams_0(ctx context.Context, marshaler runtime.Ma
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Coordinator_ListStreams_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Coordinator_ListFlows_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	msg, err := client.ListStreams(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ListFlows(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 }
 
-func local_request_Coordinator_ListStreams_0(ctx context.Context, marshaler runtime.Marshaler, server CoordinatorServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_Coordinator_ListFlows_0(ctx context.Context, marshaler runtime.Marshaler, server CoordinatorServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq ListStreamsRequest
+		protoReq ListFlowsRequest
 		metadata runtime.ServerMetadata
 	)
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Coordinator_ListStreams_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Coordinator_ListFlows_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	msg, err := server.ListStreams(ctx, &protoReq)
+	msg, err := server.ListFlows(ctx, &protoReq)
 	return msg, metadata, err
 }
 
-func request_Coordinator_GetStream_0(ctx context.Context, marshaler runtime.Marshaler, client CoordinatorClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_Coordinator_GetFlow_0(ctx context.Context, marshaler runtime.Marshaler, client CoordinatorClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq GetStreamRequest
+		protoReq GetFlowRequest
 		metadata runtime.ServerMetadata
 		err      error
 	)
@@ -127,13 +127,13 @@ func request_Coordinator_GetStream_0(ctx context.Context, marshaler runtime.Mars
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
 	}
-	msg, err := client.GetStream(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.GetFlow(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 }
 
-func local_request_Coordinator_GetStream_0(ctx context.Context, marshaler runtime.Marshaler, server CoordinatorServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_Coordinator_GetFlow_0(ctx context.Context, marshaler runtime.Marshaler, server CoordinatorServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq GetStreamRequest
+		protoReq GetFlowRequest
 		metadata runtime.ServerMetadata
 		err      error
 	)
@@ -145,13 +145,13 @@ func local_request_Coordinator_GetStream_0(ctx context.Context, marshaler runtim
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
 	}
-	msg, err := server.GetStream(ctx, &protoReq)
+	msg, err := server.GetFlow(ctx, &protoReq)
 	return msg, metadata, err
 }
 
-func request_Coordinator_CreateStream_0(ctx context.Context, marshaler runtime.Marshaler, client CoordinatorClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_Coordinator_CreateFlow_0(ctx context.Context, marshaler runtime.Marshaler, client CoordinatorClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq Stream
+		protoReq Flow
 		metadata runtime.ServerMetadata
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
@@ -160,25 +160,25 @@ func request_Coordinator_CreateStream_0(ctx context.Context, marshaler runtime.M
 	if req.Body != nil {
 		_, _ = io.Copy(io.Discard, req.Body)
 	}
-	msg, err := client.CreateStream(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.CreateFlow(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 }
 
-func local_request_Coordinator_CreateStream_0(ctx context.Context, marshaler runtime.Marshaler, server CoordinatorServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_Coordinator_CreateFlow_0(ctx context.Context, marshaler runtime.Marshaler, server CoordinatorServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq Stream
+		protoReq Flow
 		metadata runtime.ServerMetadata
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	msg, err := server.CreateStream(ctx, &protoReq)
+	msg, err := server.CreateFlow(ctx, &protoReq)
 	return msg, metadata, err
 }
 
-func request_Coordinator_UpdateStream_0(ctx context.Context, marshaler runtime.Marshaler, client CoordinatorClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_Coordinator_UpdateFlow_0(ctx context.Context, marshaler runtime.Marshaler, client CoordinatorClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq Stream
+		protoReq Flow
 		metadata runtime.ServerMetadata
 		err      error
 	)
@@ -196,13 +196,13 @@ func request_Coordinator_UpdateStream_0(ctx context.Context, marshaler runtime.M
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
 	}
-	msg, err := client.UpdateStream(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.UpdateFlow(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 }
 
-func local_request_Coordinator_UpdateStream_0(ctx context.Context, marshaler runtime.Marshaler, server CoordinatorServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_Coordinator_UpdateFlow_0(ctx context.Context, marshaler runtime.Marshaler, server CoordinatorServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq Stream
+		protoReq Flow
 		metadata runtime.ServerMetadata
 		err      error
 	)
@@ -217,7 +217,7 @@ func local_request_Coordinator_UpdateStream_0(ctx context.Context, marshaler run
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
 	}
-	msg, err := server.UpdateStream(ctx, &protoReq)
+	msg, err := server.UpdateFlow(ctx, &protoReq)
 	return msg, metadata, err
 }
 
@@ -1104,7 +1104,7 @@ func local_request_Coordinator_DeleteFile_0(ctx context.Context, marshaler runti
 	return msg, metadata, err
 }
 
-var filter_Coordinator_ListEvents_0 = &utilities.DoubleArray{Encoding: map[string]int{"stream_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
+var filter_Coordinator_ListEvents_0 = &utilities.DoubleArray{Encoding: map[string]int{"flow_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
 
 func request_Coordinator_ListEvents_0(ctx context.Context, marshaler runtime.Marshaler, client CoordinatorClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
@@ -1115,13 +1115,13 @@ func request_Coordinator_ListEvents_0(ctx context.Context, marshaler runtime.Mar
 	if req.Body != nil {
 		_, _ = io.Copy(io.Discard, req.Body)
 	}
-	val, ok := pathParams["stream_id"]
+	val, ok := pathParams["flow_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "stream_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "flow_id")
 	}
-	protoReq.StreamId, err = runtime.Int64(val)
+	protoReq.FlowId, err = runtime.Int64(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "stream_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "flow_id", err)
 	}
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
@@ -1139,13 +1139,13 @@ func local_request_Coordinator_ListEvents_0(ctx context.Context, marshaler runti
 		metadata runtime.ServerMetadata
 		err      error
 	)
-	val, ok := pathParams["stream_id"]
+	val, ok := pathParams["flow_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "stream_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "flow_id")
 	}
-	protoReq.StreamId, err = runtime.Int64(val)
+	protoReq.FlowId, err = runtime.Int64(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "stream_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "flow_id", err)
 	}
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
@@ -1204,85 +1204,85 @@ func RegisterCoordinatorHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		}
 		forward_Coordinator_ListWorkers_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodGet, pattern_Coordinator_ListStreams_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodGet, pattern_Coordinator_ListFlows_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/protorender.Coordinator/ListStreams", runtime.WithHTTPPathPattern("/v0/streams"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/protorender.Coordinator/ListFlows", runtime.WithHTTPPathPattern("/v0/flows"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Coordinator_ListStreams_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Coordinator_ListFlows_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_Coordinator_ListStreams_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Coordinator_ListFlows_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodGet, pattern_Coordinator_GetStream_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodGet, pattern_Coordinator_GetFlow_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/protorender.Coordinator/GetStream", runtime.WithHTTPPathPattern("/v0/streams/{id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/protorender.Coordinator/GetFlow", runtime.WithHTTPPathPattern("/v0/flows/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Coordinator_GetStream_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Coordinator_GetFlow_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_Coordinator_GetStream_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Coordinator_GetFlow_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodPost, pattern_Coordinator_CreateStream_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPost, pattern_Coordinator_CreateFlow_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/protorender.Coordinator/CreateStream", runtime.WithHTTPPathPattern("/v0/streams"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/protorender.Coordinator/CreateFlow", runtime.WithHTTPPathPattern("/v0/flows"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Coordinator_CreateStream_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Coordinator_CreateFlow_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_Coordinator_CreateStream_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Coordinator_CreateFlow_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodPut, pattern_Coordinator_UpdateStream_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPut, pattern_Coordinator_UpdateFlow_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/protorender.Coordinator/UpdateStream", runtime.WithHTTPPathPattern("/v0/streams/{id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/protorender.Coordinator/UpdateFlow", runtime.WithHTTPPathPattern("/v0/flows/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Coordinator_UpdateStream_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Coordinator_UpdateFlow_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_Coordinator_UpdateStream_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Coordinator_UpdateFlow_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodGet, pattern_Coordinator_ListSecrets_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -1790,7 +1790,7 @@ func RegisterCoordinatorHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/protorender.Coordinator/ListEvents", runtime.WithHTTPPathPattern("/v0/streams/{stream_id}/events"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/protorender.Coordinator/ListEvents", runtime.WithHTTPPathPattern("/v0/flows/{flow_id}/events"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1881,73 +1881,73 @@ func RegisterCoordinatorHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		}
 		forward_Coordinator_ListWorkers_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodGet, pattern_Coordinator_ListStreams_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodGet, pattern_Coordinator_ListFlows_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/protorender.Coordinator/ListStreams", runtime.WithHTTPPathPattern("/v0/streams"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/protorender.Coordinator/ListFlows", runtime.WithHTTPPathPattern("/v0/flows"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Coordinator_ListStreams_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Coordinator_ListFlows_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_Coordinator_ListStreams_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Coordinator_ListFlows_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodGet, pattern_Coordinator_GetStream_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodGet, pattern_Coordinator_GetFlow_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/protorender.Coordinator/GetStream", runtime.WithHTTPPathPattern("/v0/streams/{id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/protorender.Coordinator/GetFlow", runtime.WithHTTPPathPattern("/v0/flows/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Coordinator_GetStream_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Coordinator_GetFlow_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_Coordinator_GetStream_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Coordinator_GetFlow_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodPost, pattern_Coordinator_CreateStream_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPost, pattern_Coordinator_CreateFlow_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/protorender.Coordinator/CreateStream", runtime.WithHTTPPathPattern("/v0/streams"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/protorender.Coordinator/CreateFlow", runtime.WithHTTPPathPattern("/v0/flows"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Coordinator_CreateStream_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Coordinator_CreateFlow_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_Coordinator_CreateStream_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Coordinator_CreateFlow_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodPut, pattern_Coordinator_UpdateStream_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPut, pattern_Coordinator_UpdateFlow_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/protorender.Coordinator/UpdateStream", runtime.WithHTTPPathPattern("/v0/streams/{id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/protorender.Coordinator/UpdateFlow", runtime.WithHTTPPathPattern("/v0/flows/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Coordinator_UpdateStream_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Coordinator_UpdateFlow_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_Coordinator_UpdateStream_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Coordinator_UpdateFlow_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodGet, pattern_Coordinator_ListSecrets_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -2378,7 +2378,7 @@ func RegisterCoordinatorHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/protorender.Coordinator/ListEvents", runtime.WithHTTPPathPattern("/v0/streams/{stream_id}/events"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/protorender.Coordinator/ListEvents", runtime.WithHTTPPathPattern("/v0/flows/{flow_id}/events"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -2413,10 +2413,10 @@ func RegisterCoordinatorHandlerClient(ctx context.Context, mux *runtime.ServeMux
 
 var (
 	pattern_Coordinator_ListWorkers_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "workers", "status"}, ""))
-	pattern_Coordinator_ListStreams_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "streams"}, ""))
-	pattern_Coordinator_GetStream_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "streams", "id"}, ""))
-	pattern_Coordinator_CreateStream_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "streams"}, ""))
-	pattern_Coordinator_UpdateStream_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "streams", "id"}, ""))
+	pattern_Coordinator_ListFlows_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "flows"}, ""))
+	pattern_Coordinator_GetFlow_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "flows", "id"}, ""))
+	pattern_Coordinator_CreateFlow_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "flows"}, ""))
+	pattern_Coordinator_UpdateFlow_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "flows", "id"}, ""))
 	pattern_Coordinator_ListSecrets_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "secrets"}, ""))
 	pattern_Coordinator_CreateSecret_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "secrets"}, ""))
 	pattern_Coordinator_UpdateSecret_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "secrets", "key"}, ""))
@@ -2442,16 +2442,16 @@ var (
 	pattern_Coordinator_CreateFile_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "files"}, ""))
 	pattern_Coordinator_UpdateFile_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "files", "id"}, ""))
 	pattern_Coordinator_DeleteFile_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "files", "id"}, ""))
-	pattern_Coordinator_ListEvents_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v0", "streams", "stream_id", "events"}, ""))
+	pattern_Coordinator_ListEvents_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v0", "flows", "flow_id", "events"}, ""))
 	pattern_Coordinator_GetAnalytics_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "analytics"}, ""))
 )
 
 var (
 	forward_Coordinator_ListWorkers_0     = runtime.ForwardResponseMessage
-	forward_Coordinator_ListStreams_0     = runtime.ForwardResponseMessage
-	forward_Coordinator_GetStream_0       = runtime.ForwardResponseMessage
-	forward_Coordinator_CreateStream_0    = runtime.ForwardResponseMessage
-	forward_Coordinator_UpdateStream_0    = runtime.ForwardResponseMessage
+	forward_Coordinator_ListFlows_0       = runtime.ForwardResponseMessage
+	forward_Coordinator_GetFlow_0         = runtime.ForwardResponseMessage
+	forward_Coordinator_CreateFlow_0      = runtime.ForwardResponseMessage
+	forward_Coordinator_UpdateFlow_0      = runtime.ForwardResponseMessage
 	forward_Coordinator_ListSecrets_0     = runtime.ForwardResponseMessage
 	forward_Coordinator_CreateSecret_0    = runtime.ForwardResponseMessage
 	forward_Coordinator_UpdateSecret_0    = runtime.ForwardResponseMessage

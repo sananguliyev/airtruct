@@ -488,7 +488,7 @@ function Examples() {
 const features = [
   {
     title: "Instant MCP Endpoint",
-    description: "The coordinator exposes a /mcp endpoint. All MCP Tool streams are auto-registered and discoverable by any MCP client.",
+    description: "The coordinator exposes a /mcp endpoint. All MCP Tool flows are auto-registered and discoverable by any MCP client.",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />

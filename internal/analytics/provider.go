@@ -2,7 +2,7 @@ package analytics
 
 import "time"
 
-type StreamStatusCount struct {
+type FlowStatusCount struct {
 	Status string
 	Count  int64
 }
@@ -20,8 +20,8 @@ type TimeSeriesPoint struct {
 }
 
 type Result struct {
-	TotalStreams         int64
-	StreamsByStatus      []StreamStatusCount
+	TotalFlows         int64
+	FlowsByStatus      []FlowStatusCount
 	TotalInputEvents     uint64
 	TotalOutputEvents    uint64
 	TotalProcessorErrors uint64

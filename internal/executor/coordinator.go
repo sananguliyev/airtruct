@@ -9,9 +9,9 @@ import (
 )
 
 type CoordinatorExecutor interface {
-	CheckWorkersAndAssignStreams(context.Context) error
+	CheckWorkersAndAssignFlows(context.Context) error
 	CheckWorkerHeartbeats(context.Context) error
-	CheckStreamLeases(context.Context) error
+	CheckFlowLeases(context.Context) error
 	ForwardRequestToWorker(context.Context, *http.Request) (int32, []byte, error)
 }
 
@@ -21,28 +21,28 @@ type coordinatorExecutor struct {
 
 func NewCoordinatorExecutor(
 	workerRepo persistence.WorkerRepository,
-	streamRepo persistence.StreamRepository,
-	streamCacheRepo persistence.StreamCacheRepository,
-	streamRateLimitRepo persistence.StreamRateLimitRepository,
-	workerStreamRepo persistence.WorkerStreamRepository,
+	flowRepo persistence.FlowRepository,
+	flowCacheRepo persistence.FlowCacheRepository,
+	flowRateLimitRepo persistence.FlowRateLimitRepository,
+	workerFlowRepo persistence.WorkerFlowRepository,
 	fileRepo persistence.FileRepository,
-	streamWorkerMap coordinator.StreamWorkerMap,
+	flowWorkerMap coordinator.FlowWorkerMap,
 ) CoordinatorExecutor {
 	return &coordinatorExecutor{
-		coordinator: coordinator.NewCoordinatorExecutor(workerRepo, streamRepo, streamCacheRepo, streamRateLimitRepo, workerStreamRepo, fileRepo, streamWorkerMap),
+		coordinator: coordinator.NewCoordinatorExecutor(workerRepo, flowRepo, flowCacheRepo, flowRateLimitRepo, workerFlowRepo, fileRepo, flowWorkerMap),
 	}
 }
 
-func (e *coordinatorExecutor) CheckWorkersAndAssignStreams(ctx context.Context) error {
-	return e.coordinator.CheckWorkersAndAssignStreams(ctx)
+func (e *coordinatorExecutor) CheckWorkersAndAssignFlows(ctx context.Context) error {
+	return e.coordinator.CheckWorkersAndAssignFlows(ctx)
 }
 
 func (e *coordinatorExecutor) CheckWorkerHeartbeats(ctx context.Context) error {
 	return e.coordinator.CheckWorkerHeartbeats(ctx)
 }
 
-func (e *coordinatorExecutor) CheckStreamLeases(ctx context.Context) error {
-	return e.coordinator.CheckStreamLeases(ctx)
+func (e *coordinatorExecutor) CheckFlowLeases(ctx context.Context) error {
+	return e.coordinator.CheckFlowLeases(ctx)
 }
 
 func (e *coordinatorExecutor) ForwardRequestToWorker(ctx context.Context, r *http.Request) (int32, []byte, error) {

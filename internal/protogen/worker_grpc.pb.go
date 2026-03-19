@@ -20,11 +20,11 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Worker_HealthCheck_FullMethodName    = "/protorender.Worker/HealthCheck"
-	Worker_AssignStream_FullMethodName   = "/protorender.Worker/AssignStream"
-	Worker_FetchStream_FullMethodName    = "/protorender.Worker/FetchStream"
-	Worker_CompleteStream_FullMethodName = "/protorender.Worker/CompleteStream"
-	Worker_Ingest_FullMethodName         = "/protorender.Worker/Ingest"
+	Worker_HealthCheck_FullMethodName  = "/protorender.Worker/HealthCheck"
+	Worker_AssignFlow_FullMethodName   = "/protorender.Worker/AssignFlow"
+	Worker_FetchFlow_FullMethodName    = "/protorender.Worker/FetchFlow"
+	Worker_CompleteFlow_FullMethodName = "/protorender.Worker/CompleteFlow"
+	Worker_Ingest_FullMethodName       = "/protorender.Worker/Ingest"
 )
 
 // WorkerClient is the client API for Worker service.
@@ -32,9 +32,9 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type WorkerClient interface {
 	HealthCheck(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*CommonResponse, error)
-	AssignStream(ctx context.Context, in *AssignStreamRequest, opts ...grpc.CallOption) (*CommonResponse, error)
-	FetchStream(ctx context.Context, in *FetchStreamRequest, opts ...grpc.CallOption) (*FetchStreamResponse, error)
-	CompleteStream(ctx context.Context, in *CompleteStreamRequest, opts ...grpc.CallOption) (*CommonResponse, error)
+	AssignFlow(ctx context.Context, in *AssignFlowRequest, opts ...grpc.CallOption) (*CommonResponse, error)
+	FetchFlow(ctx context.Context, in *FetchFlowRequest, opts ...grpc.CallOption) (*FetchFlowResponse, error)
+	CompleteFlow(ctx context.Context, in *CompleteFlowRequest, opts ...grpc.CallOption) (*CommonResponse, error)
 	Ingest(ctx context.Context, in *IngestRequest, opts ...grpc.CallOption) (*IngestResponse, error)
 }
 
@@ -56,30 +56,30 @@ func (c *workerClient) HealthCheck(ctx context.Context, in *emptypb.Empty, opts 
 	return out, nil
 }
 
-func (c *workerClient) AssignStream(ctx context.Context, in *AssignStreamRequest, opts ...grpc.CallOption) (*CommonResponse, error) {
+func (c *workerClient) AssignFlow(ctx context.Context, in *AssignFlowRequest, opts ...grpc.CallOption) (*CommonResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CommonResponse)
-	err := c.cc.Invoke(ctx, Worker_AssignStream_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, Worker_AssignFlow_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *workerClient) FetchStream(ctx context.Context, in *FetchStreamRequest, opts ...grpc.CallOption) (*FetchStreamResponse, error) {
+func (c *workerClient) FetchFlow(ctx context.Context, in *FetchFlowRequest, opts ...grpc.CallOption) (*FetchFlowResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(FetchStreamResponse)
-	err := c.cc.Invoke(ctx, Worker_FetchStream_FullMethodName, in, out, cOpts...)
+	out := new(FetchFlowResponse)
+	err := c.cc.Invoke(ctx, Worker_FetchFlow_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *workerClient) CompleteStream(ctx context.Context, in *CompleteStreamRequest, opts ...grpc.CallOption) (*CommonResponse, error) {
+func (c *workerClient) CompleteFlow(ctx context.Context, in *CompleteFlowRequest, opts ...grpc.CallOption) (*CommonResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CommonResponse)
-	err := c.cc.Invoke(ctx, Worker_CompleteStream_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, Worker_CompleteFlow_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -101,9 +101,9 @@ func (c *workerClient) Ingest(ctx context.Context, in *IngestRequest, opts ...gr
 // for forward compatibility.
 type WorkerServer interface {
 	HealthCheck(context.Context, *emptypb.Empty) (*CommonResponse, error)
-	AssignStream(context.Context, *AssignStreamRequest) (*CommonResponse, error)
-	FetchStream(context.Context, *FetchStreamRequest) (*FetchStreamResponse, error)
-	CompleteStream(context.Context, *CompleteStreamRequest) (*CommonResponse, error)
+	AssignFlow(context.Context, *AssignFlowRequest) (*CommonResponse, error)
+	FetchFlow(context.Context, *FetchFlowRequest) (*FetchFlowResponse, error)
+	CompleteFlow(context.Context, *CompleteFlowRequest) (*CommonResponse, error)
 	Ingest(context.Context, *IngestRequest) (*IngestResponse, error)
 	mustEmbedUnimplementedWorkerServer()
 }
@@ -118,14 +118,14 @@ type UnimplementedWorkerServer struct{}
 func (UnimplementedWorkerServer) HealthCheck(context.Context, *emptypb.Empty) (*CommonResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method HealthCheck not implemented")
 }
-func (UnimplementedWorkerServer) AssignStream(context.Context, *AssignStreamRequest) (*CommonResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method AssignStream not implemented")
+func (UnimplementedWorkerServer) AssignFlow(context.Context, *AssignFlowRequest) (*CommonResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AssignFlow not implemented")
 }
-func (UnimplementedWorkerServer) FetchStream(context.Context, *FetchStreamRequest) (*FetchStreamResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method FetchStream not implemented")
+func (UnimplementedWorkerServer) FetchFlow(context.Context, *FetchFlowRequest) (*FetchFlowResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method FetchFlow not implemented")
 }
-func (UnimplementedWorkerServer) CompleteStream(context.Context, *CompleteStreamRequest) (*CommonResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method CompleteStream not implemented")
+func (UnimplementedWorkerServer) CompleteFlow(context.Context, *CompleteFlowRequest) (*CommonResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CompleteFlow not implemented")
 }
 func (UnimplementedWorkerServer) Ingest(context.Context, *IngestRequest) (*IngestResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Ingest not implemented")
@@ -169,56 +169,56 @@ func _Worker_HealthCheck_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Worker_AssignStream_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AssignStreamRequest)
+func _Worker_AssignFlow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AssignFlowRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(WorkerServer).AssignStream(ctx, in)
+		return srv.(WorkerServer).AssignFlow(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Worker_AssignStream_FullMethodName,
+		FullMethod: Worker_AssignFlow_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WorkerServer).AssignStream(ctx, req.(*AssignStreamRequest))
+		return srv.(WorkerServer).AssignFlow(ctx, req.(*AssignFlowRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Worker_FetchStream_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(FetchStreamRequest)
+func _Worker_FetchFlow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FetchFlowRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(WorkerServer).FetchStream(ctx, in)
+		return srv.(WorkerServer).FetchFlow(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Worker_FetchStream_FullMethodName,
+		FullMethod: Worker_FetchFlow_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WorkerServer).FetchStream(ctx, req.(*FetchStreamRequest))
+		return srv.(WorkerServer).FetchFlow(ctx, req.(*FetchFlowRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Worker_CompleteStream_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CompleteStreamRequest)
+func _Worker_CompleteFlow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CompleteFlowRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(WorkerServer).CompleteStream(ctx, in)
+		return srv.(WorkerServer).CompleteFlow(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Worker_CompleteStream_FullMethodName,
+		FullMethod: Worker_CompleteFlow_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WorkerServer).CompleteStream(ctx, req.(*CompleteStreamRequest))
+		return srv.(WorkerServer).CompleteFlow(ctx, req.(*CompleteFlowRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -253,16 +253,16 @@ var Worker_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Worker_HealthCheck_Handler,
 		},
 		{
-			MethodName: "AssignStream",
-			Handler:    _Worker_AssignStream_Handler,
+			MethodName: "AssignFlow",
+			Handler:    _Worker_AssignFlow_Handler,
 		},
 		{
-			MethodName: "FetchStream",
-			Handler:    _Worker_FetchStream_Handler,
+			MethodName: "FetchFlow",
+			Handler:    _Worker_FetchFlow_Handler,
 		},
 		{
-			MethodName: "CompleteStream",
-			Handler:    _Worker_CompleteStream_Handler,
+			MethodName: "CompleteFlow",
+			Handler:    _Worker_CompleteFlow_Handler,
 		},
 		{
 			MethodName: "Ingest",

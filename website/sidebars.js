@@ -17,11 +17,11 @@ const sidebars = {
       label: "Concepts",
       items: [
         "concepts/architecture",
-        "concepts/streams",
+        "concepts/flows",
         "concepts/components",
         "concepts/files",
         "concepts/validation",
-        "concepts/testing-streams",
+        "concepts/testing-flows",
       ],
     },
     {

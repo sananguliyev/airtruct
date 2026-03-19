@@ -6,9 +6,9 @@ const playbooks = [
   {
     title: "Kafka to PostgreSQL",
     description:
-      "Set up a streaming pipeline from Kafka to PostgreSQL with Avro schema decoding.",
+      "Set up a flowing pipeline from Kafka to PostgreSQL with Avro schema decoding.",
     href: "/playbooks/kafka-to-postgresql",
-    tags: ["kafka", "postgresql", "avro", "streaming"],
+    tags: ["kafka", "postgresql", "avro", "flowing"],
   },
   {
     title: "HTTP Webhooks",
@@ -20,7 +20,7 @@ const playbooks = [
   {
     title: "MCP Tool Integration",
     description:
-      "Expose Airtruct streams as tools for AI assistants via Model Context Protocol.",
+      "Expose Airtruct flows as tools for AI assistants via Model Context Protocol.",
     href: "/playbooks/mcp-tool",
     tags: ["mcp", "ai", "tools"],
   },

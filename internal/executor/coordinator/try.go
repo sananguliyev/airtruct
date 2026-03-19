@@ -16,7 +16,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const tryStreamTimeout = 60 * time.Second
+const tryFlowTimeout = 60 * time.Second
 
 type TryMessage struct {
 	Content string `json:"content"`
@@ -31,12 +31,12 @@ type TryOutput struct {
 	Content string `json:"content"`
 }
 
-type TryStreamOptions struct {
+type TryFlowOptions struct {
 	EnvVarLookupFn func(string) (string, bool)
 	FileRepo       persistence.FileRepository
 }
 
-func TryStream(ctx context.Context, processors []persistence.StreamProcessor, messages []TryMessage, opts TryStreamOptions) *TryResult {
+func TryStream(ctx context.Context, processors []persistence.FlowProcessor, messages []TryMessage, opts TryFlowOptions) *TryResult {
 	if len(messages) == 0 {
 		return &TryResult{Error: "at least one test message is required"}
 	}
@@ -148,40 +148,40 @@ func TryStream(ctx context.Context, processors []persistence.StreamProcessor, me
 		return &TryResult{Error: fmt.Sprintf("failed to set up test output: %s", err)}
 	}
 
-	stream, err := builder.Build()
+	flow, err := builder.Build()
 	if err != nil {
-		return &TryResult{Error: fmt.Sprintf("failed to build stream: %s", err)}
+		return &TryResult{Error: fmt.Sprintf("failed to build flow: %s", err)}
 	}
 
-	tryCtx, cancel := context.WithTimeout(ctx, tryStreamTimeout)
+	tryCtx, cancel := context.WithTimeout(ctx, tryFlowTimeout)
 	defer cancel()
 
-	streamDone := make(chan error, 1)
+	flowDone := make(chan error, 1)
 	go func() {
-		streamDone <- stream.Run(tryCtx)
+		flowDone <- flow.Run(tryCtx)
 	}()
 
 	for _, msg := range messages {
 		if err := sendFn(tryCtx, service.NewMessage([]byte(msg.Content))); err != nil {
 			cancel()
-			<-streamDone
+			<-flowDone
 			return &TryResult{Error: fmt.Sprintf("failed to send test message: %s", err)}
 		}
 	}
 
-	// Wait for all outputs to arrive, the stream to exit, or the timeout.
+	// Wait for all outputs to arrive, the flow to exit, or the timeout.
 	select {
 	case <-outputsCh:
 	case <-time.After(3 * time.Second):
 	}
 
-	if err := stream.StopWithin(5 * time.Second); err != nil {
+	if err := flow.StopWithin(5 * time.Second); err != nil {
 		cancel()
-		<-streamDone
-		return &TryResult{Error: fmt.Sprintf("stream did not stop gracefully: %s", err)}
+		<-flowDone
+		return &TryResult{Error: fmt.Sprintf("flow did not stop gracefully: %s", err)}
 	}
 
-	<-streamDone
+	<-flowDone
 
 	return &TryResult{Outputs: outputs}
 }

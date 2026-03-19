@@ -92,9 +92,9 @@ func (c *WorkerCLI) Run(ctx context.Context) {
 	})
 
 	g.Go(func() error {
-		log.Info().Msg("Starting worker stream queue consumption...")
-		c.executor.ConsumeStreamQueue(ctx)
-		log.Info().Msg("Worker stream queue consumption stopped.")
+		log.Info().Msg("Starting worker flow queue consumption...")
+		c.executor.ConsumeFlowQueue(ctx)
+		log.Info().Msg("Worker flow queue consumption stopped.")
 		return ctx.Err()
 	})
 

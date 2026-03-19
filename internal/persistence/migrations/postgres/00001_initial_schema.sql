@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS events (
     id bigserial PRIMARY KEY,
-    stream_id bigint NOT NULL,
-    worker_stream_id bigint NOT NULL,
-    flow_id text NOT NULL,
+    flow_id bigint NOT NULL,
+    worker_flow_id bigint NOT NULL,
+    trace_id text NOT NULL,
     section text NOT NULL,
     component_label text,
     type text NOT NULL,
@@ -10,11 +10,11 @@ CREATE TABLE IF NOT EXISTS events (
     meta bytea NOT NULL,
     created_at timestamptz
 );
-CREATE INDEX IF NOT EXISTS idx_events_stream_id ON events(stream_id);
-CREATE INDEX IF NOT EXISTS idx_events_worker_stream_id ON events(worker_stream_id);
 CREATE INDEX IF NOT EXISTS idx_events_flow_id ON events(flow_id);
+CREATE INDEX IF NOT EXISTS idx_events_worker_flow_id ON events(worker_flow_id);
+CREATE INDEX IF NOT EXISTS idx_events_trace_id ON events(trace_id);
 
-CREATE TABLE IF NOT EXISTS streams (
+CREATE TABLE IF NOT EXISTS flows (
     id bigserial PRIMARY KEY,
     parent_id bigint,
     name text NOT NULL,
@@ -27,31 +27,31 @@ CREATE TABLE IF NOT EXISTS streams (
     buffer_id bigint,
     is_current boolean DEFAULT true,
     is_ready boolean DEFAULT false,
-    flow_state bytea,
+    builder_state bytea,
     status text NOT NULL,
     created_at timestamptz NOT NULL,
     updated_at timestamptz
 );
-CREATE INDEX IF NOT EXISTS idx_streams_parent_id ON streams(parent_id);
+CREATE INDEX IF NOT EXISTS idx_flows_parent_id ON flows(parent_id);
 
-CREATE TABLE IF NOT EXISTS stream_processors (
+CREATE TABLE IF NOT EXISTS flow_processors (
     id bigserial PRIMARY KEY,
-    stream_id bigint NOT NULL,
+    flow_id bigint NOT NULL,
     component text NOT NULL,
     label text,
     config bytea,
     created_at timestamptz NOT NULL
 );
-CREATE INDEX IF NOT EXISTS idx_stream_processors_stream_id ON stream_processors(stream_id);
+CREATE INDEX IF NOT EXISTS idx_flow_processors_flow_id ON flow_processors(flow_id);
 
-CREATE TABLE IF NOT EXISTS stream_caches (
+CREATE TABLE IF NOT EXISTS flow_caches (
     id bigserial PRIMARY KEY,
-    stream_id bigint NOT NULL,
+    flow_id bigint NOT NULL,
     cache_id bigint NOT NULL,
     created_at timestamptz NOT NULL
 );
-CREATE INDEX IF NOT EXISTS idx_stream_caches_stream_id ON stream_caches(stream_id);
-CREATE INDEX IF NOT EXISTS idx_stream_caches_cache_id ON stream_caches(cache_id);
+CREATE INDEX IF NOT EXISTS idx_flow_caches_flow_id ON flow_caches(flow_id);
+CREATE INDEX IF NOT EXISTS idx_flow_caches_cache_id ON flow_caches(cache_id);
 
 CREATE TABLE IF NOT EXISTS workers (
     id text PRIMARY KEY,
@@ -60,10 +60,10 @@ CREATE TABLE IF NOT EXISTS workers (
     status text
 );
 
-CREATE TABLE IF NOT EXISTS worker_streams (
+CREATE TABLE IF NOT EXISTS worker_flows (
     id bigserial PRIMARY KEY,
     worker_id text NOT NULL,
-    stream_id bigint NOT NULL,
+    flow_id bigint NOT NULL,
     input_events bigint NOT NULL DEFAULT 0,
     processor_errors bigint NOT NULL DEFAULT 0,
     output_events bigint NOT NULL DEFAULT 0,
@@ -72,8 +72,8 @@ CREATE TABLE IF NOT EXISTS worker_streams (
     created_at timestamptz NOT NULL,
     updated_at timestamptz
 );
-CREATE INDEX IF NOT EXISTS idx_worker_streams_worker_id ON worker_streams(worker_id);
-CREATE INDEX IF NOT EXISTS idx_worker_streams_stream_id ON worker_streams(stream_id);
+CREATE INDEX IF NOT EXISTS idx_worker_flows_worker_id ON worker_flows(worker_id);
+CREATE INDEX IF NOT EXISTS idx_worker_flows_flow_id ON worker_flows(flow_id);
 
 CREATE TABLE IF NOT EXISTS secrets (
     key text PRIMARY KEY,
@@ -128,20 +128,20 @@ CREATE TABLE IF NOT EXISTS rate_limit_states (
 );
 CREATE INDEX IF NOT EXISTS idx_label_key ON rate_limit_states(rate_limit_label, key);
 
-CREATE TABLE IF NOT EXISTS stream_rate_limits (
+CREATE TABLE IF NOT EXISTS flow_rate_limits (
     id bigserial PRIMARY KEY,
-    stream_id bigint NOT NULL,
+    flow_id bigint NOT NULL,
     rate_limit_id bigint NOT NULL,
     created_at timestamptz NOT NULL
 );
-CREATE INDEX IF NOT EXISTS idx_stream_rate_limits_stream_id ON stream_rate_limits(stream_id);
-CREATE INDEX IF NOT EXISTS idx_stream_rate_limits_rate_limit_id ON stream_rate_limits(rate_limit_id);
+CREATE INDEX IF NOT EXISTS idx_flow_rate_limits_flow_id ON flow_rate_limits(flow_id);
+CREATE INDEX IF NOT EXISTS idx_flow_rate_limits_rate_limit_id ON flow_rate_limits(rate_limit_id);
 
-CREATE TABLE IF NOT EXISTS stream_buffers (
+CREATE TABLE IF NOT EXISTS flow_buffers (
     id bigserial PRIMARY KEY,
-    stream_id bigint NOT NULL,
+    flow_id bigint NOT NULL,
     buffer_id bigint NOT NULL,
     created_at timestamptz NOT NULL
 );
-CREATE INDEX IF NOT EXISTS idx_stream_buffers_stream_id ON stream_buffers(stream_id);
-CREATE INDEX IF NOT EXISTS idx_stream_buffers_buffer_id ON stream_buffers(buffer_id);
+CREATE INDEX IF NOT EXISTS idx_flow_buffers_flow_id ON flow_buffers(flow_id);
+CREATE INDEX IF NOT EXISTS idx_flow_buffers_buffer_id ON flow_buffers(buffer_id);

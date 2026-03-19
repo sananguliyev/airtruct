@@ -1,6 +1,6 @@
 import {
-  Stream,
-  StreamEvent,
+  Flow,
+  FlowEvent,
   Worker,
   Secret,
   Cache,
@@ -52,7 +52,7 @@ export async function fetchWorkers(): Promise<Worker[]> {
       lastHeartbeat: worker.last_heartbeat
         ? new Date(worker.last_heartbeat).toLocaleString()
         : "N/A",
-      activeStreams: worker.active_streams || 0,
+      activeFlows: worker.active_flows || 0,
       createdAt: worker.created_at
         ? new Date(worker.created_at).toLocaleString()
         : "N/A",
@@ -63,10 +63,10 @@ export async function fetchWorkers(): Promise<Worker[]> {
   }
 }
 
-export async function fetchStreams(): Promise<Stream[]> {
+export async function fetchFlows(): Promise<Flow[]> {
   try {
     const response = await handleResponse(
-      await fetch(`${API_BASE_URL}/streams?status=all`, {
+      await fetch(`${API_BASE_URL}/flows?status=all`, {
         headers: getAuthHeaders(),
       }),
     );
@@ -75,40 +75,40 @@ export async function fetchStreams(): Promise<Stream[]> {
     }
     const data = await response.json();
 
-    return data?.data.map((stream: any) => ({
-      id: stream.id,
-      parentID: stream.parent_id || stream.id,
-      name: stream.name,
-      status: stream.status,
-      input_label: stream.input_label,
-      input_component: stream.input_component,
-      input_config: stream.input_config || "",
-      output_label: stream.output_label,
-      output_component: stream.output_component,
-      output_config: stream.output_config || "",
-      buffer_id: stream.buffer_id || undefined,
+    return data?.data.map((flow: any) => ({
+      id: flow.id,
+      parentID: flow.parent_id || flow.id,
+      name: flow.name,
+      status: flow.status,
+      input_label: flow.input_label,
+      input_component: flow.input_component,
+      input_config: flow.input_config || "",
+      output_label: flow.output_label,
+      output_component: flow.output_component,
+      output_config: flow.output_config || "",
+      buffer_id: flow.buffer_id || undefined,
       processors:
-        stream.processors?.map((processor: any) => ({
+        flow.processors?.map((processor: any) => ({
           label: processor.label,
           component: processor.component,
           config: processor.config || "",
         })) || [],
-      createdAt: new Date(stream.created_at).toLocaleString(),
-      is_http_server: stream.is_http_server || false,
-      is_mcp_tool: stream.is_mcp_tool || false,
-      is_ready: stream.is_ready || false,
-      flow_state: stream.flow_state || undefined,
+      createdAt: new Date(flow.created_at).toLocaleString(),
+      is_http_server: flow.is_http_server || false,
+      is_mcp_tool: flow.is_mcp_tool || false,
+      is_ready: flow.is_ready || false,
+      builder_state: flow.builder_state || undefined,
     }));
   } catch (error) {
-    console.error("Error fetching streams:", error);
+    console.error("Error fetching flows:", error);
     throw error; // Re-throw error to be handled by the calling component
   }
 }
 
-export async function fetchStream(id: string): Promise<Stream> {
+export async function fetchStream(id: string): Promise<Flow> {
   try {
     const response = await handleResponse(
-      await fetch(`${API_BASE_URL}/streams/${id}`, {
+      await fetch(`${API_BASE_URL}/flows/${id}`, {
         headers: getAuthHeaders(),
       }),
     );
@@ -139,15 +139,15 @@ export async function fetchStream(id: string): Promise<Stream> {
       is_http_server: data.data.is_http_server || false,
       is_mcp_tool: data.data.is_mcp_tool || false,
       is_ready: data.data.is_ready || false,
-      flow_state: data.data.flow_state || undefined,
+      builder_state: data.data.builder_state || undefined,
     };
   } catch (error) {
-    console.error("Error fetching stream:", error);
+    console.error("Error fetching flow:", error);
     throw error;
   }
 }
 
-export async function validateStream(stream: {
+export async function validateFlow(flow: {
   input_component: string;
   input_label: string;
   input_config: string;
@@ -158,10 +158,10 @@ export async function validateStream(stream: {
 }): Promise<{ valid: boolean; error?: string }> {
   try {
     const response = await handleResponse(
-      await fetch(`${API_BASE_URL}/streams/validate`, {
+      await fetch(`${API_BASE_URL}/flows/validate`, {
         method: "POST",
         headers: getAuthHeaders(),
-        body: JSON.stringify(stream),
+        body: JSON.stringify(flow),
       }),
     );
     if (!response.ok) {
@@ -169,18 +169,18 @@ export async function validateStream(stream: {
     }
     return await response.json();
   } catch (error) {
-    console.error("Error validating stream:", error);
+    console.error("Error validating flow:", error);
     throw error;
   }
 }
 
-export async function tryStream(data: {
+export async function tryFlow(data: {
   processors: Array<{ label: string; component: string; config: string }>;
   messages: Array<{ content: string }>;
 }): Promise<{ outputs: Array<{ content: string }>; error?: string }> {
   try {
     const response = await handleResponse(
-      await fetch(`${API_BASE_URL}/streams/try`, {
+      await fetch(`${API_BASE_URL}/flows/try`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify(data),
@@ -191,12 +191,12 @@ export async function tryStream(data: {
     }
     return await response.json();
   } catch (error) {
-    console.error("Error trying stream:", error);
+    console.error("Error trying flow:", error);
     throw error;
   }
 }
 
-export async function createStream(stream: {
+export async function createFlow(flow: {
   name: string;
   status: string;
   input_component: string;
@@ -207,31 +207,31 @@ export async function createStream(stream: {
   output_config: string;
   buffer_id?: number;
   is_ready?: boolean;
-  flow_state?: string;
+  builder_state?: string;
   processors: Array<{
     label: string;
     component: string;
     config: string;
   }>;
-}): Promise<Stream> {
+}): Promise<Flow> {
   try {
     const response = await handleResponse(
-      await fetch(`${API_BASE_URL}/streams`, {
+      await fetch(`${API_BASE_URL}/flows`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify({
-          name: stream.name,
-          status: stream.status,
-          input_component: stream.input_component,
-          input_label: stream.input_label,
-          input_config: stream.input_config,
-          output_component: stream.output_component,
-          output_label: stream.output_label,
-          output_config: stream.output_config,
-          buffer_id: stream.buffer_id || undefined,
-          is_ready: stream.is_ready ?? true,
-          flow_state: stream.flow_state || "",
-          processors: stream.processors.map((processor) => ({
+          name: flow.name,
+          status: flow.status,
+          input_component: flow.input_component,
+          input_label: flow.input_label,
+          input_config: flow.input_config,
+          output_component: flow.output_component,
+          output_label: flow.output_label,
+          output_config: flow.output_config,
+          buffer_id: flow.buffer_id || undefined,
+          is_ready: flow.is_ready ?? true,
+          builder_state: flow.builder_state || "",
+          processors: flow.processors.map((processor) => ({
             label: processor.label,
             component: processor.component,
             config: processor.config,
@@ -267,17 +267,17 @@ export async function createStream(stream: {
       is_http_server: data.data.is_http_server || false,
       is_mcp_tool: data.data.is_mcp_tool || false,
       is_ready: data.data.is_ready || false,
-      flow_state: data.data.flow_state || undefined,
+      builder_state: data.data.builder_state || undefined,
     };
   } catch (error) {
-    console.error("Error creating stream:", error);
+    console.error("Error creating flow:", error);
     throw error;
   }
 }
 
-export async function updateStream(
+export async function updateFlow(
   id: string,
-  stream: {
+  flow: {
     name: string;
     status: string;
     input_component: string;
@@ -288,32 +288,32 @@ export async function updateStream(
     output_config: string;
     buffer_id?: number;
     is_ready?: boolean;
-    flow_state?: string;
+    builder_state?: string;
     processors: Array<{
       label: string;
       component: string;
       config: string;
     }>;
   },
-): Promise<Stream> {
+): Promise<Flow> {
   try {
     const response = await handleResponse(
-      await fetch(`${API_BASE_URL}/streams/${id}`, {
+      await fetch(`${API_BASE_URL}/flows/${id}`, {
         method: "PUT",
         headers: getAuthHeaders(),
         body: JSON.stringify({
-          name: stream.name,
-          status: stream.status,
-          input_component: stream.input_component,
-          input_label: stream.input_label,
-          input_config: stream.input_config,
-          output_component: stream.output_component,
-          output_label: stream.output_label,
-          output_config: stream.output_config,
-          buffer_id: stream.buffer_id || undefined,
-          is_ready: stream.is_ready ?? true,
-          flow_state: stream.flow_state || "",
-          processors: stream.processors.map((processor) => ({
+          name: flow.name,
+          status: flow.status,
+          input_component: flow.input_component,
+          input_label: flow.input_label,
+          input_config: flow.input_config,
+          output_component: flow.output_component,
+          output_label: flow.output_label,
+          output_config: flow.output_config,
+          buffer_id: flow.buffer_id || undefined,
+          is_ready: flow.is_ready ?? true,
+          builder_state: flow.builder_state || "",
+          processors: flow.processors.map((processor) => ({
             label: processor.label,
             component: processor.component,
             config: processor.config,
@@ -349,18 +349,18 @@ export async function updateStream(
       is_http_server: data.data.is_http_server || false,
       is_mcp_tool: data.data.is_mcp_tool || false,
       is_ready: data.data.is_ready || false,
-      flow_state: data.data.flow_state || undefined,
+      builder_state: data.data.builder_state || undefined,
     };
   } catch (error) {
-    console.error("Error updating stream:", error);
+    console.error("Error updating flow:", error);
     throw error;
   }
 }
 
-export async function deleteStream(id: string): Promise<void> {
+export async function deleteFlow(id: string): Promise<void> {
   try {
     const response = await handleResponse(
-      await fetch(`${API_BASE_URL}/streams/${id}`, {
+      await fetch(`${API_BASE_URL}/flows/${id}`, {
         method: "DELETE",
         headers: getAuthHeaders(),
       }),
@@ -369,35 +369,35 @@ export async function deleteStream(id: string): Promise<void> {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
   } catch (error) {
-    console.error("Error deleting stream:", error);
+    console.error("Error deleting flow:", error);
     throw error;
   }
 }
 
-export async function updateStreamStatus(
+export async function updateFlowStatus(
   id: string,
   status: string,
-): Promise<Stream> {
+): Promise<Flow> {
   try {
-    const stream = await fetchStream(id);
+    const flow = await fetchStream(id);
 
     const response = await handleResponse(
-      await fetch(`${API_BASE_URL}/streams/${id}`, {
+      await fetch(`${API_BASE_URL}/flows/${id}`, {
         method: "PUT",
         headers: getAuthHeaders(),
         body: JSON.stringify({
-          name: stream.name,
+          name: flow.name,
           status: status,
-          input_component: stream.input_component,
-          input_label: stream.input_label,
-          input_config: stream.input_config,
-          output_component: stream.output_component,
-          output_label: stream.output_label,
-          output_config: stream.output_config,
-          buffer_id: stream.buffer_id || undefined,
-          is_ready: stream.is_ready,
-          flow_state: stream.flow_state,
-          processors: stream.processors.map((p) => ({
+          input_component: flow.input_component,
+          input_label: flow.input_label,
+          input_config: flow.input_config,
+          output_component: flow.output_component,
+          output_label: flow.output_label,
+          output_config: flow.output_config,
+          buffer_id: flow.buffer_id || undefined,
+          is_ready: flow.is_ready,
+          builder_state: flow.builder_state,
+          processors: flow.processors.map((p) => ({
             label: p.label,
             component: p.component,
             config: p.config,
@@ -436,10 +436,10 @@ export async function updateStreamStatus(
       is_http_server: data.data.input_component === "http_server",
       is_mcp_tool: data.data.input_component === "mcp_tool",
       is_ready: data.data.is_ready || false,
-      flow_state: data.data.flow_state || undefined,
+      builder_state: data.data.builder_state || undefined,
     };
   } catch (error) {
-    console.error("Error updating stream status:", error);
+    console.error("Error updating flow status:", error);
     throw error;
   }
 }
@@ -992,15 +992,15 @@ export async function deleteBuffer(id: string): Promise<void> {
   }
 }
 
-export async function fetchStreamEvents(
-  streamId: string,
+export async function fetchFlowEvents(
+  flowId: string,
   params: {
     limit: number;
     offset: number;
     startTime: string;
     endTime: string;
   },
-): Promise<{ data: StreamEvent[]; total: number }> {
+): Promise<{ data: FlowEvent[]; total: number }> {
   try {
     const query = new URLSearchParams({
       limit: params.limit.toString(),
@@ -1011,7 +1011,7 @@ export async function fetchStreamEvents(
 
     const response = await handleResponse(
       await fetch(
-        `${API_BASE_URL}/streams/${streamId}/events?${query.toString()}`,
+        `${API_BASE_URL}/flows/${flowId}/events?${query.toString()}`,
         {
           headers: getAuthHeaders(),
         },
@@ -1027,8 +1027,8 @@ export async function fetchStreamEvents(
     return {
       data: (result.data || []).map((event: any) => ({
         id: event.id,
-        worker_stream_id: event.workerStreamId,
-        flow_id: event.flowId,
+        worker_flow_id: event.workerFlowId,
+        trace_id: event.traceId,
         section: event.section,
         component_label: event.componentLabel,
         type: event.type,
@@ -1039,7 +1039,7 @@ export async function fetchStreamEvents(
       total: result.total || 0,
     };
   } catch (error) {
-    console.error("Error fetching stream events:", error);
+    console.error("Error fetching flow events:", error);
     throw error;
   }
 }
@@ -1214,8 +1214,8 @@ export async function fetchAnalytics(): Promise<Analytics> {
     const data = await response.json();
     const num = (v: unknown): number => Number(v) || 0;
     return {
-      total_streams: num(data.total_streams),
-      streams_by_status: (data.streams_by_status ?? []).map(
+      total_flows: num(data.total_flows),
+      flows_by_status: (data.flows_by_status ?? []).map(
         (s: { status: string; count: unknown }) => ({
           status: s.status,
           count: num(s.count),

@@ -20,63 +20,63 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Coordinator_UpdateWorkerStreamStatus_FullMethodName = "/protorender.Coordinator/UpdateWorkerStreamStatus"
-	Coordinator_RegisterWorker_FullMethodName           = "/protorender.Coordinator/RegisterWorker"
-	Coordinator_DeregisterWorker_FullMethodName         = "/protorender.Coordinator/DeregisterWorker"
-	Coordinator_Heartbeat_FullMethodName                = "/protorender.Coordinator/Heartbeat"
-	Coordinator_ListWorkers_FullMethodName              = "/protorender.Coordinator/ListWorkers"
-	Coordinator_ListStreams_FullMethodName              = "/protorender.Coordinator/ListStreams"
-	Coordinator_GetStream_FullMethodName                = "/protorender.Coordinator/GetStream"
-	Coordinator_CreateStream_FullMethodName             = "/protorender.Coordinator/CreateStream"
-	Coordinator_UpdateStream_FullMethodName             = "/protorender.Coordinator/UpdateStream"
-	Coordinator_ListSecrets_FullMethodName              = "/protorender.Coordinator/ListSecrets"
-	Coordinator_CreateSecret_FullMethodName             = "/protorender.Coordinator/CreateSecret"
-	Coordinator_UpdateSecret_FullMethodName             = "/protorender.Coordinator/UpdateSecret"
-	Coordinator_GetSecret_FullMethodName                = "/protorender.Coordinator/GetSecret"
-	Coordinator_DeleteSecret_FullMethodName             = "/protorender.Coordinator/DeleteSecret"
-	Coordinator_ListCaches_FullMethodName               = "/protorender.Coordinator/ListCaches"
-	Coordinator_GetCache_FullMethodName                 = "/protorender.Coordinator/GetCache"
-	Coordinator_CreateCache_FullMethodName              = "/protorender.Coordinator/CreateCache"
-	Coordinator_UpdateCache_FullMethodName              = "/protorender.Coordinator/UpdateCache"
-	Coordinator_DeleteCache_FullMethodName              = "/protorender.Coordinator/DeleteCache"
-	Coordinator_ListRateLimits_FullMethodName           = "/protorender.Coordinator/ListRateLimits"
-	Coordinator_GetRateLimit_FullMethodName             = "/protorender.Coordinator/GetRateLimit"
-	Coordinator_CreateRateLimit_FullMethodName          = "/protorender.Coordinator/CreateRateLimit"
-	Coordinator_UpdateRateLimit_FullMethodName          = "/protorender.Coordinator/UpdateRateLimit"
-	Coordinator_DeleteRateLimit_FullMethodName          = "/protorender.Coordinator/DeleteRateLimit"
-	Coordinator_CheckRateLimit_FullMethodName           = "/protorender.Coordinator/CheckRateLimit"
-	Coordinator_ListBuffers_FullMethodName              = "/protorender.Coordinator/ListBuffers"
-	Coordinator_GetBuffer_FullMethodName                = "/protorender.Coordinator/GetBuffer"
-	Coordinator_CreateBuffer_FullMethodName             = "/protorender.Coordinator/CreateBuffer"
-	Coordinator_UpdateBuffer_FullMethodName             = "/protorender.Coordinator/UpdateBuffer"
-	Coordinator_DeleteBuffer_FullMethodName             = "/protorender.Coordinator/DeleteBuffer"
-	Coordinator_ListFiles_FullMethodName                = "/protorender.Coordinator/ListFiles"
-	Coordinator_GetFile_FullMethodName                  = "/protorender.Coordinator/GetFile"
-	Coordinator_CreateFile_FullMethodName               = "/protorender.Coordinator/CreateFile"
-	Coordinator_UpdateFile_FullMethodName               = "/protorender.Coordinator/UpdateFile"
-	Coordinator_DeleteFile_FullMethodName               = "/protorender.Coordinator/DeleteFile"
-	Coordinator_ListEvents_FullMethodName               = "/protorender.Coordinator/ListEvents"
-	Coordinator_IngestEvents_FullMethodName             = "/protorender.Coordinator/IngestEvents"
-	Coordinator_IngestMetrics_FullMethodName            = "/protorender.Coordinator/IngestMetrics"
-	Coordinator_GetAnalytics_FullMethodName             = "/protorender.Coordinator/GetAnalytics"
+	Coordinator_UpdateWorkerFlowStatus_FullMethodName = "/protorender.Coordinator/UpdateWorkerFlowStatus"
+	Coordinator_RegisterWorker_FullMethodName         = "/protorender.Coordinator/RegisterWorker"
+	Coordinator_DeregisterWorker_FullMethodName       = "/protorender.Coordinator/DeregisterWorker"
+	Coordinator_Heartbeat_FullMethodName              = "/protorender.Coordinator/Heartbeat"
+	Coordinator_ListWorkers_FullMethodName            = "/protorender.Coordinator/ListWorkers"
+	Coordinator_ListFlows_FullMethodName              = "/protorender.Coordinator/ListFlows"
+	Coordinator_GetFlow_FullMethodName                = "/protorender.Coordinator/GetFlow"
+	Coordinator_CreateFlow_FullMethodName             = "/protorender.Coordinator/CreateFlow"
+	Coordinator_UpdateFlow_FullMethodName             = "/protorender.Coordinator/UpdateFlow"
+	Coordinator_ListSecrets_FullMethodName            = "/protorender.Coordinator/ListSecrets"
+	Coordinator_CreateSecret_FullMethodName           = "/protorender.Coordinator/CreateSecret"
+	Coordinator_UpdateSecret_FullMethodName           = "/protorender.Coordinator/UpdateSecret"
+	Coordinator_GetSecret_FullMethodName              = "/protorender.Coordinator/GetSecret"
+	Coordinator_DeleteSecret_FullMethodName           = "/protorender.Coordinator/DeleteSecret"
+	Coordinator_ListCaches_FullMethodName             = "/protorender.Coordinator/ListCaches"
+	Coordinator_GetCache_FullMethodName               = "/protorender.Coordinator/GetCache"
+	Coordinator_CreateCache_FullMethodName            = "/protorender.Coordinator/CreateCache"
+	Coordinator_UpdateCache_FullMethodName            = "/protorender.Coordinator/UpdateCache"
+	Coordinator_DeleteCache_FullMethodName            = "/protorender.Coordinator/DeleteCache"
+	Coordinator_ListRateLimits_FullMethodName         = "/protorender.Coordinator/ListRateLimits"
+	Coordinator_GetRateLimit_FullMethodName           = "/protorender.Coordinator/GetRateLimit"
+	Coordinator_CreateRateLimit_FullMethodName        = "/protorender.Coordinator/CreateRateLimit"
+	Coordinator_UpdateRateLimit_FullMethodName        = "/protorender.Coordinator/UpdateRateLimit"
+	Coordinator_DeleteRateLimit_FullMethodName        = "/protorender.Coordinator/DeleteRateLimit"
+	Coordinator_CheckRateLimit_FullMethodName         = "/protorender.Coordinator/CheckRateLimit"
+	Coordinator_ListBuffers_FullMethodName            = "/protorender.Coordinator/ListBuffers"
+	Coordinator_GetBuffer_FullMethodName              = "/protorender.Coordinator/GetBuffer"
+	Coordinator_CreateBuffer_FullMethodName           = "/protorender.Coordinator/CreateBuffer"
+	Coordinator_UpdateBuffer_FullMethodName           = "/protorender.Coordinator/UpdateBuffer"
+	Coordinator_DeleteBuffer_FullMethodName           = "/protorender.Coordinator/DeleteBuffer"
+	Coordinator_ListFiles_FullMethodName              = "/protorender.Coordinator/ListFiles"
+	Coordinator_GetFile_FullMethodName                = "/protorender.Coordinator/GetFile"
+	Coordinator_CreateFile_FullMethodName             = "/protorender.Coordinator/CreateFile"
+	Coordinator_UpdateFile_FullMethodName             = "/protorender.Coordinator/UpdateFile"
+	Coordinator_DeleteFile_FullMethodName             = "/protorender.Coordinator/DeleteFile"
+	Coordinator_ListEvents_FullMethodName             = "/protorender.Coordinator/ListEvents"
+	Coordinator_IngestEvents_FullMethodName           = "/protorender.Coordinator/IngestEvents"
+	Coordinator_IngestMetrics_FullMethodName          = "/protorender.Coordinator/IngestMetrics"
+	Coordinator_GetAnalytics_FullMethodName           = "/protorender.Coordinator/GetAnalytics"
 )
 
 // CoordinatorClient is the client API for Coordinator service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CoordinatorClient interface {
-	// Worker stream methods
-	UpdateWorkerStreamStatus(ctx context.Context, in *WorkerStreamStatusRequest, opts ...grpc.CallOption) (*CommonResponse, error)
+	// Worker flow methods
+	UpdateWorkerFlowStatus(ctx context.Context, in *WorkerFlowStatusRequest, opts ...grpc.CallOption) (*CommonResponse, error)
 	// Worker methods
 	RegisterWorker(ctx context.Context, in *RegisterWorkerRequest, opts ...grpc.CallOption) (*CommonResponse, error)
 	DeregisterWorker(ctx context.Context, in *DeregisterWorkerRequest, opts ...grpc.CallOption) (*CommonResponse, error)
 	Heartbeat(ctx context.Context, in *HeartbeatRequest, opts ...grpc.CallOption) (*HeartbeatResponse, error)
 	ListWorkers(ctx context.Context, in *ListWorkersRequest, opts ...grpc.CallOption) (*ListWorkersResponse, error)
-	// Stream methods
-	ListStreams(ctx context.Context, in *ListStreamsRequest, opts ...grpc.CallOption) (*ListStreamsResponse, error)
-	GetStream(ctx context.Context, in *GetStreamRequest, opts ...grpc.CallOption) (*StreamResponse, error)
-	CreateStream(ctx context.Context, in *Stream, opts ...grpc.CallOption) (*StreamResponse, error)
-	UpdateStream(ctx context.Context, in *Stream, opts ...grpc.CallOption) (*StreamResponse, error)
+	// Flow methods
+	ListFlows(ctx context.Context, in *ListFlowsRequest, opts ...grpc.CallOption) (*ListFlowsResponse, error)
+	GetFlow(ctx context.Context, in *GetFlowRequest, opts ...grpc.CallOption) (*FlowResponse, error)
+	CreateFlow(ctx context.Context, in *Flow, opts ...grpc.CallOption) (*FlowResponse, error)
+	UpdateFlow(ctx context.Context, in *Flow, opts ...grpc.CallOption) (*FlowResponse, error)
 	// Secret methods
 	ListSecrets(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListSecretsResponse, error)
 	CreateSecret(ctx context.Context, in *SecretRequest, opts ...grpc.CallOption) (*CommonResponse, error)
@@ -124,10 +124,10 @@ func NewCoordinatorClient(cc grpc.ClientConnInterface) CoordinatorClient {
 	return &coordinatorClient{cc}
 }
 
-func (c *coordinatorClient) UpdateWorkerStreamStatus(ctx context.Context, in *WorkerStreamStatusRequest, opts ...grpc.CallOption) (*CommonResponse, error) {
+func (c *coordinatorClient) UpdateWorkerFlowStatus(ctx context.Context, in *WorkerFlowStatusRequest, opts ...grpc.CallOption) (*CommonResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CommonResponse)
-	err := c.cc.Invoke(ctx, Coordinator_UpdateWorkerStreamStatus_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, Coordinator_UpdateWorkerFlowStatus_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -174,40 +174,40 @@ func (c *coordinatorClient) ListWorkers(ctx context.Context, in *ListWorkersRequ
 	return out, nil
 }
 
-func (c *coordinatorClient) ListStreams(ctx context.Context, in *ListStreamsRequest, opts ...grpc.CallOption) (*ListStreamsResponse, error) {
+func (c *coordinatorClient) ListFlows(ctx context.Context, in *ListFlowsRequest, opts ...grpc.CallOption) (*ListFlowsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListStreamsResponse)
-	err := c.cc.Invoke(ctx, Coordinator_ListStreams_FullMethodName, in, out, cOpts...)
+	out := new(ListFlowsResponse)
+	err := c.cc.Invoke(ctx, Coordinator_ListFlows_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *coordinatorClient) GetStream(ctx context.Context, in *GetStreamRequest, opts ...grpc.CallOption) (*StreamResponse, error) {
+func (c *coordinatorClient) GetFlow(ctx context.Context, in *GetFlowRequest, opts ...grpc.CallOption) (*FlowResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(StreamResponse)
-	err := c.cc.Invoke(ctx, Coordinator_GetStream_FullMethodName, in, out, cOpts...)
+	out := new(FlowResponse)
+	err := c.cc.Invoke(ctx, Coordinator_GetFlow_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *coordinatorClient) CreateStream(ctx context.Context, in *Stream, opts ...grpc.CallOption) (*StreamResponse, error) {
+func (c *coordinatorClient) CreateFlow(ctx context.Context, in *Flow, opts ...grpc.CallOption) (*FlowResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(StreamResponse)
-	err := c.cc.Invoke(ctx, Coordinator_CreateStream_FullMethodName, in, out, cOpts...)
+	out := new(FlowResponse)
+	err := c.cc.Invoke(ctx, Coordinator_CreateFlow_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *coordinatorClient) UpdateStream(ctx context.Context, in *Stream, opts ...grpc.CallOption) (*StreamResponse, error) {
+func (c *coordinatorClient) UpdateFlow(ctx context.Context, in *Flow, opts ...grpc.CallOption) (*FlowResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(StreamResponse)
-	err := c.cc.Invoke(ctx, Coordinator_UpdateStream_FullMethodName, in, out, cOpts...)
+	out := new(FlowResponse)
+	err := c.cc.Invoke(ctx, Coordinator_UpdateFlow_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -521,18 +521,18 @@ func (c *coordinatorClient) GetAnalytics(ctx context.Context, in *GetAnalyticsRe
 // All implementations must embed UnimplementedCoordinatorServer
 // for forward compatibility.
 type CoordinatorServer interface {
-	// Worker stream methods
-	UpdateWorkerStreamStatus(context.Context, *WorkerStreamStatusRequest) (*CommonResponse, error)
+	// Worker flow methods
+	UpdateWorkerFlowStatus(context.Context, *WorkerFlowStatusRequest) (*CommonResponse, error)
 	// Worker methods
 	RegisterWorker(context.Context, *RegisterWorkerRequest) (*CommonResponse, error)
 	DeregisterWorker(context.Context, *DeregisterWorkerRequest) (*CommonResponse, error)
 	Heartbeat(context.Context, *HeartbeatRequest) (*HeartbeatResponse, error)
 	ListWorkers(context.Context, *ListWorkersRequest) (*ListWorkersResponse, error)
-	// Stream methods
-	ListStreams(context.Context, *ListStreamsRequest) (*ListStreamsResponse, error)
-	GetStream(context.Context, *GetStreamRequest) (*StreamResponse, error)
-	CreateStream(context.Context, *Stream) (*StreamResponse, error)
-	UpdateStream(context.Context, *Stream) (*StreamResponse, error)
+	// Flow methods
+	ListFlows(context.Context, *ListFlowsRequest) (*ListFlowsResponse, error)
+	GetFlow(context.Context, *GetFlowRequest) (*FlowResponse, error)
+	CreateFlow(context.Context, *Flow) (*FlowResponse, error)
+	UpdateFlow(context.Context, *Flow) (*FlowResponse, error)
 	// Secret methods
 	ListSecrets(context.Context, *emptypb.Empty) (*ListSecretsResponse, error)
 	CreateSecret(context.Context, *SecretRequest) (*CommonResponse, error)
@@ -580,8 +580,8 @@ type CoordinatorServer interface {
 // pointer dereference when methods are called.
 type UnimplementedCoordinatorServer struct{}
 
-func (UnimplementedCoordinatorServer) UpdateWorkerStreamStatus(context.Context, *WorkerStreamStatusRequest) (*CommonResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method UpdateWorkerStreamStatus not implemented")
+func (UnimplementedCoordinatorServer) UpdateWorkerFlowStatus(context.Context, *WorkerFlowStatusRequest) (*CommonResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateWorkerFlowStatus not implemented")
 }
 func (UnimplementedCoordinatorServer) RegisterWorker(context.Context, *RegisterWorkerRequest) (*CommonResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method RegisterWorker not implemented")
@@ -595,17 +595,17 @@ func (UnimplementedCoordinatorServer) Heartbeat(context.Context, *HeartbeatReque
 func (UnimplementedCoordinatorServer) ListWorkers(context.Context, *ListWorkersRequest) (*ListWorkersResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListWorkers not implemented")
 }
-func (UnimplementedCoordinatorServer) ListStreams(context.Context, *ListStreamsRequest) (*ListStreamsResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ListStreams not implemented")
+func (UnimplementedCoordinatorServer) ListFlows(context.Context, *ListFlowsRequest) (*ListFlowsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListFlows not implemented")
 }
-func (UnimplementedCoordinatorServer) GetStream(context.Context, *GetStreamRequest) (*StreamResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetStream not implemented")
+func (UnimplementedCoordinatorServer) GetFlow(context.Context, *GetFlowRequest) (*FlowResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetFlow not implemented")
 }
-func (UnimplementedCoordinatorServer) CreateStream(context.Context, *Stream) (*StreamResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method CreateStream not implemented")
+func (UnimplementedCoordinatorServer) CreateFlow(context.Context, *Flow) (*FlowResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateFlow not implemented")
 }
-func (UnimplementedCoordinatorServer) UpdateStream(context.Context, *Stream) (*StreamResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method UpdateStream not implemented")
+func (UnimplementedCoordinatorServer) UpdateFlow(context.Context, *Flow) (*FlowResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateFlow not implemented")
 }
 func (UnimplementedCoordinatorServer) ListSecrets(context.Context, *emptypb.Empty) (*ListSecretsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListSecrets not implemented")
@@ -718,20 +718,20 @@ func RegisterCoordinatorServer(s grpc.ServiceRegistrar, srv CoordinatorServer) {
 	s.RegisterService(&Coordinator_ServiceDesc, srv)
 }
 
-func _Coordinator_UpdateWorkerStreamStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(WorkerStreamStatusRequest)
+func _Coordinator_UpdateWorkerFlowStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(WorkerFlowStatusRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CoordinatorServer).UpdateWorkerStreamStatus(ctx, in)
+		return srv.(CoordinatorServer).UpdateWorkerFlowStatus(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Coordinator_UpdateWorkerStreamStatus_FullMethodName,
+		FullMethod: Coordinator_UpdateWorkerFlowStatus_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CoordinatorServer).UpdateWorkerStreamStatus(ctx, req.(*WorkerStreamStatusRequest))
+		return srv.(CoordinatorServer).UpdateWorkerFlowStatus(ctx, req.(*WorkerFlowStatusRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -808,74 +808,74 @@ func _Coordinator_ListWorkers_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Coordinator_ListStreams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListStreamsRequest)
+func _Coordinator_ListFlows_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListFlowsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CoordinatorServer).ListStreams(ctx, in)
+		return srv.(CoordinatorServer).ListFlows(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Coordinator_ListStreams_FullMethodName,
+		FullMethod: Coordinator_ListFlows_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CoordinatorServer).ListStreams(ctx, req.(*ListStreamsRequest))
+		return srv.(CoordinatorServer).ListFlows(ctx, req.(*ListFlowsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Coordinator_GetStream_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetStreamRequest)
+func _Coordinator_GetFlow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetFlowRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CoordinatorServer).GetStream(ctx, in)
+		return srv.(CoordinatorServer).GetFlow(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Coordinator_GetStream_FullMethodName,
+		FullMethod: Coordinator_GetFlow_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CoordinatorServer).GetStream(ctx, req.(*GetStreamRequest))
+		return srv.(CoordinatorServer).GetFlow(ctx, req.(*GetFlowRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Coordinator_CreateStream_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Stream)
+func _Coordinator_CreateFlow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Flow)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CoordinatorServer).CreateStream(ctx, in)
+		return srv.(CoordinatorServer).CreateFlow(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Coordinator_CreateStream_FullMethodName,
+		FullMethod: Coordinator_CreateFlow_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CoordinatorServer).CreateStream(ctx, req.(*Stream))
+		return srv.(CoordinatorServer).CreateFlow(ctx, req.(*Flow))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Coordinator_UpdateStream_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Stream)
+func _Coordinator_UpdateFlow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Flow)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CoordinatorServer).UpdateStream(ctx, in)
+		return srv.(CoordinatorServer).UpdateFlow(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Coordinator_UpdateStream_FullMethodName,
+		FullMethod: Coordinator_UpdateFlow_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CoordinatorServer).UpdateStream(ctx, req.(*Stream))
+		return srv.(CoordinatorServer).UpdateFlow(ctx, req.(*Flow))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1417,8 +1417,8 @@ var Coordinator_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*CoordinatorServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "UpdateWorkerStreamStatus",
-			Handler:    _Coordinator_UpdateWorkerStreamStatus_Handler,
+			MethodName: "UpdateWorkerFlowStatus",
+			Handler:    _Coordinator_UpdateWorkerFlowStatus_Handler,
 		},
 		{
 			MethodName: "RegisterWorker",
@@ -1437,20 +1437,20 @@ var Coordinator_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Coordinator_ListWorkers_Handler,
 		},
 		{
-			MethodName: "ListStreams",
-			Handler:    _Coordinator_ListStreams_Handler,
+			MethodName: "ListFlows",
+			Handler:    _Coordinator_ListFlows_Handler,
 		},
 		{
-			MethodName: "GetStream",
-			Handler:    _Coordinator_GetStream_Handler,
+			MethodName: "GetFlow",
+			Handler:    _Coordinator_GetFlow_Handler,
 		},
 		{
-			MethodName: "CreateStream",
-			Handler:    _Coordinator_CreateStream_Handler,
+			MethodName: "CreateFlow",
+			Handler:    _Coordinator_CreateFlow_Handler,
 		},
 		{
-			MethodName: "UpdateStream",
-			Handler:    _Coordinator_UpdateStream_Handler,
+			MethodName: "UpdateFlow",
+			Handler:    _Coordinator_UpdateFlow_Handler,
 		},
 		{
 			MethodName: "ListSecrets",

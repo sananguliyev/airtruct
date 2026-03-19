@@ -453,46 +453,46 @@ var _ interface {
 	ErrorName() string
 } = HeartbeatResponseValidationError{}
 
-// Validate checks the field values on WorkerStreamStatusRequest with the rules
+// Validate checks the field values on WorkerFlowStatusRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *WorkerStreamStatusRequest) Validate() error {
+func (m *WorkerFlowStatusRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on WorkerStreamStatusRequest with the
+// ValidateAll checks the field values on WorkerFlowStatusRequest with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// WorkerStreamStatusRequestMultiError, or nil if none found.
-func (m *WorkerStreamStatusRequest) ValidateAll() error {
+// WorkerFlowStatusRequestMultiError, or nil if none found.
+func (m *WorkerFlowStatusRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *WorkerStreamStatusRequest) validate(all bool) error {
+func (m *WorkerFlowStatusRequest) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
 	var errors []error
 
-	// no validation rules for WorkerStreamId
+	// no validation rules for WorkerFlowId
 
 	// no validation rules for Status
 
 	if len(errors) > 0 {
-		return WorkerStreamStatusRequestMultiError(errors)
+		return WorkerFlowStatusRequestMultiError(errors)
 	}
 
 	return nil
 }
 
-// WorkerStreamStatusRequestMultiError is an error wrapping multiple validation
-// errors returned by WorkerStreamStatusRequest.ValidateAll() if the
-// designated constraints aren't met.
-type WorkerStreamStatusRequestMultiError []error
+// WorkerFlowStatusRequestMultiError is an error wrapping multiple validation
+// errors returned by WorkerFlowStatusRequest.ValidateAll() if the designated
+// constraints aren't met.
+type WorkerFlowStatusRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m WorkerStreamStatusRequestMultiError) Error() string {
+func (m WorkerFlowStatusRequestMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -501,11 +501,11 @@ func (m WorkerStreamStatusRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m WorkerStreamStatusRequestMultiError) AllErrors() []error { return m }
+func (m WorkerFlowStatusRequestMultiError) AllErrors() []error { return m }
 
-// WorkerStreamStatusRequestValidationError is the validation error returned by
-// WorkerStreamStatusRequest.Validate if the designated constraints aren't met.
-type WorkerStreamStatusRequestValidationError struct {
+// WorkerFlowStatusRequestValidationError is the validation error returned by
+// WorkerFlowStatusRequest.Validate if the designated constraints aren't met.
+type WorkerFlowStatusRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -513,24 +513,24 @@ type WorkerStreamStatusRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e WorkerStreamStatusRequestValidationError) Field() string { return e.field }
+func (e WorkerFlowStatusRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e WorkerStreamStatusRequestValidationError) Reason() string { return e.reason }
+func (e WorkerFlowStatusRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e WorkerStreamStatusRequestValidationError) Cause() error { return e.cause }
+func (e WorkerFlowStatusRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e WorkerStreamStatusRequestValidationError) Key() bool { return e.key }
+func (e WorkerFlowStatusRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e WorkerStreamStatusRequestValidationError) ErrorName() string {
-	return "WorkerStreamStatusRequestValidationError"
+func (e WorkerFlowStatusRequestValidationError) ErrorName() string {
+	return "WorkerFlowStatusRequestValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e WorkerStreamStatusRequestValidationError) Error() string {
+func (e WorkerFlowStatusRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -542,14 +542,14 @@ func (e WorkerStreamStatusRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sWorkerStreamStatusRequest.%s: %s%s",
+		"invalid %sWorkerFlowStatusRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = WorkerStreamStatusRequestValidationError{}
+var _ error = WorkerFlowStatusRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -557,7 +557,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = WorkerStreamStatusRequestValidationError{}
+} = WorkerFlowStatusRequestValidationError{}
 
 // Validate checks the field values on ListWorkersRequest with the rules
 // defined in the proto definition for this message. If any rules are
@@ -814,30 +814,30 @@ var _ interface {
 	ErrorName() string
 } = ListWorkersResponseValidationError{}
 
-// Validate checks the field values on ListStreamsRequest with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *ListStreamsRequest) Validate() error {
+// Validate checks the field values on ListFlowsRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *ListFlowsRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on ListStreamsRequest with the rules
+// ValidateAll checks the field values on ListFlowsRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// ListStreamsRequestMultiError, or nil if none found.
-func (m *ListStreamsRequest) ValidateAll() error {
+// ListFlowsRequestMultiError, or nil if none found.
+func (m *ListFlowsRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *ListStreamsRequest) validate(all bool) error {
+func (m *ListFlowsRequest) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
 	var errors []error
 
-	if _, ok := _ListStreamsRequest_Status_InLookup[m.GetStatus()]; !ok {
-		err := ListStreamsRequestValidationError{
+	if _, ok := _ListFlowsRequest_Status_InLookup[m.GetStatus()]; !ok {
+		err := ListFlowsRequestValidationError{
 			field:  "Status",
 			reason: "value must be in list [active completed paused failed all]",
 		}
@@ -848,19 +848,19 @@ func (m *ListStreamsRequest) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return ListStreamsRequestMultiError(errors)
+		return ListFlowsRequestMultiError(errors)
 	}
 
 	return nil
 }
 
-// ListStreamsRequestMultiError is an error wrapping multiple validation errors
-// returned by ListStreamsRequest.ValidateAll() if the designated constraints
+// ListFlowsRequestMultiError is an error wrapping multiple validation errors
+// returned by ListFlowsRequest.ValidateAll() if the designated constraints
 // aren't met.
-type ListStreamsRequestMultiError []error
+type ListFlowsRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m ListStreamsRequestMultiError) Error() string {
+func (m ListFlowsRequestMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -869,11 +869,11 @@ func (m ListStreamsRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m ListStreamsRequestMultiError) AllErrors() []error { return m }
+func (m ListFlowsRequestMultiError) AllErrors() []error { return m }
 
-// ListStreamsRequestValidationError is the validation error returned by
-// ListStreamsRequest.Validate if the designated constraints aren't met.
-type ListStreamsRequestValidationError struct {
+// ListFlowsRequestValidationError is the validation error returned by
+// ListFlowsRequest.Validate if the designated constraints aren't met.
+type ListFlowsRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -881,24 +881,22 @@ type ListStreamsRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e ListStreamsRequestValidationError) Field() string { return e.field }
+func (e ListFlowsRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e ListStreamsRequestValidationError) Reason() string { return e.reason }
+func (e ListFlowsRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e ListStreamsRequestValidationError) Cause() error { return e.cause }
+func (e ListFlowsRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e ListStreamsRequestValidationError) Key() bool { return e.key }
+func (e ListFlowsRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e ListStreamsRequestValidationError) ErrorName() string {
-	return "ListStreamsRequestValidationError"
-}
+func (e ListFlowsRequestValidationError) ErrorName() string { return "ListFlowsRequestValidationError" }
 
 // Error satisfies the builtin error interface
-func (e ListStreamsRequestValidationError) Error() string {
+func (e ListFlowsRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -910,14 +908,14 @@ func (e ListStreamsRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sListStreamsRequest.%s: %s%s",
+		"invalid %sListFlowsRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = ListStreamsRequestValidationError{}
+var _ error = ListFlowsRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -925,9 +923,9 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = ListStreamsRequestValidationError{}
+} = ListFlowsRequestValidationError{}
 
-var _ListStreamsRequest_Status_InLookup = map[string]struct{}{
+var _ListFlowsRequest_Status_InLookup = map[string]struct{}{
 	"active":    {},
 	"completed": {},
 	"paused":    {},
@@ -935,22 +933,22 @@ var _ListStreamsRequest_Status_InLookup = map[string]struct{}{
 	"all":       {},
 }
 
-// Validate checks the field values on ListStreamsResponse with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *ListStreamsResponse) Validate() error {
+// Validate checks the field values on ListFlowsResponse with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *ListFlowsResponse) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on ListStreamsResponse with the rules
+// ValidateAll checks the field values on ListFlowsResponse with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// ListStreamsResponseMultiError, or nil if none found.
-func (m *ListStreamsResponse) ValidateAll() error {
+// ListFlowsResponseMultiError, or nil if none found.
+func (m *ListFlowsResponse) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *ListStreamsResponse) validate(all bool) error {
+func (m *ListFlowsResponse) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -964,7 +962,7 @@ func (m *ListStreamsResponse) validate(all bool) error {
 			switch v := interface{}(item).(type) {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, ListStreamsResponseValidationError{
+					errors = append(errors, ListFlowsResponseValidationError{
 						field:  fmt.Sprintf("Data[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -972,7 +970,7 @@ func (m *ListStreamsResponse) validate(all bool) error {
 				}
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
-					errors = append(errors, ListStreamsResponseValidationError{
+					errors = append(errors, ListFlowsResponseValidationError{
 						field:  fmt.Sprintf("Data[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -981,7 +979,7 @@ func (m *ListStreamsResponse) validate(all bool) error {
 			}
 		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
-				return ListStreamsResponseValidationError{
+				return ListFlowsResponseValidationError{
 					field:  fmt.Sprintf("Data[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -992,19 +990,19 @@ func (m *ListStreamsResponse) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return ListStreamsResponseMultiError(errors)
+		return ListFlowsResponseMultiError(errors)
 	}
 
 	return nil
 }
 
-// ListStreamsResponseMultiError is an error wrapping multiple validation
-// errors returned by ListStreamsResponse.ValidateAll() if the designated
-// constraints aren't met.
-type ListStreamsResponseMultiError []error
+// ListFlowsResponseMultiError is an error wrapping multiple validation errors
+// returned by ListFlowsResponse.ValidateAll() if the designated constraints
+// aren't met.
+type ListFlowsResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m ListStreamsResponseMultiError) Error() string {
+func (m ListFlowsResponseMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -1013,11 +1011,11 @@ func (m ListStreamsResponseMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m ListStreamsResponseMultiError) AllErrors() []error { return m }
+func (m ListFlowsResponseMultiError) AllErrors() []error { return m }
 
-// ListStreamsResponseValidationError is the validation error returned by
-// ListStreamsResponse.Validate if the designated constraints aren't met.
-type ListStreamsResponseValidationError struct {
+// ListFlowsResponseValidationError is the validation error returned by
+// ListFlowsResponse.Validate if the designated constraints aren't met.
+type ListFlowsResponseValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1025,24 +1023,24 @@ type ListStreamsResponseValidationError struct {
 }
 
 // Field function returns field value.
-func (e ListStreamsResponseValidationError) Field() string { return e.field }
+func (e ListFlowsResponseValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e ListStreamsResponseValidationError) Reason() string { return e.reason }
+func (e ListFlowsResponseValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e ListStreamsResponseValidationError) Cause() error { return e.cause }
+func (e ListFlowsResponseValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e ListStreamsResponseValidationError) Key() bool { return e.key }
+func (e ListFlowsResponseValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e ListStreamsResponseValidationError) ErrorName() string {
-	return "ListStreamsResponseValidationError"
+func (e ListFlowsResponseValidationError) ErrorName() string {
+	return "ListFlowsResponseValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e ListStreamsResponseValidationError) Error() string {
+func (e ListFlowsResponseValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1054,14 +1052,14 @@ func (e ListStreamsResponseValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sListStreamsResponse.%s: %s%s",
+		"invalid %sListFlowsResponse.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = ListStreamsResponseValidationError{}
+var _ error = ListFlowsResponseValidationError{}
 
 var _ interface {
 	Field() string
@@ -1069,24 +1067,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = ListStreamsResponseValidationError{}
+} = ListFlowsResponseValidationError{}
 
-// Validate checks the field values on GetStreamRequest with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// first error encountered is returned, or nil if there are no violations.
-func (m *GetStreamRequest) Validate() error {
+// Validate checks the field values on GetFlowRequest with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *GetFlowRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on GetStreamRequest with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// GetStreamRequestMultiError, or nil if none found.
-func (m *GetStreamRequest) ValidateAll() error {
+// ValidateAll checks the field values on GetFlowRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in GetFlowRequestMultiError,
+// or nil if none found.
+func (m *GetFlowRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *GetStreamRequest) validate(all bool) error {
+func (m *GetFlowRequest) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -1094,7 +1092,7 @@ func (m *GetStreamRequest) validate(all bool) error {
 	var errors []error
 
 	if m.GetId() <= 0 {
-		err := GetStreamRequestValidationError{
+		err := GetFlowRequestValidationError{
 			field:  "Id",
 			reason: "value must be greater than 0",
 		}
@@ -1105,19 +1103,19 @@ func (m *GetStreamRequest) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return GetStreamRequestMultiError(errors)
+		return GetFlowRequestMultiError(errors)
 	}
 
 	return nil
 }
 
-// GetStreamRequestMultiError is an error wrapping multiple validation errors
-// returned by GetStreamRequest.ValidateAll() if the designated constraints
+// GetFlowRequestMultiError is an error wrapping multiple validation errors
+// returned by GetFlowRequest.ValidateAll() if the designated constraints
 // aren't met.
-type GetStreamRequestMultiError []error
+type GetFlowRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m GetStreamRequestMultiError) Error() string {
+func (m GetFlowRequestMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -1126,11 +1124,11 @@ func (m GetStreamRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m GetStreamRequestMultiError) AllErrors() []error { return m }
+func (m GetFlowRequestMultiError) AllErrors() []error { return m }
 
-// GetStreamRequestValidationError is the validation error returned by
-// GetStreamRequest.Validate if the designated constraints aren't met.
-type GetStreamRequestValidationError struct {
+// GetFlowRequestValidationError is the validation error returned by
+// GetFlowRequest.Validate if the designated constraints aren't met.
+type GetFlowRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1138,22 +1136,22 @@ type GetStreamRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e GetStreamRequestValidationError) Field() string { return e.field }
+func (e GetFlowRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e GetStreamRequestValidationError) Reason() string { return e.reason }
+func (e GetFlowRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e GetStreamRequestValidationError) Cause() error { return e.cause }
+func (e GetFlowRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e GetStreamRequestValidationError) Key() bool { return e.key }
+func (e GetFlowRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e GetStreamRequestValidationError) ErrorName() string { return "GetStreamRequestValidationError" }
+func (e GetFlowRequestValidationError) ErrorName() string { return "GetFlowRequestValidationError" }
 
 // Error satisfies the builtin error interface
-func (e GetStreamRequestValidationError) Error() string {
+func (e GetFlowRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1165,14 +1163,14 @@ func (e GetStreamRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sGetStreamRequest.%s: %s%s",
+		"invalid %sGetFlowRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = GetStreamRequestValidationError{}
+var _ error = GetFlowRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -1180,24 +1178,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = GetStreamRequestValidationError{}
+} = GetFlowRequestValidationError{}
 
-// Validate checks the field values on StreamResponse with the rules defined in
+// Validate checks the field values on FlowResponse with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
-func (m *StreamResponse) Validate() error {
+func (m *FlowResponse) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on StreamResponse with the rules defined
+// ValidateAll checks the field values on FlowResponse with the rules defined
 // in the proto definition for this message. If any rules are violated, the
-// result is a list of violation errors wrapped in StreamResponseMultiError,
-// or nil if none found.
-func (m *StreamResponse) ValidateAll() error {
+// result is a list of violation errors wrapped in FlowResponseMultiError, or
+// nil if none found.
+func (m *FlowResponse) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *StreamResponse) validate(all bool) error {
+func (m *FlowResponse) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -1208,7 +1206,7 @@ func (m *StreamResponse) validate(all bool) error {
 		switch v := interface{}(m.GetData()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, StreamResponseValidationError{
+				errors = append(errors, FlowResponseValidationError{
 					field:  "Data",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -1216,7 +1214,7 @@ func (m *StreamResponse) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, StreamResponseValidationError{
+				errors = append(errors, FlowResponseValidationError{
 					field:  "Data",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -1225,7 +1223,7 @@ func (m *StreamResponse) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return StreamResponseValidationError{
+			return FlowResponseValidationError{
 				field:  "Data",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -1237,7 +1235,7 @@ func (m *StreamResponse) validate(all bool) error {
 		switch v := interface{}(m.GetMeta()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, StreamResponseValidationError{
+				errors = append(errors, FlowResponseValidationError{
 					field:  "Meta",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -1245,7 +1243,7 @@ func (m *StreamResponse) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, StreamResponseValidationError{
+				errors = append(errors, FlowResponseValidationError{
 					field:  "Meta",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -1254,7 +1252,7 @@ func (m *StreamResponse) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetMeta()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return StreamResponseValidationError{
+			return FlowResponseValidationError{
 				field:  "Meta",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -1263,19 +1261,18 @@ func (m *StreamResponse) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return StreamResponseMultiError(errors)
+		return FlowResponseMultiError(errors)
 	}
 
 	return nil
 }
 
-// StreamResponseMultiError is an error wrapping multiple validation errors
-// returned by StreamResponse.ValidateAll() if the designated constraints
-// aren't met.
-type StreamResponseMultiError []error
+// FlowResponseMultiError is an error wrapping multiple validation errors
+// returned by FlowResponse.ValidateAll() if the designated constraints aren't met.
+type FlowResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m StreamResponseMultiError) Error() string {
+func (m FlowResponseMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -1284,11 +1281,11 @@ func (m StreamResponseMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m StreamResponseMultiError) AllErrors() []error { return m }
+func (m FlowResponseMultiError) AllErrors() []error { return m }
 
-// StreamResponseValidationError is the validation error returned by
-// StreamResponse.Validate if the designated constraints aren't met.
-type StreamResponseValidationError struct {
+// FlowResponseValidationError is the validation error returned by
+// FlowResponse.Validate if the designated constraints aren't met.
+type FlowResponseValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1296,22 +1293,22 @@ type StreamResponseValidationError struct {
 }
 
 // Field function returns field value.
-func (e StreamResponseValidationError) Field() string { return e.field }
+func (e FlowResponseValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e StreamResponseValidationError) Reason() string { return e.reason }
+func (e FlowResponseValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e StreamResponseValidationError) Cause() error { return e.cause }
+func (e FlowResponseValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e StreamResponseValidationError) Key() bool { return e.key }
+func (e FlowResponseValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e StreamResponseValidationError) ErrorName() string { return "StreamResponseValidationError" }
+func (e FlowResponseValidationError) ErrorName() string { return "FlowResponseValidationError" }
 
 // Error satisfies the builtin error interface
-func (e StreamResponseValidationError) Error() string {
+func (e FlowResponseValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1323,14 +1320,14 @@ func (e StreamResponseValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sStreamResponse.%s: %s%s",
+		"invalid %sFlowResponse.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = StreamResponseValidationError{}
+var _ error = FlowResponseValidationError{}
 
 var _ interface {
 	Field() string
@@ -1338,7 +1335,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = StreamResponseValidationError{}
+} = FlowResponseValidationError{}
 
 // Validate checks the field values on Event with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
@@ -1361,7 +1358,7 @@ func (m *Event) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for WorkerStreamId
+	// no validation rules for WorkerFlowId
 
 	// no validation rules for Section
 
@@ -1409,7 +1406,7 @@ func (m *Event) validate(all bool) error {
 		}
 	}
 
-	// no validation rules for FlowId
+	// no validation rules for TraceId
 
 	// no validation rules for Id
 
@@ -1549,9 +1546,9 @@ func (m *ListEventsRequest) validate(all bool) error {
 
 	var errors []error
 
-	if m.GetStreamId() <= 0 {
+	if m.GetFlowId() <= 0 {
 		err := ListEventsRequestValidationError{
-			field:  "StreamId",
+			field:  "FlowId",
 			reason: "value must be greater than 0",
 		}
 		if !all {
@@ -1862,9 +1859,9 @@ func (m *MetricsRequest) validate(all bool) error {
 
 	var errors []error
 
-	if m.GetWorkerStreamId() <= 0 {
+	if m.GetWorkerFlowId() <= 0 {
 		err := MetricsRequestValidationError{
-			field:  "WorkerStreamId",
+			field:  "WorkerFlowId",
 			reason: "value must be greater than 0",
 		}
 		if !all {
@@ -2087,9 +2084,9 @@ func (m *GetAnalyticsResponse) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for TotalStreams
+	// no validation rules for TotalFlows
 
-	for idx, item := range m.GetStreamsByStatus() {
+	for idx, item := range m.GetFlowsByStatus() {
 		_, _ = idx, item
 
 		if all {
@@ -2097,7 +2094,7 @@ func (m *GetAnalyticsResponse) validate(all bool) error {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
 					errors = append(errors, GetAnalyticsResponseValidationError{
-						field:  fmt.Sprintf("StreamsByStatus[%v]", idx),
+						field:  fmt.Sprintf("FlowsByStatus[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
@@ -2105,7 +2102,7 @@ func (m *GetAnalyticsResponse) validate(all bool) error {
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
 					errors = append(errors, GetAnalyticsResponseValidationError{
-						field:  fmt.Sprintf("StreamsByStatus[%v]", idx),
+						field:  fmt.Sprintf("FlowsByStatus[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
@@ -2114,7 +2111,7 @@ func (m *GetAnalyticsResponse) validate(all bool) error {
 		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
 				return GetAnalyticsResponseValidationError{
-					field:  fmt.Sprintf("StreamsByStatus[%v]", idx),
+					field:  fmt.Sprintf("FlowsByStatus[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
 				}
@@ -4475,24 +4472,23 @@ var _ interface {
 	ErrorName() string
 } = ListWorkersResponse_WorkerValidationError{}
 
-// Validate checks the field values on GetAnalyticsResponse_StreamStatusCount
+// Validate checks the field values on GetAnalyticsResponse_FlowStatusCount
 // with the rules defined in the proto definition for this message. If any
 // rules are violated, the first error encountered is returned, or nil if
 // there are no violations.
-func (m *GetAnalyticsResponse_StreamStatusCount) Validate() error {
+func (m *GetAnalyticsResponse_FlowStatusCount) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on
-// GetAnalyticsResponse_StreamStatusCount with the rules defined in the proto
-// definition for this message. If any rules are violated, the result is a
-// list of violation errors wrapped in
-// GetAnalyticsResponse_StreamStatusCountMultiError, or nil if none found.
-func (m *GetAnalyticsResponse_StreamStatusCount) ValidateAll() error {
+// ValidateAll checks the field values on GetAnalyticsResponse_FlowStatusCount
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the result is a list of violation errors wrapped in
+// GetAnalyticsResponse_FlowStatusCountMultiError, or nil if none found.
+func (m *GetAnalyticsResponse_FlowStatusCount) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *GetAnalyticsResponse_StreamStatusCount) validate(all bool) error {
+func (m *GetAnalyticsResponse_FlowStatusCount) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -4504,20 +4500,20 @@ func (m *GetAnalyticsResponse_StreamStatusCount) validate(all bool) error {
 	// no validation rules for Count
 
 	if len(errors) > 0 {
-		return GetAnalyticsResponse_StreamStatusCountMultiError(errors)
+		return GetAnalyticsResponse_FlowStatusCountMultiError(errors)
 	}
 
 	return nil
 }
 
-// GetAnalyticsResponse_StreamStatusCountMultiError is an error wrapping
-// multiple validation errors returned by
-// GetAnalyticsResponse_StreamStatusCount.ValidateAll() if the designated
+// GetAnalyticsResponse_FlowStatusCountMultiError is an error wrapping multiple
+// validation errors returned by
+// GetAnalyticsResponse_FlowStatusCount.ValidateAll() if the designated
 // constraints aren't met.
-type GetAnalyticsResponse_StreamStatusCountMultiError []error
+type GetAnalyticsResponse_FlowStatusCountMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m GetAnalyticsResponse_StreamStatusCountMultiError) Error() string {
+func (m GetAnalyticsResponse_FlowStatusCountMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -4526,12 +4522,12 @@ func (m GetAnalyticsResponse_StreamStatusCountMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m GetAnalyticsResponse_StreamStatusCountMultiError) AllErrors() []error { return m }
+func (m GetAnalyticsResponse_FlowStatusCountMultiError) AllErrors() []error { return m }
 
-// GetAnalyticsResponse_StreamStatusCountValidationError is the validation
-// error returned by GetAnalyticsResponse_StreamStatusCount.Validate if the
-// designated constraints aren't met.
-type GetAnalyticsResponse_StreamStatusCountValidationError struct {
+// GetAnalyticsResponse_FlowStatusCountValidationError is the validation error
+// returned by GetAnalyticsResponse_FlowStatusCount.Validate if the designated
+// constraints aren't met.
+type GetAnalyticsResponse_FlowStatusCountValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -4539,24 +4535,24 @@ type GetAnalyticsResponse_StreamStatusCountValidationError struct {
 }
 
 // Field function returns field value.
-func (e GetAnalyticsResponse_StreamStatusCountValidationError) Field() string { return e.field }
+func (e GetAnalyticsResponse_FlowStatusCountValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e GetAnalyticsResponse_StreamStatusCountValidationError) Reason() string { return e.reason }
+func (e GetAnalyticsResponse_FlowStatusCountValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e GetAnalyticsResponse_StreamStatusCountValidationError) Cause() error { return e.cause }
+func (e GetAnalyticsResponse_FlowStatusCountValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e GetAnalyticsResponse_StreamStatusCountValidationError) Key() bool { return e.key }
+func (e GetAnalyticsResponse_FlowStatusCountValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e GetAnalyticsResponse_StreamStatusCountValidationError) ErrorName() string {
-	return "GetAnalyticsResponse_StreamStatusCountValidationError"
+func (e GetAnalyticsResponse_FlowStatusCountValidationError) ErrorName() string {
+	return "GetAnalyticsResponse_FlowStatusCountValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e GetAnalyticsResponse_StreamStatusCountValidationError) Error() string {
+func (e GetAnalyticsResponse_FlowStatusCountValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -4568,14 +4564,14 @@ func (e GetAnalyticsResponse_StreamStatusCountValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sGetAnalyticsResponse_StreamStatusCount.%s: %s%s",
+		"invalid %sGetAnalyticsResponse_FlowStatusCount.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = GetAnalyticsResponse_StreamStatusCountValidationError{}
+var _ error = GetAnalyticsResponse_FlowStatusCountValidationError{}
 
 var _ interface {
 	Field() string
@@ -4583,7 +4579,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = GetAnalyticsResponse_StreamStatusCountValidationError{}
+} = GetAnalyticsResponse_FlowStatusCountValidationError{}
 
 // Validate checks the field values on GetAnalyticsResponse_ComponentCount with
 // the rules defined in the proto definition for this message. If any rules

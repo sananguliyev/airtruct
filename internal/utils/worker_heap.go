@@ -5,7 +5,7 @@ import "github.com/sananguliyev/airtruct/internal/persistence"
 type WorkerHeap []persistence.Worker
 
 func (h WorkerHeap) Len() int           { return len(h) }
-func (h WorkerHeap) Less(i, j int) bool { return h[i].RunningStreamCount < h[j].RunningStreamCount }
+func (h WorkerHeap) Less(i, j int) bool { return h[i].RunningFlowCount < h[j].RunningFlowCount }
 func (h WorkerHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
 
 func (h *WorkerHeap) Push(x any) {

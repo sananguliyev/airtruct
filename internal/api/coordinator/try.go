@@ -10,7 +10,7 @@ import (
 	"github.com/sananguliyev/airtruct/internal/persistence"
 )
 
-type tryStreamRequest struct {
+type tryFlowRequest struct {
 	Processors []struct {
 		Label     string `json:"label"`
 		Component string `json:"component"`
@@ -19,13 +19,13 @@ type tryStreamRequest struct {
 	Messages []coordinatorexecutor.TryMessage `json:"messages"`
 }
 
-func (c *CoordinatorAPI) TryStreamHTTP(w http.ResponseWriter, r *http.Request) {
+func (c *CoordinatorAPI) TryFlowHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	var req tryStreamRequest
+	var req tryFlowRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
@@ -33,9 +33,9 @@ func (c *CoordinatorAPI) TryStreamHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	processors := make([]persistence.StreamProcessor, len(req.Processors))
+	processors := make([]persistence.FlowProcessor, len(req.Processors))
 	for i, p := range req.Processors {
-		processors[i] = persistence.StreamProcessor{
+		processors[i] = persistence.FlowProcessor{
 			Label:     p.Label,
 			Component: p.Component,
 			Config:    []byte(p.Config),
@@ -54,12 +54,12 @@ func (c *CoordinatorAPI) TryStreamHTTP(w http.ResponseWriter, r *http.Request) {
 		return decrypted, true
 	}
 
-	result := coordinatorexecutor.TryStream(r.Context(), processors, req.Messages, coordinatorexecutor.TryStreamOptions{
+	result := coordinatorexecutor.TryStream(r.Context(), processors, req.Messages, coordinatorexecutor.TryFlowOptions{
 		EnvVarLookupFn: envVarLookupFn,
 		FileRepo:       c.fileRepo,
 	})
 	if result.Error != "" {
-		log.Debug().Str("error", result.Error).Msg("stream try failed")
+		log.Debug().Str("error", result.Error).Msg("flow try failed")
 	}
 
 	w.Header().Set("Content-Type", "application/json")

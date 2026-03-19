@@ -22,7 +22,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type StreamFile struct {
+type FlowFile struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 	Content       []byte                 `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
@@ -30,20 +30,20 @@ type StreamFile struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *StreamFile) Reset() {
-	*x = StreamFile{}
+func (x *FlowFile) Reset() {
+	*x = FlowFile{}
 	mi := &file_worker_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *StreamFile) String() string {
+func (x *FlowFile) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*StreamFile) ProtoMessage() {}
+func (*FlowFile) ProtoMessage() {}
 
-func (x *StreamFile) ProtoReflect() protoreflect.Message {
+func (x *FlowFile) ProtoReflect() protoreflect.Message {
 	mi := &file_worker_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -55,48 +55,48 @@ func (x *StreamFile) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use StreamFile.ProtoReflect.Descriptor instead.
-func (*StreamFile) Descriptor() ([]byte, []int) {
+// Deprecated: Use FlowFile.ProtoReflect.Descriptor instead.
+func (*FlowFile) Descriptor() ([]byte, []int) {
 	return file_worker_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *StreamFile) GetKey() string {
+func (x *FlowFile) GetKey() string {
 	if x != nil {
 		return x.Key
 	}
 	return ""
 }
 
-func (x *StreamFile) GetContent() []byte {
+func (x *FlowFile) GetContent() []byte {
 	if x != nil {
 		return x.Content
 	}
 	return nil
 }
 
-type AssignStreamRequest struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	WorkerStreamId int64                  `protobuf:"varint,1,opt,name=worker_stream_id,json=workerStreamId,proto3" json:"worker_stream_id,omitempty"`
-	Config         string                 `protobuf:"bytes,2,opt,name=config,proto3" json:"config,omitempty"`
-	Files          []*StreamFile          `protobuf:"bytes,3,rep,name=files,proto3" json:"files,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+type AssignFlowRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	WorkerFlowId  int64                  `protobuf:"varint,1,opt,name=worker_flow_id,json=workerFlowId,proto3" json:"worker_flow_id,omitempty"`
+	Config        string                 `protobuf:"bytes,2,opt,name=config,proto3" json:"config,omitempty"`
+	Files         []*FlowFile            `protobuf:"bytes,3,rep,name=files,proto3" json:"files,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
-func (x *AssignStreamRequest) Reset() {
-	*x = AssignStreamRequest{}
+func (x *AssignFlowRequest) Reset() {
+	*x = AssignFlowRequest{}
 	mi := &file_worker_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *AssignStreamRequest) String() string {
+func (x *AssignFlowRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AssignStreamRequest) ProtoMessage() {}
+func (*AssignFlowRequest) ProtoMessage() {}
 
-func (x *AssignStreamRequest) ProtoReflect() protoreflect.Message {
+func (x *AssignFlowRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_worker_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -108,97 +108,97 @@ func (x *AssignStreamRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AssignStreamRequest.ProtoReflect.Descriptor instead.
-func (*AssignStreamRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use AssignFlowRequest.ProtoReflect.Descriptor instead.
+func (*AssignFlowRequest) Descriptor() ([]byte, []int) {
 	return file_worker_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *AssignStreamRequest) GetWorkerStreamId() int64 {
+func (x *AssignFlowRequest) GetWorkerFlowId() int64 {
 	if x != nil {
-		return x.WorkerStreamId
+		return x.WorkerFlowId
 	}
 	return 0
 }
 
-func (x *AssignStreamRequest) GetConfig() string {
+func (x *AssignFlowRequest) GetConfig() string {
 	if x != nil {
 		return x.Config
 	}
 	return ""
 }
 
-func (x *AssignStreamRequest) GetFiles() []*StreamFile {
+func (x *AssignFlowRequest) GetFiles() []*FlowFile {
 	if x != nil {
 		return x.Files
 	}
 	return nil
 }
 
-type FetchStreamRequest struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	WorkerStreamId int64                  `protobuf:"varint,1,opt,name=worker_stream_id,json=workerStreamId,proto3" json:"worker_stream_id,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
-}
-
-func (x *FetchStreamRequest) Reset() {
-	*x = FetchStreamRequest{}
-	mi := &file_worker_proto_msgTypes[2]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *FetchStreamRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*FetchStreamRequest) ProtoMessage() {}
-
-func (x *FetchStreamRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_worker_proto_msgTypes[2]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use FetchStreamRequest.ProtoReflect.Descriptor instead.
-func (*FetchStreamRequest) Descriptor() ([]byte, []int) {
-	return file_worker_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *FetchStreamRequest) GetWorkerStreamId() int64 {
-	if x != nil {
-		return x.WorkerStreamId
-	}
-	return 0
-}
-
-type FetchStreamResponse struct {
+type FetchFlowRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Status        WorkerStreamStatus     `protobuf:"varint,1,opt,name=status,proto3,enum=protorender.WorkerStreamStatus" json:"status,omitempty"`
+	WorkerFlowId  int64                  `protobuf:"varint,1,opt,name=worker_flow_id,json=workerFlowId,proto3" json:"worker_flow_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *FetchStreamResponse) Reset() {
-	*x = FetchStreamResponse{}
+func (x *FetchFlowRequest) Reset() {
+	*x = FetchFlowRequest{}
+	mi := &file_worker_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FetchFlowRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FetchFlowRequest) ProtoMessage() {}
+
+func (x *FetchFlowRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_worker_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FetchFlowRequest.ProtoReflect.Descriptor instead.
+func (*FetchFlowRequest) Descriptor() ([]byte, []int) {
+	return file_worker_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *FetchFlowRequest) GetWorkerFlowId() int64 {
+	if x != nil {
+		return x.WorkerFlowId
+	}
+	return 0
+}
+
+type FetchFlowResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Status        WorkerFlowStatus       `protobuf:"varint,1,opt,name=status,proto3,enum=protorender.WorkerFlowStatus" json:"status,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FetchFlowResponse) Reset() {
+	*x = FetchFlowResponse{}
 	mi := &file_worker_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *FetchStreamResponse) String() string {
+func (x *FetchFlowResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*FetchStreamResponse) ProtoMessage() {}
+func (*FetchFlowResponse) ProtoMessage() {}
 
-func (x *FetchStreamResponse) ProtoReflect() protoreflect.Message {
+func (x *FetchFlowResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_worker_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -210,39 +210,39 @@ func (x *FetchStreamResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use FetchStreamResponse.ProtoReflect.Descriptor instead.
-func (*FetchStreamResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use FetchFlowResponse.ProtoReflect.Descriptor instead.
+func (*FetchFlowResponse) Descriptor() ([]byte, []int) {
 	return file_worker_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *FetchStreamResponse) GetStatus() WorkerStreamStatus {
+func (x *FetchFlowResponse) GetStatus() WorkerFlowStatus {
 	if x != nil {
 		return x.Status
 	}
-	return WorkerStreamStatus_waiting
+	return WorkerFlowStatus_waiting
 }
 
-type CompleteStreamRequest struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	WorkerStreamId int64                  `protobuf:"varint,1,opt,name=worker_stream_id,json=workerStreamId,proto3" json:"worker_stream_id,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+type CompleteFlowRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	WorkerFlowId  int64                  `protobuf:"varint,1,opt,name=worker_flow_id,json=workerFlowId,proto3" json:"worker_flow_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
-func (x *CompleteStreamRequest) Reset() {
-	*x = CompleteStreamRequest{}
+func (x *CompleteFlowRequest) Reset() {
+	*x = CompleteFlowRequest{}
 	mi := &file_worker_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CompleteStreamRequest) String() string {
+func (x *CompleteFlowRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CompleteStreamRequest) ProtoMessage() {}
+func (*CompleteFlowRequest) ProtoMessage() {}
 
-func (x *CompleteStreamRequest) ProtoReflect() protoreflect.Message {
+func (x *CompleteFlowRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_worker_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -254,27 +254,27 @@ func (x *CompleteStreamRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CompleteStreamRequest.ProtoReflect.Descriptor instead.
-func (*CompleteStreamRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use CompleteFlowRequest.ProtoReflect.Descriptor instead.
+func (*CompleteFlowRequest) Descriptor() ([]byte, []int) {
 	return file_worker_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *CompleteStreamRequest) GetWorkerStreamId() int64 {
+func (x *CompleteFlowRequest) GetWorkerFlowId() int64 {
 	if x != nil {
-		return x.WorkerStreamId
+		return x.WorkerFlowId
 	}
 	return 0
 }
 
 type IngestRequest struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	WorkerStreamId int64                  `protobuf:"varint,1,opt,name=worker_stream_id,json=workerStreamId,proto3" json:"worker_stream_id,omitempty"`
-	Method         string                 `protobuf:"bytes,2,opt,name=method,proto3" json:"method,omitempty"`
-	Path           string                 `protobuf:"bytes,3,opt,name=path,proto3" json:"path,omitempty"`
-	ContentType    string                 `protobuf:"bytes,4,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
-	Payload        []byte                 `protobuf:"bytes,5,opt,name=payload,proto3" json:"payload,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	WorkerFlowId  int64                  `protobuf:"varint,1,opt,name=worker_flow_id,json=workerFlowId,proto3" json:"worker_flow_id,omitempty"`
+	Method        string                 `protobuf:"bytes,2,opt,name=method,proto3" json:"method,omitempty"`
+	Path          string                 `protobuf:"bytes,3,opt,name=path,proto3" json:"path,omitempty"`
+	ContentType   string                 `protobuf:"bytes,4,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
+	Payload       []byte                 `protobuf:"bytes,5,opt,name=payload,proto3" json:"payload,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *IngestRequest) Reset() {
@@ -307,9 +307,9 @@ func (*IngestRequest) Descriptor() ([]byte, []int) {
 	return file_worker_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *IngestRequest) GetWorkerStreamId() int64 {
+func (x *IngestRequest) GetWorkerFlowId() int64 {
 	if x != nil {
-		return x.WorkerStreamId
+		return x.WorkerFlowId
 	}
 	return 0
 }
@@ -398,23 +398,22 @@ var File_worker_proto protoreflect.FileDescriptor
 
 const file_worker_proto_rawDesc = "" +
 	"\n" +
-	"\fworker.proto\x12\vprotorender\x1a\x1bgoogle/protobuf/empty.proto\x1a\fcommon.proto\"8\n" +
-	"\n" +
-	"StreamFile\x12\x10\n" +
+	"\fworker.proto\x12\vprotorender\x1a\x1bgoogle/protobuf/empty.proto\x1a\fcommon.proto\"6\n" +
+	"\bFlowFile\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x18\n" +
-	"\acontent\x18\x02 \x01(\fR\acontent\"\x86\x01\n" +
-	"\x13AssignStreamRequest\x12(\n" +
-	"\x10worker_stream_id\x18\x01 \x01(\x03R\x0eworkerStreamId\x12\x16\n" +
-	"\x06config\x18\x02 \x01(\tR\x06config\x12-\n" +
-	"\x05files\x18\x03 \x03(\v2\x17.protorender.StreamFileR\x05files\">\n" +
-	"\x12FetchStreamRequest\x12(\n" +
-	"\x10worker_stream_id\x18\x01 \x01(\x03R\x0eworkerStreamId\"N\n" +
-	"\x13FetchStreamResponse\x127\n" +
-	"\x06status\x18\x01 \x01(\x0e2\x1f.protorender.WorkerStreamStatusR\x06status\"A\n" +
-	"\x15CompleteStreamRequest\x12(\n" +
-	"\x10worker_stream_id\x18\x01 \x01(\x03R\x0eworkerStreamId\"\xa2\x01\n" +
-	"\rIngestRequest\x12(\n" +
-	"\x10worker_stream_id\x18\x01 \x01(\x03R\x0eworkerStreamId\x12\x16\n" +
+	"\acontent\x18\x02 \x01(\fR\acontent\"~\n" +
+	"\x11AssignFlowRequest\x12$\n" +
+	"\x0eworker_flow_id\x18\x01 \x01(\x03R\fworkerFlowId\x12\x16\n" +
+	"\x06config\x18\x02 \x01(\tR\x06config\x12+\n" +
+	"\x05files\x18\x03 \x03(\v2\x15.protorender.FlowFileR\x05files\"8\n" +
+	"\x10FetchFlowRequest\x12$\n" +
+	"\x0eworker_flow_id\x18\x01 \x01(\x03R\fworkerFlowId\"J\n" +
+	"\x11FetchFlowResponse\x125\n" +
+	"\x06status\x18\x01 \x01(\x0e2\x1d.protorender.WorkerFlowStatusR\x06status\";\n" +
+	"\x13CompleteFlowRequest\x12$\n" +
+	"\x0eworker_flow_id\x18\x01 \x01(\x03R\fworkerFlowId\"\x9e\x01\n" +
+	"\rIngestRequest\x12$\n" +
+	"\x0eworker_flow_id\x18\x01 \x01(\x03R\fworkerFlowId\x12\x16\n" +
 	"\x06method\x18\x02 \x01(\tR\x06method\x12\x12\n" +
 	"\x04path\x18\x03 \x01(\tR\x04path\x12!\n" +
 	"\fcontent_type\x18\x04 \x01(\tR\vcontentType\x12\x18\n" +
@@ -423,12 +422,13 @@ const file_worker_proto_rawDesc = "" +
 	"\n" +
 	"statusCode\x18\x01 \x01(\x05R\n" +
 	"statusCode\x12\x1a\n" +
-	"\bresponse\x18\x02 \x01(\fR\bresponse2\x8d\x03\n" +
+	"\bresponse\x18\x02 \x01(\fR\bresponse2\xff\x02\n" +
 	"\x06Worker\x12D\n" +
-	"\vHealthCheck\x12\x16.google.protobuf.Empty\x1a\x1b.protorender.CommonResponse\"\x00\x12O\n" +
-	"\fAssignStream\x12 .protorender.AssignStreamRequest\x1a\x1b.protorender.CommonResponse\"\x00\x12R\n" +
-	"\vFetchStream\x12\x1f.protorender.FetchStreamRequest\x1a .protorender.FetchStreamResponse\"\x00\x12S\n" +
-	"\x0eCompleteStream\x12\".protorender.CompleteStreamRequest\x1a\x1b.protorender.CommonResponse\"\x00\x12C\n" +
+	"\vHealthCheck\x12\x16.google.protobuf.Empty\x1a\x1b.protorender.CommonResponse\"\x00\x12K\n" +
+	"\n" +
+	"AssignFlow\x12\x1e.protorender.AssignFlowRequest\x1a\x1b.protorender.CommonResponse\"\x00\x12L\n" +
+	"\tFetchFlow\x12\x1d.protorender.FetchFlowRequest\x1a\x1e.protorender.FetchFlowResponse\"\x00\x12O\n" +
+	"\fCompleteFlow\x12 .protorender.CompleteFlowRequest\x1a\x1b.protorender.CommonResponse\"\x00\x12C\n" +
 	"\x06Ingest\x12\x1a.protorender.IngestRequest\x1a\x1b.protorender.IngestResponse\"\x00B4Z2github.com/sananguliyev/airtruct/internal/protogenb\x06proto3"
 
 var (
@@ -445,29 +445,29 @@ func file_worker_proto_rawDescGZIP() []byte {
 
 var file_worker_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_worker_proto_goTypes = []any{
-	(*StreamFile)(nil),            // 0: protorender.StreamFile
-	(*AssignStreamRequest)(nil),   // 1: protorender.AssignStreamRequest
-	(*FetchStreamRequest)(nil),    // 2: protorender.FetchStreamRequest
-	(*FetchStreamResponse)(nil),   // 3: protorender.FetchStreamResponse
-	(*CompleteStreamRequest)(nil), // 4: protorender.CompleteStreamRequest
-	(*IngestRequest)(nil),         // 5: protorender.IngestRequest
-	(*IngestResponse)(nil),        // 6: protorender.IngestResponse
-	(WorkerStreamStatus)(0),       // 7: protorender.WorkerStreamStatus
-	(*emptypb.Empty)(nil),         // 8: google.protobuf.Empty
-	(*CommonResponse)(nil),        // 9: protorender.CommonResponse
+	(*FlowFile)(nil),            // 0: protorender.FlowFile
+	(*AssignFlowRequest)(nil),   // 1: protorender.AssignFlowRequest
+	(*FetchFlowRequest)(nil),    // 2: protorender.FetchFlowRequest
+	(*FetchFlowResponse)(nil),   // 3: protorender.FetchFlowResponse
+	(*CompleteFlowRequest)(nil), // 4: protorender.CompleteFlowRequest
+	(*IngestRequest)(nil),       // 5: protorender.IngestRequest
+	(*IngestResponse)(nil),      // 6: protorender.IngestResponse
+	(WorkerFlowStatus)(0),       // 7: protorender.WorkerFlowStatus
+	(*emptypb.Empty)(nil),       // 8: google.protobuf.Empty
+	(*CommonResponse)(nil),      // 9: protorender.CommonResponse
 }
 var file_worker_proto_depIdxs = []int32{
-	0, // 0: protorender.AssignStreamRequest.files:type_name -> protorender.StreamFile
-	7, // 1: protorender.FetchStreamResponse.status:type_name -> protorender.WorkerStreamStatus
+	0, // 0: protorender.AssignFlowRequest.files:type_name -> protorender.FlowFile
+	7, // 1: protorender.FetchFlowResponse.status:type_name -> protorender.WorkerFlowStatus
 	8, // 2: protorender.Worker.HealthCheck:input_type -> google.protobuf.Empty
-	1, // 3: protorender.Worker.AssignStream:input_type -> protorender.AssignStreamRequest
-	2, // 4: protorender.Worker.FetchStream:input_type -> protorender.FetchStreamRequest
-	4, // 5: protorender.Worker.CompleteStream:input_type -> protorender.CompleteStreamRequest
+	1, // 3: protorender.Worker.AssignFlow:input_type -> protorender.AssignFlowRequest
+	2, // 4: protorender.Worker.FetchFlow:input_type -> protorender.FetchFlowRequest
+	4, // 5: protorender.Worker.CompleteFlow:input_type -> protorender.CompleteFlowRequest
 	5, // 6: protorender.Worker.Ingest:input_type -> protorender.IngestRequest
 	9, // 7: protorender.Worker.HealthCheck:output_type -> protorender.CommonResponse
-	9, // 8: protorender.Worker.AssignStream:output_type -> protorender.CommonResponse
-	3, // 9: protorender.Worker.FetchStream:output_type -> protorender.FetchStreamResponse
-	9, // 10: protorender.Worker.CompleteStream:output_type -> protorender.CommonResponse
+	9, // 8: protorender.Worker.AssignFlow:output_type -> protorender.CommonResponse
+	3, // 9: protorender.Worker.FetchFlow:output_type -> protorender.FetchFlowResponse
+	9, // 10: protorender.Worker.CompleteFlow:output_type -> protorender.CommonResponse
 	6, // 11: protorender.Worker.Ingest:output_type -> protorender.IngestResponse
 	7, // [7:12] is the sub-list for method output_type
 	2, // [2:7] is the sub-list for method input_type

@@ -4,9 +4,7 @@ import {
   Cpu,
   MemoryStick,
   Layers,
-  ScanLine,
   Waypoints,
-  Truck,
   KeyRound,
   Gauge,
   FileText,
@@ -33,8 +31,8 @@ const menuItems = [
         icon: LayoutDashboard,
       },
       {
-        name: "Streams",
-        href: "/streams",
+        name: "Flows",
+        href: "/flows",
         icon: Waypoints,
       },
       {
@@ -66,11 +64,6 @@ const menuItems = [
         name: "Buffers",
         href: "/buffers",
         icon: Layers,
-      },
-      {
-        name: "Scanners",
-        href: "/scanners",
-        icon: ScanLine,
       },
       {
         name: "Files",
@@ -116,9 +109,7 @@ export function Sidebar() {
     >
       <div className="h-14 flex items-center px-4 border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded-md bg-gray-900 dark:bg-gray-100 flex items-center justify-center text-white dark:text-gray-900 flex-shrink-0">
-            <Truck className="h-5 w-5" />
-          </div>
+          <img src="/logo.png" alt="airtruct" className="h-6 w-6 flex-shrink-0 rounded" />
           {!isCollapsed && (
             <div>
               <h1 className="text-lg font-semibold">airtruct</h1>

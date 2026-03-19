@@ -4,7 +4,7 @@ sidebar_position: 4
 
 # Caches
 
-Cache resources provide key-value storage that components can use to persist state. They are created through the Airtruct UI and linked to streams that need them.
+Cache resources provide key-value storage that components can use to persist state. They are created through the Airtruct UI and linked to flows that need them.
 
 Components like [CDC MySQL](/docs/components/inputs/cdc-mysql) and [Shopify](/docs/components/inputs/shopify) reference a cache by its **label** to store and retrieve data such as binlog positions or pagination cursors.
 
@@ -16,9 +16,9 @@ Each cache resource has:
 - **Component**: The cache type (e.g., `memory`, `redis`, `file`).
 - **Config**: Type-specific settings.
 
-When a stream is linked to a cache resource, the cache becomes available to the stream's components at runtime. Components access the cache by label and store data under specific keys.
+When a flow is linked to a cache resource, the cache becomes available to the flow's components at runtime. Components access the cache by label and store data under specific keys.
 
-Multiple streams can share a single cache resource as long as they use different keys.
+Multiple flows can share a single cache resource as long as they use different keys.
 
 ---
 

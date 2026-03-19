@@ -96,7 +96,7 @@ export default function Home() {
     );
   }
 
-  const statusData = data.streams_by_status.map((s) => ({
+  const statusData = data.flows_by_status.map((s) => ({
     name: s.status,
     value: s.count,
     fill: STATUS_COLORS[s.status] || "hsl(var(--muted))",
@@ -118,13 +118,13 @@ export default function Home() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
         <Card>
           <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-sm font-medium">Total Streams</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Flows</CardTitle>
             <Workflow className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data.total_streams}</div>
+            <div className="text-2xl font-bold">{data.total_flows}</div>
             <div className="flex gap-1.5 mt-2 flex-wrap">
-              {data.streams_by_status.map((s) => (
+              {data.flows_by_status.map((s) => (
                 <Badge key={s.status} variant="secondary" className="text-xs">
                   {s.status}: {s.count}
                 </Badge>
@@ -141,7 +141,7 @@ export default function Home() {
           <CardContent>
             <div className="text-2xl font-bold">{formatNumber(data.total_input_events)}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Total events ingested across all streams
+              Total events ingested across all flows
             </p>
           </CardContent>
         </Card>
@@ -221,7 +221,7 @@ export default function Home() {
 
         <Card className="md:col-span-2">
           <CardHeader>
-            <CardTitle>Stream Status</CardTitle>
+            <CardTitle>Flow Status</CardTitle>
             <CardDescription>Distribution by status</CardDescription>
           </CardHeader>
           <CardContent>
@@ -238,7 +238,7 @@ export default function Home() {
               </ChartContainer>
             ) : (
               <div className="flex items-center justify-center h-[300px] text-muted-foreground">
-                No streams yet
+                No flows yet
               </div>
             )}
           </CardContent>
@@ -261,13 +261,13 @@ export default function Home() {
                       <span className="text-sm font-medium">{c.component}</span>
                     </div>
                     <span className="text-sm text-muted-foreground">
-                      {c.count} {c.count === 1 ? "stream" : "streams"}
+                      {c.count} {c.count === 1 ? "flow" : "flows"}
                     </span>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">No streams configured yet</p>
+              <p className="text-sm text-muted-foreground">No flows configured yet</p>
             )}
           </CardContent>
         </Card>
@@ -287,13 +287,13 @@ export default function Home() {
                       <span className="text-sm font-medium">{c.component}</span>
                     </div>
                     <span className="text-sm text-muted-foreground">
-                      {c.count} {c.count === 1 ? "stream" : "streams"}
+                      {c.count} {c.count === 1 ? "flow" : "flows"}
                     </span>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">No streams configured yet</p>
+              <p className="text-sm text-muted-foreground">No flows configured yet</p>
             )}
           </CardContent>
         </Card>

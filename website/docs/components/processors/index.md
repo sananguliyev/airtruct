@@ -4,7 +4,7 @@ sidebar_position: 2
 
 # Processors
 
-Processors transform, validate, or route messages within a pipeline. They are applied in order between the input and output. Add processors when creating or editing a stream in the UI.
+Processors transform, validate, or route messages within a pipeline. They are applied in order between the input and output. Add processors when creating or editing a flow in the UI.
 
 | Component | Description |
 |-----------|-------------|

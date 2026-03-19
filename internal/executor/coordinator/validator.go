@@ -11,23 +11,23 @@ import (
 	"github.com/warpstreamlabs/bento/public/service"
 )
 
-// ValidateStream validates each component of a stream independently using Bento's per-component
+// ValidateFlow validates each component of a stream independently using Bento's per-component
 // linting, which produces detailed errors (line/column, field names) per failing section.
 // Returns nil if all components are valid.
-func ValidateStream(stream persistence.Stream) error {
+func ValidateFlow(flow persistence.Flow) error {
 	b := &configBuilder{}
 	var msgs []string
 
-	inputMap, err := b.buildInputConfig(stream)
+	inputMap, err := b.buildInputConfig(flow)
 	if err != nil {
-		msgs = append(msgs, fmt.Sprintf("[input/%s] %s", stream.InputComponent, err))
+		msgs = append(msgs, fmt.Sprintf("[input/%s] %s", flow.InputComponent, err))
 	} else if inputErr := lintComponentYAML(inputMap, func(s *service.StreamBuilder, y string) error {
 		return s.AddInputYAML(y)
 	}); inputErr != nil {
-		msgs = append(msgs, fmt.Sprintf("[input/%s] %s", stream.InputComponent, inputErr))
+		msgs = append(msgs, fmt.Sprintf("[input/%s] %s", flow.InputComponent, inputErr))
 	}
 
-	for _, proc := range stream.Processors {
+	for _, proc := range flow.Processors {
 		procMap, err := b.buildProcessorConfig(proc)
 		if err != nil {
 			msgs = append(msgs, fmt.Sprintf("[processor/%s] %s", proc.Label, err))
@@ -46,13 +46,13 @@ func ValidateStream(stream persistence.Stream) error {
 		}
 	}
 
-	outputMap, err := b.buildOutputConfig(stream)
+	outputMap, err := b.buildOutputConfig(flow)
 	if err != nil {
-		msgs = append(msgs, fmt.Sprintf("[output/%s] %s", stream.OutputComponent, err))
+		msgs = append(msgs, fmt.Sprintf("[output/%s] %s", flow.OutputComponent, err))
 	} else if outputErr := lintComponentYAML(outputMap, func(s *service.StreamBuilder, y string) error {
 		return s.AddOutputYAML(y)
 	}); outputErr != nil {
-		msgs = append(msgs, fmt.Sprintf("[output/%s] %s", stream.OutputComponent, outputErr))
+		msgs = append(msgs, fmt.Sprintf("[output/%s] %s", flow.OutputComponent, outputErr))
 	}
 
 	if len(msgs) > 0 {

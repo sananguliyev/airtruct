@@ -17,9 +17,8 @@ import Layout from "./components/Layout";
 
 import LoginPage from "./pages/login/page.tsx";
 import HomePage from "./pages/HomePage.tsx";
-import StreamsPage from "./pages/streams/page.tsx";
+import FlowsPage from "./pages/flows/page.tsx";
 import WorkersPage from "./pages/workers/page.tsx";
-import ScannersPage from "./pages/scanners/page.tsx";
 import BuffersPage from "./pages/buffers/page.tsx";
 import BufferNewPage from "./pages/buffers/new/page.tsx";
 import BufferEditPage from "./pages/buffers/[id]/edit/page.tsx";
@@ -30,9 +29,9 @@ import CacheEditPage from "./pages/caches/[id]/edit/page.tsx";
 import RateLimitsPage from "./pages/rate-limits/page.tsx";
 import RateLimitNewPage from "./pages/rate-limits/new/page.tsx";
 import RateLimitEditPage from "./pages/rate-limits/[id]/edit/page.tsx";
-import StreamEditPage from "./pages/streams/[id]/edit/page.tsx";
-import StreamEventsPage from "./pages/streams/[id]/events/page.tsx";
-import StreamNewPage from "./pages/streams/new/page.tsx";
+import FlowEditPage from "./pages/flows/[id]/edit/page.tsx";
+import FlowEventsPage from "./pages/flows/[id]/events/page.tsx";
+import FlowNewPage from "./pages/flows/new/page.tsx";
 import FilesPage from "./pages/files/page.tsx";
 
 const AppLayout: React.FC = () => {
@@ -43,7 +42,7 @@ const AppLayout: React.FC = () => {
           <title>Admin Dashboard</title>
           <meta
             name="description"
-            content="Admin dashboard for managing streams and components"
+            content="Admin dashboard for managing flows and components"
           />
         </Helmet>
         <Layout>
@@ -91,13 +90,12 @@ function App() {
             }
           >
             <Route index element={<HomePage />} />
-            <Route path="streams" element={<StreamsPage />} />
-            <Route path="streams/new" element={<StreamNewPage />} />
-            <Route path="streams/:id/edit" element={<StreamEditPage />} />
-            <Route path="streams/:id/events" element={<StreamEventsPage />} />
+            <Route path="flows" element={<FlowsPage />} />
+            <Route path="flows/new" element={<FlowNewPage />} />
+            <Route path="flows/:id/edit" element={<FlowEditPage />} />
+            <Route path="flows/:id/events" element={<FlowEventsPage />} />
             <Route path="workers" element={<WorkersPage />} />
             <Route path="secrets" element={<SecretsPage />} />
-            <Route path="scanners" element={<ScannersPage />} />
             <Route path="buffers" element={<BuffersPage />} />
             <Route path="buffers/new" element={<BufferNewPage />} />
             <Route path="buffers/:id/edit" element={<BufferEditPage />} />

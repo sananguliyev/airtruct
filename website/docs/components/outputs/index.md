@@ -4,7 +4,7 @@ sidebar_position: 3
 
 # Outputs
 
-Outputs define where processed data is delivered. Select an output type when creating a stream in the UI.
+Outputs define where processed data is delivered. Select an output type when creating a flow in the UI.
 
 | Component | Description |
 |-----------|-------------|

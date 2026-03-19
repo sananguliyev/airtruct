@@ -1,6 +1,6 @@
 # Generate
 
-Generates messages on a schedule. Primarily used for synthetic data in testing and development, but also works well as a **recurring job trigger** — use it to drive any stream that should run on a fixed interval or cron schedule.
+Generates messages on a schedule. Primarily used for synthetic data in testing and development, but also works well as a **recurring job trigger** — use it to drive any flow that should run on a fixed interval or cron schedule.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|

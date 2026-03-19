@@ -1,8 +1,8 @@
 # MCP Tool
 
-Exposes a stream as a tool via the [Model Context Protocol](https://modelcontextprotocol.io/) (MCP). AI assistants like Claude Desktop, Claude Code, Cursor, and other MCP-compatible clients can discover and call your stream as a tool.
+Exposes a flow as a tool via the [Model Context Protocol](https://modelcontextprotocol.io/) (MCP). AI assistants like Claude Desktop, Claude Code, Cursor, and other MCP-compatible clients can discover and call your flow as a tool.
 
-The coordinator exposes a single MCP endpoint at `/mcp` using the Streamable HTTP transport. All MCP Tool streams are registered as tools on this endpoint and automatically synced every 5 seconds.
+The coordinator exposes a single MCP endpoint at `/mcp` using the Flowable HTTP transport. All MCP Tool flows are registered as tools on this endpoint and automatically synced every 5 seconds.
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -14,7 +14,7 @@ The output **must** be [Sync Response](/docs/components/outputs/sync-response) â
 
 ## Error Handling
 
-By default, successful tool executions return with a 200 status code. To signal errors or different HTTP status codes (like 404 for "not found" or 400 for "bad request"), set the `meta status_code` field in your stream:
+By default, successful tool executions return with a 200 status code. To signal errors or different HTTP status codes (like 404 for "not found" or 400 for "bad request"), set the `meta status_code` field in your flow:
 
 ```yaml
 meta status_code = 404

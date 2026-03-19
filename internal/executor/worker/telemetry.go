@@ -20,13 +20,13 @@ type TelemetryManager interface {
 
 type telemetryManager struct {
 	coordinatorConnection CoordinatorConnection
-	streamManager         StreamManager
+	flowManager         FlowManager
 }
 
-func NewTelemetryManager(coordinatorConnection CoordinatorConnection, streamManager StreamManager) TelemetryManager {
+func NewTelemetryManager(coordinatorConnection CoordinatorConnection, flowManager FlowManager) TelemetryManager {
 	return &telemetryManager{
 		coordinatorConnection: coordinatorConnection,
-		streamManager:         streamManager,
+		flowManager:         flowManager,
 	}
 }
 
@@ -34,11 +34,11 @@ func (t *telemetryManager) ShipLogs(ctx context.Context) {
 	retryDelay := time.Second
 
 	for {
-		streamClient, err := t.coordinatorConnection.GetClient().IngestEvents(ctx)
+		eventStreamClient, err := t.coordinatorConnection.GetClient().IngestEvents(ctx)
 		if err != nil {
-			log.Error().Err(err).Msg("Failed to create stream client")
+			log.Error().Err(err).Msg("Failed to create event stream client")
 			retryDelay *= 2
-			time.Sleep(min(retryDelay, StreamMaxDelay))
+			time.Sleep(min(retryDelay, EventStreamMaxDelay))
 			continue
 		}
 		retryDelay = time.Second
@@ -46,21 +46,21 @@ func (t *telemetryManager) ShipLogs(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
-				log.Info().Msg("ShipLogs context done, closing stream")
-				if err := streamClient.CloseSend(); err != nil {
-					log.Error().Err(err).Msg("Error closing send stream")
+				log.Info().Msg("ShipLogs context done, closing event stream")
+				if err := eventStreamClient.CloseSend(); err != nil {
+					log.Error().Err(err).Msg("Error closing send event stream")
 				}
 				return
 			default:
 				sentEvents := 0
-				streams := t.streamManager.GetAllStreams()
+				flows := t.flowManager.GetAllFlows()
 
-				for workerStreamID, stream := range streams {
-					tracingSummary := stream.TracingSummary
+				for workerFlowID, flow := range flows {
+					tracingSummary := flow.TracingSummary
 					eventGetters := map[string]func(bool) map[string][]service.TracingEvent{
-						string(persistence.StreamSectionInput):    tracingSummary.InputEvents,
-						string(persistence.StreamSectionPipeline): tracingSummary.ProcessorEvents,
-						string(persistence.StreamSectionOutput):   tracingSummary.OutputEvents,
+						string(persistence.FlowSectionInput):    tracingSummary.InputEvents,
+						string(persistence.FlowSectionPipeline): tracingSummary.ProcessorEvents,
+						string(persistence.FlowSectionOutput):   tracingSummary.OutputEvents,
 					}
 
 					for section, getEvents := range eventGetters {
@@ -70,7 +70,7 @@ func (t *telemetryManager) ShipLogs(ctx context.Context) {
 								if err != nil {
 									log.Error().
 										Err(err).
-										Int64("worker_stream_id", workerStreamID).
+										Int64("worker_flow_id", workerFlowID).
 										Str("component_label", componentLabel).
 										Str("event_type", string(event.Type)).
 										Str("event_content", event.Content).
@@ -79,28 +79,28 @@ func (t *telemetryManager) ShipLogs(ctx context.Context) {
 									continue
 								}
 
-								if err := streamClient.Send(&pb.Event{
-									WorkerStreamId: workerStreamID,
+								if err := eventStreamClient.Send(&pb.Event{
+									WorkerFlowId: workerFlowID,
 									ComponentLabel: componentLabel,
 									Section:        section,
 									Type:           string(event.Type),
 									Content:        event.Content,
 									Meta:           metaStruct,
-									FlowId:         event.FlowID,
+									TraceId:         event.FlowID,
 								}); err != nil {
-									log.Error().Err(err).Msg("Failed to send event, re-establishing stream")
-									goto ReconnectStream
+									log.Error().Err(err).Msg("Failed to send event, re-establishing connection")
+									goto ReconnectEventStream
 								}
 								sentEvents++
 
-								_, err = streamClient.Recv()
+								_, err = eventStreamClient.Recv()
 								if err == io.EOF {
-									log.Info().Msg("Server closed the stream")
-									goto ReconnectStream
+									log.Info().Msg("Server closed the connection")
+									goto ReconnectEventStream
 								}
 								if err != nil {
-									log.Error().Err(err).Msg("Failed to receive acknowledgment, re-establishing stream")
-									goto ReconnectStream
+									log.Error().Err(err).Msg("Failed to receive acknowledgment, re-establishing connection")
+									goto ReconnectEventStream
 								}
 							}
 						}
@@ -112,20 +112,20 @@ func (t *telemetryManager) ShipLogs(ctx context.Context) {
 				}
 			}
 		}
-	ReconnectStream:
-		log.Info().Msg("Attempting to reconnect stream...")
+	ReconnectEventStream:
+		log.Info().Msg("Attempting to reconnect flow...")
 		time.Sleep(retryDelay)
 	}
 }
 
 func (t *telemetryManager) ShipMetrics(ctx context.Context) {
-	streams := t.streamManager.GetAllStreams()
+	flows := t.flowManager.GetAllFlows()
 
-	for workerStreamID, stream := range streams {
-		tracingSummary := stream.TracingSummary
+	for workerFlowID, flow := range flows {
+		tracingSummary := flow.TracingSummary
 		err := t.coordinatorConnection.IngestMetrics(
 			ctx,
-			workerStreamID,
+			workerFlowID,
 			tracingSummary.TotalInput(),
 			tracingSummary.TotalProcessorErrors(),
 			tracingSummary.TotalOutput(),

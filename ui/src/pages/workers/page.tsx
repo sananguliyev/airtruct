@@ -54,8 +54,8 @@ export default function WorkersPage() {
       },
     },
     {
-      key: "activeStreams" as keyof Worker,
-      title: "Active Streams",
+      key: "activeFlows" as keyof Worker,
+      title: "Active Flows",
     },
     {
       key: "lastHeartbeat" as keyof Worker,
@@ -92,7 +92,7 @@ export default function WorkersPage() {
               <p>
                 Workers are processing nodes that automatically register
                 themselves with the system. They report their status via
-                heartbeats and can run multiple streams simultaneously.
+                heartbeats and can run multiple flows simultaneously.
               </p>
             </TooltipContent>
           </Tooltip>
