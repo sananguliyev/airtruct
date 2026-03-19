@@ -7,7 +7,7 @@ build
 *.back
 dist
 target
-*.sqlite
+*.sqlite*
 .test
 *.pos
 /airtruct
