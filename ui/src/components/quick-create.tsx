@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Layers, KeyRound, MemoryStick, Gauge, FileText } from "lucide-react";
+import { Plus, Waypoints, KeyRound, MemoryStick, Gauge, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,8 +12,8 @@ import {
 export function QuickCreate({ isCollapsed }: { isCollapsed: boolean }) {
   const navigate = useNavigate();
 
-  const handleCreateStream = () => {
-    navigate("/streams/new");
+  const handleCreateFlow = () => {
+    navigate("/flows/new");
   };
 
   const handleCreateCache = () => {
@@ -48,9 +48,9 @@ export function QuickCreate({ isCollapsed }: { isCollapsed: boolean }) {
         )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-56">
-        <DropdownMenuItem onSelect={handleCreateStream}>
-          <Layers className="mr-2 h-4 w-4" />
-          New Stream
+        <DropdownMenuItem onSelect={handleCreateFlow}>
+          <Waypoints className="mr-2 h-4 w-4" />
+          New Flow
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={handleCreateSecret}>
           <KeyRound className="mr-2 h-4 w-4" />

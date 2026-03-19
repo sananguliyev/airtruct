@@ -639,7 +639,7 @@ export default function FilesPage() {
               Are you sure you want to delete "{selectedFile?.key}"?
               <br />
               <br />
-              <strong>Warning:</strong> Streams referencing this file will fail
+              <strong>Warning:</strong> Flows referencing this file will fail
               if the file is deleted.
               <br />
               <br />

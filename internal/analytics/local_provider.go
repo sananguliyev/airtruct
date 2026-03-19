@@ -20,8 +20,8 @@ func (p *LocalProvider) GetAnalytics() (*Result, error) {
 	result := &Result{}
 
 	g := new(errgroup.Group)
-	g.Go(func() error { return p.loadStreamStats(result) })
-	g.Go(func() error { return p.loadWorkerStreamMetrics(result) })
+	g.Go(func() error { return p.loadFlowStats(result) })
+	g.Go(func() error { return p.loadWorkerFlowMetrics(result) })
 	g.Go(func() error { return p.loadActiveWorkers(result) })
 	g.Go(func() error { return p.loadEventStats(result) })
 	g.Go(func() error { return p.loadEventsOverTime(result) })
@@ -33,13 +33,13 @@ func (p *LocalProvider) GetAnalytics() (*Result, error) {
 	return result, nil
 }
 
-func (p *LocalProvider) loadStreamStats(result *Result) error {
+func (p *LocalProvider) loadFlowStats(result *Result) error {
 	type statusCount struct {
 		Status string
 		Count  int64
 	}
 	var counts []statusCount
-	if err := p.db.Model(&persistence.Stream{}).
+	if err := p.db.Model(&persistence.Flow{}).
 		Select("status, COUNT(*) as count").
 		Where("is_current = true").
 		Group("status").
@@ -47,22 +47,22 @@ func (p *LocalProvider) loadStreamStats(result *Result) error {
 		return err
 	}
 
-	result.StreamsByStatus = make([]StreamStatusCount, len(counts))
+	result.FlowsByStatus = make([]FlowStatusCount, len(counts))
 	for i, c := range counts {
-		result.StreamsByStatus[i] = StreamStatusCount{Status: c.Status, Count: c.Count}
-		result.TotalStreams += c.Count
+		result.FlowsByStatus[i] = FlowStatusCount{Status: c.Status, Count: c.Count}
+		result.TotalFlows += c.Count
 	}
 	return nil
 }
 
-func (p *LocalProvider) loadWorkerStreamMetrics(result *Result) error {
+func (p *LocalProvider) loadWorkerFlowMetrics(result *Result) error {
 	type metrics struct {
 		TotalInput  uint64
 		TotalOutput uint64
 		TotalErrors uint64
 	}
 	var m metrics
-	if err := p.db.Model(&persistence.WorkerStream{}).
+	if err := p.db.Model(&persistence.WorkerFlow{}).
 		Select("COALESCE(SUM(input_events), 0) as total_input, COALESCE(SUM(output_events), 0) as total_output, COALESCE(SUM(processor_errors), 0) as total_errors").
 		Scan(&m).Error; err != nil {
 		return err
@@ -144,7 +144,7 @@ func (p *LocalProvider) loadTopComponents(result *Result) error {
 	}
 
 	var inputs []compCount
-	if err := p.db.Model(&persistence.Stream{}).
+	if err := p.db.Model(&persistence.Flow{}).
 		Select("input_component as component, COUNT(*) as count").
 		Where("is_current = true").
 		Group("input_component").
@@ -159,7 +159,7 @@ func (p *LocalProvider) loadTopComponents(result *Result) error {
 	}
 
 	var outputs []compCount
-	if err := p.db.Model(&persistence.Stream{}).
+	if err := p.db.Model(&persistence.Flow{}).
 		Select("output_component as component, COUNT(*) as count").
 		Where("is_current = true").
 		Group("output_component").

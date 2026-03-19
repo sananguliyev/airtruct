@@ -56,12 +56,12 @@ func (c *CoordinatorCLI) Run(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
-				log.Info().Msg("Stopping worker health check / stream assignment routine...")
+				log.Info().Msg("Stopping worker health check / flow assignment routine...")
 				return ctx.Err()
 			case <-ticker.C:
-				err := c.executor.CheckWorkersAndAssignStreams(ctx)
+				err := c.executor.CheckWorkersAndAssignFlows(ctx)
 				if err != nil {
-					log.Error().Err(err).Msg("Failed to perform worker health check and assign streams")
+					log.Error().Err(err).Msg("Failed to perform worker health check and assign flows")
 				}
 			}
 		}
@@ -74,12 +74,12 @@ func (c *CoordinatorCLI) Run(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
-				log.Info().Msg("Stopping stream lease expiration checker routine...")
+				log.Info().Msg("Stopping flow lease expiration checker routine...")
 				return ctx.Err()
 			case <-leaseTicker.C:
-				err := c.executor.CheckStreamLeases(ctx)
+				err := c.executor.CheckFlowLeases(ctx)
 				if err != nil {
-					log.Error().Err(err).Msg("Failed to check stream leases")
+					log.Error().Err(err).Msg("Failed to check flow leases")
 				}
 			}
 		}
@@ -194,13 +194,13 @@ func (c *CoordinatorCLI) Run(ctx context.Context) {
 	c.authManager.SetupAuthRoutes(mainMux)
 
 	protectedAPI := c.authManager.Middleware(mux)
-	mainMux.Handle("/api/v0/streams/validate", c.authManager.Middleware(http.HandlerFunc(c.api.ValidateStreamHTTP)))
-	mainMux.Handle("/api/v0/streams/try", c.authManager.Middleware(http.HandlerFunc(c.api.TryStreamHTTP)))
+	mainMux.Handle("/api/v0/flows/validate", c.authManager.Middleware(http.HandlerFunc(c.api.ValidateFlowHTTP)))
+	mainMux.Handle("/api/v0/flows/try", c.authManager.Middleware(http.HandlerFunc(c.api.TryFlowHTTP)))
 	mainMux.Handle("/api/", http.StripPrefix("/api", protectedAPI))
 	mainMux.HandleFunc("/ingest/", func(w http.ResponseWriter, r *http.Request) {
 		statusCode, response, err := c.executor.ForwardRequestToWorker(r.Context(), r)
 		if err != nil {
-			log.Error().Err(err).Msg("failed to ingest stream")
+			log.Error().Err(err).Msg("failed to ingest flow")
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

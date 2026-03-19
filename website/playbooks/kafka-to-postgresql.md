@@ -1,10 +1,10 @@
 ---
-description: Set up a streaming pipeline from Kafka to PostgreSQL with Avro schema decoding.
+description: Set up a flowing pipeline from Kafka to PostgreSQL with Avro schema decoding.
 ---
 
 # Kafka to PostgreSQL
 
-This guide walks through setting up a complete streaming pipeline from Kafka to PostgreSQL with Avro schema decoding.
+This guide walks through setting up a complete flowing pipeline from Kafka to PostgreSQL with Avro schema decoding.
 
 ## Prerequisites
 
@@ -90,9 +90,9 @@ curl -X POST http://localhost:8081/subjects/application-events-value/versions \
   }'
 ```
 
-## 5. Create the Airtruct Stream
+## 5. Create the Airtruct Flow
 
-Open the Airtruct UI, click **Create New Stream**, and configure each section:
+Open the Airtruct UI, click **Create New Flow**, and configure each section:
 
 ### Input — select **Kafka**
 
@@ -100,7 +100,7 @@ Open the Airtruct UI, click **Create New Stream**, and configure each section:
 |-------|-------|
 | Addresses | `localhost:9092` |
 | Topics | `application-events` |
-| Consumer Group | `event-stream-group` |
+| Consumer Group | `event-flow-group` |
 
 ### Processor — select **Schema Registry Decode**
 
@@ -118,7 +118,7 @@ Open the Airtruct UI, click **Create New Stream**, and configure each section:
 | Columns | `event_type`, `user_id`, `message` |
 | Args Mapping | `root = [this.event_type, this.user_id, this.message]` |
 
-Click **Save** and then **Start** the stream.
+Click **Save** and then **Start** the flow.
 
 ## 6. Send Test Data
 

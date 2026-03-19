@@ -23,18 +23,18 @@ message DeregisterWorkerRequest {
 message HeartbeatRequest {
   string id = 1;
   uint32 port = 2;
-  repeated int64 running_worker_stream_ids = 3;
+  repeated int64 running_worker_flow_ids = 3;
 }
 
 message HeartbeatResponse {
   string message = 1;
-  repeated int64 renewed_lease_worker_stream_ids = 2;
-  repeated int64 expired_lease_worker_stream_ids = 3;
+  repeated int64 renewed_lease_worker_flow_ids = 2;
+  repeated int64 expired_lease_worker_flow_ids = 3;
 }
 
-message WorkerStreamStatusRequest {
-  int64 worker_stream_id = 1;
-  WorkerStreamStatus status = 2;
+message WorkerFlowStatusRequest {
+  int64 worker_flow_id = 1;
+  WorkerFlowStatus status = 2;
 }
 
 message ListWorkersRequest {
@@ -57,7 +57,7 @@ message ListWorkersResponse {
   repeated Worker data = 1;
 }
 
-message ListStreamsRequest {
+message ListFlowsRequest {
   string status = 1 [(validate.rules).string = {
     in: [
       "active",
@@ -69,21 +69,21 @@ message ListStreamsRequest {
   }];
 }
 
-message ListStreamsResponse {
-  repeated Stream data = 1;
+message ListFlowsResponse {
+  repeated Flow data = 1;
 }
 
-message GetStreamRequest {
+message GetFlowRequest {
   int64 id = 1 [(validate.rules).int64.gt = 0];
 }
 
-message StreamResponse {
-  Stream data = 1;
+message FlowResponse {
+  Flow data = 1;
   CommonResponse meta = 2;
 }
 
 message Event {
-  int64 worker_stream_id = 1;
+  int64 worker_flow_id = 1;
   string section = 2;
   string component_label = 3;
   string type = 4 [(validate.rules).string = {
@@ -97,13 +97,13 @@ message Event {
   }];
   string content = 5;
   google.protobuf.Struct meta = 6;
-  string flow_id = 7;
+  string trace_id = 7;
   int64 id = 8;
   google.protobuf.Timestamp created_at = 9;
 }
 
 message ListEventsRequest {
-  int64 stream_id = 1 [(validate.rules).int64.gt = 0];
+  int64 flow_id = 1 [(validate.rules).int64.gt = 0];
   int64 limit = 2;
   int64 offset = 3;
   google.protobuf.Timestamp start_time = 4;
@@ -116,7 +116,7 @@ message ListEventsResponse {
 }
 
 message MetricsRequest {
-  int64 worker_stream_id = 1 [(validate.rules).int64.gt = 0];
+  int64 worker_flow_id = 1 [(validate.rules).int64.gt = 0];
   uint64 input_events = 2;
   uint64 processor_errors = 3;
   uint64 output_events = 4;
@@ -128,7 +128,7 @@ message MetricsRequest {
 message GetAnalyticsRequest {}
 
 message GetAnalyticsResponse {
-  message StreamStatusCount {
+  message FlowStatusCount {
     string status = 1;
     int64 count = 2;
   }
@@ -142,8 +142,8 @@ message GetAnalyticsResponse {
     int64 output_events = 3 [json_name = "output_events"];
     int64 error_events = 4 [json_name = "error_events"];
   }
-  int64 total_streams = 1 [json_name = "total_streams"];
-  repeated StreamStatusCount streams_by_status = 2 [json_name = "streams_by_status"];
+  int64 total_flows = 1 [json_name = "total_flows"];
+  repeated FlowStatusCount flows_by_status = 2 [json_name = "flows_by_status"];
   uint64 total_input_events = 3 [json_name = "total_input_events"];
   uint64 total_output_events = 4 [json_name = "total_output_events"];
   uint64 total_processor_errors = 5 [json_name = "total_processor_errors"];
@@ -222,8 +222,8 @@ message RateLimitResponse {
 }
 
 service Coordinator {
-  // Worker stream methods
-  rpc UpdateWorkerStreamStatus(WorkerStreamStatusRequest) returns (CommonResponse) {}
+  // Worker flow methods
+  rpc UpdateWorkerFlowStatus(WorkerFlowStatusRequest) returns (CommonResponse) {}
 
   // Worker methods
   rpc RegisterWorker(RegisterWorkerRequest) returns (CommonResponse) {}
@@ -233,22 +233,22 @@ service Coordinator {
     option (google.api.http) = {get: "/v0/workers/{status}"};
   }
 
-  // Stream methods
-  rpc ListStreams(ListStreamsRequest) returns (ListStreamsResponse) {
-    option (google.api.http) = {get: "/v0/streams"};
+  // Flow methods
+  rpc ListFlows(ListFlowsRequest) returns (ListFlowsResponse) {
+    option (google.api.http) = {get: "/v0/flows"};
   }
-  rpc GetStream(GetStreamRequest) returns (StreamResponse) {
-    option (google.api.http) = {get: "/v0/streams/{id}"};
+  rpc GetFlow(GetFlowRequest) returns (FlowResponse) {
+    option (google.api.http) = {get: "/v0/flows/{id}"};
   }
-  rpc CreateStream(Stream) returns (StreamResponse) {
+  rpc CreateFlow(Flow) returns (FlowResponse) {
     option (google.api.http) = {
-      post: "/v0/streams"
+      post: "/v0/flows"
       body: "*"
     };
   }
-  rpc UpdateStream(Stream) returns (StreamResponse) {
+  rpc UpdateFlow(Flow) returns (FlowResponse) {
     option (google.api.http) = {
-      put: "/v0/streams/{id}"
+      put: "/v0/flows/{id}"
       body: "*"
     };
   }
@@ -371,7 +371,7 @@ service Coordinator {
 
   // Observability methods
   rpc ListEvents(ListEventsRequest) returns (ListEventsResponse) {
-    option (google.api.http) = {get: "/v0/streams/{stream_id}/events"};
+    option (google.api.http) = {get: "/v0/flows/{flow_id}/events"};
   }
   rpc IngestEvents(stream Event) returns (stream google.protobuf.Empty);
   rpc IngestMetrics(MetricsRequest) returns (google.protobuf.Empty) {}

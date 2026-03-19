@@ -17,13 +17,13 @@ type WorkerExecutor interface {
 	JoinToCoordinator(context.Context) error
 	LeaveCoordinator(context.Context) error
 	SendHeartbeat(context.Context) error
-	AddStreamToQueue(ctx context.Context, workerStreamID int64, config string, files []*pb.StreamFile) error
-	FetchWorkerStreamStatus(ctx context.Context, workerStreamID int64) (*persistence.WorkerStreamStatus, error)
-	DeleteWorkerStream(ctx context.Context, workerStreamID int64) error
+	AddFlowToQueue(ctx context.Context, workerFlowID int64, config string, files []*pb.FlowFile) error
+	FetchWorkerFlowStatus(ctx context.Context, workerFlowID int64) (*persistence.WorkerFlowStatus, error)
+	DeleteWorkerFlow(ctx context.Context, workerFlowID int64) error
 	ShipLogs(context.Context)
 	ShipMetrics(context.Context)
-	ConsumeStreamQueue(context.Context)
-	IngestData(ctx context.Context, workerStreamID int64, method, path, contentType string, payload []byte) (*IngestResult, error)
+	ConsumeFlowQueue(context.Context)
+	IngestData(ctx context.Context, workerFlowID int64, method, path, contentType string, payload []byte) (*IngestResult, error)
 }
 
 type workerExecutor struct {
@@ -48,16 +48,16 @@ func (e *workerExecutor) SendHeartbeat(ctx context.Context) error {
 	return e.worker.SendHeartbeat(ctx)
 }
 
-func (e *workerExecutor) AddStreamToQueue(ctx context.Context, workerStreamID int64, config string, files []*pb.StreamFile) error {
-	return e.worker.AddStreamToQueue(ctx, workerStreamID, config, files)
+func (e *workerExecutor) AddFlowToQueue(ctx context.Context, workerFlowID int64, config string, files []*pb.FlowFile) error {
+	return e.worker.AddFlowToQueue(ctx, workerFlowID, config, files)
 }
 
-func (e *workerExecutor) FetchWorkerStreamStatus(ctx context.Context, workerStreamID int64) (*persistence.WorkerStreamStatus, error) {
-	return e.worker.FetchWorkerStreamStatus(ctx, workerStreamID)
+func (e *workerExecutor) FetchWorkerFlowStatus(ctx context.Context, workerFlowID int64) (*persistence.WorkerFlowStatus, error) {
+	return e.worker.FetchWorkerFlowStatus(ctx, workerFlowID)
 }
 
-func (e *workerExecutor) DeleteWorkerStream(ctx context.Context, workerStreamID int64) error {
-	return e.worker.DeleteWorkerStream(ctx, workerStreamID)
+func (e *workerExecutor) DeleteWorkerFlow(ctx context.Context, workerFlowID int64) error {
+	return e.worker.DeleteWorkerFlow(ctx, workerFlowID)
 }
 
 func (e *workerExecutor) ShipLogs(ctx context.Context) {
@@ -68,10 +68,10 @@ func (e *workerExecutor) ShipMetrics(ctx context.Context) {
 	e.worker.ShipMetrics(ctx)
 }
 
-func (e *workerExecutor) ConsumeStreamQueue(ctx context.Context) {
-	e.worker.ConsumeStreamQueue(ctx)
+func (e *workerExecutor) ConsumeFlowQueue(ctx context.Context) {
+	e.worker.ConsumeFlowQueue(ctx)
 }
 
-func (e *workerExecutor) IngestData(ctx context.Context, workerStreamID int64, method, path, contentType string, payload []byte) (*IngestResult, error) {
-	return e.worker.IngestData(ctx, workerStreamID, method, path, contentType, payload)
+func (e *workerExecutor) IngestData(ctx context.Context, workerFlowID int64, method, path, contentType string, payload []byte) (*IngestResult, error) {
+	return e.worker.IngestData(ctx, workerFlowID, method, path, contentType, payload)
 }

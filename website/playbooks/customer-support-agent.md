@@ -4,12 +4,12 @@ description: Build an AI customer support agent with three MCP tools that look u
 
 # Customer Support Agent
 
-In this playbook you will build three MCP tools that work together as a customer support agent. An AI assistant like Claude will be able to look up orders, find customer history, and draft support replies, all through Airtruct streams.
+In this playbook you will build three MCP tools that work together as a customer support agent. An AI assistant like Claude will be able to look up orders, find customer history, and draft support replies, all through Airtruct flows.
 
 By the end you will have:
 
 - A SQLite database with sample order data
-- Three MCP tool streams that the AI can call
+- Three MCP tool flows that the AI can call
 - A working setup where Claude (or any MCP client) handles support questions on its own
 
 ## Prerequisites
@@ -71,7 +71,7 @@ This gives you five orders across three customers with different statuses: shipp
 
 This tool lets the AI look up a specific order by its ID.
 
-Open the Airtruct UI, click **Create New Stream**, and give it a name like `lookup-order`.
+Open the Airtruct UI, click **Create New Flow**, and give it a name like `lookup-order`.
 
 ### Input: select MCP Tool
 
@@ -96,13 +96,13 @@ Open the Airtruct UI, click **Create New Stream**, and give it a name like `look
 
 Automatically set to **Sync Response**.
 
-Click **Save** and then **Start** the stream.
+Click **Save** and then **Start** the flow.
 
 ## 3. Create the "lookup_customer" Tool
 
 This tool lets the AI find all orders for a given customer email. Useful when the customer does not have their order ID handy.
 
-Create another stream called `lookup-customer`.
+Create another flow called `lookup-customer`.
 
 ### Input: select MCP Tool
 
@@ -127,13 +127,13 @@ Create another stream called `lookup-customer`.
 
 Automatically set to **Sync Response**.
 
-Click **Save** and then **Start** the stream.
+Click **Save** and then **Start** the flow.
 
 ## 4. Create the "draft_support_reply" Tool
 
 This tool takes what the AI learned from the other tools and generates a professional support reply.
 
-Create a stream called `draft-support-reply`.
+Create a flow called `draft-support-reply`.
 
 ### Input: select MCP Tool
 
@@ -159,7 +159,7 @@ Create a stream called `draft-support-reply`.
 
 Automatically set to **Sync Response**.
 
-Click **Save** and then **Start** the stream.
+Click **Save** and then **Start** the flow.
 
 ## 5. Connect Your AI Client
 
@@ -237,15 +237,15 @@ INSERT INTO orders VALUES
 SQL
 ```
 
-The MCP tools query the database on every call, so new data is available immediately. No need to restart any streams.
+The MCP tools query the database on every call, so new data is available immediately. No need to restart any flows.
 
 ## What is Happening Under the Hood
 
 When the AI calls one of your tools, here is the flow:
 
 1. The AI client sends a tool call to the Airtruct MCP endpoint at `/mcp`
-2. Airtruct routes the call to the matching stream based on the tool name
-3. The stream's processor runs (SQL query or AI generation)
+2. Airtruct routes the call to the matching flow based on the tool name
+3. The flow's processor runs (SQL query or AI generation)
 4. The result goes back through Sync Response to the AI client
 
-Each tool is just a regular Airtruct stream with an MCP Tool input. You can add more processors, change the database, or swap in a different AI provider without touching the client configuration.
+Each tool is just a regular Airtruct flow with an MCP Tool input. You can add more processors, change the database, or swap in a different AI provider without touching the client configuration.

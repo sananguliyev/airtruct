@@ -17,7 +17,7 @@ Each worker is an independent process that registers with the coordinator. To ad
 - Use a unique `-grpc-port` for each worker on the same host.
 - Set `-discovery-uri` to the coordinator's gRPC address (default `localhost:50000`).
 
-Workers automatically register on startup and begin accepting stream assignments.
+Workers automatically register on startup and begin accepting flow assignments.
 
 ## Multi-Host Deployment
 
@@ -28,11 +28,11 @@ Run workers on separate machines by pointing them to the coordinator's address:
 ./airtruct -role worker -grpc-port 50001 -discovery-uri coordinator-host:50000
 ```
 
-The coordinator tracks all workers and distributes streams across them.
+The coordinator tracks all workers and distributes flows across them.
 
 ## Worker Health
 
-Workers send periodic heartbeats to the coordinator. If a worker stops sending heartbeats, the coordinator marks it as unhealthy and can reassign its streams.
+Workers send periodic heartbeats to the coordinator. If a worker stops sending heartbeats, the coordinator marks it as unhealthy and can reassign its flows.
 
 ## Scaling Strategies
 
@@ -44,8 +44,8 @@ Increase the resources (CPU, memory) of individual worker machines. Airtruct is 
 
 Add more worker processes. This is the recommended approach for handling increased workload:
 
-- Each worker can run multiple streams.
-- The coordinator balances stream assignments across available workers.
+- Each worker can run multiple flows.
+- The coordinator balances flow assignments across available workers.
 - Workers can be added or removed without downtime.
 
 ### Kubernetes

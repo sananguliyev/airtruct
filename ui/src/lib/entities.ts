@@ -3,7 +3,7 @@ export type Worker = {
   status: string;
   address: string;
   lastHeartbeat: string;
-  activeStreams: number;
+  activeFlows: number;
   createdAt: string;
 };
 
@@ -12,7 +12,7 @@ export type Secret = {
   createdAt: string;
 };
 
-export type Stream = {
+export type Flow = {
   id: string;
   parentID?: string;
   name: string;
@@ -33,7 +33,7 @@ export type Stream = {
   is_http_server: boolean;
   is_mcp_tool: boolean;
   is_ready: boolean;
-  flow_state?: string;
+  builder_state?: string;
 
   // Legacy fields for backward compatibility
   inputLabel?: string;
@@ -45,7 +45,7 @@ export type Stream = {
   isHttpServer?: boolean;
 };
 
-export type StreamProcessor = {
+export type FlowProcessor = {
   processorID: number;
   label: string;
 };
@@ -87,10 +87,10 @@ export type FileEntry = {
   updatedAt?: string;
 };
 
-export type StreamEvent = {
+export type FlowEvent = {
   id: number;
-  worker_stream_id: number;
-  flow_id: string;
+  worker_flow_id: number;
+  trace_id: string;
   section: string;
   component_label: string;
   type: string;
@@ -99,7 +99,7 @@ export type StreamEvent = {
   created_at: string;
 };
 
-export type StreamStatusCount = {
+export type FlowStatusCount = {
   status: string;
   count: number;
 };
@@ -117,8 +117,8 @@ export type TimeSeriesPoint = {
 };
 
 export type Analytics = {
-  total_streams: number;
-  streams_by_status: StreamStatusCount[];
+  total_flows: number;
+  flows_by_status: FlowStatusCount[];
   total_input_events: number;
   total_output_events: number;
   total_processor_errors: number;

@@ -328,8 +328,8 @@ export default function SecretsPage() {
               "?
               <br />
               <br />
-              <strong>Warning:</strong> Please ensure that no streams are using
-              this secret, otherwise streams that depend on this secret might
+              <strong>Warning:</strong> Please ensure that no flows are using
+              this secret, otherwise flows that depend on this secret might
               not work as expected.
               <br />
               <br />

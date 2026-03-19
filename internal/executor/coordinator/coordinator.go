@@ -11,52 +11,52 @@ import (
 )
 
 type CoordinatorExecutor interface {
-	CheckWorkersAndAssignStreams(context.Context) error
+	CheckWorkersAndAssignFlows(context.Context) error
 	CheckWorkerHeartbeats(context.Context) error
-	CheckStreamLeases(context.Context) error
+	CheckFlowLeases(context.Context) error
 	ForwardRequestToWorker(context.Context, *http.Request) (int32, []byte, error)
 }
 
 type coordinatorExecutor struct {
-	streamAssigner   StreamAssigner
+	flowAssigner   FlowAssigner
 	requestForwarder RequestForwarder
-	streamWorkerMap  StreamWorkerMap
-	workerStreamRepo persistence.WorkerStreamRepository
+	flowWorkerMap  FlowWorkerMap
+	workerFlowRepo persistence.WorkerFlowRepository
 	workerRepo       persistence.WorkerRepository
 }
 
 func NewCoordinatorExecutor(
 	workerRepo persistence.WorkerRepository,
-	streamRepo persistence.StreamRepository,
-	streamCacheRepo persistence.StreamCacheRepository,
-	streamRateLimitRepo persistence.StreamRateLimitRepository,
-	workerStreamRepo persistence.WorkerStreamRepository,
+	flowRepo persistence.FlowRepository,
+	flowCacheRepo persistence.FlowCacheRepository,
+	flowRateLimitRepo persistence.FlowRateLimitRepository,
+	workerFlowRepo persistence.WorkerFlowRepository,
 	fileRepo persistence.FileRepository,
-	streamWorkerMap StreamWorkerMap,
+	flowWorkerMap FlowWorkerMap,
 ) CoordinatorExecutor {
 	clientManager := NewGRPCClientManager()
-	workerManager := NewWorkerManager(workerRepo, workerStreamRepo, clientManager)
-	configBuilder := NewConfigBuilder(streamCacheRepo, streamRateLimitRepo, fileRepo)
+	workerManager := NewWorkerManager(workerRepo, workerFlowRepo, clientManager)
+	configBuilder := NewConfigBuilder(flowCacheRepo, flowRateLimitRepo, fileRepo)
 
-	err := initializeStreamWorkerMapping(workerStreamRepo, streamWorkerMap)
+	err := initializeFlowWorkerMapping(workerFlowRepo, flowWorkerMap)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to initialize stream-worker mapping")
+		log.Error().Err(err).Msg("Failed to initialize flow-worker mapping")
 	}
 
-	streamAssigner := NewStreamAssigner(workerManager, streamRepo, workerStreamRepo, configBuilder, streamWorkerMap)
-	requestForwarder := NewRequestForwarder(workerManager, streamWorkerMap, streamRepo)
+	flowAssigner := NewFlowAssigner(workerManager, flowRepo, workerFlowRepo, configBuilder, flowWorkerMap)
+	requestForwarder := NewRequestForwarder(workerManager, flowWorkerMap, flowRepo)
 
 	return &coordinatorExecutor{
-		streamAssigner:   streamAssigner,
+		flowAssigner:   flowAssigner,
 		requestForwarder: requestForwarder,
-		streamWorkerMap:  streamWorkerMap,
-		workerStreamRepo: workerStreamRepo,
+		flowWorkerMap:  flowWorkerMap,
+		workerFlowRepo: workerFlowRepo,
 		workerRepo:       workerRepo,
 	}
 }
 
-func (e *coordinatorExecutor) CheckWorkersAndAssignStreams(ctx context.Context) error {
-	return e.streamAssigner.AssignStreams(ctx)
+func (e *coordinatorExecutor) CheckWorkersAndAssignFlows(ctx context.Context) error {
+	return e.flowAssigner.AssignFlows(ctx)
 }
 
 func (e *coordinatorExecutor) CheckWorkerHeartbeats(ctx context.Context) error {
@@ -83,12 +83,12 @@ func (e *coordinatorExecutor) CheckWorkerHeartbeats(ctx context.Context) error {
 			continue
 		}
 
-		err = e.workerStreamRepo.StopAllRunningAndWaitingByWorkerID(worker.ID)
+		err = e.workerFlowRepo.StopAllRunningAndWaitingByWorkerID(worker.ID)
 		if err != nil {
 			log.Error().
 				Err(err).
 				Str("worker_id", worker.ID).
-				Msg("Failed to stop worker streams")
+				Msg("Failed to stop worker flows")
 			continue
 		}
 
@@ -100,39 +100,39 @@ func (e *coordinatorExecutor) CheckWorkerHeartbeats(ctx context.Context) error {
 	return nil
 }
 
-func (e *coordinatorExecutor) CheckStreamLeases(ctx context.Context) error {
-	expiredStreams, err := e.workerStreamRepo.FindRunningWithExpiredLeases()
+func (e *coordinatorExecutor) CheckFlowLeases(ctx context.Context) error {
+	expiredFlows, err := e.workerFlowRepo.FindRunningWithExpiredLeases()
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to fetch streams with expired leases")
+		log.Error().Err(err).Msg("Failed to fetch flows with expired leases")
 		return err
 	}
 
-	for _, workerStream := range expiredStreams {
-		timeSinceExpiry := time.Since(workerStream.LeaseExpiresAt)
+	for _, workerFlow := range expiredFlows {
+		timeSinceExpiry := time.Since(workerFlow.LeaseExpiresAt)
 
 		log.Warn().
-			Str("worker_id", workerStream.WorkerID).
-			Int64("stream_id", workerStream.StreamID).
-			Int64("worker_stream_id", workerStream.ID).
+			Str("worker_id", workerFlow.WorkerID).
+			Int64("flow_id", workerFlow.FlowID).
+			Int64("worker_flow_id", workerFlow.ID).
 			Dur("time_since_expiry", timeSinceExpiry).
-			Msg("Stream lease expired - marking as stopped")
+			Msg("Flow lease expired - marking as stopped")
 
-		err := e.workerStreamRepo.UpdateStatus(
-			workerStream.ID,
-			persistence.WorkerStreamStatusStopped,
+		err := e.workerFlowRepo.UpdateStatus(
+			workerFlow.ID,
+			persistence.WorkerFlowStatusStopped,
 		)
 		if err != nil {
 			log.Error().
 				Err(err).
-				Int64("worker_stream_id", workerStream.ID).
-				Msg("Failed to mark expired stream as stopped")
+				Int64("worker_flow_id", workerFlow.ID).
+				Msg("Failed to mark expired flow as stopped")
 			continue
 		}
 
 		log.Info().
-			Str("worker_id", workerStream.WorkerID).
-			Int64("stream_id", workerStream.StreamID).
-			Msg("Expired stream marked as stopped - available for reassignment")
+			Str("worker_id", workerFlow.WorkerID).
+			Int64("flow_id", workerFlow.FlowID).
+			Msg("Expired flow marked as stopped - available for reassignment")
 	}
 
 	return nil
@@ -142,20 +142,20 @@ func (e *coordinatorExecutor) ForwardRequestToWorker(ctx context.Context, r *htt
 	return e.requestForwarder.ForwardRequestToWorker(ctx, r)
 }
 
-func initializeStreamWorkerMapping(workerStreamRepo persistence.WorkerStreamRepository, streamWorkerMap StreamWorkerMap) error {
-	workerStreams, err := workerStreamRepo.ListAllByStatuses(persistence.WorkerStreamStatusRunning)
+func initializeFlowWorkerMapping(workerFlowRepo persistence.WorkerFlowRepository, flowWorkerMap FlowWorkerMap) error {
+	workerFlows, err := workerFlowRepo.ListAllByStatuses(persistence.WorkerFlowStatusRunning)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to list all running worker streams, suggesting to restart the coordinator, otherwise HTTP streams will not be reachable")
+		log.Error().Err(err).Msg("Failed to list all running worker flows, suggesting to restart the coordinator, otherwise HTTP streams will not be reachable")
 		return err
 	}
 
-	for _, workerStream := range workerStreams {
-		streamWorkerMap.SetStreamWorker(workerStream.StreamID, workerStream.Worker.ID, workerStream.ID)
-		if workerStream.Stream.ParentID != nil {
-			streamWorkerMap.SetStreamWorker(*workerStream.Stream.ParentID, workerStream.Worker.ID, workerStream.ID)
+	for _, workerFlow := range workerFlows {
+		flowWorkerMap.SetFlowWorker(workerFlow.FlowID, workerFlow.Worker.ID, workerFlow.ID)
+		if workerFlow.Flow.ParentID != nil {
+			flowWorkerMap.SetFlowWorker(*workerFlow.Flow.ParentID, workerFlow.Worker.ID, workerFlow.ID)
 		}
 	}
 
-	log.Info().Int("running_worker_stream_count", len(workerStreams)).Msg("Loaded running worker streams")
+	log.Info().Int("running_worker_stream_count", len(workerFlows)).Msg("Loaded running worker flows")
 	return nil
 }

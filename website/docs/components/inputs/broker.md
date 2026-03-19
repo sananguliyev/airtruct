@@ -1,6 +1,6 @@
 # Broker
 
-Combines multiple inputs into a single stream. Useful for fan-in patterns.
+Combines multiple inputs into a single flow. Useful for fan-in patterns.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|

@@ -19,9 +19,9 @@ const (
 
 type Event struct {
 	ID             int64           `json:"id" gorm:"primaryKey"`
-	WorkerStreamID int64           `json:"worker_stream_id" gorm:"not null"`
-	StreamID       int64           `json:"stream_id"`
-	FlowID         string          `json:"flow_id"`
+	WorkerFlowID int64           `json:"worker_flow_id" gorm:"not null"`
+	FlowID       int64           `json:"flow_id"`
+	TraceID      string          `json:"trace_id"`
 	Section        string          `json:"section" gorm:"not null"`
 	ComponentLabel string          `json:"component_label"`
 	Type           EventType       `json:"type" gorm:"not null"`
@@ -29,13 +29,13 @@ type Event struct {
 	Meta           json.RawMessage `json:"meta" gorm:"not null"`
 	CreatedAt      time.Time       `json:"created_at"`
 
-	Worker WorkerStream `json:"worker" gorm:"foreignKey:WorkerStreamID"`
+	Worker WorkerFlow `json:"worker" gorm:"foreignKey:WorkerFlowID"`
 }
 
 type EventRepository interface {
 	AddEvent(event *Event) error
-	ListEventsByWorkerStream(workerID int64, preload bool) ([]*Event, error)
-	ListEventsByStreamIDs(streamIDs []int64, limit, offset int, startTime, endTime time.Time) ([]*Event, int64, error)
+	ListEventsByWorkerFlow(workerID int64, preload bool) ([]*Event, error)
+	ListEventsByFlowIDs(flowIDs []int64, limit, offset int, startTime, endTime time.Time) ([]*Event, int64, error)
 }
 
 type eventRepository struct {
@@ -51,11 +51,11 @@ func (r *eventRepository) AddEvent(event *Event) error {
 	return r.db.Create(event).Error
 }
 
-func (r *eventRepository) ListEventsByWorkerStream(workerStreamID int64, preload bool) ([]*Event, error) {
+func (r *eventRepository) ListEventsByWorkerFlow(workerFlowID int64, preload bool) ([]*Event, error) {
 	var events []*Event
-	query := r.db.Where("worker_stream_id = ?", workerStreamID)
+	query := r.db.Where("worker_flow_id = ?", workerFlowID)
 	if preload {
-		query = query.Preload("WorkerStream")
+		query = query.Preload("WorkerFlow")
 	}
 	err := query.Find(&events).Error
 	if err != nil {
@@ -64,12 +64,12 @@ func (r *eventRepository) ListEventsByWorkerStream(workerStreamID int64, preload
 	return events, nil
 }
 
-func (r *eventRepository) ListEventsByStreamIDs(streamIDs []int64, limit, offset int, startTime, endTime time.Time) ([]*Event, int64, error) {
+func (r *eventRepository) ListEventsByFlowIDs(flowIDs []int64, limit, offset int, startTime, endTime time.Time) ([]*Event, int64, error) {
 	var events []*Event
 	var totalFlows int64
 
-	baseWhere := "stream_id IN ? AND flow_id != ''"
-	baseArgs := []any{streamIDs}
+	baseWhere := "flow_id IN ? AND trace_id != ''"
+	baseArgs := []any{flowIDs}
 
 	if !startTime.IsZero() {
 		baseWhere += " AND created_at >= ?"
@@ -80,42 +80,42 @@ func (r *eventRepository) ListEventsByStreamIDs(streamIDs []int64, limit, offset
 		baseArgs = append(baseArgs, endTime)
 	}
 
-	// Count distinct flow_ids for pagination
+	// Count distinct trace_ids for pagination
 	if err := r.db.Model(&Event{}).
 		Where(baseWhere, baseArgs...).
-		Distinct("flow_id").
+		Distinct("trace_id").
 		Count(&totalFlows).Error; err != nil {
 		return nil, 0, err
 	}
 
-	// Find the N most recent flow_ids (by their latest event timestamp)
+	// Find the N most recent trace_ids (by their latest event timestamp)
 	type flowResult struct {
-		FlowID string
+		TraceID string
 	}
-	var flowIDs []flowResult
+	var traceIDs []flowResult
 	if err := r.db.Model(&Event{}).
-		Select("flow_id, MAX(created_at) as max_ts").
+		Select("trace_id, MAX(created_at) as max_ts").
 		Where(baseWhere, baseArgs...).
-		Group("flow_id").
+		Group("trace_id").
 		Order("max_ts DESC").
 		Limit(limit).
 		Offset(offset).
-		Find(&flowIDs).Error; err != nil {
+		Find(&traceIDs).Error; err != nil {
 		return nil, 0, err
 	}
 
-	if len(flowIDs) == 0 {
+	if len(traceIDs) == 0 {
 		return events, totalFlows, nil
 	}
 
-	// Fetch ALL events for the selected flow_ids
-	ids := make([]string, len(flowIDs))
-	for i, f := range flowIDs {
-		ids[i] = f.FlowID
+	// Fetch ALL events for the selected trace_ids
+	ids := make([]string, len(traceIDs))
+	for i, f := range traceIDs {
+		ids[i] = f.TraceID
 	}
 
 	if err := r.db.
-		Where("flow_id IN ?", ids).
+		Where("trace_id IN ?", ids).
 		Order("created_at DESC").
 		Find(&events).Error; err != nil {
 		return nil, 0, err

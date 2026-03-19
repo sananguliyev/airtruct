@@ -2,13 +2,13 @@
 sidebar_position: 5
 ---
 
-# Stream Validation
+# Flow Validation
 
-Airtruct validates stream configurations before saving them as **active**. This prevents broken streams from being dispatched to workers, and gives you immediate, per-component error feedback so you can fix problems before they reach production.
+Airtruct validates flow configurations before saving them as **active**. This prevents broken flows from being dispatched to workers, and gives you immediate, per-component error feedback so you can fix problems before they reach production.
 
 ## How Validation Works
 
-When you save a stream with status **active**, the coordinator validates every component in the pipeline:
+When you save a flow with status **active**, the coordinator validates every component in the pipeline:
 
 1. **Input** — checked against Bento's component schema (field names, types, required fields).
 2. **Processors** — each processor is checked individually:
@@ -39,23 +39,23 @@ Each line identifies:
 If the configuration is invalid and you attempt to save with status **active**, the save is **rejected** — nothing is written to the database. The full validation error is returned so you can correct it.
 
 :::tip
-Use the **Validate** button in the stream builder to check your configuration at any time before saving. This runs the same validation without attempting to save. To also verify that your processors produce the expected output, see [Testing Streams](./testing-streams).
+Use the **Validate** button in the flow builder to check your configuration at any time before saving. This runs the same validation without attempting to save. To also verify that your processors produce the expected output, see [Testing Flows](./testing-flows).
 :::
 
 ## Saving an Invalid Configuration
 
-If you want to save a stream that is not yet fully configured or has known issues, set the status to **paused**. A paused stream is saved to the database but is never dispatched to a worker, so it cannot cause runtime failures.
+If you want to save a flow that is not yet fully configured or has known issues, set the status to **paused**. A paused flow is saved to the database but is never dispatched to a worker, so it cannot cause runtime failures.
 
-Once you have fixed the configuration, change the status to **active** and save again to put the stream back into the work queue.
+Once you have fixed the configuration, change the status to **active** and save again to put the flow back into the work queue.
 
 ## Validate Button
 
-The stream builder includes a **Validate** button in the toolbar. Clicking it sends the current configuration to the coordinator for validation without saving. Results appear inline:
+The flow builder includes a **Validate** button in the toolbar. Clicking it sends the current configuration to the coordinator for validation without saving. Results appear inline:
 
 - A green confirmation message if all components pass.
 - A red error panel listing every component-level error if any fail.
 
-The result is cleared automatically whenever you change the stream name, status, or any node configuration.
+The result is cleared automatically whenever you change the flow name, status, or any node configuration.
 
 ## What Is and Is Not Validated
 
@@ -66,4 +66,4 @@ The result is cleared automatically whenever you change the stream name, status,
 | Bloblang syntax errors in mapping processors | File references existing on disk |
 | Invalid field types | Permission errors on external systems |
 
-Runtime errors that only manifest when a worker executes the stream — such as a Kafka broker being unreachable — are captured as stream events and surfaced in the stream detail view.
+Runtime errors that only manifest when a worker executes the flow — such as a Kafka broker being unreachable — are captured as flow events and surfaced in the flow detail view.

@@ -29,14 +29,14 @@ type toolConfig struct {
 type MCPHandler struct {
 	mcpServer   *server.MCPServer
 	httpHandler *server.StreamableHTTPServer
-	streamRepo  persistence.StreamRepository
+	flowRepo  persistence.FlowRepository
 	forwarder   RequestForwarder
 	mu          sync.RWMutex
-	// tool name -> stream ID used for forwarding via /ingest/{streamID}
-	toolStreamMap map[string]int64
+	// tool name -> stream ID used for forwarding via /ingest/{flowID}
+	toolFlowMap map[string]int64
 }
 
-func NewMCPHandler(streamRepo persistence.StreamRepository, forwarder RequestForwarder) *MCPHandler {
+func NewMCPHandler(flowRepo persistence.FlowRepository, forwarder RequestForwarder) *MCPHandler {
 	mcpServer := server.NewMCPServer(
 		"airtruct",
 		"0.1.0",
@@ -48,9 +48,9 @@ func NewMCPHandler(streamRepo persistence.StreamRepository, forwarder RequestFor
 	h := &MCPHandler{
 		mcpServer:     mcpServer,
 		httpHandler:   httpHandler,
-		streamRepo:    streamRepo,
+		flowRepo:    flowRepo,
 		forwarder:     forwarder,
-		toolStreamMap: make(map[string]int64),
+		toolFlowMap: make(map[string]int64),
 	}
 
 	h.SyncTools()
@@ -62,51 +62,51 @@ func (h *MCPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *MCPHandler) SyncTools() {
-	streams, err := h.streamRepo.ListAllByStatuses(persistence.StreamStatusActive)
+	flows, err := h.flowRepo.ListAllByStatuses(persistence.FlowStatusActive)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to list streams for MCP tool sync")
+		log.Error().Err(err).Msg("Failed to list flows for MCP tool sync")
 		return
 	}
 
 	newToolMap := make(map[string]int64)
 	var newTools []server.ServerTool
 
-	for _, stream := range streams {
-		if stream.InputComponent != "mcp_tool" {
+	for _, flow := range flows {
+		if flow.InputComponent != "mcp_tool" {
 			continue
 		}
 
-		cfg, err := parseToolConfig(stream.InputConfig)
+		cfg, err := parseToolConfig(flow.InputConfig)
 		if err != nil {
-			log.Warn().Err(err).Int64("stream_id", stream.ID).Msg("Failed to parse MCP tool config")
+			log.Warn().Err(err).Int64("flow_id", flow.ID).Msg("Failed to parse MCP tool config")
 			continue
 		}
 
 		if cfg.Name == "" {
-			log.Warn().Int64("stream_id", stream.ID).Msg("MCP stream missing tool name")
+			log.Warn().Int64("flow_id", flow.ID).Msg("MCP flow missing tool name")
 			continue
 		}
 
 		if _, exists := newToolMap[cfg.Name]; exists {
-			log.Warn().Str("tool", cfg.Name).Int64("stream_id", stream.ID).Msg("Duplicate MCP tool name, skipping")
+			log.Warn().Str("tool", cfg.Name).Int64("flow_id", flow.ID).Msg("Duplicate MCP tool name, skipping")
 			continue
 		}
 
-		streamID := stream.ID
-		if stream.ParentID != nil {
-			streamID = *stream.ParentID
+		flowID := flow.ID
+		if flow.ParentID != nil {
+			flowID = *flow.ParentID
 		}
-		newToolMap[cfg.Name] = streamID
+		newToolMap[cfg.Name] = flowID
 
 		tool := mcp.NewToolWithRawSchema(cfg.Name, cfg.Description, cfg.InputSchema)
 		newTools = append(newTools, server.ServerTool{
 			Tool:    tool,
-			Handler: h.createToolHandler(streamID),
+			Handler: h.createToolHandler(flowID),
 		})
 	}
 
 	h.mu.Lock()
-	h.toolStreamMap = newToolMap
+	h.toolFlowMap = newToolMap
 	h.mu.Unlock()
 
 	h.mcpServer.SetTools(newTools...)
@@ -114,7 +114,7 @@ func (h *MCPHandler) SyncTools() {
 	log.Debug().Int("tool_count", len(newTools)).Msg("MCP tools synced")
 }
 
-func (h *MCPHandler) createToolHandler(streamID int64) server.ToolHandlerFunc {
+func (h *MCPHandler) createToolHandler(flowID int64) server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		args := request.GetArguments()
 
@@ -123,7 +123,7 @@ func (h *MCPHandler) createToolHandler(streamID int64) server.ToolHandlerFunc {
 			return mcp.NewToolResultError(fmt.Sprintf("failed to marshal arguments: %v", err)), nil
 		}
 
-		path := fmt.Sprintf("/ingest/%d/", streamID)
+		path := fmt.Sprintf("/ingest/%d/", flowID)
 		req, err := http.NewRequestWithContext(ctx, http.MethodPost, path, bytes.NewReader(payload))
 		if err != nil {
 			return mcp.NewToolResultError(fmt.Sprintf("failed to create request: %v", err)), nil

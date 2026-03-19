@@ -35,22 +35,22 @@ var (
 	_ = sort.Sort
 )
 
-// Validate checks the field values on StreamFile with the rules defined in the
+// Validate checks the field values on FlowFile with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
-func (m *StreamFile) Validate() error {
+func (m *FlowFile) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on StreamFile with the rules defined in
+// ValidateAll checks the field values on FlowFile with the rules defined in
 // the proto definition for this message. If any rules are violated, the
-// result is a list of violation errors wrapped in StreamFileMultiError, or
-// nil if none found.
-func (m *StreamFile) ValidateAll() error {
+// result is a list of violation errors wrapped in FlowFileMultiError, or nil
+// if none found.
+func (m *FlowFile) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *StreamFile) validate(all bool) error {
+func (m *FlowFile) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -62,18 +62,18 @@ func (m *StreamFile) validate(all bool) error {
 	// no validation rules for Content
 
 	if len(errors) > 0 {
-		return StreamFileMultiError(errors)
+		return FlowFileMultiError(errors)
 	}
 
 	return nil
 }
 
-// StreamFileMultiError is an error wrapping multiple validation errors
-// returned by StreamFile.ValidateAll() if the designated constraints aren't met.
-type StreamFileMultiError []error
+// FlowFileMultiError is an error wrapping multiple validation errors returned
+// by FlowFile.ValidateAll() if the designated constraints aren't met.
+type FlowFileMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m StreamFileMultiError) Error() string {
+func (m FlowFileMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -82,11 +82,11 @@ func (m StreamFileMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m StreamFileMultiError) AllErrors() []error { return m }
+func (m FlowFileMultiError) AllErrors() []error { return m }
 
-// StreamFileValidationError is the validation error returned by
-// StreamFile.Validate if the designated constraints aren't met.
-type StreamFileValidationError struct {
+// FlowFileValidationError is the validation error returned by
+// FlowFile.Validate if the designated constraints aren't met.
+type FlowFileValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -94,22 +94,22 @@ type StreamFileValidationError struct {
 }
 
 // Field function returns field value.
-func (e StreamFileValidationError) Field() string { return e.field }
+func (e FlowFileValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e StreamFileValidationError) Reason() string { return e.reason }
+func (e FlowFileValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e StreamFileValidationError) Cause() error { return e.cause }
+func (e FlowFileValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e StreamFileValidationError) Key() bool { return e.key }
+func (e FlowFileValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e StreamFileValidationError) ErrorName() string { return "StreamFileValidationError" }
+func (e FlowFileValidationError) ErrorName() string { return "FlowFileValidationError" }
 
 // Error satisfies the builtin error interface
-func (e StreamFileValidationError) Error() string {
+func (e FlowFileValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -121,14 +121,14 @@ func (e StreamFileValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sStreamFile.%s: %s%s",
+		"invalid %sFlowFile.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = StreamFileValidationError{}
+var _ error = FlowFileValidationError{}
 
 var _ interface {
 	Field() string
@@ -136,31 +136,31 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = StreamFileValidationError{}
+} = FlowFileValidationError{}
 
-// Validate checks the field values on AssignStreamRequest with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *AssignStreamRequest) Validate() error {
+// Validate checks the field values on AssignFlowRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *AssignFlowRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on AssignStreamRequest with the rules
+// ValidateAll checks the field values on AssignFlowRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// AssignStreamRequestMultiError, or nil if none found.
-func (m *AssignStreamRequest) ValidateAll() error {
+// AssignFlowRequestMultiError, or nil if none found.
+func (m *AssignFlowRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *AssignStreamRequest) validate(all bool) error {
+func (m *AssignFlowRequest) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
 	var errors []error
 
-	// no validation rules for WorkerStreamId
+	// no validation rules for WorkerFlowId
 
 	// no validation rules for Config
 
@@ -171,7 +171,7 @@ func (m *AssignStreamRequest) validate(all bool) error {
 			switch v := interface{}(item).(type) {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, AssignStreamRequestValidationError{
+					errors = append(errors, AssignFlowRequestValidationError{
 						field:  fmt.Sprintf("Files[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -179,7 +179,7 @@ func (m *AssignStreamRequest) validate(all bool) error {
 				}
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
-					errors = append(errors, AssignStreamRequestValidationError{
+					errors = append(errors, AssignFlowRequestValidationError{
 						field:  fmt.Sprintf("Files[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -188,7 +188,7 @@ func (m *AssignStreamRequest) validate(all bool) error {
 			}
 		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
-				return AssignStreamRequestValidationError{
+				return AssignFlowRequestValidationError{
 					field:  fmt.Sprintf("Files[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -199,19 +199,19 @@ func (m *AssignStreamRequest) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return AssignStreamRequestMultiError(errors)
+		return AssignFlowRequestMultiError(errors)
 	}
 
 	return nil
 }
 
-// AssignStreamRequestMultiError is an error wrapping multiple validation
-// errors returned by AssignStreamRequest.ValidateAll() if the designated
-// constraints aren't met.
-type AssignStreamRequestMultiError []error
+// AssignFlowRequestMultiError is an error wrapping multiple validation errors
+// returned by AssignFlowRequest.ValidateAll() if the designated constraints
+// aren't met.
+type AssignFlowRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m AssignStreamRequestMultiError) Error() string {
+func (m AssignFlowRequestMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -220,11 +220,11 @@ func (m AssignStreamRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m AssignStreamRequestMultiError) AllErrors() []error { return m }
+func (m AssignFlowRequestMultiError) AllErrors() []error { return m }
 
-// AssignStreamRequestValidationError is the validation error returned by
-// AssignStreamRequest.Validate if the designated constraints aren't met.
-type AssignStreamRequestValidationError struct {
+// AssignFlowRequestValidationError is the validation error returned by
+// AssignFlowRequest.Validate if the designated constraints aren't met.
+type AssignFlowRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -232,24 +232,24 @@ type AssignStreamRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e AssignStreamRequestValidationError) Field() string { return e.field }
+func (e AssignFlowRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e AssignStreamRequestValidationError) Reason() string { return e.reason }
+func (e AssignFlowRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e AssignStreamRequestValidationError) Cause() error { return e.cause }
+func (e AssignFlowRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e AssignStreamRequestValidationError) Key() bool { return e.key }
+func (e AssignFlowRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e AssignStreamRequestValidationError) ErrorName() string {
-	return "AssignStreamRequestValidationError"
+func (e AssignFlowRequestValidationError) ErrorName() string {
+	return "AssignFlowRequestValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e AssignStreamRequestValidationError) Error() string {
+func (e AssignFlowRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -261,14 +261,14 @@ func (e AssignStreamRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sAssignStreamRequest.%s: %s%s",
+		"invalid %sAssignFlowRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = AssignStreamRequestValidationError{}
+var _ error = AssignFlowRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -276,46 +276,46 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = AssignStreamRequestValidationError{}
+} = AssignFlowRequestValidationError{}
 
-// Validate checks the field values on FetchStreamRequest with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *FetchStreamRequest) Validate() error {
+// Validate checks the field values on FetchFlowRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *FetchFlowRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on FetchStreamRequest with the rules
+// ValidateAll checks the field values on FetchFlowRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// FetchStreamRequestMultiError, or nil if none found.
-func (m *FetchStreamRequest) ValidateAll() error {
+// FetchFlowRequestMultiError, or nil if none found.
+func (m *FetchFlowRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *FetchStreamRequest) validate(all bool) error {
+func (m *FetchFlowRequest) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
 	var errors []error
 
-	// no validation rules for WorkerStreamId
+	// no validation rules for WorkerFlowId
 
 	if len(errors) > 0 {
-		return FetchStreamRequestMultiError(errors)
+		return FetchFlowRequestMultiError(errors)
 	}
 
 	return nil
 }
 
-// FetchStreamRequestMultiError is an error wrapping multiple validation errors
-// returned by FetchStreamRequest.ValidateAll() if the designated constraints
+// FetchFlowRequestMultiError is an error wrapping multiple validation errors
+// returned by FetchFlowRequest.ValidateAll() if the designated constraints
 // aren't met.
-type FetchStreamRequestMultiError []error
+type FetchFlowRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m FetchStreamRequestMultiError) Error() string {
+func (m FetchFlowRequestMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -324,11 +324,11 @@ func (m FetchStreamRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m FetchStreamRequestMultiError) AllErrors() []error { return m }
+func (m FetchFlowRequestMultiError) AllErrors() []error { return m }
 
-// FetchStreamRequestValidationError is the validation error returned by
-// FetchStreamRequest.Validate if the designated constraints aren't met.
-type FetchStreamRequestValidationError struct {
+// FetchFlowRequestValidationError is the validation error returned by
+// FetchFlowRequest.Validate if the designated constraints aren't met.
+type FetchFlowRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -336,24 +336,22 @@ type FetchStreamRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e FetchStreamRequestValidationError) Field() string { return e.field }
+func (e FetchFlowRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e FetchStreamRequestValidationError) Reason() string { return e.reason }
+func (e FetchFlowRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e FetchStreamRequestValidationError) Cause() error { return e.cause }
+func (e FetchFlowRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e FetchStreamRequestValidationError) Key() bool { return e.key }
+func (e FetchFlowRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e FetchStreamRequestValidationError) ErrorName() string {
-	return "FetchStreamRequestValidationError"
-}
+func (e FetchFlowRequestValidationError) ErrorName() string { return "FetchFlowRequestValidationError" }
 
 // Error satisfies the builtin error interface
-func (e FetchStreamRequestValidationError) Error() string {
+func (e FetchFlowRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -365,14 +363,14 @@ func (e FetchStreamRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sFetchStreamRequest.%s: %s%s",
+		"invalid %sFetchFlowRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = FetchStreamRequestValidationError{}
+var _ error = FetchFlowRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -380,24 +378,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = FetchStreamRequestValidationError{}
+} = FetchFlowRequestValidationError{}
 
-// Validate checks the field values on FetchStreamResponse with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *FetchStreamResponse) Validate() error {
+// Validate checks the field values on FetchFlowResponse with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *FetchFlowResponse) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on FetchStreamResponse with the rules
+// ValidateAll checks the field values on FetchFlowResponse with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// FetchStreamResponseMultiError, or nil if none found.
-func (m *FetchStreamResponse) ValidateAll() error {
+// FetchFlowResponseMultiError, or nil if none found.
+func (m *FetchFlowResponse) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *FetchStreamResponse) validate(all bool) error {
+func (m *FetchFlowResponse) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -407,19 +405,19 @@ func (m *FetchStreamResponse) validate(all bool) error {
 	// no validation rules for Status
 
 	if len(errors) > 0 {
-		return FetchStreamResponseMultiError(errors)
+		return FetchFlowResponseMultiError(errors)
 	}
 
 	return nil
 }
 
-// FetchStreamResponseMultiError is an error wrapping multiple validation
-// errors returned by FetchStreamResponse.ValidateAll() if the designated
-// constraints aren't met.
-type FetchStreamResponseMultiError []error
+// FetchFlowResponseMultiError is an error wrapping multiple validation errors
+// returned by FetchFlowResponse.ValidateAll() if the designated constraints
+// aren't met.
+type FetchFlowResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m FetchStreamResponseMultiError) Error() string {
+func (m FetchFlowResponseMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -428,11 +426,11 @@ func (m FetchStreamResponseMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m FetchStreamResponseMultiError) AllErrors() []error { return m }
+func (m FetchFlowResponseMultiError) AllErrors() []error { return m }
 
-// FetchStreamResponseValidationError is the validation error returned by
-// FetchStreamResponse.Validate if the designated constraints aren't met.
-type FetchStreamResponseValidationError struct {
+// FetchFlowResponseValidationError is the validation error returned by
+// FetchFlowResponse.Validate if the designated constraints aren't met.
+type FetchFlowResponseValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -440,24 +438,24 @@ type FetchStreamResponseValidationError struct {
 }
 
 // Field function returns field value.
-func (e FetchStreamResponseValidationError) Field() string { return e.field }
+func (e FetchFlowResponseValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e FetchStreamResponseValidationError) Reason() string { return e.reason }
+func (e FetchFlowResponseValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e FetchStreamResponseValidationError) Cause() error { return e.cause }
+func (e FetchFlowResponseValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e FetchStreamResponseValidationError) Key() bool { return e.key }
+func (e FetchFlowResponseValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e FetchStreamResponseValidationError) ErrorName() string {
-	return "FetchStreamResponseValidationError"
+func (e FetchFlowResponseValidationError) ErrorName() string {
+	return "FetchFlowResponseValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e FetchStreamResponseValidationError) Error() string {
+func (e FetchFlowResponseValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -469,14 +467,14 @@ func (e FetchStreamResponseValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sFetchStreamResponse.%s: %s%s",
+		"invalid %sFetchFlowResponse.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = FetchStreamResponseValidationError{}
+var _ error = FetchFlowResponseValidationError{}
 
 var _ interface {
 	Field() string
@@ -484,46 +482,46 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = FetchStreamResponseValidationError{}
+} = FetchFlowResponseValidationError{}
 
-// Validate checks the field values on CompleteStreamRequest with the rules
+// Validate checks the field values on CompleteFlowRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *CompleteStreamRequest) Validate() error {
+func (m *CompleteFlowRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on CompleteStreamRequest with the rules
+// ValidateAll checks the field values on CompleteFlowRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// CompleteStreamRequestMultiError, or nil if none found.
-func (m *CompleteStreamRequest) ValidateAll() error {
+// CompleteFlowRequestMultiError, or nil if none found.
+func (m *CompleteFlowRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *CompleteStreamRequest) validate(all bool) error {
+func (m *CompleteFlowRequest) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
 	var errors []error
 
-	// no validation rules for WorkerStreamId
+	// no validation rules for WorkerFlowId
 
 	if len(errors) > 0 {
-		return CompleteStreamRequestMultiError(errors)
+		return CompleteFlowRequestMultiError(errors)
 	}
 
 	return nil
 }
 
-// CompleteStreamRequestMultiError is an error wrapping multiple validation
-// errors returned by CompleteStreamRequest.ValidateAll() if the designated
+// CompleteFlowRequestMultiError is an error wrapping multiple validation
+// errors returned by CompleteFlowRequest.ValidateAll() if the designated
 // constraints aren't met.
-type CompleteStreamRequestMultiError []error
+type CompleteFlowRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m CompleteStreamRequestMultiError) Error() string {
+func (m CompleteFlowRequestMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -532,11 +530,11 @@ func (m CompleteStreamRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m CompleteStreamRequestMultiError) AllErrors() []error { return m }
+func (m CompleteFlowRequestMultiError) AllErrors() []error { return m }
 
-// CompleteStreamRequestValidationError is the validation error returned by
-// CompleteStreamRequest.Validate if the designated constraints aren't met.
-type CompleteStreamRequestValidationError struct {
+// CompleteFlowRequestValidationError is the validation error returned by
+// CompleteFlowRequest.Validate if the designated constraints aren't met.
+type CompleteFlowRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -544,24 +542,24 @@ type CompleteStreamRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e CompleteStreamRequestValidationError) Field() string { return e.field }
+func (e CompleteFlowRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e CompleteStreamRequestValidationError) Reason() string { return e.reason }
+func (e CompleteFlowRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e CompleteStreamRequestValidationError) Cause() error { return e.cause }
+func (e CompleteFlowRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e CompleteStreamRequestValidationError) Key() bool { return e.key }
+func (e CompleteFlowRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e CompleteStreamRequestValidationError) ErrorName() string {
-	return "CompleteStreamRequestValidationError"
+func (e CompleteFlowRequestValidationError) ErrorName() string {
+	return "CompleteFlowRequestValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e CompleteStreamRequestValidationError) Error() string {
+func (e CompleteFlowRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -573,14 +571,14 @@ func (e CompleteStreamRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sCompleteStreamRequest.%s: %s%s",
+		"invalid %sCompleteFlowRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = CompleteStreamRequestValidationError{}
+var _ error = CompleteFlowRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -588,7 +586,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = CompleteStreamRequestValidationError{}
+} = CompleteFlowRequestValidationError{}
 
 // Validate checks the field values on IngestRequest with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
@@ -612,7 +610,7 @@ func (m *IngestRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for WorkerStreamId
+	// no validation rules for WorkerFlowId
 
 	// no validation rules for Method
 

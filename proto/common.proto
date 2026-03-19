@@ -12,7 +12,7 @@ extend google.protobuf.EnumValueOptions {
   string string_value = 51234;
 }
 
-enum WorkerStreamStatus {
+enum WorkerFlowStatus {
   waiting = 0 [(string_value) = "waiting"];
   running = 1 [(string_value) = "running"];
   stopped = 2 [(string_value) = "stopped"];
@@ -24,7 +24,7 @@ message CommonResponse {
   string message = 1;
 }
 
-message Stream {
+message Flow {
   message Processor {
     string label = 1 [
       json_name = "label",
@@ -83,7 +83,7 @@ message Stream {
   optional int64 buffer_id = 16 [json_name = "buffer_id"];
   bool is_mcp_tool = 17 [json_name = "is_mcp_tool"];
   bool is_ready = 18 [json_name = "is_ready"];
-  string flow_state = 19 [json_name = "flow_state"];
+  string builder_state = 19 [json_name = "builder_state"];
 }
 
 message Secret {

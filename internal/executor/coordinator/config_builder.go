@@ -22,27 +22,27 @@ type BuildResult struct {
 }
 
 type ConfigBuilder interface {
-	BuildStreamConfig(stream persistence.Stream) (*BuildResult, error)
+	BuildFlowConfig(flow persistence.Flow) (*BuildResult, error)
 }
 
 type configBuilder struct {
-	streamCacheRepo     persistence.StreamCacheRepository
-	streamRateLimitRepo persistence.StreamRateLimitRepository
+	flowCacheRepo     persistence.FlowCacheRepository
+	flowRateLimitRepo persistence.FlowRateLimitRepository
 	fileRepo            persistence.FileRepository
 }
 
-func NewConfigBuilder(streamCacheRepo persistence.StreamCacheRepository, streamRateLimitRepo persistence.StreamRateLimitRepository, fileRepo persistence.FileRepository) ConfigBuilder {
+func NewConfigBuilder(flowCacheRepo persistence.FlowCacheRepository, flowRateLimitRepo persistence.FlowRateLimitRepository, fileRepo persistence.FileRepository) ConfigBuilder {
 	return &configBuilder{
-		streamCacheRepo:     streamCacheRepo,
-		streamRateLimitRepo: streamRateLimitRepo,
+		flowCacheRepo:     flowCacheRepo,
+		flowRateLimitRepo: flowRateLimitRepo,
 		fileRepo:            fileRepo,
 	}
 }
 
-func (b *configBuilder) BuildStreamConfig(stream persistence.Stream) (*BuildResult, error) {
+func (b *configBuilder) BuildFlowConfig(flow persistence.Flow) (*BuildResult, error) {
 	configMap := make(map[string]any)
 
-	cacheResources, err := b.buildCacheResourcesConfig(stream.ID)
+	cacheResources, err := b.buildCacheResourcesConfig(flow.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (b *configBuilder) BuildStreamConfig(stream persistence.Stream) (*BuildResu
 		configMap["cache_resources"] = cacheResources
 	}
 
-	rateLimitResources, err := b.buildRateLimitResourcesConfig(stream.ID)
+	rateLimitResources, err := b.buildRateLimitResourcesConfig(flow.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -58,21 +58,21 @@ func (b *configBuilder) BuildStreamConfig(stream persistence.Stream) (*BuildResu
 		configMap["rate_limit_resources"] = rateLimitResources
 	}
 
-	input, err := b.buildInputConfig(stream)
+	input, err := b.buildInputConfig(flow)
 	if err != nil {
 		return nil, err
 	}
 	configMap["input"] = input
 
-	if len(stream.Processors) > 0 {
-		pipeline, err := b.buildPipelineConfig(stream.Processors)
+	if len(flow.Processors) > 0 {
+		pipeline, err := b.buildProcessorPipelineConfig(flow.Processors)
 		if err != nil {
 			return nil, err
 		}
 		configMap["pipeline"] = pipeline
 	}
 
-	output, err := b.buildOutputConfig(stream)
+	output, err := b.buildOutputConfig(flow)
 	if err != nil {
 		return nil, err
 	}
@@ -153,10 +153,10 @@ func resolveFileRefs(v any) {
 	}
 }
 
-func (b *configBuilder) buildInputConfig(stream persistence.Stream) (map[string]any, error) {
+func (b *configBuilder) buildInputConfig(flow persistence.Flow) (map[string]any, error) {
 	input := make(map[string]any)
 
-	if stream.InputComponent == "mcp_tool" {
+	if flow.InputComponent == "mcp_tool" {
 		input["http_server"] = map[string]any{
 			"path":          "/",
 			"allowed_verbs": []string{"POST"},
@@ -166,29 +166,29 @@ func (b *configBuilder) buildInputConfig(stream persistence.Stream) (map[string]
 			},
 		}
 	} else {
-		input[stream.InputComponent] = make(map[string]any)
-		if err := yaml.Unmarshal(stream.InputConfig, input[stream.InputComponent]); err != nil {
+		input[flow.InputComponent] = make(map[string]any)
+		if err := yaml.Unmarshal(flow.InputConfig, input[flow.InputComponent]); err != nil {
 			return nil, err
 		}
 	}
 
-	input["label"] = stream.InputLabel
+	input["label"] = flow.InputLabel
 	return input, nil
 }
 
-func (b *configBuilder) buildOutputConfig(stream persistence.Stream) (map[string]any, error) {
+func (b *configBuilder) buildOutputConfig(flow persistence.Flow) (map[string]any, error) {
 	output := make(map[string]any)
-	output[stream.OutputComponent] = make(map[string]any)
+	output[flow.OutputComponent] = make(map[string]any)
 
-	if err := yaml.Unmarshal(stream.OutputConfig, output[stream.OutputComponent]); err != nil {
+	if err := yaml.Unmarshal(flow.OutputConfig, output[flow.OutputComponent]); err != nil {
 		return nil, err
 	}
 
-	output["label"] = stream.OutputLabel
+	output["label"] = flow.OutputLabel
 	return output, nil
 }
 
-func (b *configBuilder) buildPipelineConfig(processors []persistence.StreamProcessor) (map[string]any, error) {
+func (b *configBuilder) buildProcessorPipelineConfig(processors []persistence.FlowProcessor) (map[string]any, error) {
 	processorList := make([]any, len(processors))
 
 	for i, processor := range processors {
@@ -204,7 +204,7 @@ func (b *configBuilder) buildPipelineConfig(processors []persistence.StreamProce
 	}, nil
 }
 
-func (b *configBuilder) buildProcessorConfig(processor persistence.StreamProcessor) (map[string]any, error) {
+func (b *configBuilder) buildProcessorConfig(processor persistence.FlowProcessor) (map[string]any, error) {
 	processorConfig := make(map[string]any)
 
 	switch processor.Component {
@@ -231,54 +231,54 @@ func (b *configBuilder) isSpecialProcessor(component string) bool {
 	return slices.Contains([]string{"catch", "switch"}, component)
 }
 
-func (b *configBuilder) buildCacheResourcesConfig(streamID int64) ([]map[string]any, error) {
-	streamCaches, err := b.streamCacheRepo.FindByStreamID(streamID)
+func (b *configBuilder) buildCacheResourcesConfig(flowID int64) ([]map[string]any, error) {
+	flowCaches, err := b.flowCacheRepo.FindByFlowID(flowID)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(streamCaches) == 0 {
+	if len(flowCaches) == 0 {
 		return nil, nil
 	}
 
-	cacheResources := make([]map[string]any, 0, len(streamCaches))
-	for _, streamCache := range streamCaches {
+	cacheResources := make([]map[string]any, 0, len(flowCaches))
+	for _, flowCache := range flowCaches {
 		cacheResource := make(map[string]any)
-		cacheResource["label"] = streamCache.Cache.Label
+		cacheResource["label"] = flowCache.Cache.Label
 
 		cacheConfig := make(map[string]any)
-		if err := yaml.Unmarshal(streamCache.Cache.Config, &cacheConfig); err != nil {
+		if err := yaml.Unmarshal(flowCache.Cache.Config, &cacheConfig); err != nil {
 			return nil, err
 		}
 
-		cacheResource[streamCache.Cache.Component] = cacheConfig
+		cacheResource[flowCache.Cache.Component] = cacheConfig
 		cacheResources = append(cacheResources, cacheResource)
 	}
 
 	return cacheResources, nil
 }
 
-func (b *configBuilder) buildRateLimitResourcesConfig(streamID int64) ([]map[string]any, error) {
-	streamRateLimits, err := b.streamRateLimitRepo.FindByStreamID(streamID)
+func (b *configBuilder) buildRateLimitResourcesConfig(flowID int64) ([]map[string]any, error) {
+	flowRateLimits, err := b.flowRateLimitRepo.FindByFlowID(flowID)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(streamRateLimits) == 0 {
+	if len(flowRateLimits) == 0 {
 		return nil, nil
 	}
 
-	rateLimitResources := make([]map[string]any, 0, len(streamRateLimits))
-	for _, streamRateLimit := range streamRateLimits {
+	rateLimitResources := make([]map[string]any, 0, len(flowRateLimits))
+	for _, flowRateLimit := range flowRateLimits {
 		rateLimitResource := make(map[string]any)
-		rateLimitResource["label"] = streamRateLimit.RateLimit.Label
+		rateLimitResource["label"] = flowRateLimit.RateLimit.Label
 
 		rateLimitConfig := make(map[string]any)
-		if err := yaml.Unmarshal(streamRateLimit.RateLimit.Config, &rateLimitConfig); err != nil {
+		if err := yaml.Unmarshal(flowRateLimit.RateLimit.Config, &rateLimitConfig); err != nil {
 			return nil, err
 		}
 
-		rateLimitResource[streamRateLimit.RateLimit.Component] = rateLimitConfig
+		rateLimitResource[flowRateLimit.RateLimit.Component] = rateLimitConfig
 		rateLimitResources = append(rateLimitResources, rateLimitResource)
 	}
 

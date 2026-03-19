@@ -60,10 +60,10 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                 Dashboard
               </CommandItem>
               <CommandItem
-                onSelect={() => runCommand(() => navigate("/streams/new"))}
+                onSelect={() => runCommand(() => navigate("/flows/new"))}
               >
                 <Waypoints className="mr-2 h-4 w-4" />
-                Streams
+                Flows
               </CommandItem>
               <CommandItem
                 onSelect={() => runCommand(() => navigate("/workers"))}

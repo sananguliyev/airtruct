@@ -11,7 +11,7 @@ You can provide the schema in two ways — pick one:
 
 ### Schema File
 
-Select a file from the File Manager containing your JSON Schema. This is useful when the same schema is shared across multiple streams or when schemas are large.
+Select a file from the File Manager containing your JSON Schema. This is useful when the same schema is shared across multiple flows or when schemas are large.
 
 ### Inline Schema
 

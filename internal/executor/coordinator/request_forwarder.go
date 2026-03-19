@@ -18,20 +18,20 @@ type RequestForwarder interface {
 
 type requestForwarder struct {
 	workerManager   WorkerManager
-	streamWorkerMap StreamWorkerMap
-	streamRepo      persistence.StreamRepository
+	flowWorkerMap FlowWorkerMap
+	flowRepo      persistence.FlowRepository
 	pathRegex       *regexp.Regexp
 }
 
 func NewRequestForwarder(
 	workerManager WorkerManager,
-	streamWorkerMap StreamWorkerMap,
-	streamRepo persistence.StreamRepository,
+	flowWorkerMap FlowWorkerMap,
+	flowRepo persistence.FlowRepository,
 ) RequestForwarder {
 	return &requestForwarder{
 		workerManager:   workerManager,
-		streamWorkerMap: streamWorkerMap,
-		streamRepo:      streamRepo,
+		flowWorkerMap: flowWorkerMap,
+		flowRepo:      flowRepo,
 		pathRegex:       regexp.MustCompile(`^/ingest/(\d+)(/.*)?$`),
 	}
 }
@@ -55,21 +55,21 @@ func (f *requestForwarder) ForwardRequestToWorker(ctx context.Context, r *http.R
 		componentPath = matches[2]
 	}
 
-	workerStreamID, ok := f.streamWorkerMap.GetStreamWorkerStream(id)
+	workerFlowID, ok := f.flowWorkerMap.GetFlowWorkerStream(id)
 	if !ok {
-		stream, err := f.streamRepo.FindByID(id)
+		flow, err := f.flowRepo.FindByID(id)
 		if err != nil {
-			return 0, nil, fmt.Errorf("failed to look up stream %d: %w", id, err)
+			return 0, nil, fmt.Errorf("failed to look up flow %d: %w", id, err)
 		}
-		if stream == nil {
-			return 0, nil, fmt.Errorf("stream %d not found", id)
+		if flow == nil {
+			return 0, nil, fmt.Errorf("flow %d not found", id)
 		}
-		return 0, nil, fmt.Errorf("stream %d exists but is not currently assigned to any worker", id)
+		return 0, nil, fmt.Errorf("flow %d exists but is not currently assigned to any worker", id)
 	}
 
-	workerID, ok := f.streamWorkerMap.GetStreamWorker(id)
+	workerID, ok := f.flowWorkerMap.GetFlowWorker(id)
 	if !ok {
-		return 0, nil, fmt.Errorf("stream %d exists but is not currently assigned to any worker", id)
+		return 0, nil, fmt.Errorf("flow %d exists but is not currently assigned to any worker", id)
 	}
 
 	workerClient, err := f.workerManager.GetWorkerClient(&persistence.Worker{ID: workerID})
@@ -84,7 +84,7 @@ func (f *requestForwarder) ForwardRequestToWorker(ctx context.Context, r *http.R
 	defer r.Body.Close()
 
 	resp, err := workerClient.Ingest(ctx, &pb.IngestRequest{
-		WorkerStreamId: workerStreamID,
+		WorkerFlowId: workerFlowID,
 		Method:         r.Method,
 		Path:           componentPath,
 		ContentType:    r.Header.Get("Content-Type"),

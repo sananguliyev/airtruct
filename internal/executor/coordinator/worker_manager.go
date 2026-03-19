@@ -19,24 +19,24 @@ type WorkerManager interface {
 type workerManager struct {
 	mu               sync.Mutex
 	workerRepo       persistence.WorkerRepository
-	workerStreamRepo persistence.WorkerStreamRepository
+	workerFlowRepo persistence.WorkerFlowRepository
 	clientManager    GRPCClientManager
 }
 
 func NewWorkerManager(
 	workerRepo persistence.WorkerRepository,
-	workerStreamRepo persistence.WorkerStreamRepository,
+	workerFlowRepo persistence.WorkerFlowRepository,
 	clientManager GRPCClientManager,
 ) WorkerManager {
 	return &workerManager{
 		workerRepo:       workerRepo,
-		workerStreamRepo: workerStreamRepo,
+		workerFlowRepo: workerFlowRepo,
 		clientManager:    clientManager,
 	}
 }
 
 func (m *workerManager) GetHealthyWorkers(ctx context.Context) ([]persistence.Worker, error) {
-	workers, err := m.workerRepo.FindAllActiveWithRunningStreamCount()
+	workers, err := m.workerRepo.FindAllActiveWithRunningFlowCount()
 	if err != nil {
 		return nil, err
 	}
@@ -53,8 +53,8 @@ func (m *workerManager) DeactivateWorker(workerID string) error {
 		return err
 	}
 
-	if err := m.workerStreamRepo.StopAllRunningAndWaitingByWorkerID(workerID); err != nil {
-		log.Warn().Err(err).Str("worker_id", workerID).Msg("Failed to update all worker streams statuses in worker")
+	if err := m.workerFlowRepo.StopAllRunningAndWaitingByWorkerID(workerID); err != nil {
+		log.Warn().Err(err).Str("worker_id", workerID).Msg("Failed to update all worker flows statuses in worker")
 		return err
 	}
 

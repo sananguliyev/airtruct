@@ -9,21 +9,21 @@ import (
 	"github.com/sananguliyev/airtruct/internal/vault"
 )
 
-type StreamWorkerMap interface {
-	SetStreamWorker(streamID int64, workerID string, workerStreamID int64)
-	RemoveStream(streamID int64)
-	RemoveStreamIfMatches(streamID int64, workerStreamID int64)
+type FlowWorkerMap interface {
+	SetFlowWorker(flowID int64, workerID string, workerFlowID int64)
+	RemoveFlow(flowID int64)
+	RemoveFlowIfMatches(flowID int64, workerFlowID int64)
 }
 
 type CoordinatorAPI struct {
 	pb.UnimplementedCoordinatorServer
 	eventRepo           persistence.EventRepository
 	workerRepo          persistence.WorkerRepository
-	streamRepo          persistence.StreamRepository
-	streamCacheRepo     persistence.StreamCacheRepository
-	streamRateLimitRepo persistence.StreamRateLimitRepository
-	streamBufferRepo    persistence.StreamBufferRepository
-	workerStreamRepo    persistence.WorkerStreamRepository
+	flowRepo          persistence.FlowRepository
+	flowCacheRepo     persistence.FlowCacheRepository
+	flowRateLimitRepo persistence.FlowRateLimitRepository
+	flowBufferRepo    persistence.FlowBufferRepository
+	workerFlowRepo    persistence.WorkerFlowRepository
 	secretRepo          persistence.SecretRepository
 	cacheRepo           persistence.CacheRepository
 	bufferRepo          persistence.BufferRepository
@@ -32,17 +32,17 @@ type CoordinatorAPI struct {
 	rateLimiterEngine   *ratelimiter.Engine
 	aesgcm              *vault.AESGCM
 	analyticsProvider   analytics.Provider
-	streamWorkerMap     StreamWorkerMap
+	flowWorkerMap     FlowWorkerMap
 }
 
 func NewCoordinatorAPI(
 	eventRepo persistence.EventRepository,
-	streamRepo persistence.StreamRepository,
-	streamCacheRepo persistence.StreamCacheRepository,
-	streamRateLimitRepo persistence.StreamRateLimitRepository,
-	streamBufferRepo persistence.StreamBufferRepository,
+	flowRepo persistence.FlowRepository,
+	flowCacheRepo persistence.FlowCacheRepository,
+	flowRateLimitRepo persistence.FlowRateLimitRepository,
+	flowBufferRepo persistence.FlowBufferRepository,
 	workerRepo persistence.WorkerRepository,
-	workerStreamRepo persistence.WorkerStreamRepository,
+	workerFlowRepo persistence.WorkerFlowRepository,
 	secretRepo persistence.SecretRepository,
 	cacheRepo persistence.CacheRepository,
 	bufferRepo persistence.BufferRepository,
@@ -51,16 +51,16 @@ func NewCoordinatorAPI(
 	rateLimiterEngine *ratelimiter.Engine,
 	aesgcm *vault.AESGCM,
 	analyticsProvider analytics.Provider,
-	streamWorkerMap StreamWorkerMap,
+	flowWorkerMap FlowWorkerMap,
 ) *CoordinatorAPI {
 	return &CoordinatorAPI{
 		eventRepo:           eventRepo,
-		streamRepo:          streamRepo,
-		streamCacheRepo:     streamCacheRepo,
-		streamRateLimitRepo: streamRateLimitRepo,
-		streamBufferRepo:    streamBufferRepo,
+		flowRepo:          flowRepo,
+		flowCacheRepo:     flowCacheRepo,
+		flowRateLimitRepo: flowRateLimitRepo,
+		flowBufferRepo:    flowBufferRepo,
 		workerRepo:          workerRepo,
-		workerStreamRepo:    workerStreamRepo,
+		workerFlowRepo:    workerFlowRepo,
 		secretRepo:          secretRepo,
 		cacheRepo:           cacheRepo,
 		bufferRepo:          bufferRepo,
@@ -69,6 +69,6 @@ func NewCoordinatorAPI(
 		rateLimiterEngine:   rateLimiterEngine,
 		aesgcm:              aesgcm,
 		analyticsProvider:   analyticsProvider,
-		streamWorkerMap:     streamWorkerMap,
+		flowWorkerMap:     flowWorkerMap,
 	}
 }

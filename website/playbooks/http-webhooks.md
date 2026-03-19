@@ -10,9 +10,9 @@ This guide shows how to accept webhook data over HTTP and store it in a database
 
 You want to receive webhook events (e.g., from Stripe, GitHub, or any service) and insert them into PostgreSQL.
 
-## Create the Stream
+## Create the Flow
 
-Open the Airtruct UI, click **Create New Stream**, and configure each section:
+Open the Airtruct UI, click **Create New Flow**, and configure each section:
 
 ### Input — select **HTTP Server**
 
@@ -40,19 +40,19 @@ Extract and transform the relevant fields:
 | Columns | `event_type`, `payload`, `received_at` |
 | Args Mapping | `root = [this.event_type, this.payload, this.received_at]` |
 
-Click **Save** and then **Start** the stream.
+Click **Save** and then **Start** the flow.
 
 ## Test It
 
-Once the stream is running, send a test webhook. All HTTP Server streams are exposed under `/ingest/{stream-id}` followed by the configured path:
+Once the flow is running, send a test webhook. All HTTP Server flows are exposed under `/ingest/{flow-id}` followed by the configured path:
 
 ```bash
-curl -X POST http://localhost:8080/ingest/{stream-id}/webhooks/events \
+curl -X POST http://localhost:8080/ingest/{flow-id}/webhooks/events \
   -H "Content-Type: application/json" \
   -d '{"type": "payment.completed", "amount": 99.99, "currency": "USD"}'
 ```
 
-Replace `{stream-id}` with the actual stream ID shown in the Airtruct UI.
+Replace `{flow-id}` with the actual flow ID shown in the Airtruct UI.
 
 ## Returning Custom Responses
 

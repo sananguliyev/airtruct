@@ -4,7 +4,7 @@ sidebar_position: 3
 
 # Components
 
-Components are the building blocks of streams. Each stream uses one input, zero or more processors, and one output.
+Components are the building blocks of flows. Each flow uses one input, zero or more processors, and one output.
 
 ## Inputs
 
@@ -16,7 +16,7 @@ Inputs define where data enters the pipeline.
 | [HTTP Client](/docs/components/inputs/http-client) | Pulls data via HTTP requests |
 | [HTTP Server](/docs/components/inputs/http-server) | Accepts incoming HTTP requests (webhooks) |
 | [Kafka](/docs/components/inputs/kafka) | Consumes messages from Kafka topics |
-| [Broker](/docs/components/inputs/broker) | Combines multiple inputs into one stream |
+| [Broker](/docs/components/inputs/broker) | Combines multiple inputs into one flow |
 | [CDC MySQL](/docs/components/inputs/cdc-mysql) | CDC from MySQL/MariaDB binlog |
 | [Shopify](/docs/components/inputs/shopify) | Fetches data from Shopify stores |
 

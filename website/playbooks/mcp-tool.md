@@ -1,18 +1,18 @@
 ---
-description: Expose Airtruct streams as tools for AI assistants via Model Context Protocol.
+description: Expose Airtruct flows as tools for AI assistants via Model Context Protocol.
 ---
 
 # MCP Tool Integration
 
-This guide shows how to expose Airtruct streams as tools that AI assistants can discover and call via the [Model Context Protocol](https://modelcontextprotocol.io/) (MCP).
+This guide shows how to expose Airtruct flows as tools that AI assistants can discover and call via the [Model Context Protocol](https://modelcontextprotocol.io/) (MCP).
 
 ## How It Works
 
-The Airtruct coordinator exposes a single MCP endpoint at `/mcp` using the Streamable HTTP transport. When you create a stream with the **MCP Tool** input, it becomes a tool that any MCP-compatible client can call. The tool call flows through your stream's processors and returns the result via Sync Response.
+The Airtruct coordinator exposes a single MCP endpoint at `/mcp` using the Flowable HTTP transport. When you create a flow with the **MCP Tool** input, it becomes a tool that any MCP-compatible client can call. The tool call flows through your flow's processors and returns the result via Sync Response.
 
 ## Create an MCP Tool
 
-Open the Airtruct UI, click **Create New Stream**, and configure each section:
+Open the Airtruct UI, click **Create New Flow**, and configure each section:
 
 ### Input — select **MCP Tool**
 
@@ -34,7 +34,7 @@ For this example, we return a random temperature. In practice, you would call an
 
 The output is automatically set to **Sync Response** and locked when using MCP Tool input.
 
-Click **Save** and then **Start** the stream.
+Click **Save** and then **Start** the flow.
 
 ## Connect AI Clients
 
@@ -95,7 +95,7 @@ Add to `.cursor/mcp.json` in your project:
 
 ### Other MCP Clients
 
-Any client that supports the Streamable HTTP transport can connect directly to `http://localhost:8080/mcp`. For clients that only support stdio transport, use [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) as a bridge as shown in the examples above.
+Any client that supports the Flowable HTTP transport can connect directly to `http://localhost:8080/mcp`. For clients that only support stdio transport, use [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) as a bridge as shown in the examples above.
 
 ## Verify with curl
 
@@ -122,4 +122,4 @@ curl -X POST http://localhost:8080/mcp \
 
 ## Multiple Tools
 
-Each MCP Tool stream becomes a separate tool. Create as many streams as you need — they all appear under the same `/mcp` endpoint. Tools are synced automatically when streams are started or stopped.
+Each MCP Tool flow becomes a separate tool. Create as many flows as you need — they all appear under the same `/mcp` endpoint. Tools are synced automatically when flows are started or stopped.

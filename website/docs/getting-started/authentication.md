@@ -20,8 +20,8 @@ Set the `AUTH_TYPE` environment variable to choose a mode:
 
 When authentication is enabled:
 
-- **Protected:** All `/api/*` endpoints (streams, workers, secrets, caches, rate limits) and the web UI dashboard.
-- **Not protected:** Stream ingestion endpoints (`/ingest/*`) remain open to allow webhook and data ingestion from external systems. Auth info and login endpoints are also always accessible.
+- **Protected:** All `/api/*` endpoints (flows, workers, secrets, caches, rate limits) and the web UI dashboard.
+- **Not protected:** Flow ingestion endpoints (`/ingest/*`) remain open to allow webhook and data ingestion from external systems. Auth info and login endpoints are also always accessible.
 
 ## Basic Authentication
 
@@ -62,7 +62,7 @@ Response:
 Then include the token in subsequent requests:
 
 ```bash
-curl http://localhost:8080/api/v1/streams \
+curl http://localhost:8080/api/v1/flows \
   -H "Authorization: Bearer eyJhbG..."
 ```
 

@@ -124,61 +124,61 @@ func (c *CoordinatorAPI) Heartbeat(ctx context.Context, in *pb.HeartbeatRequest)
 
 	response := &pb.HeartbeatResponse{
 		Message:                     "Heartbeat acknowledged",
-		RenewedLeaseWorkerStreamIds: []int64{},
-		ExpiredLeaseWorkerStreamIds: []int64{},
+		RenewedLeaseWorkerFlowIds: []int64{},
+		ExpiredLeaseWorkerFlowIds: []int64{},
 	}
 
-	for _, workerStreamID := range in.GetRunningWorkerStreamIds() {
-		workerStream, err := c.workerStreamRepo.FindByID(workerStreamID)
+	for _, workerFlowID := range in.GetRunningWorkerFlowIds() {
+		workerFlow, err := c.workerFlowRepo.FindByID(workerFlowID)
 
 		if err != nil {
-			log.Error().Err(err).Str("worker_id", in.GetId()).Int64("worker_stream_id", workerStreamID).Msg("Failed to find worker stream")
-			response.ExpiredLeaseWorkerStreamIds = append(response.ExpiredLeaseWorkerStreamIds, workerStreamID)
+			log.Error().Err(err).Str("worker_id", in.GetId()).Int64("worker_flow_id", workerFlowID).Msg("Failed to find worker flow")
+			response.ExpiredLeaseWorkerFlowIds = append(response.ExpiredLeaseWorkerFlowIds, workerFlowID)
 			continue
 		}
 
-		if workerStream == nil {
-			log.Warn().Str("worker_id", in.GetId()).Int64("worker_stream_id", workerStreamID).Msg("Worker stream not found")
-			response.ExpiredLeaseWorkerStreamIds = append(response.ExpiredLeaseWorkerStreamIds, workerStreamID)
+		if workerFlow == nil {
+			log.Warn().Str("worker_id", in.GetId()).Int64("worker_flow_id", workerFlowID).Msg("Worker flow not found")
+			response.ExpiredLeaseWorkerFlowIds = append(response.ExpiredLeaseWorkerFlowIds, workerFlowID)
 			continue
 		}
 
-		if workerStream.WorkerID != in.GetId() {
-			log.Warn().Str("worker_id", in.GetId()).Int64("worker_stream_id", workerStreamID).Str("actual_worker", workerStream.WorkerID).Msg("Worker stream belongs to different worker")
-			response.ExpiredLeaseWorkerStreamIds = append(response.ExpiredLeaseWorkerStreamIds, workerStreamID)
+		if workerFlow.WorkerID != in.GetId() {
+			log.Warn().Str("worker_id", in.GetId()).Int64("worker_flow_id", workerFlowID).Str("actual_worker", workerFlow.WorkerID).Msg("Worker stream belongs to different worker")
+			response.ExpiredLeaseWorkerFlowIds = append(response.ExpiredLeaseWorkerFlowIds, workerFlowID)
 			continue
 		}
 
-		if workerStream.Status != persistence.WorkerStreamStatusRunning {
-			log.Warn().Str("worker_id", in.GetId()).Int64("worker_stream_id", workerStreamID).Str("status", string(workerStream.Status)).Msg("Stream should not be running")
-			response.ExpiredLeaseWorkerStreamIds = append(response.ExpiredLeaseWorkerStreamIds, workerStreamID)
+		if workerFlow.Status != persistence.WorkerFlowStatusRunning {
+			log.Warn().Str("worker_id", in.GetId()).Int64("worker_flow_id", workerFlowID).Str("status", string(workerFlow.Status)).Msg("Flow should not be running")
+			response.ExpiredLeaseWorkerFlowIds = append(response.ExpiredLeaseWorkerFlowIds, workerFlowID)
 			continue
 		}
 
-		newExpiry := time.Now().Add(persistence.StreamLeaseInterval)
+		newExpiry := time.Now().Add(persistence.FlowLeaseInterval)
 
-		if workerStream.LeaseExpiresAt.IsZero() {
+		if workerFlow.LeaseExpiresAt.IsZero() {
 			log.Info().
 				Str("worker_id", in.GetId()).
-				Int64("worker_stream_id", workerStreamID).
-				Int64("stream_id", workerStream.StreamID).
-				Msg("Initializing lease for existing stream")
+				Int64("worker_flow_id", workerFlowID).
+				Int64("flow_id", workerFlow.FlowID).
+				Msg("Initializing lease for existing flow")
 		}
 
-		err = c.workerStreamRepo.UpdateLeaseExpiry(workerStream.ID, newExpiry)
+		err = c.workerFlowRepo.UpdateLeaseExpiry(workerFlow.ID, newExpiry)
 		if err != nil {
-			log.Error().Err(err).Int64("worker_stream_id", workerStream.ID).Msg("Failed to update lease expiry")
+			log.Error().Err(err).Int64("worker_flow_id", workerFlow.ID).Msg("Failed to update lease expiry")
 			continue
 		}
 
-		response.RenewedLeaseWorkerStreamIds = append(response.RenewedLeaseWorkerStreamIds, workerStreamID)
+		response.RenewedLeaseWorkerFlowIds = append(response.RenewedLeaseWorkerFlowIds, workerFlowID)
 	}
 
 	log.Debug().
 		Str("worker_id", in.GetId()).
 		Str("address", workerEntity.Address).
-		Int("renewed", len(response.RenewedLeaseWorkerStreamIds)).
-		Int("expired", len(response.ExpiredLeaseWorkerStreamIds)).
+		Int("renewed", len(response.RenewedLeaseWorkerFlowIds)).
+		Int("expired", len(response.ExpiredLeaseWorkerFlowIds)).
 		Msg("Worker heartbeat received")
 
 	return response, nil

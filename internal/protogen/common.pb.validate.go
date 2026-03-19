@@ -137,21 +137,21 @@ var _ interface {
 	ErrorName() string
 } = CommonResponseValidationError{}
 
-// Validate checks the field values on Stream with the rules defined in the
-// proto definition for this message. If any rules are violated, the first
-// error encountered is returned, or nil if there are no violations.
-func (m *Stream) Validate() error {
+// Validate checks the field values on Flow with the rules defined in the proto
+// definition for this message. If any rules are violated, the first error
+// encountered is returned, or nil if there are no violations.
+func (m *Flow) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on Stream with the rules defined in the
+// ValidateAll checks the field values on Flow with the rules defined in the
 // proto definition for this message. If any rules are violated, the result is
-// a list of violation errors wrapped in StreamMultiError, or nil if none found.
-func (m *Stream) ValidateAll() error {
+// a list of violation errors wrapped in FlowMultiError, or nil if none found.
+func (m *Flow) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *Stream) validate(all bool) error {
+func (m *Flow) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -161,7 +161,7 @@ func (m *Stream) validate(all bool) error {
 	// no validation rules for Id
 
 	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 100 {
-		err := StreamValidationError{
+		err := FlowValidationError{
 			field:  "Name",
 			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
@@ -174,7 +174,7 @@ func (m *Stream) validate(all bool) error {
 	// no validation rules for InputConfig
 
 	if l := utf8.RuneCountInString(m.GetInputLabel()); l < 1 || l > 100 {
-		err := StreamValidationError{
+		err := FlowValidationError{
 			field:  "InputLabel",
 			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
@@ -184,8 +184,8 @@ func (m *Stream) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_Stream_InputLabel_Pattern.MatchString(m.GetInputLabel()) {
-		err := StreamValidationError{
+	if !_Flow_InputLabel_Pattern.MatchString(m.GetInputLabel()) {
+		err := FlowValidationError{
 			field:  "InputLabel",
 			reason: "value does not match regex pattern \"^[a-zA-Z0-9 _-]+$\"",
 		}
@@ -200,7 +200,7 @@ func (m *Stream) validate(all bool) error {
 	// no validation rules for OutputConfig
 
 	if l := utf8.RuneCountInString(m.GetOutputLabel()); l < 1 || l > 100 {
-		err := StreamValidationError{
+		err := FlowValidationError{
 			field:  "OutputLabel",
 			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
@@ -210,8 +210,8 @@ func (m *Stream) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_Stream_OutputLabel_Pattern.MatchString(m.GetOutputLabel()) {
-		err := StreamValidationError{
+	if !_Flow_OutputLabel_Pattern.MatchString(m.GetOutputLabel()) {
+		err := FlowValidationError{
 			field:  "OutputLabel",
 			reason: "value does not match regex pattern \"^[a-zA-Z0-9 _-]+$\"",
 		}
@@ -225,8 +225,8 @@ func (m *Stream) validate(all bool) error {
 
 	// no validation rules for IsCurrent
 
-	if _, ok := _Stream_Status_InLookup[m.GetStatus()]; !ok {
-		err := StreamValidationError{
+	if _, ok := _Flow_Status_InLookup[m.GetStatus()]; !ok {
+		err := FlowValidationError{
 			field:  "Status",
 			reason: "value must be in list [active completed paused failed]",
 		}
@@ -240,7 +240,7 @@ func (m *Stream) validate(all bool) error {
 		switch v := interface{}(m.GetCreatedAt()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, StreamValidationError{
+				errors = append(errors, FlowValidationError{
 					field:  "CreatedAt",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -248,7 +248,7 @@ func (m *Stream) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, StreamValidationError{
+				errors = append(errors, FlowValidationError{
 					field:  "CreatedAt",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -257,7 +257,7 @@ func (m *Stream) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetCreatedAt()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return StreamValidationError{
+			return FlowValidationError{
 				field:  "CreatedAt",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -272,7 +272,7 @@ func (m *Stream) validate(all bool) error {
 			switch v := interface{}(item).(type) {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, StreamValidationError{
+					errors = append(errors, FlowValidationError{
 						field:  fmt.Sprintf("Processors[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -280,7 +280,7 @@ func (m *Stream) validate(all bool) error {
 				}
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
-					errors = append(errors, StreamValidationError{
+					errors = append(errors, FlowValidationError{
 						field:  fmt.Sprintf("Processors[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -289,7 +289,7 @@ func (m *Stream) validate(all bool) error {
 			}
 		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
-				return StreamValidationError{
+				return FlowValidationError{
 					field:  fmt.Sprintf("Processors[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -305,7 +305,7 @@ func (m *Stream) validate(all bool) error {
 
 	// no validation rules for IsReady
 
-	// no validation rules for FlowState
+	// no validation rules for BuilderState
 
 	if m.ParentId != nil {
 		// no validation rules for ParentId
@@ -317,7 +317,7 @@ func (m *Stream) validate(all bool) error {
 			switch v := interface{}(m.GetUpdatedAt()).(type) {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, StreamValidationError{
+					errors = append(errors, FlowValidationError{
 						field:  "UpdatedAt",
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -325,7 +325,7 @@ func (m *Stream) validate(all bool) error {
 				}
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
-					errors = append(errors, StreamValidationError{
+					errors = append(errors, FlowValidationError{
 						field:  "UpdatedAt",
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -334,7 +334,7 @@ func (m *Stream) validate(all bool) error {
 			}
 		} else if v, ok := interface{}(m.GetUpdatedAt()).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
-				return StreamValidationError{
+				return FlowValidationError{
 					field:  "UpdatedAt",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -349,18 +349,18 @@ func (m *Stream) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return StreamMultiError(errors)
+		return FlowMultiError(errors)
 	}
 
 	return nil
 }
 
-// StreamMultiError is an error wrapping multiple validation errors returned by
-// Stream.ValidateAll() if the designated constraints aren't met.
-type StreamMultiError []error
+// FlowMultiError is an error wrapping multiple validation errors returned by
+// Flow.ValidateAll() if the designated constraints aren't met.
+type FlowMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m StreamMultiError) Error() string {
+func (m FlowMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -369,11 +369,11 @@ func (m StreamMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m StreamMultiError) AllErrors() []error { return m }
+func (m FlowMultiError) AllErrors() []error { return m }
 
-// StreamValidationError is the validation error returned by Stream.Validate if
-// the designated constraints aren't met.
-type StreamValidationError struct {
+// FlowValidationError is the validation error returned by Flow.Validate if the
+// designated constraints aren't met.
+type FlowValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -381,22 +381,22 @@ type StreamValidationError struct {
 }
 
 // Field function returns field value.
-func (e StreamValidationError) Field() string { return e.field }
+func (e FlowValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e StreamValidationError) Reason() string { return e.reason }
+func (e FlowValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e StreamValidationError) Cause() error { return e.cause }
+func (e FlowValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e StreamValidationError) Key() bool { return e.key }
+func (e FlowValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e StreamValidationError) ErrorName() string { return "StreamValidationError" }
+func (e FlowValidationError) ErrorName() string { return "FlowValidationError" }
 
 // Error satisfies the builtin error interface
-func (e StreamValidationError) Error() string {
+func (e FlowValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -408,14 +408,14 @@ func (e StreamValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sStream.%s: %s%s",
+		"invalid %sFlow.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = StreamValidationError{}
+var _ error = FlowValidationError{}
 
 var _ interface {
 	Field() string
@@ -423,13 +423,13 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = StreamValidationError{}
+} = FlowValidationError{}
 
-var _Stream_InputLabel_Pattern = regexp.MustCompile("^[a-zA-Z0-9 _-]+$")
+var _Flow_InputLabel_Pattern = regexp.MustCompile("^[a-zA-Z0-9 _-]+$")
 
-var _Stream_OutputLabel_Pattern = regexp.MustCompile("^[a-zA-Z0-9 _-]+$")
+var _Flow_OutputLabel_Pattern = regexp.MustCompile("^[a-zA-Z0-9 _-]+$")
 
-var _Stream_Status_InLookup = map[string]struct{}{
+var _Flow_Status_InLookup = map[string]struct{}{
 	"active":    {},
 	"completed": {},
 	"paused":    {},
@@ -1617,22 +1617,22 @@ var _ interface {
 	ErrorName() string
 } = RateLimitCheckResponseValidationError{}
 
-// Validate checks the field values on Stream_Processor with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// first error encountered is returned, or nil if there are no violations.
-func (m *Stream_Processor) Validate() error {
+// Validate checks the field values on Flow_Processor with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *Flow_Processor) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on Stream_Processor with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// Stream_ProcessorMultiError, or nil if none found.
-func (m *Stream_Processor) ValidateAll() error {
+// ValidateAll checks the field values on Flow_Processor with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in Flow_ProcessorMultiError,
+// or nil if none found.
+func (m *Flow_Processor) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *Stream_Processor) validate(all bool) error {
+func (m *Flow_Processor) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -1640,7 +1640,7 @@ func (m *Stream_Processor) validate(all bool) error {
 	var errors []error
 
 	if l := utf8.RuneCountInString(m.GetLabel()); l < 1 || l > 100 {
-		err := Stream_ProcessorValidationError{
+		err := Flow_ProcessorValidationError{
 			field:  "Label",
 			reason: "value length must be between 1 and 100 runes, inclusive",
 		}
@@ -1650,8 +1650,8 @@ func (m *Stream_Processor) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_Stream_Processor_Label_Pattern.MatchString(m.GetLabel()) {
-		err := Stream_ProcessorValidationError{
+	if !_Flow_Processor_Label_Pattern.MatchString(m.GetLabel()) {
+		err := Flow_ProcessorValidationError{
 			field:  "Label",
 			reason: "value does not match regex pattern \"^[a-zA-Z0-9 _-]+$\"",
 		}
@@ -1666,19 +1666,19 @@ func (m *Stream_Processor) validate(all bool) error {
 	// no validation rules for Config
 
 	if len(errors) > 0 {
-		return Stream_ProcessorMultiError(errors)
+		return Flow_ProcessorMultiError(errors)
 	}
 
 	return nil
 }
 
-// Stream_ProcessorMultiError is an error wrapping multiple validation errors
-// returned by Stream_Processor.ValidateAll() if the designated constraints
+// Flow_ProcessorMultiError is an error wrapping multiple validation errors
+// returned by Flow_Processor.ValidateAll() if the designated constraints
 // aren't met.
-type Stream_ProcessorMultiError []error
+type Flow_ProcessorMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m Stream_ProcessorMultiError) Error() string {
+func (m Flow_ProcessorMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -1687,11 +1687,11 @@ func (m Stream_ProcessorMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m Stream_ProcessorMultiError) AllErrors() []error { return m }
+func (m Flow_ProcessorMultiError) AllErrors() []error { return m }
 
-// Stream_ProcessorValidationError is the validation error returned by
-// Stream_Processor.Validate if the designated constraints aren't met.
-type Stream_ProcessorValidationError struct {
+// Flow_ProcessorValidationError is the validation error returned by
+// Flow_Processor.Validate if the designated constraints aren't met.
+type Flow_ProcessorValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1699,22 +1699,22 @@ type Stream_ProcessorValidationError struct {
 }
 
 // Field function returns field value.
-func (e Stream_ProcessorValidationError) Field() string { return e.field }
+func (e Flow_ProcessorValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e Stream_ProcessorValidationError) Reason() string { return e.reason }
+func (e Flow_ProcessorValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e Stream_ProcessorValidationError) Cause() error { return e.cause }
+func (e Flow_ProcessorValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e Stream_ProcessorValidationError) Key() bool { return e.key }
+func (e Flow_ProcessorValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e Stream_ProcessorValidationError) ErrorName() string { return "Stream_ProcessorValidationError" }
+func (e Flow_ProcessorValidationError) ErrorName() string { return "Flow_ProcessorValidationError" }
 
 // Error satisfies the builtin error interface
-func (e Stream_ProcessorValidationError) Error() string {
+func (e Flow_ProcessorValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1726,14 +1726,14 @@ func (e Stream_ProcessorValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sStream_Processor.%s: %s%s",
+		"invalid %sFlow_Processor.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = Stream_ProcessorValidationError{}
+var _ error = Flow_ProcessorValidationError{}
 
 var _ interface {
 	Field() string
@@ -1741,6 +1741,6 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = Stream_ProcessorValidationError{}
+} = Flow_ProcessorValidationError{}
 
-var _Stream_Processor_Label_Pattern = regexp.MustCompile("^[a-zA-Z0-9 _-]+$")
+var _Flow_Processor_Label_Pattern = regexp.MustCompile("^[a-zA-Z0-9 _-]+$")
