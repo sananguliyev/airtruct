@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import Editor from "@monaco-editor/react";
 import { useTheme } from "next-themes";
+import { registerBloblangLanguage } from "@/lib/bloblang-language";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -202,6 +203,7 @@ function getLanguageFromKey(key: string): string {
     ini: "ini",
     csv: "plaintext",
     txt: "plaintext",
+    blobl: "bloblang",
   };
   return ext ? map[ext] || "plaintext" : "plaintext";
 }
@@ -613,6 +615,7 @@ export default function FilesPage() {
                     language={editorLanguage}
                     theme={resolvedTheme === "dark" ? "vs-dark" : "light"}
                     onChange={(value) => handleFormChange("content", value ?? "")}
+                    beforeMount={registerBloblangLanguage}
                     options={{
                       minimap: { enabled: false },
                       fontSize: 13,

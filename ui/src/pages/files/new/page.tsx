@@ -1,21 +1,37 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import Editor from "@monaco-editor/react";
+import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createFile } from "@/lib/api";
+import { registerBloblangLanguage } from "@/lib/bloblang-language";
+
+function getLanguageFromKey(key: string): string {
+  const ext = key.split(".").pop()?.toLowerCase();
+  const map: Record<string, string> = {
+    json: "json", js: "javascript", ts: "typescript", py: "python",
+    rb: "ruby", go: "go", rs: "rust", yaml: "yaml", yml: "yaml",
+    xml: "xml", html: "html", css: "css", sql: "sql", sh: "shell",
+    bash: "shell", md: "markdown", toml: "ini", ini: "ini",
+    csv: "plaintext", txt: "plaintext", blobl: "bloblang",
+  };
+  return ext ? map[ext] || "plaintext" : "plaintext";
+}
 
 export default function FileNewPage() {
   const navigate = useNavigate();
   const { addToast } = useToast();
+  const { resolvedTheme } = useTheme();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     key: "",
     content: "",
   });
+  const editorLanguage = useMemo(() => getLanguageFromKey(formData.key), [formData.key]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,15 +124,28 @@ export default function FileNewPage() {
 
             <div className="space-y-2">
               <Label htmlFor="content">Content</Label>
-              <Textarea
-                id="content"
-                placeholder="Paste or type your file content here..."
-                value={formData.content}
-                onChange={(e) =>
-                  setFormData({ ...formData, content: e.target.value })
-                }
-                className="font-mono min-h-[400px]"
-              />
+              <div className="rounded-md border overflow-hidden">
+                <Editor
+                  value={formData.content}
+                  language={editorLanguage}
+                  theme={resolvedTheme === "dark" ? "vs-dark" : "light"}
+                  beforeMount={registerBloblangLanguage}
+                  onChange={(value) =>
+                    setFormData({ ...formData, content: value ?? "" })
+                  }
+                  height="400px"
+                  options={{
+                    minimap: { enabled: false },
+                    fontSize: 13,
+                    lineNumbers: "on",
+                    scrollBeyondLastLine: false,
+                    wordWrap: "on",
+                    tabSize: 2,
+                    automaticLayout: true,
+                    padding: { top: 8 },
+                  }}
+                />
+              </div>
             </div>
 
             <div className="flex justify-end space-x-2">

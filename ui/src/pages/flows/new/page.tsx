@@ -1,17 +1,28 @@
-import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, BrainCircuit, ArrowRight, ArrowLeft, Plus, Trash2, Workflow } from "lucide-react";
 import { useToast } from "@/components/toast";
 import { FlowBuilder } from "@/components/flow-builder/flow-builder";
 import { createFlow, validateFlow, tryFlow } from "@/lib/api";
-import { 
-  componentSchemas as rawComponentSchemas, 
-  componentLists 
+import {
+  componentSchemas as rawComponentSchemas,
+  componentLists
 } from "@/lib/component-schemas";
-import type { AllComponentSchemas, ComponentSchema } from "@/components/flow-builder/node-config-panel";
+import type { AllComponentSchemas } from "@/components/flow-builder/node-config-panel";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import * as yaml from "js-yaml";
 
-// Define StreamNodeData type locally since the file was deleted
 export interface StreamNodeData {
   label: string;
   type: "input" | "processor" | "output";
@@ -19,6 +30,17 @@ export interface StreamNodeData {
   component?: string;
   configYaml?: string;
 }
+
+type FlowType = null | "mcp_tool" | "automation";
+
+interface McpParameter {
+  name: string;
+  type: string;
+  required: boolean;
+  description: string;
+}
+
+const PARAMETER_TYPES = ["string", "number", "boolean", "array", "object"];
 
 const transformComponentSchemas = (): AllComponentSchemas => {
   const allSchemas: AllComponentSchemas = {
@@ -30,7 +52,7 @@ const transformComponentSchemas = (): AllComponentSchemas => {
   for (const typeKey of ["input", "pipeline", "output"] as const) {
     const list = componentLists[typeKey] || [];
     const targetTypeForApp = typeKey === 'pipeline' ? 'processor' : typeKey;
-    
+
     let schemaCategory: typeof rawComponentSchemas.input | typeof rawComponentSchemas.pipeline | typeof rawComponentSchemas.output | undefined;
     if (typeKey === 'input') schemaCategory = rawComponentSchemas.input;
     else if (typeKey === 'pipeline') schemaCategory = rawComponentSchemas.pipeline;
@@ -52,15 +74,275 @@ const transformComponentSchemas = (): AllComponentSchemas => {
   return allSchemas;
 };
 
+function FlowTypeSelector({ onSelect }: { onSelect: (type: FlowType) => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh]">
+      <div className="mb-8 text-center">
+        <h1 className="text-2xl font-bold">Create New Flow</h1>
+        <p className="text-muted-foreground mt-1">
+          What would you like to build?
+        </p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl w-full px-6">
+        <button
+          onClick={() => onSelect("mcp_tool")}
+          className="group relative flex flex-col items-start p-8 rounded-xl border-2 border-border bg-card hover:border-primary hover:shadow-lg transition-all duration-200 text-left"
+        >
+          <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-primary/10 text-primary mb-4 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
+            <BrainCircuit className="h-6 w-6" />
+          </div>
+          <h2 className="text-lg font-semibold mb-2">MCP Tool</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Build a tool for AI assistants. Define parameters and connect to any API, database, or service - instantly callable by Claude, Cursor, and AI agents.
+          </p>
+          <ArrowRight className="absolute top-8 right-6 h-5 w-5 text-muted-foreground/40 group-hover:text-primary transition-colors" />
+        </button>
+
+        <button
+          onClick={() => onSelect("automation")}
+          className="group relative flex flex-col items-start p-8 rounded-xl border-2 border-border bg-card hover:border-primary hover:shadow-lg transition-all duration-200 text-left"
+        >
+          <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-primary/10 text-primary mb-4 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6">
+            <Workflow className="h-6 w-6" />
+          </div>
+          <h2 className="text-lg font-semibold mb-2">Automation</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Move, transform, and route data between systems or orchestrate AI workflows that call your MCP tools. Connect 66+ sources and destinations with any trigger.
+          </p>
+          <ArrowRight className="absolute top-8 right-6 h-5 w-5 text-muted-foreground/40 group-hover:text-primary transition-colors" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function McpToolForm({ onBack, onContinue }: {
+  onBack: () => void;
+  onContinue: (data: { name: string; description: string; parameters: McpParameter[] }) => void;
+}) {
+  const [toolName, setToolName] = useState("");
+  const [description, setDescription] = useState("");
+  const [parameters, setParameters] = useState<McpParameter[]>([]);
+  const [nameError, setNameError] = useState("");
+
+  const addParameter = () => {
+    setParameters([...parameters, { name: "", type: "string", required: false, description: "" }]);
+  };
+
+  const updateParameter = (index: number, field: keyof McpParameter, value: any) => {
+    const updated = [...parameters];
+    updated[index] = { ...updated[index], [field]: value };
+    setParameters(updated);
+  };
+
+  const removeParameter = (index: number) => {
+    setParameters(parameters.filter((_, i) => i !== index));
+  };
+
+  const validateName = (value: string) => {
+    if (value && !/^[a-zA-Z0-9_-]*$/.test(value)) {
+      setNameError("Only letters, numbers, underscores, and hyphens allowed");
+    } else {
+      setNameError("");
+    }
+  };
+
+  const canContinue = toolName.trim() !== "" && description.trim() !== "" && !nameError;
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh]">
+      <div className="w-full max-w-xl px-6">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </button>
+
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold">Configure MCP Tool</h1>
+          <p className="text-muted-foreground mt-1">
+            Define how AI assistants will discover and call this tool
+          </p>
+        </div>
+
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="tool-name">Tool Name</Label>
+            <Input
+              id="tool-name"
+              value={toolName}
+              onChange={(e) => {
+                setToolName(e.target.value);
+                validateName(e.target.value);
+              }}
+              placeholder="e.g. query_customers, check_inventory"
+              className={nameError ? "border-destructive" : ""}
+            />
+            {nameError && <p className="text-xs text-destructive">{nameError}</p>}
+            <p className="text-xs text-muted-foreground">
+              The identifier AI assistants use to call this tool
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="tool-description">Description</Label>
+            <Textarea
+              id="tool-description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="e.g. Query the customer database by name, email, or ID and return matching records"
+              rows={3}
+            />
+            <p className="text-xs text-muted-foreground">
+              Helps AI assistants understand when and how to use this tool
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>Input Parameters</Label>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={addParameter}
+                className="h-7 text-xs"
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                Add Parameter
+              </Button>
+            </div>
+
+            {parameters.length === 0 && (
+              <p className="text-sm text-muted-foreground py-4 text-center border border-dashed rounded-lg">
+                No parameters defined yet. Add parameters that AI assistants will pass when calling this tool.
+              </p>
+            )}
+
+            {parameters.map((param, index) => (
+              <div
+                key={index}
+                className="flex items-start gap-3 p-3 rounded-lg border bg-muted/30"
+              >
+                <div className="flex-1 space-y-2">
+                  <div className="grid grid-cols-[1fr_120px] gap-2">
+                    <Input
+                      value={param.name}
+                      onChange={(e) => updateParameter(index, "name", e.target.value)}
+                      placeholder="Parameter name"
+                      className="h-8 text-sm"
+                    />
+                    <Select
+                      value={param.type}
+                      onValueChange={(val) => updateParameter(index, "type", val)}
+                    >
+                      <SelectTrigger className="h-8 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PARAMETER_TYPES.map((t) => (
+                          <SelectItem key={t} value={t}>{t}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Input
+                    value={param.description}
+                    onChange={(e) => updateParameter(index, "description", e.target.value)}
+                    placeholder="Description"
+                    className="h-8 text-sm"
+                  />
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={param.required}
+                      onCheckedChange={(checked) => updateParameter(index, "required", !!checked)}
+                      className="h-3.5 w-3.5"
+                    />
+                    <span className="text-xs text-muted-foreground">Required</span>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeParameter(index)}
+                  className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+
+          <Button
+            onClick={() => onContinue({ name: toolName.trim(), description: description.trim(), parameters })}
+            disabled={!canContinue}
+            className="w-full"
+            size="lg"
+          >
+            Continue to Flow Builder
+            <ArrowRight className="h-4 w-4 ml-2" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function NewStreamPage() {
   const navigate = useNavigate();
   const { addToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [transformedSchemas, setTransformedSchemas] = useState<AllComponentSchemas | null>(null);
+  const [flowType, setFlowType] = useState<FlowType>(null);
+  const [mcpInitialData, setMcpInitialData] = useState<{
+    name: string;
+    status: string;
+    nodes: StreamNodeData[];
+  } | null>(null);
 
   useEffect(() => {
     setTransformedSchemas(transformComponentSchemas());
   }, []);
+
+  const handleMcpContinue = (data: { name: string; description: string; parameters: McpParameter[] }) => {
+    const inputSchema = data.parameters.map((p) => ({
+      name: p.name,
+      type: p.type,
+      required: p.required,
+      description: p.description,
+    }));
+
+    const configObj: Record<string, any> = {
+      name: data.name,
+      description: data.description,
+    };
+    if (inputSchema.length > 0) {
+      configObj.input_schema = inputSchema;
+    }
+    const configYaml = yaml.dump(configObj, { lineWidth: -1, noRefs: true });
+
+    setMcpInitialData({
+      name: data.name,
+      status: "active",
+      nodes: [
+        {
+          label: data.name,
+          type: "input",
+          componentId: "mcp_tool",
+          component: "mcp_tool",
+          configYaml,
+        },
+        {
+          label: "mcp_tool_response",
+          type: "output",
+          componentId: "sync_response",
+          component: "sync_response",
+          configYaml: "",
+        },
+      ],
+    });
+  };
 
   const handleValidateStream = async (data: { name: string; status: string; bufferId?: number; nodes: StreamNodeData[] }) => {
     const inputNode = data.nodes.find((node) => node.type === "input");
@@ -149,7 +431,7 @@ export default function NewStreamPage() {
       await createFlow(streamData);
       addToast({
         id: "stream-created",
-        title: "Stream Created",
+        title: "Flow Created",
         description: `${data.name} has been created successfully.`,
         variant: "success",
       });
@@ -175,27 +457,47 @@ export default function NewStreamPage() {
     );
   }
 
+  if (flowType === null) {
+    return <FlowTypeSelector onSelect={setFlowType} />;
+  }
+
+  if (flowType === "mcp_tool" && !mcpInitialData) {
+    return (
+      <McpToolForm
+        onBack={() => setFlowType(null)}
+        onContinue={handleMcpContinue}
+      />
+    );
+  }
+
+  if (isSubmitting) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Add New Flow</h1>
+        <h1 className="text-2xl font-bold">
+          {flowType === "mcp_tool" ? "Build MCP Tool" : "Add New Flow"}
+        </h1>
         <p className="text-muted-foreground">
-          Design your data processing pipeline visually
+          {flowType === "mcp_tool"
+            ? "Add processors to transform data between input and response"
+            : "Design your data processing pipeline visually"}
         </p>
       </div>
 
-      {isSubmitting ? (
-        <div className="flex justify-center items-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      ) : (
-        <FlowBuilder
-          allComponentSchemas={transformedSchemas}
-          onSave={handleSaveStream}
-          onValidate={handleValidateStream}
-          onTry={handleTryStream}
-        />
-      )}
+      <FlowBuilder
+        allComponentSchemas={transformedSchemas}
+        initialData={mcpInitialData || undefined}
+        onSave={handleSaveStream}
+        onValidate={handleValidateStream}
+        onTry={handleTryStream}
+      />
     </div>
   );
 }

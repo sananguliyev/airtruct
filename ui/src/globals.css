@@ -158,72 +158,6 @@ header {
   color: #fd971f;
 }
 
-/* Basic syntax highlighting for code editor */
-.code-editor-json .string {
-  color: #a6e22e;
-}
-.code-editor-json .number {
-  color: #ae81ff;
-}
-.code-editor-json .boolean {
-  color: #66d9ef;
-}
-.code-editor-json .null {
-  color: #f92672;
-}
-.code-editor-json .key {
-  color: #f8f8f2;
-}
-
-.code-editor-bloblang .keyword {
-  color: #66d9ef;
-}
-.code-editor-bloblang .function {
-  color: #a6e22e;
-}
-.code-editor-bloblang .string {
-  color: #e6db74;
-}
-.code-editor-bloblang .number {
-  color: #ae81ff;
-}
-.code-editor-bloblang .operator {
-  color: #f92672;
-}
-
-/* Dark mode adjustments */
-.dark .code-editor-json .string {
-  color: #a6e22e;
-}
-.dark .code-editor-json .number {
-  color: #ae81ff;
-}
-.dark .code-editor-json .boolean {
-  color: #66d9ef;
-}
-.dark .code-editor-json .null {
-  color: #f92672;
-}
-.dark .code-editor-json .key {
-  color: #f8f8f2;
-}
-
-.dark .code-editor-bloblang .keyword {
-  color: #66d9ef;
-}
-.dark .code-editor-bloblang .function {
-  color: #a6e22e;
-}
-.dark .code-editor-bloblang .string {
-  color: #e6db74;
-}
-.dark .code-editor-bloblang .number {
-  color: #ae81ff;
-}
-.dark .code-editor-bloblang .operator {
-  color: #f92672;
-}
-
 /* React Flow dark mode */
 .react-flow.dark {
   --xy-background-color: hsl(var(--background));
@@ -240,10 +174,5 @@ header {
   }
 }
 
-/* Textarea styling */
-textarea.code-editor {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  tab-size: 2;
-  -moz-tab-size: 2;
-}
+
 

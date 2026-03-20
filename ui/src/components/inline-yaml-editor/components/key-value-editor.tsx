@@ -2,7 +2,6 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2 } from "lucide-react";
-import { useTheme } from "next-themes";
 import { EditorProps } from "../types";
 
 interface KeyValueEditorProps extends EditorProps {
@@ -16,8 +15,6 @@ export function KeyValueEditor({
   previewMode = false,
 }: KeyValueEditorProps) {
   const pairs = Object.entries(value);
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
 
   const addPair = () => {
     updateValue({ ...value, "": "" });
@@ -49,71 +46,64 @@ export function KeyValueEditor({
 
   if (pairs.length === 0) {
     return (
-      <div className="flex items-center space-x-2">
-        <span className="text-gray-400 text-sm font-mono">{"{}"}</span>
-        {!previewMode && (
+      <div>
+        {!previewMode ? (
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={addPair}
-            className="h-5 w-5 p-0 text-green-400 hover:text-green-300"
+            className="h-7 text-xs"
           >
-            <Plus className="h-3 w-3" />
+            <Plus className="h-3 w-3 mr-1" />
+            Add entry
           </Button>
+        ) : (
+          <span className="text-sm text-muted-foreground">No entries</span>
         )}
       </div>
     );
   }
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-2">
       {pairs.map(([key, val], index) => (
-        <div key={index} className="flex items-center space-x-2 ml-4">
+        <div key={index} className="flex items-center gap-2">
           <Input
             value={key}
             onChange={(e) => updatePairKey(key, e.target.value)}
-            placeholder="key"
-            className={`h-5 text-xs p-1 flex-1 max-w-[80px] bg-background border-border text-foreground 
-              font-mono ${isDark ? "text-green-400" : "text-green-600"}`}
-            style={{
-              fontSize: "11px",
-            }}
+            placeholder="Key"
+            className="h-8 text-sm flex-1"
+            disabled={previewMode}
           />
-          <span className="text-muted-foreground text-xs">:</span>
           <Input
             value={val}
             onChange={(e) => updatePairValue(key, e.target.value)}
-            placeholder="value"
-            className={`h-5 text-xs p-1 flex-1 max-w-[100px] bg-background border-border text-foreground 
-              font-mono ${isDark ? "text-green-400" : "text-green-600"}`}
-            style={{
-              fontSize: "11px",
-            }}
+            placeholder="Value"
+            className="h-8 text-sm flex-1"
+            disabled={previewMode}
           />
           {!previewMode && (
             <Button
               variant="ghost"
               size="sm"
               onClick={() => removePair(key)}
-              className="h-4 w-4 p-0 text-red-400 hover:text-red-300"
+              className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
             >
-              <Trash2 className="h-2 w-2" />
+              <Trash2 className="h-4 w-4" />
             </Button>
           )}
         </div>
       ))}
       {!previewMode && (
-        <div className="ml-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={addPair}
-            className="h-5 w-auto px-2 text-green-400 hover:text-green-300 text-xs"
-          >
-            <Plus className="h-3 w-3 mr-1" />
-            Add
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={addPair}
+          className="h-7 text-xs"
+        >
+          <Plus className="h-3 w-3 mr-1" />
+          Add entry
+        </Button>
       )}
     </div>
   );

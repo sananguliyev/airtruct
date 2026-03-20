@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
@@ -9,7 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useTheme } from "next-themes";
 import * as yaml from "js-yaml";
 import {
   fetchCaches,
@@ -52,14 +52,10 @@ function DynamicSelectField({
   fieldSchema,
   value,
   onChange,
-  isDark,
-  inputStyle,
 }: {
   fieldSchema: FieldSchema;
   value: string;
   onChange: (value: string) => void;
-  isDark: boolean;
-  inputStyle: React.CSSProperties;
 }) {
   const [options, setOptions] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,17 +87,13 @@ function DynamicSelectField({
 
   if (loading) {
     return (
-      <div className="text-xs text-muted-foreground font-mono">Loading...</div>
+      <div className="text-sm text-muted-foreground">Loading...</div>
     );
   }
 
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger
-        className={`h-6 text-sm w-auto min-w-[100px] bg-background border-border text-foreground
-          focus-visible:ring-1 focus-visible:ring-ring font-mono ${isDark ? "text-green-400" : "text-green-600"}`}
-        style={inputStyle}
-      >
+      <SelectTrigger className="h-9 text-sm">
         <SelectValue
           placeholder={options.length === 0 ? "No options" : "Select..."}
         />
@@ -126,13 +118,9 @@ function DynamicSelectField({
 function FileSelectField({
   value,
   onChange,
-  isDark,
-  inputStyle,
 }: {
   value: string;
   onChange: (value: string) => void;
-  isDark: boolean;
-  inputStyle: React.CSSProperties;
 }) {
   const [options, setOptions] = useState<{ key: string; label: string }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -164,7 +152,7 @@ function FileSelectField({
 
   if (loading) {
     return (
-      <div className="text-xs text-muted-foreground font-mono">Loading...</div>
+      <div className="text-sm text-muted-foreground">Loading...</div>
     );
   }
 
@@ -173,11 +161,7 @@ function FileSelectField({
       value={displayValue || ""}
       onValueChange={(val) => onChange(`airtruct://${val}`)}
     >
-      <SelectTrigger
-        className={`h-6 text-sm w-auto min-w-[150px] bg-background border-border text-foreground
-          focus-visible:ring-1 focus-visible:ring-ring font-mono ${isDark ? "text-green-400" : "text-green-600"}`}
-        style={inputStyle}
-      >
+      <SelectTrigger className="h-9 text-sm">
         <SelectValue
           placeholder={options.length === 0 ? "No files" : "Select file..."}
         />
@@ -212,7 +196,6 @@ export function InlineYamlEditor({
     {},
   );
   const lastOutputRef = React.useRef<string>("");
-  const { resolvedTheme } = useTheme();
 
   const {
     internalProcessors,
@@ -234,7 +217,6 @@ export function InlineYamlEditor({
   const flatFieldSchema = flatFieldKey ? actualSchema[flatFieldKey] : null;
 
   useEffect(() => {
-    // Initialize internal state for flat processor lists
     if (isFlat && flatFieldSchema?.type === "processor_list") {
       const currentValue = Array.isArray(getCurrentValue())
         ? (getCurrentValue() as any[])
@@ -448,17 +430,6 @@ export function InlineYamlEditor({
     state: FieldState,
     handleValueChange: (value: any) => void,
   ) => {
-    const isDark = resolvedTheme === "dark";
-
-    const inputStyle = {
-      fontFamily: "monospace",
-      fontSize: "13px",
-    };
-
-    const inputClassName = `h-6 text-sm p-1 bg-background border-border text-foreground
-      focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring
-      font-mono text-xs ${isDark ? "text-green-400" : "text-green-600"}`;
-
     switch (fieldSchema.type) {
       case "input":
         return (
@@ -466,9 +437,7 @@ export function InlineYamlEditor({
             value={state.value || ""}
             onChange={handleValueChange}
             previewMode={previewMode}
-            placeholder="Enter value..."
-            pattern={fieldSchema.pattern}
-            patternMessage={fieldSchema.patternMessage}
+            placeholder={fieldSchema.description || "Enter value..."}
           />
         );
 
@@ -478,23 +447,19 @@ export function InlineYamlEditor({
             type="number"
             value={state.value || 0}
             onChange={(e) => handleValueChange(Number(e.target.value))}
-            className={inputClassName}
-            style={inputStyle}
+            className="h-9 text-sm"
           />
         );
 
       case "bool":
         return (
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
             <Switch
               checked={state.value || false}
               onCheckedChange={handleValueChange}
-              className="scale-75"
             />
-            <span
-              className={`ml-2 font-mono text-xs ${isDark ? "text-green-400" : "text-green-600"}`}
-            >
-              {state.value ? "true" : "false"}
+            <span className="text-sm text-muted-foreground">
+              {state.value ? "Enabled" : "Disabled"}
             </span>
           </div>
         );
@@ -502,11 +467,7 @@ export function InlineYamlEditor({
       case "select":
         return (
           <Select value={state.value || ""} onValueChange={handleValueChange}>
-            <SelectTrigger
-              className={`h-6 text-sm w-auto min-w-[100px] bg-background border-border text-foreground
-                focus-visible:ring-1 focus-visible:ring-ring font-mono ${isDark ? "text-green-400" : "text-green-600"}`}
-              style={inputStyle}
-            >
+            <SelectTrigger className="h-9 text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -525,8 +486,6 @@ export function InlineYamlEditor({
             fieldSchema={fieldSchema}
             value={state.value || ""}
             onChange={handleValueChange}
-            isDark={isDark}
-            inputStyle={inputStyle}
           />
         );
 
@@ -535,15 +494,13 @@ export function InlineYamlEditor({
           <FileSelectField
             value={state.value || ""}
             onChange={handleValueChange}
-            isDark={isDark}
-            inputStyle={inputStyle}
           />
         );
 
       case "code":
         return (
           <Suspense
-            fallback={<div className="text-xs text-gray-400">Loading...</div>}
+            fallback={<div className="text-sm text-muted-foreground">Loading...</div>}
           >
             <LazyCodeEditorField
               value={state.value || ""}
@@ -565,7 +522,7 @@ export function InlineYamlEditor({
       case "array":
         return (
           <Suspense
-            fallback={<div className="text-xs text-gray-400">Loading...</div>}
+            fallback={<div className="text-sm text-muted-foreground">Loading...</div>}
           >
             <LazyArrayEditor
               value={state.value || []}
@@ -578,7 +535,7 @@ export function InlineYamlEditor({
       case "property_list":
         return (
           <Suspense
-            fallback={<div className="text-xs text-gray-400">Loading...</div>}
+            fallback={<div className="text-sm text-muted-foreground">Loading...</div>}
           >
             <LazyPropertyListEditor
               value={state.value || []}
@@ -591,7 +548,7 @@ export function InlineYamlEditor({
       case "object":
         return (
           <Suspense
-            fallback={<div className="text-xs text-gray-400">Loading...</div>}
+            fallback={<div className="text-sm text-muted-foreground">Loading...</div>}
           >
             <LazyObjectEditor
               value={state.value || {}}
@@ -605,7 +562,7 @@ export function InlineYamlEditor({
       case "processor_list":
         return (
           <Suspense
-            fallback={<div className="text-xs text-gray-400">Loading...</div>}
+            fallback={<div className="text-sm text-muted-foreground">Loading...</div>}
           >
             <LazyProcessorListEditor
               value={state.value || []}
@@ -621,7 +578,7 @@ export function InlineYamlEditor({
       case "output_cases":
         return (
           <Suspense
-            fallback={<div className="text-xs text-gray-400">Loading...</div>}
+            fallback={<div className="text-sm text-muted-foreground">Loading...</div>}
           >
             <LazyOutputCasesEditor
               value={state.value || []}
@@ -664,7 +621,7 @@ export function InlineYamlEditor({
       case "processor_cases":
         return (
           <Suspense
-            fallback={<div className="text-xs text-gray-400">Loading...</div>}
+            fallback={<div className="text-sm text-muted-foreground">Loading...</div>}
           >
             <LazyProcessorCasesEditor
               value={state.value || []}
@@ -689,13 +646,12 @@ export function InlineYamlEditor({
     }
   };
 
-  const renderInlineField = (fieldKey: string, fieldSchema: FieldSchema) => {
+  const renderField = (fieldKey: string, fieldSchema: FieldSchema) => {
     const state = fieldStates[fieldKey];
     const isRequired = fieldSchema.required === true;
 
     if (!state) return null;
 
-    // In preview mode, hide non-selected fields
     if (previewMode && !state.enabled) return null;
 
     const handleValueChange = (newValue: any) => {
@@ -703,29 +659,34 @@ export function InlineYamlEditor({
     };
 
     return (
-      <div key={fieldKey} className="flex items-center space-x-2 py-1">
-        {!previewMode && (
-          <Checkbox
-            checked={state.enabled}
-            disabled={isRequired}
-            onCheckedChange={(checked) =>
-              updateFieldState(fieldKey, { enabled: checked as boolean })
-            }
-            className="h-4 w-4"
-          />
+      <div key={fieldKey} className="space-y-1.5">
+        <div className="flex items-center gap-2">
+          {!previewMode && (
+            <Checkbox
+              checked={state.enabled}
+              disabled={isRequired}
+              onCheckedChange={(checked) =>
+                updateFieldState(fieldKey, { enabled: checked as boolean })
+              }
+              className="h-4 w-4"
+            />
+          )}
+          <Label className={`text-sm ${state.enabled ? "text-foreground" : "text-muted-foreground"}`}>
+            {fieldSchema.title || fieldKey}
+            {!previewMode && isRequired && (
+              <span className="text-destructive ml-1">*</span>
+            )}
+          </Label>
+        </div>
+        {fieldSchema.description && state.enabled && (
+          <p className={`text-xs text-muted-foreground ${!previewMode ? "pl-6" : ""}`}>
+            {fieldSchema.description}
+          </p>
         )}
-        <span
-          className={`min-w-0 font-mono text-xs ${state.enabled ? "text-foreground" : "text-muted-foreground"}`}
-        >
-          {fieldKey}:
-        </span>
         {state.enabled && (
-          <div className="flex-1 min-w-0">
+          <div className={!previewMode ? "pl-6" : ""}>
             {renderValueInput(fieldSchema, state, handleValueChange)}
           </div>
-        )}
-        {!previewMode && isRequired && (
-          <span className="text-red-500 text-xs">*</span>
         )}
       </div>
     );
@@ -795,7 +756,6 @@ export function InlineYamlEditor({
       if (typeof newValue === "string") {
         onChange(newValue);
       } else if (flatFieldSchema.type === "processor_list") {
-        // Store the raw processor array (including incomplete ones) for getCurrentValue
         const currentProcessors = Array.isArray(newValue) ? newValue : [];
 
         try {
@@ -892,14 +852,14 @@ export function InlineYamlEditor({
     };
 
     return (
-      <div className="font-mono text-sm p-4 bg-background text-foreground rounded-md border border-border">
+      <div className="p-4 bg-background rounded-md border">
         <div className="space-y-2">
-          <span className="text-sm text-muted-foreground">
+          <Label className="text-sm text-muted-foreground">
             {flatFieldSchema.title || flatFieldKey}
-          </span>
+          </Label>
           {flatFieldSchema.type === "code" ? (
             <Suspense
-              fallback={<div className="text-xs text-gray-400">Loading...</div>}
+              fallback={<div className="text-sm text-muted-foreground">Loading...</div>}
             >
               <LazyCodeEditorField
                 value={value || ""}
@@ -909,7 +869,7 @@ export function InlineYamlEditor({
             </Suspense>
           ) : flatFieldSchema.type === "processor_list" ? (
             <Suspense
-              fallback={<div className="text-xs text-gray-400">Loading...</div>}
+              fallback={<div className="text-sm text-muted-foreground">Loading...</div>}
             >
               <LazyProcessorListEditor
                 value={
@@ -930,7 +890,7 @@ export function InlineYamlEditor({
             </Suspense>
           ) : flatFieldSchema.type === "processor_cases" ? (
             <Suspense
-              fallback={<div className="text-xs text-gray-400">Loading...</div>}
+              fallback={<div className="text-sm text-muted-foreground">Loading...</div>}
             >
               <LazyProcessorCasesEditor
                 value={
@@ -957,10 +917,10 @@ export function InlineYamlEditor({
   }
 
   return (
-    <div className="font-mono text-sm p-4 bg-background text-foreground rounded-md border border-border">
-      <div className="space-y-1">
+    <div className="p-4 bg-background rounded-md border">
+      <div className="space-y-4">
         {Object.entries(actualSchema).map(([fieldKey, fieldSchema]) =>
-          renderInlineField(fieldKey, fieldSchema),
+          renderField(fieldKey, fieldSchema),
         )}
       </div>
     </div>

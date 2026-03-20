@@ -8,7 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useTheme } from "next-themes";
 import { FieldSchema } from "../types";
 import { TextInputField } from "./text-input-field";
 import { LazyCodeEditorField, LazyArrayEditor } from "./lazy-components";
@@ -30,14 +29,6 @@ export function NestedPropertyInput({
   updateValue,
   previewMode = false,
 }: NestedPropertyInputProps) {
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
-
-  const inputStyle = {
-    fontFamily: "monospace",
-    fontSize: "11px",
-  };
-
   switch (propSchema.type) {
     case "input":
       return (
@@ -55,26 +46,21 @@ export function NestedPropertyInput({
           type="number"
           value={propValue || 0}
           onChange={(e) => updateValue(Number(e.target.value))}
-          className={`h-5 text-xs p-1 bg-background border-border text-foreground 
-            font-mono ${isDark ? "text-green-400" : "text-green-600"}`}
-          style={inputStyle}
+          className="h-8 text-sm"
           disabled={previewMode}
         />
       );
 
     case "bool":
       return (
-        <div className="flex items-center">
+        <div className="flex items-center gap-2">
           <Switch
             checked={propValue || false}
             onCheckedChange={updateValue}
-            className="scale-50"
             disabled={previewMode}
           />
-          <span
-            className={`ml-1 font-mono text-xs ${isDark ? "text-green-400" : "text-green-600"}`}
-          >
-            {propValue ? "true" : "false"}
+          <span className="text-sm text-muted-foreground">
+            {propValue ? "Enabled" : "Disabled"}
           </span>
         </div>
       );
@@ -86,11 +72,7 @@ export function NestedPropertyInput({
           onValueChange={updateValue}
           disabled={previewMode}
         >
-          <SelectTrigger
-            className={`h-5 text-xs w-auto min-w-[80px] bg-background border-border text-foreground 
-            font-mono ${isDark ? "text-green-400" : "text-green-600"}`}
-            style={inputStyle}
-          >
+          <SelectTrigger className="h-8 text-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -106,7 +88,7 @@ export function NestedPropertyInput({
     case "array":
       return (
         <Suspense
-          fallback={<div className="text-xs text-gray-400">Loading...</div>}
+          fallback={<div className="text-sm text-muted-foreground">Loading...</div>}
         >
           <LazyArrayEditor
             value={propValue || []}
@@ -128,7 +110,7 @@ export function NestedPropertyInput({
     case "code":
       return (
         <Suspense
-          fallback={<div className="text-xs text-gray-400">Loading...</div>}
+          fallback={<div className="text-sm text-muted-foreground">Loading...</div>}
         >
           <LazyCodeEditorField
             value={propValue || ""}
