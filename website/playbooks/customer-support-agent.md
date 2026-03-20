@@ -43,7 +43,7 @@ INSERT INTO orders VALUES
  '123 Oak Street, Portland, OR 97201',
  '2025-03-05', '2025-03-07', 'TRK-998877'),
 
-('ORD-1002', 'Bob Martinez', 'bob@example.com', 'processing',
+('ORD-1002', 'Sanan Guliyev', 'sanan@example.com', 'processing',
  'Mechanical Keyboard x1', 149.99,
  '456 Elm Avenue, Austin, TX 78701',
  '2025-03-10', NULL, NULL),
@@ -58,7 +58,7 @@ INSERT INTO orders VALUES
  '789 Pine Road, Seattle, WA 98101',
  '2025-03-01', '2025-03-03', 'TRK-112233'),
 
-('ORD-1005', 'Bob Martinez', 'bob@example.com', 'backordered',
+('ORD-1005', 'Sanan Guliyev', 'sanan@example.com', 'backordered',
  'Monitor Arm x1, Desk Mat x1', 124.50,
  '456 Elm Avenue, Austin, TX 78701',
  '2025-03-08', NULL, NULL);
@@ -219,9 +219,9 @@ The AI will call `lookup_customer` and list both of Alice's orders.
 
 **Full support flow:**
 
-> A customer named Bob Martinez emailed us saying: "I placed two orders last week and neither has shipped yet. What is going on?" His email is bob@example.com. Can you look into it and draft a reply and use it as is?
+> A customer named Sanan Guliyev emailed us saying: "I placed two orders last week and neither has shipped yet. What is going on?" His email is sanan@example.com. Can you look into it and draft a reply and use it as is?
 
-This is where it gets interesting. The AI will call `lookup_customer` to find Bob's orders and their statuses, then call `lookup_order` on each one to get the full details like items and shipping info, and finally call `draft_support_reply` to write a response using everything it found.
+This is where it gets interesting. The AI will call `lookup_customer` to find Sanan's orders and their statuses, then call `lookup_order` on each one to get the full details like items and shipping info, and finally call `draft_support_reply` to write a response using everything it found.
 
 ## Adding More Data
 

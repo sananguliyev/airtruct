@@ -964,12 +964,26 @@ export const componentSchemas = {
             "Sampling temperature for the model. Higher values produce more random output.",
           default: 1.0,
         },
-        result_map: {
-          type: "code",
-          title: "Result Map",
+        mcp_tools: {
+          type: "bool",
+          title: "MCP Tools",
           description:
-            "A Bloblang mapping executed on the AI response and applied to the original message. In this mapping, 'this' refers to the AI response object (content, model, finish_reason, usage) and 'root' refers to the original message.",
-          required: true,
+            "When enabled, the AI model can discover and call MCP tools registered in Airtruct. The model will automatically have access to all active MCP tool flows.",
+          default: true,
+        },
+        mcp_url: {
+          type: "input",
+          title: "MCP URL",
+          description:
+            "URL of the Airtruct MCP endpoint for tool discovery and execution.",
+          default: "http://localhost:8080/mcp",
+        },
+        max_tool_rounds: {
+          type: "number",
+          title: "Max Tool Rounds",
+          description:
+            "Maximum number of tool calling rounds before forcing a final response.",
+          default: 5,
         },
       },
     },
