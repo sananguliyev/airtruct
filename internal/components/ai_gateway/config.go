@@ -14,6 +14,9 @@ const (
 	agfMaxTokens            = "max_tokens"
 	agfTemperature          = "temperature"
 	agfResultMap            = "result_map"
+	agfMCPTools             = "mcp_tools"
+	agfMCPURL               = "mcp_url"
+	agfMaxToolRounds        = "max_tool_rounds"
 )
 
 func Config() *service.ConfigSpec {
@@ -65,5 +68,15 @@ The result_map is a Bloblang mapping where ` + "`this`" + ` refers to the AI res
 			Default(1.0)).
 		Field(service.NewBloblangField(agfResultMap).
 			Description("A Bloblang mapping that is executed on the AI response and applied to the original message. In this mapping, `this` refers to the AI response object and `root` refers to the original message.")).
+		Field(service.NewBoolField(agfMCPTools).
+			Description("When enabled, the AI model can discover and call MCP tools registered in the Airtruct coordinator. The model will automatically have access to all active MCP tool flows.").
+			Default(true)).
+		Field(service.NewStringField(agfMCPURL).
+			Description("URL of the Airtruct MCP endpoint for tool discovery and execution.").
+			Default("http://localhost:8080/mcp")).
+		Field(service.NewIntField(agfMaxToolRounds).
+			Description("Maximum number of tool calling rounds before forcing a final response. Each round allows the model to call one or more tools and receive results.").
+			Default(5).
+			Advanced()).
 		Version("1.0.0")
 }

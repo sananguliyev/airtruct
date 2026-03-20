@@ -118,7 +118,7 @@ func InitializeCoordinatorCommand(ctx *cli.Context) *intcli.CoordinatorCLI {
 	flowWorkerMap := executorcoordinator.NewFlowWorkerMap()
 	coordinatorAPI := coordinator.NewCoordinatorAPI(eventRepository, flowRepository, flowCacheRepository, flowRateLimitRepository, flowBufferRepository, workerRepository, workerFlowRepository, secretRepository, cacheRepository, bufferRepository, rateLimitRepository, fileRepository, rateLimiterEngine, aesgcm, analyticsProvider, flowWorkerMap)
 	coordinatorExecutor := executor.NewCoordinatorExecutor(workerRepository, flowRepository, flowCacheRepository, flowRateLimitRepository, workerFlowRepository, fileRepository, flowWorkerMap)
-	mcpHandler := mcppkg.NewMCPHandler(flowRepository, coordinatorExecutor)
+	mcpHandler := mcppkg.NewMCPHandler(flowRepository, coordinatorExecutor, Version)
 	httpPort := uint32(ctx.Uint("http-port"))
 	grpcPort := uint32(ctx.Uint("grpc-port"))
 	coordinatorCLI := intcli.NewCoordinatorCLI(coordinatorAPI, coordinatorExecutor, rateLimiterEngine, authManager, mcpHandler, httpPort, grpcPort)

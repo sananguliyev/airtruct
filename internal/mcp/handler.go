@@ -29,27 +29,27 @@ type toolConfig struct {
 type MCPHandler struct {
 	mcpServer   *server.MCPServer
 	httpHandler *server.StreamableHTTPServer
-	flowRepo  persistence.FlowRepository
+	flowRepo    persistence.FlowRepository
 	forwarder   RequestForwarder
 	mu          sync.RWMutex
-	// tool name -> stream ID used for forwarding via /ingest/{flowID}
+	// tool name -> flow ID used for forwarding via /ingest/{flowID}
 	toolFlowMap map[string]int64
 }
 
-func NewMCPHandler(flowRepo persistence.FlowRepository, forwarder RequestForwarder) *MCPHandler {
+func NewMCPHandler(flowRepo persistence.FlowRepository, forwarder RequestForwarder, version string) *MCPHandler {
 	mcpServer := server.NewMCPServer(
 		"airtruct",
-		"0.1.0",
+		version,
 		server.WithToolCapabilities(true),
 	)
 
 	httpHandler := server.NewStreamableHTTPServer(mcpServer)
 
 	h := &MCPHandler{
-		mcpServer:     mcpServer,
-		httpHandler:   httpHandler,
+		mcpServer:   mcpServer,
+		httpHandler: httpHandler,
 		flowRepo:    flowRepo,
-		forwarder:     forwarder,
+		forwarder:   forwarder,
 		toolFlowMap: make(map[string]int64),
 	}
 
