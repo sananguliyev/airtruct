@@ -4,7 +4,7 @@
 
 [![license](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/sananguliyev/airtruct)](https://github.com/sananguliyev/airtruct/releases) [![Go Report Card](https://goreportcard.com/badge/github.com/sananguliyev/airtruct)](https://goreportcard.com/report/github.com/sananguliyev/airtruct)
 
-Turn APIs, databases, and scripts into MCP tools — without writing MCP servers. Airtruct is an open-source, self-hosted platform that lets you visually build tools for AI assistants like Claude, Cursor, and AI agents. Connect 66+ sources, define parameters, and get an instant MCP endpoint. Single binary, no Docker or JVM required.
+Turn APIs, databases, and scripts into MCP tools - without writing MCP servers. Airtruct is an open-source, self-hosted platform that lets you visually build tools for AI assistants like Claude, Cursor, and AI agents. Connect 66+ sources, define parameters, and get an instant MCP endpoint. Single binary, no Docker or JVM required.
 
 **[Documentation](https://airtruct.com/)** | **[Playbooks](https://airtruct.com/playbooks)**
 
@@ -40,28 +40,28 @@ See the [Installation docs](https://airtruct.com/docs/getting-started/installati
 
 ## How It Works
 
-1. **Connect** — Pick from 66+ built-in connectors for APIs, databases, queues, and services.
-2. **Define Tool** — Set the tool name, description, and input parameters. Airtruct generates the MCP tool automatically.
-3. **Use With AI** — Tools are instantly callable by Claude, Cursor, AI agents, and internal copilots via the `/mcp` endpoint.
+1. **Connect** - Pick from 66+ built-in connectors for APIs, databases, queues, and services.
+2. **Define Tool** - Set the tool name, description, and input parameters. Airtruct generates the MCP tool automatically.
+3. **Use With AI** - Tools are instantly callable by Claude, Cursor, AI agents, and internal copilots via the `/mcp` endpoint.
 
 ## Features
 
-- **Instant MCP Endpoint** — Flows are auto-registered as MCP tools, discoverable by any MCP client
-- **Visual Tool Builder** — Drag-and-drop DAG editor to build and manage tools and data flows
-- **66+ Connectors** — Kafka, HTTP, AMQP, MySQL CDC, PostgreSQL, and more
-- **Built-in Transformations** — Transform data with Bloblang DSL and JSON Schema validation
-- **Parameter Validation** — Define types, descriptions, and required flags visible to AI assistants
-- **Secure Credentials** — Encrypted secrets management for API keys and tokens
-- **Automation Flows** — Move and route data between systems, or orchestrate AI workflows that call your MCP tools
-- **Horizontal Scaling** — Coordinator & worker architecture for easy scaling
-- **Single Binary** — No Docker, JVM, or external dependencies required
-- **Self-hosted & Open Source** — Full control over your data, Apache 2.0 licensed
+- **Instant MCP Endpoint** - Flows are auto-registered as MCP tools, discoverable by any MCP client
+- **Visual Tool Builder** - Drag-and-drop DAG editor to build and manage tools and data flows
+- **66+ Connectors** - Kafka, HTTP, AMQP, MySQL CDC, PostgreSQL, and more
+- **Built-in Transformations** - Transform data with Bloblang DSL and JSON Schema validation
+- **Parameter Validation** - Define types, descriptions, and required flags visible to AI assistants
+- **Secure Credentials** - Encrypted secrets management for API keys and tokens
+- **Automation Flows** - Move and route data between systems, or orchestrate AI workflows that call your MCP tools
+- **Horizontal Scaling** - Coordinator & worker architecture for easy scaling
+- **Single Binary** - No Docker, JVM, or external dependencies required
+- **Self-hosted & Open Source** - Full control over your data, Apache 2.0 licensed
 
 ## Playbooks
 
-- [MCP Tool Integration](https://airtruct.com/playbooks/mcp-tool) — Build tools for AI assistants without writing MCP servers.
-- [Kafka to PostgreSQL](https://airtruct.com/playbooks/kafka-to-postgresql) — Flow events from Kafka through Avro schema decoding into PostgreSQL.
-- [HTTP Webhooks](https://airtruct.com/playbooks/http-webhooks) — Accept webhook data over HTTP and store it in a database.
+- [MCP Tool Integration](https://airtruct.com/playbooks/mcp-tool) - Build tools for AI assistants without writing MCP servers.
+- [Kafka to PostgreSQL](https://airtruct.com/playbooks/kafka-to-postgresql) - Flow events from Kafka through Avro schema decoding into PostgreSQL.
+- [HTTP Webhooks](https://airtruct.com/playbooks/http-webhooks) - Accept webhook data over HTTP and store it in a database.
 
 ## Contributing
 
@@ -69,4 +69,4 @@ We welcome contributions! Please check out [CONTRIBUTING](CONTRIBUTING) (coming 
 
 ## License
 
-Apache 2.0 — see [LICENSE](LICENSE) for details.
+Apache 2.0 - see [LICENSE](LICENSE) for details.
