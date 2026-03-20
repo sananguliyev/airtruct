@@ -13,7 +13,6 @@ const (
 	agfUnsafeDynamicPrompt  = "unsafe_dynamic_prompt"
 	agfMaxTokens            = "max_tokens"
 	agfTemperature          = "temperature"
-	agfResultMap            = "result_map"
 	agfMCPTools             = "mcp_tools"
 	agfMCPURL               = "mcp_url"
 	agfMaxToolRounds        = "max_tool_rounds"
@@ -35,7 +34,7 @@ The prompt field is a string template where ` + "`%v`" + ` placeholders are subs
 
 Alternatively, setting unsafe_dynamic_prompt to true enables interpolation functions in the prompt, allowing ` + "`${!this.field_name}`" + ` syntax to reference message fields directly. Both mechanisms can be used together.
 
-The result_map is a Bloblang mapping where ` + "`this`" + ` refers to the AI response object containing the fields: content, model, finish_reason, and usage (with input_tokens and output_tokens). The ` + "`root`" + ` refers to the original message being modified.`).
+The processor outputs a structured object containing: content, model, finish_reason, and usage (with input_tokens and output_tokens). Use a mapping processor after the AI gateway to transform the response as needed.`).
 		Field(service.NewStringEnumField(agfProvider, "openai", "anthropic").
 			Description("The AI provider to use for chat completions.")).
 		Field(service.NewStringField(agfModel).
@@ -66,8 +65,6 @@ The result_map is a Bloblang mapping where ` + "`this`" + ` refers to the AI res
 		Field(service.NewFloatField(agfTemperature).
 			Description("Sampling temperature for the model. Higher values produce more random output.").
 			Default(1.0)).
-		Field(service.NewBloblangField(agfResultMap).
-			Description("A Bloblang mapping that is executed on the AI response and applied to the original message. In this mapping, `this` refers to the AI response object and `root` refers to the original message.")).
 		Field(service.NewBoolField(agfMCPTools).
 			Description("When enabled, the AI model can discover and call MCP tools registered in the Airtruct coordinator. The model will automatically have access to all active MCP tool flows.").
 			Default(true)).

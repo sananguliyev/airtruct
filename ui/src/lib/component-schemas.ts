@@ -964,13 +964,6 @@ export const componentSchemas = {
             "Sampling temperature for the model. Higher values produce more random output.",
           default: 1.0,
         },
-        result_map: {
-          type: "code",
-          title: "Result Map",
-          description:
-            "A Bloblang mapping executed on the AI response and applied to the original message. In this mapping, 'this' refers to the AI response object (content, model, finish_reason, usage) and 'root' refers to the original message.",
-          required: true,
-        },
         mcp_tools: {
           type: "bool",
           title: "MCP Tools",

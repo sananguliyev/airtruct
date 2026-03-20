@@ -33,7 +33,6 @@ type Processor struct {
 	argsMapping   *bloblang.Executor
 	maxTokens     int
 	temperature   float64
-	resultMap     *bloblang.Executor
 	mcpTools      bool
 	mcpURL        string
 	maxToolRounds int
@@ -112,11 +111,6 @@ func NewFromConfig(conf *service.ParsedConfig, mgr *service.Resources) (*Process
 	}
 
 	p.temperature, err = conf.FieldFloat(agfTemperature)
-	if err != nil {
-		return nil, err
-	}
-
-	p.resultMap, err = conf.FieldBloblang(agfResultMap)
 	if err != nil {
 		return nil, err
 	}
@@ -366,7 +360,8 @@ func (p *Processor) Process(ctx context.Context, msg *service.Message) (service.
 	}
 	p.logger.Tracef("AI gateway response content: %s", chatResp.Content)
 
-	responseObj := map[string]any{
+	outMsg := msg.Copy()
+	outMsg.SetStructured(map[string]any{
 		"content":       chatResp.Content,
 		"model":         chatResp.Model,
 		"finish_reason": chatResp.FinishReason,
@@ -374,15 +369,7 @@ func (p *Processor) Process(ctx context.Context, msg *service.Message) (service.
 			"input_tokens":  chatResp.Usage.InputTokens,
 			"output_tokens": chatResp.Usage.OutputTokens,
 		},
-	}
-
-	result, err := p.resultMap.Query(responseObj)
-	if err != nil {
-		return nil, fmt.Errorf("failed to execute result_map: %w", err)
-	}
-
-	outMsg := msg.Copy()
-	outMsg.SetStructured(result)
+	})
 
 	return service.MessageBatch{outMsg}, nil
 }
