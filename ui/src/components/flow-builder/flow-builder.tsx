@@ -59,6 +59,7 @@ import * as yaml from "js-yaml";
 import { InputNode } from "./nodes/input-node";
 import { ProcessorNode } from "./nodes/processor-node";
 import { OutputNode } from "./nodes/output-node";
+import { BranchGroupNode } from "./nodes/branch-group-node";
 import { CatchGroupNode } from "./nodes/catch-group-node";
 import { ChildProcessorNode } from "./nodes/child-processor-node";
 import { BrokerGroupNode } from "./nodes/broker-group-node";
@@ -123,6 +124,8 @@ export interface StreamFlowNodeData extends Record<string, unknown> {
   parentBrokerPattern?: string;
   caseFallthrough?: boolean;
   caseCheck?: string;
+  isDragging?: boolean;
+  isDropTarget?: boolean;
 }
 
 type ValidationResult = { valid: boolean; error?: string } | null;
@@ -165,6 +168,7 @@ const nodeTypes = {
   inputNode: InputNode,
   processorNode: ProcessorNode,
   outputNode: OutputNode,
+  branchGroupNode: BranchGroupNode,
   catchGroupNode: CatchGroupNode,
   childProcessorNode: ChildProcessorNode,
   brokerGroupNode: BrokerGroupNode,
@@ -411,7 +415,7 @@ function migrateOutputSwitchGroups(flowNodes: Node[], flowEdges: Edge[]): void {
 
 // Re-snap child positions and fix internal edges for groups
 function reSnapChildren(flowNodes: Node[], flowEdges: Edge[]): void {
-  const groupNodes = flowNodes.filter((n) => n.type === "catchGroupNode" || n.type === "brokerGroupNode" || n.type === "brokerInputGroupNode");
+  const groupNodes = flowNodes.filter((n) => n.type === "branchGroupNode" || n.type === "catchGroupNode" || n.type === "brokerGroupNode" || n.type === "brokerInputGroupNode");
   for (const group of groupNodes) {
     const isBrokerOutput = group.type === "brokerGroupNode";
     const isBrokerInput = group.type === "brokerInputGroupNode";
@@ -423,9 +427,7 @@ function reSnapChildren(flowNodes: Node[], flowEdges: Edge[]): void {
     const pattern = isBrokerOutput ? (group.data as StreamFlowNodeData)?.brokerPattern : undefined;
     children.forEach((child, i) => {
       child.position = { x: CHILD_X, y: yStart + i * (CHILD_NODE_HEIGHT + CHILD_GAP_Y) };
-      if (isBrokerOutput) {
-        child.data = { ...child.data, childIndex: i, parentBrokerPattern: pattern };
-      }
+      child.data = { ...child.data, childIndex: i, ...(isBrokerOutput ? { parentBrokerPattern: pattern } : {}) };
     });
     const calcHeight = isBrokerOutput ? calcBrokerGroupHeight : isBrokerInput ? calcBrokerInputGroupHeight : calcCatchGroupHeight;
     group.style = { ...group.style, width: GROUP_WIDTH, height: calcHeight(children.length) };
@@ -481,6 +483,9 @@ function resolveFlowNodeType(
   baseType: "input" | "processor" | "output",
   componentId: string
 ): { nodeType: string; style?: Record<string, unknown>; extraData: Record<string, unknown>; yOffset: number } {
+  if (componentId === "branch" && baseType === "processor") {
+    return { nodeType: "branchGroupNode", style: { width: GROUP_WIDTH, height: CATCH_GROUP_MIN_HEIGHT }, extraData: { isGroup: true, childCount: 0 }, yOffset: -25 };
+  }
   if (componentId === "catch" && baseType === "processor") {
     return { nodeType: "catchGroupNode", style: { width: GROUP_WIDTH, height: CATCH_GROUP_MIN_HEIGHT }, extraData: { isGroup: true, childCount: 0 }, yOffset: -25 };
   }
@@ -669,7 +674,70 @@ function FlowBuilderContent({
     for (const nd of processorNodes) {
       const id = uuidv4();
 
-      if (nd.componentId === "catch") {
+      if (nd.componentId === "branch") {
+        let branchConfig: any = {};
+        if (nd.configYaml?.trim()) {
+          try { branchConfig = yaml.load(nd.configYaml) || {}; } catch {}
+        }
+        const childConfigs: any[] = Array.isArray(branchConfig.processors) ? branchConfig.processors : [];
+        const requestMap = branchConfig.request_map || "";
+        const resultMap = branchConfig.result_map || "";
+
+        const childCount = childConfigs.length;
+        const groupHeight = calcCatchGroupHeight(childCount);
+
+        flowNodes.push({
+          id,
+          type: "branchGroupNode",
+          position: { x: xPos, y: NODE_Y - 25 },
+          style: { width: GROUP_WIDTH, height: groupHeight },
+          data: { ...nd, nodeId: id, isGroup: true, childCount, configYaml: yaml.dump({ request_map: requestMap, result_map: resultMap }, { lineWidth: -1, noRefs: true }) },
+        });
+
+        let prevChildId: string | null = null;
+        childConfigs.forEach((procObj, i) => {
+          const componentName = Object.keys(procObj).find((k) => k !== "label") || Object.keys(procObj)[0];
+          const config = procObj[componentName];
+          const childLabel = procObj.label as string | undefined;
+          const schema = allComponentSchemas.processor.find(
+            (p) => p.component === componentName || p.id === componentName
+          );
+          const childId = uuidv4();
+          flowNodes.push({
+            id: childId,
+            type: "childProcessorNode",
+            position: {
+              x: CHILD_X,
+              y: CATCH_CHILD_Y_START + i * (CHILD_NODE_HEIGHT + CHILD_GAP_Y),
+            },
+            parentId: id,
+            extent: "parent" as const,
+            data: {
+              label: childLabel || schema?.id || componentName,
+              type: "processor",
+              componentId: schema?.id || componentName,
+              component: componentName,
+              configYaml: typeof config === "string" ? config : (config && Object.keys(config).length > 0 ? yaml.dump(config, { lineWidth: -1, noRefs: true }) : ""),
+              nodeId: childId,
+              childIndex: i,
+            },
+          });
+          if (prevChildId) {
+            flowEdges.push({
+              id: `e-internal-${prevChildId}-${childId}`,
+              source: prevChildId,
+              target: childId,
+              type: "pipeline",
+              data: { internal: true },
+            });
+          }
+          prevChildId = childId;
+        });
+
+        connectFromPrev(id);
+        prevNodeIds = [id];
+        xPos += NODE_SPACING_X;
+      } else if (nd.componentId === "catch") {
         // Parse catch children from configYaml
         let childConfigs: any[] = [];
         if (nd.configYaml?.trim()) {
@@ -715,6 +783,7 @@ function FlowBuilderContent({
               component: componentName,
               configYaml: typeof config === "string" ? config : (config && Object.keys(config).length > 0 ? yaml.dump(config, { lineWidth: -1, noRefs: true }) : ""),
               nodeId: childId,
+              childIndex: i,
             },
           });
           if (prevChildId) {
@@ -1131,12 +1200,15 @@ function FlowBuilderContent({
 
   const handleAddChildProcessor = useCallback(
     (groupId: string) => {
+      const groupNode = nodes.find((n) => n.id === groupId);
+      const isBranch = groupNode?.type === "branchGroupNode";
       const existingChildren = nodes.filter((n) => n.parentId === groupId);
-      const available = allComponentSchemas.processor.filter((p) => p.id !== "catch");
+      const available = allComponentSchemas.processor.filter((p) => p.id !== "catch" && p.id !== "branch");
+      const prefix = isBranch ? "branch_proc" : "catch_proc";
       setPendingNode({
         kind: "childProcessor",
         groupId,
-        label: `catch_proc_${existingChildren.length + 1}`,
+        label: `${prefix}_${existingChildren.length + 1}`,
         componentId: "",
         component: "",
         availableComponents: available,
@@ -1393,7 +1465,7 @@ function FlowBuilderContent({
         id: newId, type: "childProcessorNode",
         position: { x: CHILD_X, y: CATCH_CHILD_Y_START + childCount * (CHILD_NODE_HEIGHT + CHILD_GAP_Y) },
         parentId: groupId, extent: "parent" as const,
-        data: { label, type: "processor", componentId, component, configYaml: "", nodeId: newId } satisfies Partial<StreamFlowNodeData>,
+        data: { label, type: "processor", componentId, component, configYaml: "", nodeId: newId, childIndex: childCount } satisfies Partial<StreamFlowNodeData>,
       };
 
       const newHeight = calcCatchGroupHeight(childCount + 1);
@@ -1603,6 +1675,71 @@ function FlowBuilderContent({
 
   // handleAddCaseProcessor is no longer needed — case processors are added via handleAddAndConnect from case start nodes
 
+  const handleChildDragStart = useCallback(
+    (_event: React.MouseEvent, node: Node) => {
+      if (!node.parentId) return;
+      const groupId = node.parentId;
+      setNodes((nds) => nds.map((n) =>
+        n.id === node.id ? { ...n, data: { ...n.data, isDragging: true } } : n
+      ));
+      setEdges((eds) => {
+        const childIds = new Set(nodes.filter((n) => n.parentId === groupId).map((n) => n.id));
+        return eds.map((e) =>
+          (e.data as any)?.internal && (childIds.has(e.source) || childIds.has(e.target))
+            ? { ...e, hidden: true }
+            : e
+        );
+      });
+    },
+    [nodes, setNodes, setEdges]
+  );
+
+  const handleChildDrag = useCallback(
+    (_event: React.MouseEvent, node: Node) => {
+      if (!node.parentId) return;
+      const groupId = node.parentId;
+      const groupNode = nodes.find((n) => n.id === groupId);
+      if (!groupNode) return;
+
+      const isBrokerOutput = groupNode.type === "brokerGroupNode";
+      const isBrokerInput = groupNode.type === "brokerInputGroupNode";
+      const childYStart = isBrokerOutput ? BROKER_CHILD_Y_START : isBrokerInput ? BROKER_INPUT_CHILD_Y_START : CATCH_CHILD_Y_START;
+      const slotHeight = CHILD_NODE_HEIGHT + CHILD_GAP_Y;
+
+      const siblings = nodes.filter((n) => n.parentId === groupId);
+      const draggedCenter = node.position.y + CHILD_NODE_HEIGHT / 2;
+      const newIndex = Math.max(0, Math.min(siblings.length - 1, Math.round((draggedCenter - childYStart - CHILD_NODE_HEIGHT / 2) / slotHeight)));
+
+      setNodes((nds) => {
+        const sibs = nds.filter((n) => n.parentId === groupId && n.id !== node.id).sort((a, b) => a.position.y - b.position.y);
+        const ordered: string[] = [];
+        let inserted = false;
+        for (let i = 0; i < sibs.length; i++) {
+          if (i === newIndex && !inserted) { ordered.push(node.id); inserted = true; }
+          ordered.push(sibs[i].id);
+        }
+        if (!inserted) ordered.push(node.id);
+
+        const draggedIdx = ordered.indexOf(node.id);
+        return nds.map((n) => {
+          if (n.id === node.id) {
+            return { ...n, data: { ...n.data, childIndex: draggedIdx } };
+          }
+          const idx = ordered.indexOf(n.id);
+          if (idx >= 0 && n.parentId === groupId) {
+            return {
+              ...n,
+              position: { x: CHILD_X, y: childYStart + idx * slotHeight },
+              data: { ...n.data, childIndex: idx },
+            };
+          }
+          return n;
+        });
+      });
+    },
+    [nodes, setNodes]
+  );
+
   const handleChildDragStop = useCallback(
     (_event: React.MouseEvent, node: Node) => {
       if (!node.parentId) return;
@@ -1610,7 +1747,7 @@ function FlowBuilderContent({
       const groupNode = nodes.find((n) => n.id === groupId);
       if (!groupNode) return;
 
-      // Normal flat groups (catch, broker)
+      // Normal flat groups (catch, broker, branch)
       const isBrokerOutput = groupNode.type === "brokerGroupNode";
       const isBrokerInput = groupNode.type === "brokerInputGroupNode";
       const childYStart = isBrokerOutput ? BROKER_CHILD_Y_START : isBrokerInput ? BROKER_INPUT_CHILD_Y_START : CATCH_CHILD_Y_START;
@@ -1626,14 +1763,12 @@ function FlowBuilderContent({
             return {
               ...n,
               position: { x: CHILD_X, y: childYStart + idx * (CHILD_NODE_HEIGHT + CHILD_GAP_Y) },
-              ...(isBrokerOutput ? { data: { ...n.data, childIndex: idx } } : {}),
+              data: { ...n.data, childIndex: idx, isDragging: false, isDropTarget: false },
             };
           }
           return n;
         });
       });
-
-      if (siblings.length <= 1) return;
 
       const brokerPattern = isBrokerOutput ? (groupNode.data as StreamFlowNodeData).brokerPattern : undefined;
       const shouldChain = isBrokerInput ? false : isBrokerOutput ? isBrokerSequential(brokerPattern) : true;
@@ -1641,7 +1776,7 @@ function FlowBuilderContent({
       const childIds = new Set(siblings.map((s) => s.id));
       setEdges((eds) => {
         const kept = eds.filter((e) => !((e.data as any)?.internal && (childIds.has(e.source) || childIds.has(e.target))));
-        if (!shouldChain) return kept;
+        if (siblings.length <= 1 || !shouldChain) return kept;
         const sorted = [...siblings].sort((a, b) => (nodes.find((n) => n.id === a.id)?.position.y ?? 0) - (nodes.find((n) => n.id === b.id)?.position.y ?? 0));
         const newEdges: Edge[] = [];
         for (let i = 0; i < sorted.length - 1; i++) {
@@ -2021,6 +2156,39 @@ function FlowBuilderContent({
               : n
         );
 
+        // Transform to branch group when component changes to "branch"
+        if (data.componentId === "branch" && prevComponentId !== "branch" && data.type === "processor") {
+          updated = updated.map((n) =>
+            n.id === nodeId
+              ? {
+                  ...n,
+                  type: "branchGroupNode",
+                  style: { width: GROUP_WIDTH, height: CATCH_GROUP_MIN_HEIGHT },
+                  position: { ...n.position, y: n.position.y - 25 },
+                  data: { ...n.data, isGroup: true, childCount: 0, configYaml: "" },
+                }
+              : n
+          );
+        }
+
+        // Transform back from branch group when component changes away from "branch"
+        if (prevComponentId === "branch" && data.componentId !== "branch" && data.type === "processor") {
+          const childIds = updated.filter((n) => n.parentId === nodeId).map((n) => n.id);
+          updated = updated.filter((n) => n.parentId !== nodeId);
+          setEdges((eds) => eds.filter((e) => !childIds.includes(e.source) && !childIds.includes(e.target)));
+          updated = updated.map((n) =>
+            n.id === nodeId
+              ? {
+                  ...n,
+                  type: "processorNode",
+                  style: undefined,
+                  position: { ...n.position, y: n.position.y + 25 },
+                  data: { ...n.data, isGroup: false, childCount: undefined },
+                }
+              : n
+          );
+        }
+
         // Transform to catch group when component changes to "catch"
         if (data.componentId === "catch" && prevComponentId !== "catch" && data.type === "processor") {
           updated = updated.map((n) =>
@@ -2311,7 +2479,7 @@ function FlowBuilderContent({
             return remaining.map((n) => {
               if (n.id === groupId) return { ...n, style: { ...n.style, width: GROUP_WIDTH, height: calcHeight(siblings.length) }, data: { ...n.data, childCount: siblings.length } };
               const sibIdx = siblings.findIndex((s) => s.id === n.id);
-              if (sibIdx >= 0) return { ...n, position: { x: CHILD_X, y: childYStart + sibIdx * (CHILD_NODE_HEIGHT + CHILD_GAP_Y) } };
+              if (sibIdx >= 0) return { ...n, position: { x: CHILD_X, y: childYStart + sibIdx * (CHILD_NODE_HEIGHT + CHILD_GAP_Y) }, data: { ...n.data, childIndex: sibIdx } };
               return n;
             });
           });
@@ -2505,6 +2673,44 @@ function FlowBuilderContent({
         ? yaml.dump(childConfigs, { lineWidth: -1, noRefs: true, quotingType: '"', forceQuotes: false })
         : "";
       return { label: d.label, type: "processor", componentId: "catch", component: "catch", configYaml: catchYaml };
+    },
+    [nodes, allComponentSchemas]
+  );
+
+  const serializeBranchGroup = useCallback(
+    (groupNode: Node): FlowNodeData => {
+      const d = groupNode.data as StreamFlowNodeData;
+      const children = nodes.filter((cn) => cn.parentId === groupNode.id).sort((a, b) => a.position.y - b.position.y);
+      const childConfigs = children.map((child) => {
+        const cd = child.data as StreamFlowNodeData;
+        const comp = allComponentSchemas.processor.find((c) => c.id === cd.componentId);
+        const componentName = comp?.component || cd.componentId || "";
+        const entry: any = {};
+        if (comp?.schema?.flat) {
+          entry[componentName] = cd.configYaml?.trim() || "";
+        } else {
+          let config: any = {};
+          if (cd.configYaml?.trim()) { try { config = yaml.load(cd.configYaml) || {}; } catch {} }
+          entry[componentName] = config;
+        }
+        if (cd.label) {
+          entry.label = cd.label;
+        }
+        return entry;
+      });
+
+      let groupConfig: any = {};
+      if (d.configYaml?.trim()) {
+        try { groupConfig = yaml.load(d.configYaml) || {}; } catch {}
+      }
+
+      const branchObj: any = {};
+      if (groupConfig.request_map) branchObj.request_map = groupConfig.request_map;
+      branchObj.processors = childConfigs;
+      if (groupConfig.result_map) branchObj.result_map = groupConfig.result_map;
+
+      const branchYaml = yaml.dump(branchObj, { lineWidth: -1, noRefs: true, quotingType: '"', forceQuotes: false });
+      return { label: d.label, type: "processor", componentId: "branch", component: "branch", configYaml: branchYaml };
     },
     [nodes, allComponentSchemas]
   );
@@ -2721,6 +2927,7 @@ function FlowBuilderContent({
         .filter((n) => !n.parentId && n.type !== "switchCaseStartNode" && !(n.data as any).switchCaseId)
         .map((n) => {
           const d = n.data as StreamFlowNodeData;
+          if (d.isGroup && d.componentId === "branch") return serializeBranchGroup(n);
           if (d.isGroup && d.componentId === "catch") return serializeCatchGroup(n);
           if (d.isGroup && d.componentId === "broker" && d.type === "output") return serializeBrokerGroup(n);
           if (d.isGroup && d.componentId === "broker" && d.type === "input") return serializeBrokerInputGroup(n);
@@ -2739,7 +2946,7 @@ function FlowBuilderContent({
     } finally {
       setIsValidating(false);
     }
-  }, [onValidate, name, status, bufferId, nodes, addToast, serializeCatchGroup, serializeBrokerGroup, serializeBrokerInputGroup, serializeSwitchGroup, serializeProcessorSwitchGroup, findDisconnectedNodes, setNodes]);
+  }, [onValidate, name, status, bufferId, nodes, addToast, serializeBranchGroup, serializeCatchGroup, serializeBrokerGroup, serializeBrokerInputGroup, serializeSwitchGroup, serializeProcessorSwitchGroup, findDisconnectedNodes, setNodes]);
 
   const handleTrySubmit = useCallback(async () => {
     if (!onTry) return;
@@ -2757,6 +2964,10 @@ function FlowBuilderContent({
       );
       const processors = topProcessors.map((n) => {
         const d = n.data as StreamFlowNodeData;
+        if (d.isGroup && d.componentId === "branch") {
+          const serialized = serializeBranchGroup(n);
+          return { label: serialized.label, component: "branch", config: serialized.configYaml || "" };
+        }
         if (d.isGroup && d.componentId === "catch") {
           const serialized = serializeCatchGroup(n);
           return { label: serialized.label, component: "catch", config: serialized.configYaml || "" };
@@ -2775,7 +2986,7 @@ function FlowBuilderContent({
     } finally {
       setIsTrying(false);
     }
-  }, [onTry, tryMessages, nodes, allComponentSchemas, addToast, serializeCatchGroup, serializeProcessorSwitchGroup]);
+  }, [onTry, tryMessages, nodes, allComponentSchemas, addToast, serializeBranchGroup, serializeCatchGroup, serializeProcessorSwitchGroup]);
 
   const handleSave = useCallback(() => {
     if (!name.trim()) {
@@ -2950,7 +3161,9 @@ function FlowBuilderContent({
         const node = nodes.find((n) => n.id === current);
         if (node) {
           const d = node.data as StreamFlowNodeData;
-          if (d.isGroup && d.componentId === "catch") {
+          if (d.isGroup && d.componentId === "branch") {
+            orderedNodes.push(serializeBranchGroup(node));
+          } else if (d.isGroup && d.componentId === "catch") {
             orderedNodes.push(serializeCatchGroup(node));
           } else if (node.type === "switchProcessorGroupNode") {
             orderedNodes.push(serializeProcessorSwitchGroup(node));
@@ -2974,7 +3187,7 @@ function FlowBuilderContent({
     }
 
     onSave({ name, status, bufferId, nodes: orderedNodes, builderState, isReady });
-  }, [name, status, bufferId, nodes, edges, onSave, addToast, findDisconnectedNodes, validateRequiredFields, setNodes, serializeCatchGroup, serializeBrokerGroup, serializeBrokerInputGroup, serializeSwitchGroup, serializeProcessorSwitchGroup]);
+  }, [name, status, bufferId, nodes, edges, onSave, addToast, findDisconnectedNodes, validateRequiredFields, setNodes, serializeBranchGroup, serializeCatchGroup, serializeBrokerGroup, serializeBrokerInputGroup, serializeSwitchGroup, serializeProcessorSwitchGroup]);
 
   const hasInput = nodes.some((n) => (n.data as StreamFlowNodeData).type === "input");
   const hasOutput = nodes.some((n) => (n.data as StreamFlowNodeData).type === "output");
@@ -3039,6 +3252,8 @@ function FlowBuilderContent({
           onNodesChange={onNodesChange}
           onEdgesChange={handleEdgesChange}
           onConnect={onConnect}
+          onNodeDragStart={handleChildDragStart}
+          onNodeDrag={handleChildDrag}
           onNodeDragStop={handleChildDragStop}
           onNodeClick={handleNodeClick}
           onNodeDoubleClick={handleNodeDoubleClick}
@@ -3101,7 +3316,9 @@ function FlowBuilderContent({
                     ? editingNode.data.type === "processor" ? "Switch Processor Configuration" : "Switch Output Configuration"
                     : editingNode.data.componentId === "broker"
                       ? editingNode.data.type === "input" ? "Broker Input Configuration" : "Broker Output Configuration"
-                      : "Catch Group Configuration"
+                      : editingNode.data.componentId === "branch"
+                        ? "Branch Configuration"
+                        : "Catch Group Configuration"
                 : `Configure ${editingNode?.data.type ? editingNode.data.type.charAt(0).toUpperCase() + editingNode.data.type.slice(1) : ""} Node`}
             </DialogTitle>
             <DialogDescription>
@@ -3122,9 +3339,52 @@ function FlowBuilderContent({
                         handleUpdateNode(editingNode.id, { ...editingNode.data, label: val });
                       }
                     }}
-                    placeholder={editingNode.data.componentId === "switch" ? "switch label" : editingNode.data.componentId === "broker" ? "broker label" : editingNode.data.componentId === "case" ? "case label" : "catch label"}
+                    placeholder={editingNode.data.componentId === "switch" ? "switch label" : editingNode.data.componentId === "broker" ? "broker label" : editingNode.data.componentId === "case" ? "case label" : editingNode.data.componentId === "branch" ? "branch label" : "catch label"}
                   />
                 </div>
+                {editingNode.data.componentId === "branch" && (() => {
+                  let branchConfig: any = {};
+                  const cfgYaml = editingNode.data.configYaml?.trim();
+                  if (cfgYaml) { try { branchConfig = yaml.load(cfgYaml) || {}; } catch {} }
+                  const updateBranchField = (field: string, value: string) => {
+                    const updated = { ...branchConfig, [field]: value };
+                    if (!updated[field]) delete updated[field];
+                    const newYaml = Object.keys(updated).length > 0
+                      ? yaml.dump(updated, { lineWidth: -1, noRefs: true })
+                      : "";
+                    handleUpdateNode(editingNode.id, { ...editingNode.data, configYaml: newYaml });
+                  };
+                  return (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="branch-request-map">Request Map</Label>
+                        <Textarea
+                          id="branch-request-map"
+                          value={branchConfig.request_map || ""}
+                          onChange={(e) => updateBranchField("request_map", e.target.value)}
+                          placeholder="root = this"
+                          className="font-mono text-sm min-h-[80px]"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          A Bloblang mapping that transforms the message before sending it to the branch processors. Leave empty to use the original message.
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="branch-result-map">Result Map</Label>
+                        <Textarea
+                          id="branch-result-map"
+                          value={branchConfig.result_map || ""}
+                          onChange={(e) => updateBranchField("result_map", e.target.value)}
+                          placeholder="root.result = this.content"
+                          className="font-mono text-sm min-h-[80px]"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          A Bloblang mapping that merges the branch processor results back into the original message. 'this' refers to the branch result, 'root' refers to the original message.
+                        </p>
+                      </div>
+                    </>
+                  );
+                })()}
                 {editingNode.data.componentId === "case" && (() => {
                   const nd = nodes.find((n) => n.id === editingNode.id)?.data as StreamFlowNodeData | undefined;
                   const editNode = nodes.find((n) => n.id === editingNode.id);

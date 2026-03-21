@@ -20,6 +20,7 @@ import type { AllComponentSchemas } from "./node-config-panel";
 import { InputNode } from "./nodes/input-node";
 import { ProcessorNode } from "./nodes/processor-node";
 import { OutputNode } from "./nodes/output-node";
+import { BranchGroupNode } from "./nodes/branch-group-node";
 import { CatchGroupNode } from "./nodes/catch-group-node";
 import { ChildProcessorNode } from "./nodes/child-processor-node";
 import { BrokerGroupNode } from "./nodes/broker-group-node";
@@ -36,6 +37,7 @@ const nodeTypes = {
   inputNode: InputNode,
   processorNode: ProcessorNode,
   outputNode: OutputNode,
+  branchGroupNode: BranchGroupNode,
   catchGroupNode: CatchGroupNode,
   childProcessorNode: ChildProcessorNode,
   brokerGroupNode: BrokerGroupNode,
@@ -259,7 +261,83 @@ function FlowPreviewContent({ flow }: FlowPreviewProps) {
       for (const proc of flow.processors) {
         const id = uuidv4();
 
-        if (proc.component === "catch") {
+        if (proc.component === "branch") {
+          let branchConfig: any = {};
+          if (proc.config?.trim()) {
+            try { branchConfig = yaml.load(proc.config) || {}; } catch {}
+          }
+          const childConfigs: any[] = Array.isArray(branchConfig.processors) ? branchConfig.processors : [];
+
+          const childCount = childConfigs.length;
+          const groupHeight = calcCatchGroupHeight(childCount);
+
+          flowNodes.push({
+            id,
+            type: "branchGroupNode",
+            position: { x: xPos, y: NODE_Y - 25 },
+            style: { width: GROUP_WIDTH, height: groupHeight },
+            data: {
+              label: proc.label || "branch",
+              type: "processor",
+              componentId: "branch",
+              component: "branch",
+              nodeId: id,
+              isGroup: true,
+              childCount,
+              configYaml: "",
+              readOnly: true,
+            },
+          });
+
+          let prevChildId: string | null = null;
+          childConfigs.forEach((procObj, i) => {
+            const componentName = Object.keys(procObj).find((k) => k !== "label") || Object.keys(procObj)[0];
+            const config = procObj[componentName];
+            const childLabel = procObj.label as string | undefined;
+            const schema = componentSchemas.processor.find(
+              (p) => p.component === componentName || p.id === componentName
+            );
+            const childId = uuidv4();
+            flowNodes.push({
+              id: childId,
+              type: "childProcessorNode",
+              position: {
+                x: CHILD_X,
+                y: CATCH_CHILD_Y_START + i * (CHILD_NODE_HEIGHT + CHILD_GAP_Y),
+              },
+              parentId: id,
+              extent: "parent" as const,
+              data: {
+                label: childLabel || schema?.id || componentName,
+                type: "processor",
+                componentId: schema?.id || componentName,
+                component: componentName,
+                configYaml:
+                  typeof config === "string"
+                    ? config
+                    : config && Object.keys(config).length > 0
+                      ? yaml.dump(config, { lineWidth: -1, noRefs: true })
+                      : "",
+                nodeId: childId,
+                readOnly: true,
+              },
+            });
+            if (prevChildId) {
+              flowEdges.push({
+                id: `e-internal-${prevChildId}-${childId}`,
+                source: prevChildId,
+                target: childId,
+                type: "pipeline",
+                data: { internal: true },
+              });
+            }
+            prevChildId = childId;
+          });
+
+          connectFromPrev(id);
+          prevNodeIds = [id];
+          xPos += NODE_SPACING_X;
+        } else if (proc.component === "catch") {
           let childConfigs: any[] = [];
           if (proc.config?.trim()) {
             try {

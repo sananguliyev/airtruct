@@ -3,7 +3,6 @@ package coordinator
 import (
 	"fmt"
 	"path/filepath"
-	"slices"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -227,9 +226,6 @@ func (b *configBuilder) buildProcessorConfig(processor persistence.FlowProcessor
 	return processorConfig, nil
 }
 
-func (b *configBuilder) isSpecialProcessor(component string) bool {
-	return slices.Contains([]string{"catch", "switch"}, component)
-}
 
 func (b *configBuilder) buildCacheResourcesConfig(flowID int64) ([]map[string]any, error) {
 	flowCaches, err := b.flowCacheRepo.FindByFlowID(flowID)
