@@ -1016,6 +1016,34 @@ export const componentSchemas = {
         },
       },
     },
+    branch: {
+      title: "Branch",
+      description:
+        "Executes a list of processors on a copy of the message, optionally transforming the input and mapping the result back.",
+      properties: {
+        request_map: {
+          type: "code",
+          title: "Request Map",
+          description:
+            "A Bloblang mapping that transforms the message before sending it to the branch processors. If empty, the original message is used as-is.",
+          default: "",
+        },
+        processors: {
+          type: "processor_list",
+          title: "Processors",
+          description:
+            "A list of processors to execute on the mapped request.",
+          default: [],
+        },
+        result_map: {
+          type: "code",
+          title: "Result Map",
+          description:
+            "A Bloblang mapping that merges the branch processor results back into the original message. In this mapping, 'this' refers to the branch result and 'root' refers to the original message.",
+          default: "",
+        },
+      },
+    },
     catch: {
       title: "Catch",
       description:
@@ -3161,6 +3189,7 @@ export const componentLists = {
   ],
   pipeline: [
     "ai_gateway",
+    "branch",
     "mapping",
     "json_schema",
     "catch",
