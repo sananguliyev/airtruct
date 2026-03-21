@@ -23,9 +23,9 @@ function Hero() {
             <span className={styles.heroBrandName}>AirTruct</span>
           </div>
           <h1 className={styles.heroTitle}>
-            The <span className={styles.heroFastest}><span className={styles.heroFastLines}><span className={styles.heroFastLine} /><span className={styles.heroFastLine} /><span className={styles.heroFastLine} /></span>fastest</span> way to build{' '}
+            The <span className={styles.heroFastest}><span className={styles.heroFastLines}><span className={styles.heroFastLine} /><span className={styles.heroFastLine} /><span className={styles.heroFastLine} /></span>fastest</span> way to connect{' '}
             <br className={styles.brDesktop} />
-            <span className={styles.heroSkewBox}>tools</span> for <span className={styles.heroSkewBox}>AI assistants</span>
+            <span className={styles.heroSkewBox}>your data</span> to <span className={styles.heroSkewBox}>AI</span>
           </h1>
           <p className={styles.heroSubtitle}>
             Turn APIs, databases, and scripts into MCP tools - without writing MCP servers.
@@ -38,39 +38,21 @@ function Hero() {
 
 /* ──────────────────── Before / After (Animated) ──────────────────── */
 
-const codeLines = [
-  { text: 'from mcp import Server', dim: true },
-  { text: 'import psycopg2, json', dim: true },
-  { text: '' },
-  { text: 'server = Server("my-tools")', str: [14, 25] },
-  { text: '' },
-  { text: '@server.tool()', dim: true },
-  { text: 'def check_balance(customer_id):' },
-  { text: '  conn = psycopg2.connect(...)' },
-  { text: '  cur = conn.cursor()' },
-  { text: '  cur.execute("SELECT...")', str: [14, 24] },
-  { text: '  return json.dumps(cur.fetchone())', dim: true },
-  { text: '' },
-  { text: '# + error handling', dim: true },
-  { text: '# + connection pooling', dim: true },
-  { text: '# + schema definitions', dim: true },
-  { text: '# + deployment config', dim: true },
-];
-
-const buildSteps = [
-  'Installing dependencies...',
-  'Building MCP server...',
-  'Configuring transport layer...',
-  'Deploying to server...',
-  'Server running on port 3001 ✓',
+const painSteps = [
+  { icon: '{}', text: 'Write custom server code' },
+  { icon: '!', text: 'Handle errors & retries' },
+  { icon: '⇄', text: 'Manage database connections' },
+  { icon: '◈', text: 'Define tool schemas' },
+  { icon: '⚙', text: 'Configure transport layer' },
+  { icon: '▲', text: 'Deploy & maintain server' },
+  { icon: '∞', text: 'Repeat for every new tool' },
 ];
 
 function BeforeAfter() {
   const sectionRef = useRef(null);
-  // idle → typing → building → built → striking → done
+  // idle → appearing → striking → done
   const [phase, setPhase] = useState('idle');
-  const [visibleLines, setVisibleLines] = useState(0);
-  const [buildStep, setBuildStep] = useState(0);
+  const [visibleSteps, setVisibleSteps] = useState(0);
   const [strikeStep, setStrikeStep] = useState(0);
   const hasTriggered = useRef(false);
 
@@ -79,7 +61,7 @@ function BeforeAfter() {
       ([entry]) => {
         if (entry.isIntersecting && !hasTriggered.current) {
           hasTriggered.current = true;
-          setPhase('typing');
+          setPhase('appearing');
         }
       },
       { threshold: 0.3 }
@@ -88,60 +70,25 @@ function BeforeAfter() {
     return () => observer.disconnect();
   }, []);
 
-  // Type code lines
   useEffect(() => {
-    if (phase !== 'typing') return;
-    if (visibleLines < codeLines.length) {
-      const delay = codeLines[visibleLines].text === '' ? 80 : 120;
-      const timer = setTimeout(() => setVisibleLines(v => v + 1), delay);
+    if (phase !== 'appearing') return;
+    if (visibleSteps < painSteps.length) {
+      const timer = setTimeout(() => setVisibleSteps(v => v + 1), 350);
       return () => clearTimeout(timer);
     }
-    const timer = setTimeout(() => setPhase('building'), 500);
+    const timer = setTimeout(() => setPhase('striking'), 800);
     return () => clearTimeout(timer);
-  }, [phase, visibleLines]);
+  }, [phase, visibleSteps]);
 
-  // Show build/deploy steps
-  useEffect(() => {
-    if (phase !== 'building') return;
-    if (buildStep < buildSteps.length) {
-      const delay = buildStep === buildSteps.length - 1 ? 600 : 400;
-      const timer = setTimeout(() => setBuildStep(v => v + 1), delay);
-      return () => clearTimeout(timer);
-    }
-    const timer = setTimeout(() => setPhase('striking'), 1000);
-    return () => clearTimeout(timer);
-  }, [phase, buildStep]);
-
-  // Strike through lines one by one (code + build = total lines)
-  const totalStrikeLines = codeLines.length + buildSteps.length;
   useEffect(() => {
     if (phase !== 'striking') return;
-    if (strikeStep < totalStrikeLines) {
-      const timer = setTimeout(() => setStrikeStep(v => v + 1), 60);
+    if (strikeStep < painSteps.length) {
+      const timer = setTimeout(() => setStrikeStep(v => v + 1), 120);
       return () => clearTimeout(timer);
     }
     const timer = setTimeout(() => setPhase('done'), 400);
     return () => clearTimeout(timer);
-  }, [phase, strikeStep, totalStrikeLines]);
-
-  const renderCodeLine = (line, idx) => {
-    if (line.text === '') return <br key={idx} />;
-    if (line.dim) {
-      return <span key={idx} className={styles.codeDim}>{line.text}<br /></span>;
-    }
-    if (line.str) {
-      const [s, e] = line.str;
-      return (
-        <span key={idx}>
-          {line.text.slice(0, s)}
-          <span className={styles.codeStr}>{line.text.slice(s, e)}</span>
-          {line.text.slice(e)}
-          <br />
-        </span>
-      );
-    }
-    return <span key={idx}>{line.text}<br /></span>;
-  };
+  }, [phase, strikeStep]);
 
   const isAfterVisible = phase === 'done';
   const isStriking = phase === 'striking' || phase === 'done';
@@ -155,50 +102,20 @@ function BeforeAfter() {
         <div className={`${styles.comparisonGrid} ${isAfterVisible ? styles.comparisonExpanded : ''}`}>
           <div className={`${styles.comparisonBefore} ${isAfterVisible ? styles.codeDimmed : ''}`}>
             <div className={styles.comparisonLabel}>Without Airtruct</div>
-            <div className={styles.codeBlock}>
-              <div className={styles.codeHeader}>
-                <span className={styles.codeDot} style={{ background: '#ef4444' }} />
-                <span className={styles.codeDot} style={{ background: '#f59e0b' }} />
-                <span className={styles.codeDot} style={{ background: '#22c55e' }} />
-                <span className={styles.codeTitle}>mcp_server.py</span>
-              </div>
-              <div className={styles.codeBody}>
-                <code>
-                  {codeLines.map((line, idx) => {
-                    const isVisible = idx < visibleLines;
-                    const isStruck = isStriking && strikeStep > idx;
-                    return (
-                      <span key={idx} className={`${isStruck ? styles.lineStruck : ''} ${isVisible ? '' : styles.lineHidden}`}>
-                        {renderCodeLine(line, idx)}
-                      </span>
-                    );
-                  })}
-                  {phase === 'typing' && <span className={styles.cursor}>|</span>}
-                </code>
-              </div>
-            </div>
-
-            {/* Build / deploy terminal — always rendered for fixed layout */}
-            <div className={styles.terminalBlock}>
-              <div className={styles.terminalHeader}>
-                <span className={styles.terminalPrompt}>$</span>
-                <span>deploy mcp-server</span>
-              </div>
-              <div className={styles.terminalBody}>
-                {buildSteps.map((step, idx) => {
-                  const isVisible = idx < buildStep;
-                  const strikeIdx = codeLines.length + idx;
-                  const isStruck = isStriking && strikeStep > strikeIdx;
-                  return (
-                    <div key={idx} className={`${styles.terminalLine} ${isStruck ? styles.lineStruck : ''} ${isVisible ? '' : styles.lineHidden}`}>
-                      {step}
-                    </div>
-                  );
-                })}
-                {phase === 'building' && buildStep < buildSteps.length && (
-                  <span className={styles.cursor}>|</span>
-                )}
-              </div>
+            <div className={styles.painList}>
+              {painSteps.map((step, idx) => {
+                const isVisible = idx < visibleSteps;
+                const isStruck = isStriking && strikeStep > idx;
+                return (
+                  <div
+                    key={idx}
+                    className={`${styles.painStep} ${isVisible ? styles.painStepVisible : ''} ${isStruck ? styles.painStepStruck : ''}`}
+                  >
+                    <span className={styles.painIcon}>{step.icon}</span>
+                    <span className={styles.painText}>{step.text}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -210,78 +127,56 @@ function BeforeAfter() {
 
           <div className={`${styles.comparisonAfter} ${isAfterVisible ? styles.afterVisible : ''}`}>
             <div className={styles.comparisonLabel}>With Airtruct</div>
-            <div className={styles.toolCard}>
-              <div className={styles.toolCardHeader}>
+            <div className={styles.flowCard}>
+              <div className={styles.flowCardHeader}>
                 <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                 <span>MCP Tool</span>
-                <span className={styles.toolCardBadge}>Ready</span>
+                <span className={styles.flowCardBadge}>Ready</span>
               </div>
-              <div className={styles.toolCardBody}>
-                {/* Input box */}
-                <div className={styles.toolCardBox}>
-                  <div className={styles.toolCardBoxHeader}>
-                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                    <span>MCP Tool Input</span>
-                    <svg className={styles.toolCardCheck} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                  </div>
-                  <div className={styles.toolCardBoxBody}>
-                    <div className={styles.toolCardField}>
-                      <span className={styles.toolCardLabel}>Name</span>
-                      <div className={styles.toolCardInput}><span>check_balance</span></div>
+              <div className={styles.flowCardBody}>
+                <div className={styles.flowNodes}>
+                  {/* Connect node */}
+                  <div className={styles.flowNode}>
+                    <div className={styles.flowNodeIcon}>
+                      <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" /></svg>
                     </div>
-                    <div className={styles.toolCardField}>
-                      <span className={styles.toolCardLabel}>Description</span>
-                      <div className={styles.toolCardInput}><span>Check customer balance and unpaid invoices</span></div>
+                    <span className={styles.flowNodeLabel}>Connect</span>
+                  </div>
+
+                  {/* Arrow */}
+                  <div className={styles.flowArrow}>
+                    <svg width="32" height="16" viewBox="0 0 32 16" fill="none">
+                      <path d="M0 8H28M22 2L28 8L22 14" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+
+                  {/* Transform node */}
+                  <div className={styles.flowNode}>
+                    <div className={styles.flowNodeIcon}>
+                      <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                     </div>
-                    <div className={styles.toolCardField}>
-                      <span className={styles.toolCardLabel}>Parameters</span>
-                      <div className={styles.toolCardParam}>
-                        <code>customer_id</code>
-                        <span className={styles.toolCardParamType}>string, required</span>
-                      </div>
+                    <span className={styles.flowNodeLabel}>Transform</span>
+                  </div>
+
+                  {/* Arrow */}
+                  <div className={styles.flowArrow}>
+                    <svg width="32" height="16" viewBox="0 0 32 16" fill="none">
+                      <path d="M0 8H28M22 2L28 8L22 14" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+
+                  {/* AI-Ready node */}
+                  <div className={styles.flowNode}>
+                    <div className={styles.flowNodeIcon}>
+                      <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
                     </div>
-                  </div>
-                </div>
-
-                {/* Arrow */}
-                <div className={styles.toolCardArrow}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v14M5 12l7 7 7-7" /></svg>
-                </div>
-
-                {/* Processor box */}
-                <div className={styles.toolCardBox}>
-                  <div className={styles.toolCardBoxHeader}>
-                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                    <span>Processor</span>
-                    <svg className={styles.toolCardCheck} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                  </div>
-                  <div className={styles.toolCardBoxBody}>
-                    <div className={styles.toolCardInput}>
-                      <code>SELECT balance, invoices FROM customers WHERE id = ?</code>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Arrow */}
-                <div className={styles.toolCardArrow}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v14M5 12l7 7 7-7" /></svg>
-                </div>
-
-                {/* Output box */}
-                <div className={styles.toolCardBox}>
-                  <div className={styles.toolCardBoxHeader}>
-                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    <span>Sync Response</span>
-                    <svg className={styles.toolCardCheck} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                  </div>
-                  <div className={styles.toolCardBoxBody}>
-                    <div className={styles.toolCardInput}><span>Result → AI client</span></div>
+                    <span className={styles.flowNodeLabel}>AI-Ready</span>
                   </div>
                 </div>
               </div>
-              <div className={styles.toolCardFooter}>
+              <div className={styles.flowCardFooter}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                <span>Exposed at <code>/mcp</code> — discoverable by AI clients</span>
+                <span>Configure visually. Deploy instantly.</span>
               </div>
             </div>
           </div>
@@ -339,63 +234,169 @@ function HowItWorks() {
 const examples = [
   {
     title: "Match Payments to Invoices",
-    tool: "match_payment",
-    inputs: [{ name: "payment_ref", type: "string" }, { name: "amount", type: "number" }],
-    action: "List open invoices → return matches with confidence",
+    source: "Invoicing database",
     userMessage: "We received payment REF-4821 for $2,500. Find matching invoices.",
     toolCall: 'match_payment(payment_ref="REF-4821", amount=2500)',
-    agentReply: "Found 2 potential matches: INV-1094 from Acme Corp ($2,500, due Mar 25) — 98% confidence. INV-1087 from Acme Corp ($2,480) — 72% confidence. Recommend matching to INV-1094.",
+    agentReply: "Found 2 potential matches: INV-1094 from Acme Corp ($2,500, due Mar 25) - 98% confidence. INV-1087 from Acme Corp ($2,480) - 72% confidence. Recommend matching to INV-1094.",
   },
   {
     title: "Run Custom Python Script",
-    tool: "analyze_churn",
-    inputs: [{ name: "customer_segment", type: "string" }],
-    action: "subprocess → python3 churn_model.py",
+    source: "Python script",
     userMessage: "Run churn analysis for the enterprise segment",
     toolCall: 'analyze_churn(customer_segment="enterprise")',
     agentReply: "Churn risk report: 3 accounts flagged high-risk (Acme Corp, Globex, Initech). Top factor: no login in 30+ days. Recommended action: trigger re-engagement campaign.",
   },
   {
     title: "Customer Compensation Decision",
-    tool: "decide_compensation",
-    inputs: [{ name: "customer_id", type: "string" }, { name: "turnover", type: "number" }, { name: "return_ratio", type: "number" }, { name: "tenure_years", type: "number" }],
-    action: "Custom logic → evaluate and decide compensation",
+    source: "CRM + business rules",
     userMessage: "Customer C-4412 is complaining about a late delivery. Should we offer anything?",
     toolCall: 'decide_compensation(customer_id="C-4412")',
     agentReply: "Customer since 2021, $18,200 total spend, 2% return rate. High-value loyal customer. Recommendation: offer 15% discount voucher on next order. Applied code SORRY15 and sent via email.",
   },
 ];
 
-function Examples() {
-  const [active, setActive] = useState(0);
-  // Animation steps: 0=empty, 1=tool row, 2=inputs row, 3=action row, 4=arrow, 5=user msg, 6=tool call, 7=agent reply
-  const [step, setStep] = useState(0);
-  const animating = useRef(false);
-
-  const runAnimation = () => {
-    if (animating.current) return;
-    animating.current = true;
-    setStep(0);
-    const delays = [300, 400, 400, 400, 300, 500, 400, 0];
-    let total = 0;
-    for (let i = 0; i < 8; i++) {
-      total += delays[i];
-      const s = i + 1;
-      setTimeout(() => {
-        setStep(s);
-        if (s === 8) animating.current = false;
-      }, total);
-    }
-  };
+function Typewriter({ text, speed = 20, onDone, onUpdate }) {
+  const [displayed, setDisplayed] = useState('');
+  const idx = useRef(0);
 
   useEffect(() => {
-    runAnimation();
-  }, [active]);
+    idx.current = 0;
+    setDisplayed('');
+    const timer = setInterval(() => {
+      idx.current++;
+      const val = text.slice(0, idx.current);
+      setDisplayed(val);
+      if (onUpdate) onUpdate(val);
+      if (idx.current >= text.length) {
+        clearInterval(timer);
+        if (onDone) onDone();
+      }
+    }, speed);
+    return () => clearInterval(timer);
+  }, [text, speed]);
 
-  const switchTo = (idx) => {
-    if (idx === active) return;
-    setStep(0);
+  return <>{displayed}</>;
+}
+
+function Examples() {
+  const [active, setActive] = useState(0);
+  // Steps: 0=idle, 1=cursor to input, 2=typing in input bar, 3=sent (msg appears as bubble),
+  //        4=typing dots, 5=tool call, 6=typing reply, 7=done, 8=cursor to sidebar
+  const [step, setStep] = useState(0);
+  // mode: 'text' (blinking line), 'pointer' (hand), 'idle' (arrow, no blink)
+  const [cursorPos, setCursorPos] = useState({ x: '60%', y: '90%', mode: 'arrow' });
+  const autoplayTimer = useRef(null);
+  const sidebarRefs = useRef([]);
+  const inputBarRef = useRef(null);
+  const inputTextRef = useRef(null);
+  const chatWindowRef = useRef(null);
+  const animationId = useRef(0);
+
+  const getRelPos = (el) => {
+    const win = chatWindowRef.current;
+    if (!el || !win) return null;
+    const wr = win.getBoundingClientRect();
+    const er = el.getBoundingClientRect();
+    return { wx: wr.left, wy: wr.top, ex: er.left, ey: er.top, ew: er.width, eh: er.height };
+  };
+
+  const getCursorPosForSidebar = (idx) => {
+    const r = getRelPos(sidebarRefs.current[idx]);
+    if (!r) return { x: '10%', y: '50%', mode: 'pointer' };
+    return {
+      x: `${r.ex - r.wx + r.ew * 0.6}px`,
+      y: `${r.ey - r.wy + r.eh / 2}px`,
+      mode: 'pointer',
+    };
+  };
+
+  const getCursorPosForInputStart = () => {
+    const r = getRelPos(inputBarRef.current);
+    if (!r) return { x: '60%', y: '90%', mode: 'text' };
+    return {
+      x: `${r.ex - r.wx + 12}px`,
+      y: `${r.ey - r.wy + r.eh / 2}px`,
+      mode: 'text',
+    };
+  };
+
+  const updateCursorToTextEnd = () => {
+    requestAnimationFrame(() => {
+      const span = inputTextRef.current;
+      const win = chatWindowRef.current;
+      if (!span || !win) return;
+      const wr = win.getBoundingClientRect();
+      const sr = span.getBoundingClientRect();
+      setCursorPos(prev => ({
+        ...prev,
+        x: `${sr.left - wr.left + sr.width}px`,
+      }));
+    });
+  };
+
+  const runAnimation = (idx) => {
+    const id = ++animationId.current;
     setActive(idx);
+    setStep(0);
+
+    const schedule = (delay, fn) => {
+      setTimeout(() => {
+        if (animationId.current === id) fn();
+      }, delay);
+    };
+
+    schedule(300, () => {
+      setCursorPos({ ...getCursorPosForInputStart(), mode: 'arrow' });
+      setStep(1);
+    });
+    schedule(900, () => {
+      setCursorPos(prev => ({ ...prev, mode: 'text' }));
+      setStep(2);
+    });
+  };
+
+  const advanceAfterInputType = () => setStep(3);
+
+  useEffect(() => {
+    if (step === 3) {
+      // Message sent - switch to arrow, stay near input
+      setCursorPos(prev => ({ ...prev, mode: 'arrow' }));
+      const t = setTimeout(() => setStep(4), 400);
+      return () => clearTimeout(t);
+    }
+    if (step === 4) {
+      const t = setTimeout(() => setStep(5), 1000);
+      return () => clearTimeout(t);
+    }
+    if (step === 5) {
+      const t = setTimeout(() => setStep(6), 200);
+      return () => clearTimeout(t);
+    }
+  }, [step]);
+
+  const advanceAfterReply = () => setStep(7);
+
+  useEffect(() => {
+    if (step !== 7) return;
+    autoplayTimer.current = setTimeout(() => {
+      const next = (active + 1) % examples.length;
+      setStep(8);
+      setCursorPos(getCursorPosForSidebar(next));
+      setTimeout(() => {
+        runAnimation(next);
+      }, 700);
+    }, 3000);
+    return () => clearTimeout(autoplayTimer.current);
+  }, [step, active]);
+
+  useEffect(() => {
+    runAnimation(0);
+  }, []);
+
+  const handleManualClick = (idx) => {
+    clearTimeout(autoplayTimer.current);
+    animationId.current++;
+    runAnimation(idx);
   };
 
   const ex = examples[active];
@@ -410,73 +411,84 @@ function Examples() {
           </p>
         </div>
 
-        <div className={styles.sliderTabs}>
-          {examples.map((e, idx) => (
-            <button
-              key={idx}
-              className={`${styles.sliderTab} ${idx === active ? styles.sliderTabActive : ''}`}
-              onClick={() => switchTo(idx)}
-            >
-              {e.title}
-            </button>
-          ))}
-        </div>
+        <div className={styles.chatWindow} ref={chatWindowRef}>
+          {/* Always-visible cursor */}
+          <div
+            className={`${styles.fakeCursor} ${step === 2 ? styles.fakeCursorSnap : ''}`}
+            style={{ left: cursorPos.x, top: cursorPos.y }}
+          >
+            {cursorPos.mode === 'text' ? (
+              <div className={styles.textCursor} />
+            ) : cursorPos.mode === 'pointer' ? (
+              <svg width="20" height="24" viewBox="0 0 20 24">
+                <path d="M8 0C6.9 0 6 .9 6 2v9.5l-.7-.7C4.5 10 3.3 10 2.5 10.8c-.8.8-.8 2 0 2.8L7.2 18c1 1 2.3 1.5 3.7 1.5H13c3.3 0 6-2.7 6-6v-3.5c0-1.1-.9-2-2-2s-2 .9-2 2v-.5c0-1.1-.9-2-2-2s-2 .9-2 2V2c0-1.1-.9-2-2-2z" fill="white" stroke="black" strokeWidth="1.2" />
+              </svg>
+            ) : (
+              <svg width="18" height="22" viewBox="0 0 16 20" fill="white" stroke="black" strokeWidth="1">
+                <path d="M1 1L1 14L4.5 10.5L7.5 17L10 16L7 9.5L11.5 9.5L1 1Z" />
+              </svg>
+            )}
+          </div>
 
-        <div className={styles.slideWrap}>
-          <div className={styles.slideContent}>
-            {/* Left: tool definition */}
-            <div className={styles.slideTool}>
-              <div className={styles.toolDef}>
-                <div className={`${styles.toolDefRow} ${step >= 1 ? styles.rowVisible : styles.rowHidden}`}>
-                  <span className={styles.toolDefKey}>Tool</span>
-                  <code className={styles.toolDefVal}>{ex.tool}</code>
-                </div>
-                <div className={`${styles.toolDefRow} ${step >= 2 ? styles.rowVisible : styles.rowHidden}`}>
-                  <span className={styles.toolDefKey}>Inputs</span>
-                  <code className={styles.toolDefVal}>
-                    {ex.inputs.map(i => i.name).join(", ")}
-                  </code>
-                </div>
-                <div className={`${styles.toolDefRow} ${step >= 3 ? styles.rowVisible : styles.rowHidden}`}>
-                  <span className={styles.toolDefKey}>Action</span>
-                  <code className={styles.toolDefVal}>{ex.action}</code>
-                </div>
-              </div>
+          {/* Sidebar */}
+          <div className={styles.chatSidebar}>
+            <div className={styles.chatSidebarHeader}>
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+              <span>New chat</span>
             </div>
-
-            {/* Arrow between */}
-            <div className={`${styles.slideArrow} ${step >= 4 ? styles.rowVisible : styles.rowHidden}`}>
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-            </div>
-
-            {/* Right: chat demo */}
-            <div className={styles.slideChat}>
-              <div className={styles.chatDemo}>
-                <div className={`${styles.chatMessage} ${styles.chatUser} ${step >= 5 ? styles.rowVisible : styles.rowHidden}`}>
-                  {ex.userMessage}
-                </div>
-                <div className={`${styles.chatMessage} ${styles.chatAgent} ${step >= 6 ? styles.rowVisible : styles.rowHidden}`}>
-                  <span className={`${styles.chatToolCall} ${step >= 6 ? '' : styles.rowHidden}`}>
-                    Called {ex.toolCall}
-                  </span>
-                  <span className={step >= 7 ? '' : styles.rowHidden}>
-                    {ex.agentReply}
-                  </span>
-                </div>
-              </div>
+            <div className={styles.chatSidebarList}>
+              {examples.map((e, idx) => (
+                <button
+                  key={idx}
+                  ref={el => sidebarRefs.current[idx] = el}
+                  className={`${styles.chatSidebarItem} ${idx === active ? styles.chatSidebarItemActive : ''}`}
+                  onClick={() => handleManualClick(idx)}
+                >
+                  <svg className={styles.chatSidebarIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>
+                  <span>{e.title}</span>
+                </button>
+              ))}
             </div>
           </div>
-        </div>
 
-        <div className={styles.sliderDots}>
-          {examples.map((_, idx) => (
-            <button
-              key={idx}
-              className={`${styles.sliderDot} ${idx === active ? styles.sliderDotActive : ''}`}
-              onClick={() => switchTo(idx)}
-              aria-label={`Example ${idx + 1}`}
-            />
-          ))}
+          {/* Chat content */}
+          <div className={styles.chatContent}>
+            <div className={styles.chatContentHeader}>
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+              <span>Connected to: {ex.source}</span>
+            </div>
+            <div className={styles.chatMessages}>
+              {step >= 3 && (
+                <div className={`${styles.chatMessage} ${styles.chatUser} ${styles.rowVisible}`}>
+                  {ex.userMessage}
+                </div>
+              )}
+              {step === 4 && (
+                <div className={`${styles.chatMessage} ${styles.chatAgent} ${styles.rowVisible}`}>
+                  <span className={styles.chatTyping}>
+                    <span className={styles.chatTypingDot} />
+                    <span className={styles.chatTypingDot} />
+                    <span className={styles.chatTypingDot} />
+                  </span>
+                </div>
+              )}
+              {step >= 5 && (
+                <div className={`${styles.chatMessage} ${styles.chatAgent} ${styles.rowVisible}`}>
+                  <span className={styles.chatToolCall}>
+                    Called {ex.toolCall}
+                  </span>
+                  {step === 6
+                    ? <Typewriter text={ex.agentReply} speed={25} onDone={advanceAfterReply} />
+                    : step >= 7 ? ex.agentReply : null}
+                </div>
+              )}
+            </div>
+            <div className={styles.chatInputBar} ref={inputBarRef}>
+              {step === 2
+                ? <span className={styles.chatInputTyping} ref={inputTextRef}><Typewriter text={ex.userMessage} speed={45} onDone={advanceAfterInputType} onUpdate={updateCursorToTextEnd} /></span>
+                : <span className={styles.chatInputPlaceholder}>Ask anything...</span>}
+            </div>
+          </div>
         </div>
       </div>
     </section>
