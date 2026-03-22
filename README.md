@@ -1,6 +1,6 @@
 # Airtruct
 
-> The fastest way to build tools for AI assistants.
+> The fastest way to connect your data to AI
 
 [![license](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/sananguliyev/airtruct)](https://github.com/sananguliyev/airtruct/releases) [![Go Report Card](https://goreportcard.com/badge/github.com/sananguliyev/airtruct)](https://goreportcard.com/report/github.com/sananguliyev/airtruct)
 

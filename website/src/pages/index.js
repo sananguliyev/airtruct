@@ -721,7 +721,7 @@ export default function Home() {
 
   return (
     <Layout
-      title="The fastest way to build tools for AI assistants"
+      title="The fastest way to connect your data to AI"
       description="Turn APIs, databases, and scripts into MCP tools for AI assistants — without writing MCP servers. Open source, self-hosted."
     >
       <div className={styles.pageWrap}>
