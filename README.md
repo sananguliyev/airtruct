@@ -59,7 +59,7 @@ See the [Installation docs](https://airtruct.com/docs/getting-started/installati
 
 ## Playbooks
 
-- [MCP Tool Integration](https://airtruct.com/playbooks/mcp-tool) - Build tools for AI assistants without writing MCP servers.
+- [Build a Weather Tool for AI Assistants](https://airtruct.com/playbooks/mcp-weather-tool) - Build tools for AI assistants without writing MCP servers.
 - [Kafka to PostgreSQL](https://airtruct.com/playbooks/kafka-to-postgresql) - Flow events from Kafka through Avro schema decoding into PostgreSQL.
 - [HTTP Webhooks](https://airtruct.com/playbooks/http-webhooks) - Accept webhook data over HTTP and store it in a database.
 

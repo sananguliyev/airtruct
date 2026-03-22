@@ -20,8 +20,9 @@ Set the `AUTH_TYPE` environment variable to choose a mode:
 
 When authentication is enabled:
 
-- **Protected:** All `/api/*` endpoints (flows, workers, secrets, caches, rate limits) and the web UI dashboard.
+- **Protected:** All `/api/*` endpoints (flows, workers, secrets, caches, rate limits, settings) and the web UI dashboard.
 - **Not protected:** Flow ingestion endpoints (`/ingest/*`) remain open to allow webhook and data ingestion from external systems. Auth info and login endpoints are also always accessible.
+- **Separately protected:** The MCP endpoint (`/mcp`) has its own token-based authentication that can be enabled independently. See [MCP Authentication](#mcp-authentication) below.
 
 ## Basic Authentication
 
@@ -126,6 +127,74 @@ When authentication is enabled, the login page adapts automatically:
 - **None:** Shows a "Continue to Dashboard" button.
 
 After successful authentication, a JWT token (valid for 24 hours) is issued. The web UI stores this token and includes it in all API requests. When the token expires, the user is redirected back to the login page.
+
+## MCP Authentication
+
+The MCP endpoint (`/mcp`) can be protected with API tokens, separate from the main application authentication. This allows you to control which MCP clients (Claude Desktop, Cursor, etc.) can access your tools.
+
+### How It Works
+
+1. **Enable app authentication first** - MCP token management requires basic or OAuth2 authentication to be enabled on the application. Without app auth, the settings page is accessible to everyone.
+2. **Enable MCP protection** - In the Settings page, toggle "Require authentication" under the MCP Authentication section.
+3. **Create API tokens** - Create named tokens for each MCP client. The token value is shown only once - copy and store it securely.
+4. **Configure your MCP client** - Pass the token to your MCP client using one of the methods below.
+
+### Passing the Token
+
+MCP clients can authenticate using either method:
+
+**Query parameter** (recommended for `mcp-remote` / `npx` setups):
+
+```json
+{
+  "mcpServers": {
+    "airtruct": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "http://your-host:8080/mcp?token=at_your_token_here"
+      ]
+    }
+  }
+}
+```
+
+**Authorization header** (for clients that support custom headers):
+
+```json
+{
+  "mcpServers": {
+    "airtruct": {
+      "url": "http://your-host:8080/mcp",
+      "headers": {
+        "Authorization": "Bearer at_your_token_here"
+      }
+    }
+  }
+}
+```
+
+### Token Management
+
+Tokens are managed through the Settings page in the web UI or via the API:
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v0/settings/mcp` | GET | Get MCP protection status and token list |
+| `/api/v0/settings/mcp` | PUT | Enable or disable MCP protection |
+| `/api/v0/settings/mcp/tokens` | GET | List all API tokens |
+| `/api/v0/settings/mcp/tokens` | POST | Create a new API token |
+| `/api/v0/settings/mcp/tokens/{id}` | DELETE | Delete a token |
+
+Each token has a name, scopes, creation date, and last-used timestamp. The last-used time is tracked in memory and flushed to the database periodically, so there is no performance overhead on every MCP request.
+
+:::tip
+Create separate tokens for each MCP client (e.g., "Claude Desktop", "Cursor", "CI Pipeline"). This way you can revoke access for a specific client without affecting others.
+:::
+
+:::warning
+When MCP protection is enabled, all existing MCP client connections without a valid token will stop working. Make sure to update your client configurations before enabling protection.
+:::
 
 ## Security Notes
 

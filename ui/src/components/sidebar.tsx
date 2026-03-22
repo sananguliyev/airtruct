@@ -8,6 +8,7 @@ import {
   KeyRound,
   Gauge,
   FileText,
+  Settings,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -69,6 +70,16 @@ const menuItems = [
         name: "Files",
         href: "/files",
         icon: FileText,
+      },
+    ],
+  },
+  {
+    section: "Admin",
+    items: [
+      {
+        name: "Settings",
+        href: "/settings",
+        icon: Settings,
       },
     ],
   },

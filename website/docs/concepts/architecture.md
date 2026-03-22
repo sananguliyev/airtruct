@@ -55,6 +55,7 @@ The coordinator includes a built-in **Model Context Protocol (MCP) server** that
 - Automatically syncs tools every 5 seconds based on active flows with the MCP Tool input
 - Works with any MCP-compatible client (Claude Desktop, Claude Code, Cursor, etc.)
 - Forwards tool calls to workers for execution and returns the response
+- Supports optional **token-based authentication** to control which clients can access tools (see [MCP Authentication](/docs/getting-started/authentication#mcp-authentication))
 
 When an AI assistant calls a tool, the MCP server:
 1. Receives the tool call via the `/mcp` endpoint
@@ -62,7 +63,7 @@ When an AI assistant calls a tool, the MCP server:
 3. The flow processes the request through its processors
 4. Returns the result with optional status code (via `meta status_code`) to the AI client
 
-See the [MCP Tool component](/docs/components/inputs/mcp-tool) and [MCP Tool Integration playbook](/playbooks/mcp-tool) for details on creating and connecting MCP tools.
+See the [MCP Server guide](/docs/guides/mcp-server) for connecting clients and authentication, and the [MCP Tool component](/docs/components/inputs/mcp-tool) for creating tools.
 
 ## Deployment
 

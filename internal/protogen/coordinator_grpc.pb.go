@@ -59,6 +59,11 @@ const (
 	Coordinator_IngestEvents_FullMethodName           = "/protorender.Coordinator/IngestEvents"
 	Coordinator_IngestMetrics_FullMethodName          = "/protorender.Coordinator/IngestMetrics"
 	Coordinator_GetAnalytics_FullMethodName           = "/protorender.Coordinator/GetAnalytics"
+	Coordinator_GetMCPSettings_FullMethodName         = "/protorender.Coordinator/GetMCPSettings"
+	Coordinator_UpdateMCPProtected_FullMethodName     = "/protorender.Coordinator/UpdateMCPProtected"
+	Coordinator_ListAPITokens_FullMethodName          = "/protorender.Coordinator/ListAPITokens"
+	Coordinator_CreateAPIToken_FullMethodName         = "/protorender.Coordinator/CreateAPIToken"
+	Coordinator_DeleteAPIToken_FullMethodName         = "/protorender.Coordinator/DeleteAPIToken"
 )
 
 // CoordinatorClient is the client API for Coordinator service.
@@ -114,6 +119,12 @@ type CoordinatorClient interface {
 	IngestMetrics(ctx context.Context, in *MetricsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// Analytics methods
 	GetAnalytics(ctx context.Context, in *GetAnalyticsRequest, opts ...grpc.CallOption) (*GetAnalyticsResponse, error)
+	// Settings methods
+	GetMCPSettings(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetMCPSettingsResponse, error)
+	UpdateMCPProtected(ctx context.Context, in *UpdateMCPProtectedRequest, opts ...grpc.CallOption) (*UpdateMCPProtectedResponse, error)
+	ListAPITokens(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListAPITokensResponse, error)
+	CreateAPIToken(ctx context.Context, in *CreateAPITokenRequest, opts ...grpc.CallOption) (*CreateAPITokenResponse, error)
+	DeleteAPIToken(ctx context.Context, in *DeleteAPITokenRequest, opts ...grpc.CallOption) (*CommonResponse, error)
 }
 
 type coordinatorClient struct {
@@ -517,6 +528,56 @@ func (c *coordinatorClient) GetAnalytics(ctx context.Context, in *GetAnalyticsRe
 	return out, nil
 }
 
+func (c *coordinatorClient) GetMCPSettings(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetMCPSettingsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetMCPSettingsResponse)
+	err := c.cc.Invoke(ctx, Coordinator_GetMCPSettings_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *coordinatorClient) UpdateMCPProtected(ctx context.Context, in *UpdateMCPProtectedRequest, opts ...grpc.CallOption) (*UpdateMCPProtectedResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateMCPProtectedResponse)
+	err := c.cc.Invoke(ctx, Coordinator_UpdateMCPProtected_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *coordinatorClient) ListAPITokens(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListAPITokensResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListAPITokensResponse)
+	err := c.cc.Invoke(ctx, Coordinator_ListAPITokens_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *coordinatorClient) CreateAPIToken(ctx context.Context, in *CreateAPITokenRequest, opts ...grpc.CallOption) (*CreateAPITokenResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateAPITokenResponse)
+	err := c.cc.Invoke(ctx, Coordinator_CreateAPIToken_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *coordinatorClient) DeleteAPIToken(ctx context.Context, in *DeleteAPITokenRequest, opts ...grpc.CallOption) (*CommonResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CommonResponse)
+	err := c.cc.Invoke(ctx, Coordinator_DeleteAPIToken_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CoordinatorServer is the server API for Coordinator service.
 // All implementations must embed UnimplementedCoordinatorServer
 // for forward compatibility.
@@ -570,6 +631,12 @@ type CoordinatorServer interface {
 	IngestMetrics(context.Context, *MetricsRequest) (*emptypb.Empty, error)
 	// Analytics methods
 	GetAnalytics(context.Context, *GetAnalyticsRequest) (*GetAnalyticsResponse, error)
+	// Settings methods
+	GetMCPSettings(context.Context, *emptypb.Empty) (*GetMCPSettingsResponse, error)
+	UpdateMCPProtected(context.Context, *UpdateMCPProtectedRequest) (*UpdateMCPProtectedResponse, error)
+	ListAPITokens(context.Context, *emptypb.Empty) (*ListAPITokensResponse, error)
+	CreateAPIToken(context.Context, *CreateAPITokenRequest) (*CreateAPITokenResponse, error)
+	DeleteAPIToken(context.Context, *DeleteAPITokenRequest) (*CommonResponse, error)
 	mustEmbedUnimplementedCoordinatorServer()
 }
 
@@ -696,6 +763,21 @@ func (UnimplementedCoordinatorServer) IngestMetrics(context.Context, *MetricsReq
 }
 func (UnimplementedCoordinatorServer) GetAnalytics(context.Context, *GetAnalyticsRequest) (*GetAnalyticsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetAnalytics not implemented")
+}
+func (UnimplementedCoordinatorServer) GetMCPSettings(context.Context, *emptypb.Empty) (*GetMCPSettingsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetMCPSettings not implemented")
+}
+func (UnimplementedCoordinatorServer) UpdateMCPProtected(context.Context, *UpdateMCPProtectedRequest) (*UpdateMCPProtectedResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateMCPProtected not implemented")
+}
+func (UnimplementedCoordinatorServer) ListAPITokens(context.Context, *emptypb.Empty) (*ListAPITokensResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListAPITokens not implemented")
+}
+func (UnimplementedCoordinatorServer) CreateAPIToken(context.Context, *CreateAPITokenRequest) (*CreateAPITokenResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateAPIToken not implemented")
+}
+func (UnimplementedCoordinatorServer) DeleteAPIToken(context.Context, *DeleteAPITokenRequest) (*CommonResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteAPIToken not implemented")
 }
 func (UnimplementedCoordinatorServer) mustEmbedUnimplementedCoordinatorServer() {}
 func (UnimplementedCoordinatorServer) testEmbeddedByValue()                     {}
@@ -1409,6 +1491,96 @@ func _Coordinator_GetAnalytics_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Coordinator_GetMCPSettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoordinatorServer).GetMCPSettings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Coordinator_GetMCPSettings_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoordinatorServer).GetMCPSettings(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Coordinator_UpdateMCPProtected_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateMCPProtectedRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoordinatorServer).UpdateMCPProtected(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Coordinator_UpdateMCPProtected_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoordinatorServer).UpdateMCPProtected(ctx, req.(*UpdateMCPProtectedRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Coordinator_ListAPITokens_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoordinatorServer).ListAPITokens(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Coordinator_ListAPITokens_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoordinatorServer).ListAPITokens(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Coordinator_CreateAPIToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateAPITokenRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoordinatorServer).CreateAPIToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Coordinator_CreateAPIToken_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoordinatorServer).CreateAPIToken(ctx, req.(*CreateAPITokenRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Coordinator_DeleteAPIToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteAPITokenRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CoordinatorServer).DeleteAPIToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Coordinator_DeleteAPIToken_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CoordinatorServer).DeleteAPIToken(ctx, req.(*DeleteAPITokenRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Coordinator_ServiceDesc is the grpc.ServiceDesc for Coordinator service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1567,6 +1739,26 @@ var Coordinator_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAnalytics",
 			Handler:    _Coordinator_GetAnalytics_Handler,
+		},
+		{
+			MethodName: "GetMCPSettings",
+			Handler:    _Coordinator_GetMCPSettings_Handler,
+		},
+		{
+			MethodName: "UpdateMCPProtected",
+			Handler:    _Coordinator_UpdateMCPProtected_Handler,
+		},
+		{
+			MethodName: "ListAPITokens",
+			Handler:    _Coordinator_ListAPITokens_Handler,
+		},
+		{
+			MethodName: "CreateAPIToken",
+			Handler:    _Coordinator_CreateAPIToken_Handler,
+		},
+		{
+			MethodName: "DeleteAPIToken",
+			Handler:    _Coordinator_DeleteAPIToken_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

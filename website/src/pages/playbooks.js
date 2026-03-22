@@ -18,11 +18,11 @@ const playbooks = [
     tags: ["http", "webhooks", "postgresql", "validation"],
   },
   {
-    title: "MCP Tool Integration",
+    title: "Build a Weather Tool for AI Assistants",
     description:
-      "Expose Airtruct flows as tools for AI assistants via Model Context Protocol.",
-    href: "/playbooks/mcp-tool",
-    tags: ["mcp", "ai", "tools"],
+      "Build a weather tool that AI assistants can call via Model Context Protocol.",
+    href: "/playbooks/mcp-weather-tool",
+    tags: ["mcp", "ai", "tools", "weather"],
   },
   {
     title: "Customer Support Agent",

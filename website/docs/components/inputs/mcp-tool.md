@@ -2,15 +2,17 @@
 
 Exposes a flow as a tool via the [Model Context Protocol](https://modelcontextprotocol.io/) (MCP). AI assistants like Claude Desktop, Claude Code, Cursor, and other MCP-compatible clients can discover and call your flow as a tool.
 
-The coordinator exposes a single MCP endpoint at `/mcp` using the Flowable HTTP transport. All MCP Tool flows are registered as tools on this endpoint and automatically synced every 5 seconds.
+The coordinator exposes a single MCP endpoint at `/mcp` using the Streamable HTTP transport. All MCP Tool flows are registered as tools on this endpoint and automatically synced every 5 seconds.
+
+For connecting AI clients, authentication setup, and testing, see the [MCP Server guide](/docs/guides/mcp-server). For a step-by-step example, see the [Build a Weather Tool for AI Assistants](/playbooks/mcp-weather-tool) playbook.
 
 | Field | Type | Description |
 |-------|------|-------------|
 | Name | string | Tool name that AI clients see (required) |
 | Description | string | Human-readable description of what the tool does (required) |
-| Input Parameters | property list | Parameters the tool accepts — each with a name, type, description, and required flag (required) |
+| Input Parameters | property list | Parameters the tool accepts - each with a name, type, description, and required flag (required) |
 
-The output **must** be [Sync Response](/docs/components/outputs/sync-response) — this is enforced automatically in the UI. The processed message is returned as the tool result to the AI client.
+The output **must** be [Sync Response](/docs/components/outputs/sync-response) - this is enforced automatically in the UI. The processed message is returned as the tool result to the AI client.
 
 ## Error Handling
 

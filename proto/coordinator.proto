@@ -221,6 +221,47 @@ message RateLimitResponse {
   CommonResponse meta = 2;
 }
 
+// Settings messages
+message GetMCPSettingsResponse {
+  bool protected = 1 [json_name = "protected"];
+  bool auth_enabled = 2 [json_name = "auth_enabled"];
+  repeated APIToken tokens = 3 [json_name = "tokens"];
+}
+
+message UpdateMCPProtectedRequest {
+  bool protected = 1 [json_name = "protected"];
+}
+
+message UpdateMCPProtectedResponse {
+  bool protected = 1 [json_name = "protected"];
+}
+
+message APIToken {
+  int64 id = 1 [json_name = "id"];
+  string name = 2 [json_name = "name"];
+  string token = 3 [json_name = "token"];
+  repeated string scopes = 4 [json_name = "scopes"];
+  google.protobuf.Timestamp created_at = 5 [json_name = "created_at"];
+  optional google.protobuf.Timestamp last_used_at = 6 [json_name = "last_used_at"];
+}
+
+message CreateAPITokenRequest {
+  string name = 1 [(validate.rules).string = {min_len: 1, max_len: 100}];
+  repeated string scopes = 2 [json_name = "scopes"];
+}
+
+message CreateAPITokenResponse {
+  APIToken data = 1;
+}
+
+message DeleteAPITokenRequest {
+  int64 id = 1 [(validate.rules).int64.gt = 0];
+}
+
+message ListAPITokensResponse {
+  repeated APIToken tokens = 1 [json_name = "tokens"];
+}
+
 service Coordinator {
   // Worker flow methods
   rpc UpdateWorkerFlowStatus(WorkerFlowStatusRequest) returns (CommonResponse) {}
@@ -379,5 +420,28 @@ service Coordinator {
   // Analytics methods
   rpc GetAnalytics(GetAnalyticsRequest) returns (GetAnalyticsResponse) {
     option (google.api.http) = {get: "/v0/analytics"};
+  }
+
+  // Settings methods
+  rpc GetMCPSettings(google.protobuf.Empty) returns (GetMCPSettingsResponse) {
+    option (google.api.http) = {get: "/v0/settings/mcp"};
+  }
+  rpc UpdateMCPProtected(UpdateMCPProtectedRequest) returns (UpdateMCPProtectedResponse) {
+    option (google.api.http) = {
+      put: "/v0/settings/mcp"
+      body: "*"
+    };
+  }
+  rpc ListAPITokens(google.protobuf.Empty) returns (ListAPITokensResponse) {
+    option (google.api.http) = {get: "/v0/settings/mcp/tokens"};
+  }
+  rpc CreateAPIToken(CreateAPITokenRequest) returns (CreateAPITokenResponse) {
+    option (google.api.http) = {
+      post: "/v0/settings/mcp/tokens"
+      body: "*"
+    };
+  }
+  rpc DeleteAPIToken(DeleteAPITokenRequest) returns (CommonResponse) {
+    option (google.api.http) = {delete: "/v0/settings/mcp/tokens/{id}"};
   }
 }

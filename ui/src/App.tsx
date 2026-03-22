@@ -33,6 +33,7 @@ import FlowEditPage from "./pages/flows/[id]/edit/page.tsx";
 import FlowEventsPage from "./pages/flows/[id]/events/page.tsx";
 import FlowNewPage from "./pages/flows/new/page.tsx";
 import FilesPage from "./pages/files/page.tsx";
+import SettingsPage from "./pages/settings/page.tsx";
 
 const AppLayout: React.FC = () => {
   return (
@@ -109,6 +110,7 @@ function App() {
               element={<RateLimitEditPage />}
             />
             <Route path="files" element={<FilesPage />} />
+            <Route path="settings" element={<SettingsPage />} />
           </Route>
         </Routes>
       </AuthProvider>

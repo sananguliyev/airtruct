@@ -12,6 +12,7 @@ import (
 	"github.com/sananguliyev/airtruct/internal/api/coordinator"
 	"github.com/sananguliyev/airtruct/internal/auth"
 	"github.com/sananguliyev/airtruct/internal/executor"
+	mcppkg "github.com/sananguliyev/airtruct/internal/mcp"
 	pb "github.com/sananguliyev/airtruct/internal/protogen"
 	_ "github.com/sananguliyev/airtruct/internal/statik"
 
@@ -30,12 +31,12 @@ type MCPSyncer interface {
 }
 
 type CoordinatorCLI struct {
-	api                *coordinator.CoordinatorAPI
-	executor           executor.CoordinatorExecutor
-	rateLimiterEngine  interface{ Cleanup(time.Duration) error }
-	authManager        *auth.Manager
-	mcpHandler         http.Handler
-	mcpSyncer          MCPSyncer
+	api               *coordinator.CoordinatorAPI
+	executor          executor.CoordinatorExecutor
+	rateLimiterEngine interface{ Cleanup(time.Duration) error }
+	authManager       *auth.Manager
+	mcpHandler        http.Handler
+	mcpSyncer         MCPSyncer
 	httpPort, grpcPort uint32
 }
 
@@ -138,6 +139,22 @@ func (c *CoordinatorCLI) Run(ctx context.Context) {
 		}
 	})
 
+	tokenUsageTicker := time.NewTicker(5 * time.Minute)
+	defer tokenUsageTicker.Stop()
+
+	g.Go(func() error {
+		for {
+			select {
+			case <-ctx.Done():
+				log.Info().Msg("Flushing token usage before shutdown...")
+				c.api.FlushTokenUsage()
+				return ctx.Err()
+			case <-tokenUsageTicker.C:
+				c.api.FlushTokenUsage()
+			}
+		}
+	})
+
 	coordinatorServerAddress := fmt.Sprintf(":%d", c.grpcPort)
 	lis, err := net.Listen("tcp", coordinatorServerAddress)
 	if err != nil {
@@ -207,8 +224,14 @@ func (c *CoordinatorCLI) Run(ctx context.Context) {
 		w.WriteHeader(int(statusCode))
 		w.Write(response)
 	})
-	mainMux.Handle("/mcp", c.mcpHandler)
-	mainMux.Handle("/mcp/", c.mcpHandler)
+	mainMux.HandleFunc("/.well-known/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(`{"error":"not found"}`))
+	})
+	mcpWithAuth := mcppkg.AuthMiddleware(c.api, c.mcpHandler)
+	mainMux.Handle("/mcp", mcpWithAuth)
+	mainMux.Handle("/mcp/", mcpWithAuth)
 	mainMux.HandleFunc("/", serveSpa(statikFS, "/index.html"))
 
 	httpServer := &http.Server{

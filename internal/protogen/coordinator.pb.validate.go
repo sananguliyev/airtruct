@@ -4335,6 +4335,1014 @@ var _ interface {
 	ErrorName() string
 } = RateLimitResponseValidationError{}
 
+// Validate checks the field values on GetMCPSettingsResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetMCPSettingsResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetMCPSettingsResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetMCPSettingsResponseMultiError, or nil if none found.
+func (m *GetMCPSettingsResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetMCPSettingsResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Protected
+
+	// no validation rules for AuthEnabled
+
+	for idx, item := range m.GetTokens() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, GetMCPSettingsResponseValidationError{
+						field:  fmt.Sprintf("Tokens[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, GetMCPSettingsResponseValidationError{
+						field:  fmt.Sprintf("Tokens[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetMCPSettingsResponseValidationError{
+					field:  fmt.Sprintf("Tokens[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return GetMCPSettingsResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetMCPSettingsResponseMultiError is an error wrapping multiple validation
+// errors returned by GetMCPSettingsResponse.ValidateAll() if the designated
+// constraints aren't met.
+type GetMCPSettingsResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetMCPSettingsResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetMCPSettingsResponseMultiError) AllErrors() []error { return m }
+
+// GetMCPSettingsResponseValidationError is the validation error returned by
+// GetMCPSettingsResponse.Validate if the designated constraints aren't met.
+type GetMCPSettingsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetMCPSettingsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetMCPSettingsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetMCPSettingsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetMCPSettingsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetMCPSettingsResponseValidationError) ErrorName() string {
+	return "GetMCPSettingsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetMCPSettingsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetMCPSettingsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetMCPSettingsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetMCPSettingsResponseValidationError{}
+
+// Validate checks the field values on UpdateMCPProtectedRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UpdateMCPProtectedRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateMCPProtectedRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpdateMCPProtectedRequestMultiError, or nil if none found.
+func (m *UpdateMCPProtectedRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateMCPProtectedRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Protected
+
+	if len(errors) > 0 {
+		return UpdateMCPProtectedRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// UpdateMCPProtectedRequestMultiError is an error wrapping multiple validation
+// errors returned by UpdateMCPProtectedRequest.ValidateAll() if the
+// designated constraints aren't met.
+type UpdateMCPProtectedRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateMCPProtectedRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateMCPProtectedRequestMultiError) AllErrors() []error { return m }
+
+// UpdateMCPProtectedRequestValidationError is the validation error returned by
+// UpdateMCPProtectedRequest.Validate if the designated constraints aren't met.
+type UpdateMCPProtectedRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateMCPProtectedRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateMCPProtectedRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateMCPProtectedRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateMCPProtectedRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateMCPProtectedRequestValidationError) ErrorName() string {
+	return "UpdateMCPProtectedRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateMCPProtectedRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateMCPProtectedRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateMCPProtectedRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateMCPProtectedRequestValidationError{}
+
+// Validate checks the field values on UpdateMCPProtectedResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UpdateMCPProtectedResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateMCPProtectedResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpdateMCPProtectedResponseMultiError, or nil if none found.
+func (m *UpdateMCPProtectedResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateMCPProtectedResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Protected
+
+	if len(errors) > 0 {
+		return UpdateMCPProtectedResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// UpdateMCPProtectedResponseMultiError is an error wrapping multiple
+// validation errors returned by UpdateMCPProtectedResponse.ValidateAll() if
+// the designated constraints aren't met.
+type UpdateMCPProtectedResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateMCPProtectedResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateMCPProtectedResponseMultiError) AllErrors() []error { return m }
+
+// UpdateMCPProtectedResponseValidationError is the validation error returned
+// by UpdateMCPProtectedResponse.Validate if the designated constraints aren't met.
+type UpdateMCPProtectedResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateMCPProtectedResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateMCPProtectedResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateMCPProtectedResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateMCPProtectedResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateMCPProtectedResponseValidationError) ErrorName() string {
+	return "UpdateMCPProtectedResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateMCPProtectedResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateMCPProtectedResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateMCPProtectedResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateMCPProtectedResponseValidationError{}
+
+// Validate checks the field values on APIToken with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *APIToken) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on APIToken with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in APITokenMultiError, or nil
+// if none found.
+func (m *APIToken) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *APIToken) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Id
+
+	// no validation rules for Name
+
+	// no validation rules for Token
+
+	if all {
+		switch v := interface{}(m.GetCreatedAt()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, APITokenValidationError{
+					field:  "CreatedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, APITokenValidationError{
+					field:  "CreatedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCreatedAt()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return APITokenValidationError{
+				field:  "CreatedAt",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if m.LastUsedAt != nil {
+
+		if all {
+			switch v := interface{}(m.GetLastUsedAt()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, APITokenValidationError{
+						field:  "LastUsedAt",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, APITokenValidationError{
+						field:  "LastUsedAt",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetLastUsedAt()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return APITokenValidationError{
+					field:  "LastUsedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return APITokenMultiError(errors)
+	}
+
+	return nil
+}
+
+// APITokenMultiError is an error wrapping multiple validation errors returned
+// by APIToken.ValidateAll() if the designated constraints aren't met.
+type APITokenMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m APITokenMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m APITokenMultiError) AllErrors() []error { return m }
+
+// APITokenValidationError is the validation error returned by
+// APIToken.Validate if the designated constraints aren't met.
+type APITokenValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e APITokenValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e APITokenValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e APITokenValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e APITokenValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e APITokenValidationError) ErrorName() string { return "APITokenValidationError" }
+
+// Error satisfies the builtin error interface
+func (e APITokenValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sAPIToken.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = APITokenValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = APITokenValidationError{}
+
+// Validate checks the field values on CreateAPITokenRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CreateAPITokenRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreateAPITokenRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CreateAPITokenRequestMultiError, or nil if none found.
+func (m *CreateAPITokenRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreateAPITokenRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 100 {
+		err := CreateAPITokenRequestValidationError{
+			field:  "Name",
+			reason: "value length must be between 1 and 100 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return CreateAPITokenRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// CreateAPITokenRequestMultiError is an error wrapping multiple validation
+// errors returned by CreateAPITokenRequest.ValidateAll() if the designated
+// constraints aren't met.
+type CreateAPITokenRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreateAPITokenRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreateAPITokenRequestMultiError) AllErrors() []error { return m }
+
+// CreateAPITokenRequestValidationError is the validation error returned by
+// CreateAPITokenRequest.Validate if the designated constraints aren't met.
+type CreateAPITokenRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateAPITokenRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateAPITokenRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateAPITokenRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateAPITokenRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateAPITokenRequestValidationError) ErrorName() string {
+	return "CreateAPITokenRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateAPITokenRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateAPITokenRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateAPITokenRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateAPITokenRequestValidationError{}
+
+// Validate checks the field values on CreateAPITokenResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CreateAPITokenResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreateAPITokenResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CreateAPITokenResponseMultiError, or nil if none found.
+func (m *CreateAPITokenResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreateAPITokenResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateAPITokenResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateAPITokenResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateAPITokenResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return CreateAPITokenResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// CreateAPITokenResponseMultiError is an error wrapping multiple validation
+// errors returned by CreateAPITokenResponse.ValidateAll() if the designated
+// constraints aren't met.
+type CreateAPITokenResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreateAPITokenResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreateAPITokenResponseMultiError) AllErrors() []error { return m }
+
+// CreateAPITokenResponseValidationError is the validation error returned by
+// CreateAPITokenResponse.Validate if the designated constraints aren't met.
+type CreateAPITokenResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateAPITokenResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateAPITokenResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateAPITokenResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateAPITokenResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateAPITokenResponseValidationError) ErrorName() string {
+	return "CreateAPITokenResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateAPITokenResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateAPITokenResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateAPITokenResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateAPITokenResponseValidationError{}
+
+// Validate checks the field values on DeleteAPITokenRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *DeleteAPITokenRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on DeleteAPITokenRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// DeleteAPITokenRequestMultiError, or nil if none found.
+func (m *DeleteAPITokenRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *DeleteAPITokenRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if m.GetId() <= 0 {
+		err := DeleteAPITokenRequestValidationError{
+			field:  "Id",
+			reason: "value must be greater than 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return DeleteAPITokenRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// DeleteAPITokenRequestMultiError is an error wrapping multiple validation
+// errors returned by DeleteAPITokenRequest.ValidateAll() if the designated
+// constraints aren't met.
+type DeleteAPITokenRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m DeleteAPITokenRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m DeleteAPITokenRequestMultiError) AllErrors() []error { return m }
+
+// DeleteAPITokenRequestValidationError is the validation error returned by
+// DeleteAPITokenRequest.Validate if the designated constraints aren't met.
+type DeleteAPITokenRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteAPITokenRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteAPITokenRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteAPITokenRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteAPITokenRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteAPITokenRequestValidationError) ErrorName() string {
+	return "DeleteAPITokenRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteAPITokenRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteAPITokenRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteAPITokenRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteAPITokenRequestValidationError{}
+
+// Validate checks the field values on ListAPITokensResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListAPITokensResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListAPITokensResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListAPITokensResponseMultiError, or nil if none found.
+func (m *ListAPITokensResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListAPITokensResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetTokens() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListAPITokensResponseValidationError{
+						field:  fmt.Sprintf("Tokens[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListAPITokensResponseValidationError{
+						field:  fmt.Sprintf("Tokens[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListAPITokensResponseValidationError{
+					field:  fmt.Sprintf("Tokens[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ListAPITokensResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListAPITokensResponseMultiError is an error wrapping multiple validation
+// errors returned by ListAPITokensResponse.ValidateAll() if the designated
+// constraints aren't met.
+type ListAPITokensResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListAPITokensResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListAPITokensResponseMultiError) AllErrors() []error { return m }
+
+// ListAPITokensResponseValidationError is the validation error returned by
+// ListAPITokensResponse.Validate if the designated constraints aren't met.
+type ListAPITokensResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListAPITokensResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListAPITokensResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListAPITokensResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListAPITokensResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListAPITokensResponseValidationError) ErrorName() string {
+	return "ListAPITokensResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListAPITokensResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListAPITokensResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListAPITokensResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListAPITokensResponseValidationError{}
+
 // Validate checks the field values on ListWorkersResponse_Worker with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.

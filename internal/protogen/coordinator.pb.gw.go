@@ -1178,6 +1178,141 @@ func local_request_Coordinator_GetAnalytics_0(ctx context.Context, marshaler run
 	return msg, metadata, err
 }
 
+func request_Coordinator_GetMCPSettings_0(ctx context.Context, marshaler runtime.Marshaler, client CoordinatorClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq emptypb.Empty
+		metadata runtime.ServerMetadata
+	)
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	msg, err := client.GetMCPSettings(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_Coordinator_GetMCPSettings_0(ctx context.Context, marshaler runtime.Marshaler, server CoordinatorServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq emptypb.Empty
+		metadata runtime.ServerMetadata
+	)
+	msg, err := server.GetMCPSettings(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+func request_Coordinator_UpdateMCPProtected_0(ctx context.Context, marshaler runtime.Marshaler, client CoordinatorClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq UpdateMCPProtectedRequest
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	msg, err := client.UpdateMCPProtected(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_Coordinator_UpdateMCPProtected_0(ctx context.Context, marshaler runtime.Marshaler, server CoordinatorServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq UpdateMCPProtectedRequest
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := server.UpdateMCPProtected(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+func request_Coordinator_ListAPITokens_0(ctx context.Context, marshaler runtime.Marshaler, client CoordinatorClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq emptypb.Empty
+		metadata runtime.ServerMetadata
+	)
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	msg, err := client.ListAPITokens(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_Coordinator_ListAPITokens_0(ctx context.Context, marshaler runtime.Marshaler, server CoordinatorServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq emptypb.Empty
+		metadata runtime.ServerMetadata
+	)
+	msg, err := server.ListAPITokens(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+func request_Coordinator_CreateAPIToken_0(ctx context.Context, marshaler runtime.Marshaler, client CoordinatorClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq CreateAPITokenRequest
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	msg, err := client.CreateAPIToken(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_Coordinator_CreateAPIToken_0(ctx context.Context, marshaler runtime.Marshaler, server CoordinatorServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq CreateAPITokenRequest
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := server.CreateAPIToken(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+func request_Coordinator_DeleteAPIToken_0(ctx context.Context, marshaler runtime.Marshaler, client CoordinatorClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq DeleteAPITokenRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	val, ok := pathParams["id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
+	}
+	protoReq.Id, err = runtime.Int64(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
+	}
+	msg, err := client.DeleteAPIToken(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_Coordinator_DeleteAPIToken_0(ctx context.Context, marshaler runtime.Marshaler, server CoordinatorServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq DeleteAPITokenRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	val, ok := pathParams["id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
+	}
+	protoReq.Id, err = runtime.Int64(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
+	}
+	msg, err := server.DeleteAPIToken(ctx, &protoReq)
+	return msg, metadata, err
+}
+
 // RegisterCoordinatorHandlerServer registers the http handlers for service Coordinator to "mux".
 // UnaryRPC     :call CoordinatorServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
@@ -1824,6 +1959,106 @@ func RegisterCoordinatorHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		}
 		forward_Coordinator_GetAnalytics_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodGet, pattern_Coordinator_GetMCPSettings_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/protorender.Coordinator/GetMCPSettings", runtime.WithHTTPPathPattern("/v0/settings/mcp"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Coordinator_GetMCPSettings_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_Coordinator_GetMCPSettings_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodPut, pattern_Coordinator_UpdateMCPProtected_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/protorender.Coordinator/UpdateMCPProtected", runtime.WithHTTPPathPattern("/v0/settings/mcp"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Coordinator_UpdateMCPProtected_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_Coordinator_UpdateMCPProtected_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodGet, pattern_Coordinator_ListAPITokens_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/protorender.Coordinator/ListAPITokens", runtime.WithHTTPPathPattern("/v0/settings/mcp/tokens"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Coordinator_ListAPITokens_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_Coordinator_ListAPITokens_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodPost, pattern_Coordinator_CreateAPIToken_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/protorender.Coordinator/CreateAPIToken", runtime.WithHTTPPathPattern("/v0/settings/mcp/tokens"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Coordinator_CreateAPIToken_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_Coordinator_CreateAPIToken_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodDelete, pattern_Coordinator_DeleteAPIToken_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/protorender.Coordinator/DeleteAPIToken", runtime.WithHTTPPathPattern("/v0/settings/mcp/tokens/{id}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Coordinator_DeleteAPIToken_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_Coordinator_DeleteAPIToken_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 
 	return nil
 }
@@ -2408,75 +2643,170 @@ func RegisterCoordinatorHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		}
 		forward_Coordinator_GetAnalytics_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodGet, pattern_Coordinator_GetMCPSettings_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/protorender.Coordinator/GetMCPSettings", runtime.WithHTTPPathPattern("/v0/settings/mcp"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Coordinator_GetMCPSettings_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_Coordinator_GetMCPSettings_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodPut, pattern_Coordinator_UpdateMCPProtected_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/protorender.Coordinator/UpdateMCPProtected", runtime.WithHTTPPathPattern("/v0/settings/mcp"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Coordinator_UpdateMCPProtected_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_Coordinator_UpdateMCPProtected_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodGet, pattern_Coordinator_ListAPITokens_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/protorender.Coordinator/ListAPITokens", runtime.WithHTTPPathPattern("/v0/settings/mcp/tokens"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Coordinator_ListAPITokens_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_Coordinator_ListAPITokens_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodPost, pattern_Coordinator_CreateAPIToken_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/protorender.Coordinator/CreateAPIToken", runtime.WithHTTPPathPattern("/v0/settings/mcp/tokens"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Coordinator_CreateAPIToken_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_Coordinator_CreateAPIToken_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodDelete, pattern_Coordinator_DeleteAPIToken_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/protorender.Coordinator/DeleteAPIToken", runtime.WithHTTPPathPattern("/v0/settings/mcp/tokens/{id}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Coordinator_DeleteAPIToken_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_Coordinator_DeleteAPIToken_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	return nil
 }
 
 var (
-	pattern_Coordinator_ListWorkers_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "workers", "status"}, ""))
-	pattern_Coordinator_ListFlows_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "flows"}, ""))
-	pattern_Coordinator_GetFlow_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "flows", "id"}, ""))
-	pattern_Coordinator_CreateFlow_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "flows"}, ""))
-	pattern_Coordinator_UpdateFlow_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "flows", "id"}, ""))
-	pattern_Coordinator_ListSecrets_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "secrets"}, ""))
-	pattern_Coordinator_CreateSecret_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "secrets"}, ""))
-	pattern_Coordinator_UpdateSecret_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "secrets", "key"}, ""))
-	pattern_Coordinator_GetSecret_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "secrets", "key"}, ""))
-	pattern_Coordinator_DeleteSecret_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "secrets", "key"}, ""))
-	pattern_Coordinator_ListCaches_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "caches"}, ""))
-	pattern_Coordinator_GetCache_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "caches", "id"}, ""))
-	pattern_Coordinator_CreateCache_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "caches"}, ""))
-	pattern_Coordinator_UpdateCache_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "caches", "id"}, ""))
-	pattern_Coordinator_DeleteCache_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "caches", "id"}, ""))
-	pattern_Coordinator_ListRateLimits_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "rate-limits"}, ""))
-	pattern_Coordinator_GetRateLimit_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "rate-limits", "id"}, ""))
-	pattern_Coordinator_CreateRateLimit_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "rate-limits"}, ""))
-	pattern_Coordinator_UpdateRateLimit_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "rate-limits", "id"}, ""))
-	pattern_Coordinator_DeleteRateLimit_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "rate-limits", "id"}, ""))
-	pattern_Coordinator_ListBuffers_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "buffers"}, ""))
-	pattern_Coordinator_GetBuffer_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "buffers", "id"}, ""))
-	pattern_Coordinator_CreateBuffer_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "buffers"}, ""))
-	pattern_Coordinator_UpdateBuffer_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "buffers", "id"}, ""))
-	pattern_Coordinator_DeleteBuffer_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "buffers", "id"}, ""))
-	pattern_Coordinator_ListFiles_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "files"}, ""))
-	pattern_Coordinator_GetFile_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "files", "id"}, ""))
-	pattern_Coordinator_CreateFile_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "files"}, ""))
-	pattern_Coordinator_UpdateFile_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "files", "id"}, ""))
-	pattern_Coordinator_DeleteFile_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "files", "id"}, ""))
-	pattern_Coordinator_ListEvents_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v0", "flows", "flow_id", "events"}, ""))
-	pattern_Coordinator_GetAnalytics_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "analytics"}, ""))
+	pattern_Coordinator_ListWorkers_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "workers", "status"}, ""))
+	pattern_Coordinator_ListFlows_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "flows"}, ""))
+	pattern_Coordinator_GetFlow_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "flows", "id"}, ""))
+	pattern_Coordinator_CreateFlow_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "flows"}, ""))
+	pattern_Coordinator_UpdateFlow_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "flows", "id"}, ""))
+	pattern_Coordinator_ListSecrets_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "secrets"}, ""))
+	pattern_Coordinator_CreateSecret_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "secrets"}, ""))
+	pattern_Coordinator_UpdateSecret_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "secrets", "key"}, ""))
+	pattern_Coordinator_GetSecret_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "secrets", "key"}, ""))
+	pattern_Coordinator_DeleteSecret_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "secrets", "key"}, ""))
+	pattern_Coordinator_ListCaches_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "caches"}, ""))
+	pattern_Coordinator_GetCache_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "caches", "id"}, ""))
+	pattern_Coordinator_CreateCache_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "caches"}, ""))
+	pattern_Coordinator_UpdateCache_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "caches", "id"}, ""))
+	pattern_Coordinator_DeleteCache_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "caches", "id"}, ""))
+	pattern_Coordinator_ListRateLimits_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "rate-limits"}, ""))
+	pattern_Coordinator_GetRateLimit_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "rate-limits", "id"}, ""))
+	pattern_Coordinator_CreateRateLimit_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "rate-limits"}, ""))
+	pattern_Coordinator_UpdateRateLimit_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "rate-limits", "id"}, ""))
+	pattern_Coordinator_DeleteRateLimit_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "rate-limits", "id"}, ""))
+	pattern_Coordinator_ListBuffers_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "buffers"}, ""))
+	pattern_Coordinator_GetBuffer_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "buffers", "id"}, ""))
+	pattern_Coordinator_CreateBuffer_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "buffers"}, ""))
+	pattern_Coordinator_UpdateBuffer_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "buffers", "id"}, ""))
+	pattern_Coordinator_DeleteBuffer_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "buffers", "id"}, ""))
+	pattern_Coordinator_ListFiles_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "files"}, ""))
+	pattern_Coordinator_GetFile_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "files", "id"}, ""))
+	pattern_Coordinator_CreateFile_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "files"}, ""))
+	pattern_Coordinator_UpdateFile_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "files", "id"}, ""))
+	pattern_Coordinator_DeleteFile_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "files", "id"}, ""))
+	pattern_Coordinator_ListEvents_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v0", "flows", "flow_id", "events"}, ""))
+	pattern_Coordinator_GetAnalytics_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "analytics"}, ""))
+	pattern_Coordinator_GetMCPSettings_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "settings", "mcp"}, ""))
+	pattern_Coordinator_UpdateMCPProtected_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "settings", "mcp"}, ""))
+	pattern_Coordinator_ListAPITokens_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v0", "settings", "mcp", "tokens"}, ""))
+	pattern_Coordinator_CreateAPIToken_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v0", "settings", "mcp", "tokens"}, ""))
+	pattern_Coordinator_DeleteAPIToken_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v0", "settings", "mcp", "tokens", "id"}, ""))
 )
 
 var (
-	forward_Coordinator_ListWorkers_0     = runtime.ForwardResponseMessage
-	forward_Coordinator_ListFlows_0       = runtime.ForwardResponseMessage
-	forward_Coordinator_GetFlow_0         = runtime.ForwardResponseMessage
-	forward_Coordinator_CreateFlow_0      = runtime.ForwardResponseMessage
-	forward_Coordinator_UpdateFlow_0      = runtime.ForwardResponseMessage
-	forward_Coordinator_ListSecrets_0     = runtime.ForwardResponseMessage
-	forward_Coordinator_CreateSecret_0    = runtime.ForwardResponseMessage
-	forward_Coordinator_UpdateSecret_0    = runtime.ForwardResponseMessage
-	forward_Coordinator_GetSecret_0       = runtime.ForwardResponseMessage
-	forward_Coordinator_DeleteSecret_0    = runtime.ForwardResponseMessage
-	forward_Coordinator_ListCaches_0      = runtime.ForwardResponseMessage
-	forward_Coordinator_GetCache_0        = runtime.ForwardResponseMessage
-	forward_Coordinator_CreateCache_0     = runtime.ForwardResponseMessage
-	forward_Coordinator_UpdateCache_0     = runtime.ForwardResponseMessage
-	forward_Coordinator_DeleteCache_0     = runtime.ForwardResponseMessage
-	forward_Coordinator_ListRateLimits_0  = runtime.ForwardResponseMessage
-	forward_Coordinator_GetRateLimit_0    = runtime.ForwardResponseMessage
-	forward_Coordinator_CreateRateLimit_0 = runtime.ForwardResponseMessage
-	forward_Coordinator_UpdateRateLimit_0 = runtime.ForwardResponseMessage
-	forward_Coordinator_DeleteRateLimit_0 = runtime.ForwardResponseMessage
-	forward_Coordinator_ListBuffers_0     = runtime.ForwardResponseMessage
-	forward_Coordinator_GetBuffer_0       = runtime.ForwardResponseMessage
-	forward_Coordinator_CreateBuffer_0    = runtime.ForwardResponseMessage
-	forward_Coordinator_UpdateBuffer_0    = runtime.ForwardResponseMessage
-	forward_Coordinator_DeleteBuffer_0    = runtime.ForwardResponseMessage
-	forward_Coordinator_ListFiles_0       = runtime.ForwardResponseMessage
-	forward_Coordinator_GetFile_0         = runtime.ForwardResponseMessage
-	forward_Coordinator_CreateFile_0      = runtime.ForwardResponseMessage
-	forward_Coordinator_UpdateFile_0      = runtime.ForwardResponseMessage
-	forward_Coordinator_DeleteFile_0      = runtime.ForwardResponseMessage
-	forward_Coordinator_ListEvents_0      = runtime.ForwardResponseMessage
-	forward_Coordinator_GetAnalytics_0    = runtime.ForwardResponseMessage
+	forward_Coordinator_ListWorkers_0        = runtime.ForwardResponseMessage
+	forward_Coordinator_ListFlows_0          = runtime.ForwardResponseMessage
+	forward_Coordinator_GetFlow_0            = runtime.ForwardResponseMessage
+	forward_Coordinator_CreateFlow_0         = runtime.ForwardResponseMessage
+	forward_Coordinator_UpdateFlow_0         = runtime.ForwardResponseMessage
+	forward_Coordinator_ListSecrets_0        = runtime.ForwardResponseMessage
+	forward_Coordinator_CreateSecret_0       = runtime.ForwardResponseMessage
+	forward_Coordinator_UpdateSecret_0       = runtime.ForwardResponseMessage
+	forward_Coordinator_GetSecret_0          = runtime.ForwardResponseMessage
+	forward_Coordinator_DeleteSecret_0       = runtime.ForwardResponseMessage
+	forward_Coordinator_ListCaches_0         = runtime.ForwardResponseMessage
+	forward_Coordinator_GetCache_0           = runtime.ForwardResponseMessage
+	forward_Coordinator_CreateCache_0        = runtime.ForwardResponseMessage
+	forward_Coordinator_UpdateCache_0        = runtime.ForwardResponseMessage
+	forward_Coordinator_DeleteCache_0        = runtime.ForwardResponseMessage
+	forward_Coordinator_ListRateLimits_0     = runtime.ForwardResponseMessage
+	forward_Coordinator_GetRateLimit_0       = runtime.ForwardResponseMessage
+	forward_Coordinator_CreateRateLimit_0    = runtime.ForwardResponseMessage
+	forward_Coordinator_UpdateRateLimit_0    = runtime.ForwardResponseMessage
+	forward_Coordinator_DeleteRateLimit_0    = runtime.ForwardResponseMessage
+	forward_Coordinator_ListBuffers_0        = runtime.ForwardResponseMessage
+	forward_Coordinator_GetBuffer_0          = runtime.ForwardResponseMessage
+	forward_Coordinator_CreateBuffer_0       = runtime.ForwardResponseMessage
+	forward_Coordinator_UpdateBuffer_0       = runtime.ForwardResponseMessage
+	forward_Coordinator_DeleteBuffer_0       = runtime.ForwardResponseMessage
+	forward_Coordinator_ListFiles_0          = runtime.ForwardResponseMessage
+	forward_Coordinator_GetFile_0            = runtime.ForwardResponseMessage
+	forward_Coordinator_CreateFile_0         = runtime.ForwardResponseMessage
+	forward_Coordinator_UpdateFile_0         = runtime.ForwardResponseMessage
+	forward_Coordinator_DeleteFile_0         = runtime.ForwardResponseMessage
+	forward_Coordinator_ListEvents_0         = runtime.ForwardResponseMessage
+	forward_Coordinator_GetAnalytics_0       = runtime.ForwardResponseMessage
+	forward_Coordinator_GetMCPSettings_0     = runtime.ForwardResponseMessage
+	forward_Coordinator_UpdateMCPProtected_0 = runtime.ForwardResponseMessage
+	forward_Coordinator_ListAPITokens_0      = runtime.ForwardResponseMessage
+	forward_Coordinator_CreateAPIToken_0     = runtime.ForwardResponseMessage
+	forward_Coordinator_DeleteAPIToken_0     = runtime.ForwardResponseMessage
 )
