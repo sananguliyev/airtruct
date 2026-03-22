@@ -3,7 +3,7 @@
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: "Airtruct",
-  tagline: "The fastest way to build tools for AI assistants.",
+  tagline: "The fastest way to connect your data to AI.",
   favicon: "img/favicon.png",
 
   url: "https://airtruct.com",
