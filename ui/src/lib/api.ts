@@ -7,6 +7,8 @@ import {
   RateLimit,
   FileEntry,
   Analytics,
+  MCPSettings,
+  APIToken,
 } from "./entities";
 import * as yaml from "js-yaml";
 
@@ -1251,5 +1253,66 @@ export async function fetchAnalytics(): Promise<Analytics> {
   } catch (error) {
     console.error("Error fetching analytics:", error);
     throw error;
+  }
+}
+
+export async function fetchMCPSettings(): Promise<MCPSettings> {
+  const response = await handleResponse(
+    await fetch(`${API_BASE_URL}/settings/mcp`, {
+      headers: getAuthHeaders(),
+    }),
+  );
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function updateMCPProtected(
+  protected_: boolean,
+): Promise<{ protected: boolean }> {
+  const response = await handleResponse(
+    await fetch(`${API_BASE_URL}/settings/mcp`, {
+      method: "PUT",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ protected: protected_ }),
+    }),
+  );
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function createAPIToken(
+  name: string,
+  scopes: string[],
+): Promise<APIToken> {
+  const response = await handleResponse(
+    await fetch(`${API_BASE_URL}/settings/mcp/tokens`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ name, scopes }),
+    }),
+  );
+  if (!response.ok) {
+    if (response.status === 409) {
+      throw new Error("A token with this name already exists");
+    }
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  const result = await response.json();
+  return result.data;
+}
+
+export async function deleteAPIToken(id: number): Promise<void> {
+  const response = await handleResponse(
+    await fetch(`${API_BASE_URL}/settings/mcp/tokens/${id}`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    }),
+  );
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
   }
 }

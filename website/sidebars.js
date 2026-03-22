@@ -82,6 +82,7 @@ const sidebars = {
       type: "category",
       label: "Guides",
       items: [
+        "guides/mcp-server",
         "guides/scaling-workers",
         "guides/keycloak-authentication",
       ],

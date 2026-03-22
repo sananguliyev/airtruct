@@ -116,6 +116,21 @@ export type TimeSeriesPoint = {
   error_events: number;
 };
 
+export type APIToken = {
+  id: number;
+  name: string;
+  token?: string;
+  scopes: string[];
+  last_used_at?: string;
+  created_at: string;
+};
+
+export type MCPSettings = {
+  protected: boolean;
+  auth_enabled: boolean;
+  tokens: APIToken[];
+};
+
 export type Analytics = {
   total_flows: number;
   flows_by_status: FlowStatusCount[];

@@ -1,34 +1,33 @@
 ---
-description: Expose Airtruct flows as tools for AI assistants via Model Context Protocol.
+slug: mcp-weather-tool
+description: Build a weather tool that AI assistants can call via Model Context Protocol.
 ---
 
-# MCP Tool Integration
+# Build a Weather Tool for AI Assistants
 
-This guide shows how to expose Airtruct flows as tools that AI assistants can discover and call via the [Model Context Protocol](https://modelcontextprotocol.io/) (MCP).
+This playbook walks through creating a weather tool that AI assistants can discover and call via MCP.
 
-## How It Works
+For general setup, connecting clients, and authentication, see the [MCP Server guide](/docs/guides/mcp-server).
 
-The Airtruct coordinator exposes a single MCP endpoint at `/mcp` using the Flowable HTTP transport. When you create a flow with the **MCP Tool** input, it becomes a tool that any MCP-compatible client can call. The tool call flows through your flow's processors and returns the result via Sync Response.
-
-## Create an MCP Tool
+## Create the Weather Tool
 
 Open the Airtruct UI, click **Create New Flow**, and configure each section:
 
-### Input — select **MCP Tool**
+### Input - select **MCP Tool**
 
 | Field | Value |
 |-------|-------|
 | Name | `get_weather` |
 | Description | `Get current weather for a city` |
-| Input Parameters | `city` (string, required) — "City name" |
+| Input Parameters | `city` (string, required) - "City name" |
 
-### Processor — select **Mapping**
+### Processor - select **Mapping**
 
-For this example, we return a random temperature. In practice, you would call an external API using or use other processors.
+For this example, we return a random temperature. In practice, you would call an external API or use other processors.
 
 | Field | Value |
 |-------|-------|
-| Mapping | `root.temperature = random_int(min:0, max:40).string() + "°C"` / `root.city = this.city` |
+| Mapping | `root.temperature = random_int(min:0, max:40).string() + "C"` / `root.city = this.city` |
 
 ### Output
 
@@ -36,90 +35,8 @@ The output is automatically set to **Sync Response** and locked when using MCP T
 
 Click **Save** and then **Start** the flow.
 
-## Connect AI Clients
+## Test the Tool
 
-The MCP endpoint is available at `http://<coordinator-host>:<port>/mcp`. The examples below assume the coordinator is running on `localhost:8080`.
+Once the flow is running, the `get_weather` tool appears automatically on the `/mcp` endpoint. You can verify it by asking your AI assistant something like "What's the weather in London?" and it will call the tool.
 
-### Claude Code
-
-Add directly via the CLI:
-
-```bash
-claude mcp add airtruct -- npx mcp-remote http://localhost:8080/mcp
-```
-
-Or add to your claude settings
-
-```json
-{
-  "mcpServers": {
-    "airtruct": {
-      "command": "npx",
-      "args": ["mcp-remote", "http://localhost:8080/mcp"]
-    }
-  }
-}
-```
-
-Restart Claude Code after adding the configuration.
-
-### Claude Desktop
-
-Add the server in **Settings > Connectors** with the MCP endpoint URL, or add to your Claude Desktop configuration:
-
-```json
-{
-  "mcpServers": {
-    "airtruct": {
-      "command": "npx",
-      "args": ["mcp-remote", "http://localhost:8080/mcp"]
-    }
-  }
-}
-```
-
-### Cursor
-
-Add to `.cursor/mcp.json` in your project:
-
-```json
-{
-  "mcpServers": {
-    "airtruct": {
-      "command": "npx",
-      "args": ["mcp-remote", "http://localhost:8080/mcp"]
-    }
-  }
-}
-```
-
-### Other MCP Clients
-
-Any client that supports the Flowable HTTP transport can connect directly to `http://localhost:8080/mcp`. For clients that only support stdio transport, use [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) as a bridge as shown in the examples above.
-
-## Verify with curl
-
-You can test the MCP endpoint directly:
-
-```bash
-# Initialize a session
-curl -X POST http://localhost:8080/mcp \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}'
-
-# List available tools
-curl -X POST http://localhost:8080/mcp \
-  -H "Content-Type: application/json" \
-  -H "Mcp-Session-Id: <session-id-from-init-response>" \
-  -d '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'
-
-# Call a tool
-curl -X POST http://localhost:8080/mcp \
-  -H "Content-Type: application/json" \
-  -H "Mcp-Session-Id: <session-id-from-init-response>" \
-  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"get_weather","arguments":{"city":"London"}}}'
-```
-
-## Multiple Tools
-
-Each MCP Tool flow becomes a separate tool. Create as many flows as you need — they all appear under the same `/mcp` endpoint. Tools are synced automatically when flows are started or stopped.
+See [MCP Server - Verify with curl](/docs/guides/mcp-server#verify-with-curl) for testing via the command line.
